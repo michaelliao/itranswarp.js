@@ -1,0 +1,15 @@
+{
+	"name": "itranswarp.js",
+	"description": "A full-stack website framework.",
+	"version": "0.1.0",
+	"private": true,
+	"dependencies": {
+		"node-uuid": "1.4.x",
+		"express": "3.x",
+		"ejs": "0.8.x",
+		"sequelize": "1.x",
+		"markdown": "0.5.x",
+		"validator": "3.x",
+		"less": "1.x"
+	}
+}
