@@ -54,18 +54,19 @@ u.save().success(function() {
 var express = require('express');
 var app = express();
 
-app.set('view engine', 'ejs');
-app.set('views', __dirname + '/views');
+app.engine('html', require('ejs').__express);
 
-app.get('/', function(req, resp) {
-	resp.setHeader('Content-Type', 'text/html');
-	resp.end('<html><body><h1>Hello</h1></body></html>')
+app.get('/test', function(req, resp, next) {
+    resp.render('test.html', { name: 'Michael', addr: 'Beijing'});
 });
 
+app.get('/', function(req, resp, next) {
+    resp.setHeader('Content-Type', 'text/html');
+    resp.end('<html><body><h1>Hello</h1></body></html>')
+});
 
 var next_id = require(__dirname + '/models/_id');
 console.log(next_id());
 
-
-//app.listen(3000);
-//console.log('Start app on port 3000...');
+app.listen(3000);
+console.log('Start app on port 3000...');
