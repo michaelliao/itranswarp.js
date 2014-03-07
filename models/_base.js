@@ -1,8 +1,17 @@
 // base.js
 
+var Sequelize = require('sequelize');
+
 var next_id = require('./_id');
 
-module.exports = function(sequelize, DataTypes, tableName, fields) {
+/**
+ * automatically add following fields as well as hooks to each model:
+ *   id: varchar(50), not null, the primary key.
+ *   created_at: bigint, not null, the created timestamp.
+ *   updated_at: bigint, not null, the updated timestamp.
+ *   version: bigint, not null, the increased version number starts from 0.
+ */
+function create(sequelize, DataTypes, tableName, fields) {
     fields.id = {
         primaryKey: true,
         type: DataTypes.STRING(50),
@@ -22,8 +31,11 @@ module.exports = function(sequelize, DataTypes, tableName, fields) {
     };
     return sequelize.define(tableName, fields, {
         timestamps: false,
-        tableName: 'it_' + tableName.toLowerCase(),
+        tableName: 't_' + tableName.toLowerCase(),
         hooks: {
+            /**
+             * automatically set id, created_at before create if obj.id is missing.
+             */
             beforeCreate: function(obj, fn) {
                 console.log('before create...');
                 if (! obj.id) {
@@ -34,6 +46,9 @@ module.exports = function(sequelize, DataTypes, tableName, fields) {
                 obj.version = 0;
                 fn(null, obj);
             },
+            /**
+             * automatically set updated_at, version before update.
+             */
             beforeUpdate: function(obj, fn) {
                 console.log('before update...');
                 var timestamp = new Date().getTime();
@@ -44,3 +59,61 @@ module.exports = function(sequelize, DataTypes, tableName, fields) {
         }
     });
 }
+
+exports = module.exports = {
+    column_boolean: function() {
+        return {
+            type: Sequelize.BOOLEAN,
+            allowNull: false
+        };
+    },
+    column_bigint: function() {
+        return {
+            type: Sequelize.BIGINT,
+            allowNull: false
+        };
+    },
+    column_timestamp: function() {
+        return {
+            type: Sequelize.BIGINT,
+            allowNull: false
+        };
+    },
+    column_id: function() {
+        return {
+            type: Sequelize.STRING(50),
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
+        };
+    },
+    column_name: function() {
+        return {
+            type: Sequelize.STRING(100),
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
+        };
+    },
+    column_description: function() {
+        return {
+            type: Sequelize.STRING(500),
+            allowNull: false
+        };
+    },
+    column_tags: function() {
+        return {
+            type: Sequelize.STRING(500),
+            allowNull: false
+        };
+    },
+    column_url: function() {
+        return {
+            type: Sequelize.STRING(1000),
+            allowNull: false
+        };
+    },
+    create: create
+};
