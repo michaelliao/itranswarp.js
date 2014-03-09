@@ -1,0 +1,73 @@
+// ----------------------------------------------------------------------------
+// Customized Style
+// ----------------------------------------------------------------------------
+
+@import "variables.less"; // Modify this for custom colors, font-sizes, etc
+@import "mixins.less";
+
+div.x-video {
+  width: 160px;
+  height: 90px;
+  background-color: lighten(@gray, 50%);
+  position: relative;
+
+  div.x-video-button {
+    position: absolute;
+    left: 55px;
+    top: 20px;
+    width: 42px;
+    height: 42px;
+    border-radius: 25px;
+    border: 4px solid lighten(@gray, 25%);
+
+    div.x-video-play {
+      width: 0;
+      height: 0;
+      position: absolute;
+      left: 13px;
+      top: 12px;
+      border-left: 20px solid lighten(@gray, 25%);
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: none;
+    }
+  }
+}
+
+div.x-video-active {
+  cursor: pointer;
+  &:hover {
+    background-color: lighten(@gray, 30%);
+    div.x-video-button {
+      border-color: @white;
+      div.x-video-play {
+        border-left-color: @white;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Footer
+// ----------------------------------------------------------------------------
+
+.x-footer {
+  border-top: 2px solid @linkColorHover;
+  background-color: darken(@white, 2%);
+  font-size: 12px;
+  p {
+    line-height: @fontSizeSmall * 2;
+    margin: 0;
+  }
+  div.hr {
+    border-top: 1px solid darken(@grayDarker, 10%);
+    border-bottom: 1px solid darken(@grayLight, 10%);
+  }
+
+  .v-footer-copy {
+    color: @grayDark;
+    border-top: 1px solid #ccc;
+    margin: 0;
+    padding: 8px 0 8px 0;
+  }
+}
