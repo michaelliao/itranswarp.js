@@ -1,17 +1,22 @@
 {
-	"name": "itranswarp.js",
-	"description": "A full-stack website framework.",
-	"version": "0.1.0",
-	"private": true,
-	"dependencies": {
-		"node-uuid": "1.4.x",
-		"express": "3.x",
-		"canvas": "1.1.x",
-		"ejs": "0.8.x",
-		"sequelize": "1.x",
-                "canvas": "1.1.x",
-		"markdown": "0.5.x",
-		"validator": "3.x",
-		"less": "1.x"
-	}
+    "name": "itranswarp.js",
+    "description": "A full-stack website framework.",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "async": "0.2.x",
+        "underscore": "1.6.x",
+        "node-uuid": "1.4.x",
+        "express": "3.x",
+        "request": "2.x",
+        "canvas": "1.1.x",
+        "ejs": "0.8.x",
+        "mysql": "2.x",
+        "sequelize": "1.x",
+        "sequelize-mysql": "2.x",
+        "markdown": "0.5.x",
+        "validator": "3.x",
+        "nodemailer": "0.6.x",
+        "less": "1.x"
+    }
 }
