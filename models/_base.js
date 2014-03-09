@@ -97,13 +97,25 @@ exports = module.exports = {
             }
         };
     },
-    column_description: function() {
+    column_varchar_100: function() {
         return {
-            type: Sequelize.STRING(500),
-            allowNull: false
+            type: Sequelize.STRING(100),
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
         };
     },
-    column_tags: function() {
+    column_varchar_200: function() {
+        return {
+            type: Sequelize.STRING(200),
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
+        };
+    },
+    column_varchar_500: function() {
         return {
             type: Sequelize.STRING(500),
             allowNull: false
@@ -112,6 +124,18 @@ exports = module.exports = {
     column_url: function() {
         return {
             type: Sequelize.STRING(1000),
+            allowNull: false
+        };
+    },
+    column_text: function() {
+        return {
+            type: Sequelize.TEXT,
+            allowNull: false
+        };
+    },
+    column_blob: function() {
+        return {
+            type: Sequelize.BLOB,
             allowNull: false
         };
     },
