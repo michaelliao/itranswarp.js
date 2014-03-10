@@ -14,7 +14,15 @@ results
 npm-debug.log
 node_modules
 
-# generated bootstrap.css
+########################
+# private config files #
+########################
+
+config_override.js
+
+###########################
+# generated bootstrap.css #
+###########################
 
 bootstrap.css
 
