@@ -8,8 +8,8 @@ var
 
 // load config:
 var
-    config = require(__dirname + '/config'),
-    db = require(__dirname + '/db');
+    config = require('./config'),
+    db = require('./db');
 
 var
     User = db.user,
