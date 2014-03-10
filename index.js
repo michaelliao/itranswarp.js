@@ -11,31 +11,6 @@ var
     config = require('./config'),
     db = require('./db');
 
-var
-    User = db.user,
-    Article = db.article,
-    sequelize = db.sequelize;
-
-// save a user:
-
-//var u = User.build({
-//    name: 'AAMichael',
-//    email: 'askxuefeng@gmail.com'
-//});
-
-//u.save().success(function() {
-//    console.log('user saved.');
-
-
-//u.name = 'AABob';
-//u.save().success(function() {
-//    console.log('user updated.');
-//}).error(function(error) {
-//    console.error(error);
-//});
-
-
-
 // init http server:
 var app = express();
 
