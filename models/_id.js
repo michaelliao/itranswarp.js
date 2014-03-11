@@ -11,6 +11,6 @@ var uuid = require('node-uuid');
  */
 exports = module.exports = function() {
     // generate uuid with timestamp:
-    var id = util.format('%d%s000', new Date().getTime(), uuid.v4().replace(/\-/g, ''));
+    var id = util.format('%d%s000', Date.now(), uuid.v4().replace(/\-/g, ''));
     return id.length >= 50 ? id : new Array(50 - id.length + 1).join('0') + id;
 }
