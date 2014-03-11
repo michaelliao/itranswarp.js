@@ -44,14 +44,15 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.multipart({ keepExtensions: true, uploadDir: tmp_upload_dir }));
 
-// auto set current user with each request:
-app.use(require('./controllers/_utils').extract_session_cookie);
-
 // set content type: json for api:
 app.use('/api/', function(req, res, next) {
+    console.log('set api response type: application/json');
     res.type('application/json');
     next();
 });
+
+// auto set current user with each request:
+app.use(require('./controllers/_utils').extract_session_cookie);
 
 function load_controllers() {
     var files = require('fs').readdirSync(__dirname + '/controllers');
@@ -145,11 +146,6 @@ _.each(load_controllers(), function(app_mod, index, list) {
         else if (verb=='POST') {
             console.log('Found api: POST ' + route + ' in ' + app_mod + '.js');
             app.post(route, fn);
-        }
-        else if (verb=='USE') {
-            console.log('Found a middleware: ' + route + ' in ' + app_mod + '.js');
-            app.use(route, fn);
-            return;
         }
         else {
             console.log('Error: Invalid verb: ' + verb);

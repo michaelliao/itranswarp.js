@@ -108,7 +108,10 @@ exports = module.exports = {
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
         utils.get_categories(function(err, array) {
-            return res.send(err ? api.server_error(err) : {categories: array});
+            if (err) {
+                return res.send(api.error(err));
+            }
+            return res.send({ categories: array });
         });
     },
 
@@ -120,7 +123,7 @@ exports = module.exports = {
          * @return {object} Category object.
          */
         utils.get_category(req.params.id, function(err, obj) {
-            return res.send(err ? api.server_error(err) : obj);
+            return res.send(err ? api.error(err) : obj);
         });
     },
 
@@ -132,8 +135,11 @@ exports = module.exports = {
          * @param {string,optional} description - The description of the category.
          * @return {object} Category object that was created.
          */
-        var name = req.body.name.trim();
-        var description = req.body.description.trim();
+        var name = utils.get_required_param('name', req);
+        if (! name) {
+            return res.send(api.invalid_param('name'));
+        }
+        var description = utils.get_param('description', req);
 
         Category.max('display_order').error(function(err) {
             return res.send(api.server_error(err));

@@ -65,7 +65,49 @@ function parse_session_cookie(s, fn) {
     });
 }
 
+function parse_authorization(auth, fn) {
+    console.log('try parse header: Authorization: ' + auth);
+    if ((auth.length < 6) || (auth.substring(0, 6)!=='Basic ')) {
+        return fn(null, null);
+    }
+    var up = new Buffer(auth.substring(6), 'base64').toString().split(':');
+    if (up.length!=2) {
+        return fn(null, null);
+    }
+    var u = up[0], p = up[1];
+    console.log('try validate: ' + u + ', ' + p)
+    if (!u || !p) {
+        return fn(null, null);
+    }
+    User.find({
+        where: { email: u }
+    }).error(function(err) {
+        return fn(err);
+    }).success(function(user) {
+        if (user && user.passwd===p) {
+            console.log('binded user: ' + user.email);
+            return fn(null, user);
+        }
+        console.log('invalid authorization header.');
+        return fn(null, null);
+    });
+}
+
 exports = module.exports = {
+
+    get_param: function(name, req) {
+        if (name in req.body) {
+            return req.body[name].trim();
+        }
+        return '';
+    },
+
+    get_required_param: function(name, req) {
+        if (name in req.body) {
+            return req.body[name].trim();
+        }
+        return null;
+    },
 
     make_session_cookie: function(provider, uid, passwd, expires) {
         /**
@@ -90,6 +132,7 @@ exports = module.exports = {
     },
 
     extract_session_cookie: function(req, res, next) {
+        req.user = null;
         var cookie = req.cookies[SESSION_COOKIE_NAME];
         if (cookie) {
             return parse_session_cookie(cookie, function(err, user) {
@@ -112,31 +155,29 @@ exports = module.exports = {
         }
         console.log('no session cookie found.');
         var auth = req.get('authorization');
-        if (auth && (auth.length > 6) && (auth.substring(0, 6)==='Basic ')) {
-            // try basic auth: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-            var up = new Buffer(auth.substring(6), 'base64').toString().split(':');
-            if (up.length==2) {
-                var u = up[0], p = up[1];
-                User.find({
-                    where: { email: up[0] }
-                }).error(function(err) {
-                    return res.send(api.server_error(err));
-                }).success(function(user) {
-                    if ( !user || !user.passwd || user.passwd!=up[1]) {
-                        return res.send(api.error('auth:failed', '', 'Bad email or password.'));
+        if (auth) {
+            return parse_authorization(auth, function(err, user) {
+                if (err) {
+                    next(err);
+                }
+                else {
+                    if (user) {
+                        user.passwd = '******'
+                        req.user = user;
+                        console.log('bind user from authorization: ' + user.email);
                     }
-                    user.passwd = '******';
-                    req.user = user;
+                    else {
+                        console.log('invalid authorization header.');
+                    }
                     next();
-                });
-            }
+                }
+            });
         }
-        req.user = null;
         next();
     },
 
     get_categories: function(fn) {
-        return Category.findAll({
+        Category.findAll({
             order: 'display_order'
         }).error(function(err) {
             return fn(err);
