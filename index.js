@@ -17,6 +17,11 @@ var app = express();
 // set engine to ejs:
 app.engine('html', ejs.__express);
 
+// set for production:
+if ('production' == app.get('env')) {
+    app.enable('trust proxy');
+}
+
 // set for development:
 if ('development' == app.get('env')) {
     app.use('/static', express.static(__dirname + '/static'));
@@ -38,6 +43,9 @@ if (! fs.existsSync(tmp_upload_dir)) {
 app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.multipart({ keepExtensions: true, uploadDir: tmp_upload_dir }));
+
+// auto set current user with each request:
+app.use(require('./controllers/_utils').extract_session_cookie);
 
 // set content type: json for api:
 app.use('/api/', function(req, res, next) {
