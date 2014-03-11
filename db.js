@@ -2,13 +2,13 @@
 
 console.log('init mysql with sequelize...');
 
-var _ = require('underscore');
-
-// load config:
-var config = require('./config');
+var
+    _ = require('underscore'),
+    Sequelize = require('sequelize'),
+    next_id = require('./models/_id'),
+    config = require('./config');
 
 // init database:
-var Sequelize = require('sequelize');
 var sequelize = new Sequelize(config.db.schema, config.db.user, config.db.password, {
     logging: console.log,
     dialect: 'mysql',
@@ -26,7 +26,8 @@ var sequelize = new Sequelize(config.db.schema, config.db.user, config.db.passwo
 
 // export sequelize and all model objects:
 var dict = {
-    sequelize: sequelize
+    sequelize: sequelize,
+    next_id: next_id
 };
 
 // load all models:
