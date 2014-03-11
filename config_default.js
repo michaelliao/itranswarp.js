@@ -3,6 +3,9 @@
 // make a copy to 'config_override.js' and override some of the settings you needed:
 
 module.exports = {
+    'session': {
+        'salt': 'iTranswarp.js',
+    },
     'db': {
         'host': 'localhost',
         'port': 3306,
