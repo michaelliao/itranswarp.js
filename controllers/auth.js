@@ -20,9 +20,14 @@ exports = module.exports = {
     },
 
     'POST /api/authenticate': function(req, res, next) {
-        var email = req.body.email,
-            passwd = req.body.passwd;
-
+        var email = utils.get_required_param('email', req),
+            passwd = utils.get_required_param('passwd', req);
+        if (! email) {
+            return res.send(api.invalid_param('email'));
+        }
+        if (! passwd) {
+            return res.send(api.invalid_param('passwd'));
+        }
         User.find({
             where: {
                 email: email
@@ -32,6 +37,9 @@ exports = module.exports = {
         }).success(function(user) {
             if ( !user || !user.passwd || user.passwd!=passwd) {
                 return res.send(api.error('auth:failed', '', 'Bad email or password.'));
+            }
+            if (user.locked_util > Date.now()) {
+                return res.send(api.error('auth:locked', '', 'User is locked.'));
             }
             var expires = Date.now() + 604800000; // 7 days
             var cookie = utils.make_session_cookie('local', user.id, user.passwd, expires);

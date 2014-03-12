@@ -95,13 +95,15 @@ function parse_authorization(auth, fn) {
 
 exports = module.exports = {
 
-    get_param: function(name, req) {
+    // return parameter value as string, or default value if not exist. defaultValue is default to null.
+    get_param: function(name, defaultValue, req) {
         if (name in req.body) {
             return req.body[name].trim();
         }
-        return '';
+        return defaultValue;
     },
 
+    // return parameter value as string, if not exist, return null.
     get_required_param: function(name, req) {
         if (name in req.body) {
             return req.body[name].trim();
@@ -180,7 +182,7 @@ exports = module.exports = {
         Category.findAll({
             order: 'display_order'
         }).error(function(err) {
-            return fn(err);
+            fn(err);
         }).success(function(arr) {
             fn(null, arr);
         });
@@ -188,7 +190,7 @@ exports = module.exports = {
 
     get_category: function(id, fn) {
         Category.find(id).error(function(err) {
-            return fn(err);
+            fn(err);
         }).success(function(obj) {
             if (! obj) {
                 return fn(api.not_found('category', 'Category not found.'));
@@ -199,7 +201,7 @@ exports = module.exports = {
 
     get_user: function(id, fn) {
         User.find(id).error(function(err) {
-            return fn(api.server_error(err));
+            fn(err);
         }).success(function(obj) {
             if (! obj) {
                 return fn(api.not_found('user', 'User not found.'));

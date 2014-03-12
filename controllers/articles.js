@@ -13,27 +13,6 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
-// do management console
-
-function get_categories(req, res) {
-    return Category.findAll({
-        order: 'display_order'
-    }).error(function(err) {
-        return res.send(api.server_error(err));
-    });
-}
-
-function get_category(id, fn, req, res) {
-    Category.find(id).error(function(err) {
-        return res.send(api.error(err));
-    }).success(function(obj) {
-        if (! obj) {
-            return res.send(api.not_found('category', 'Category not found.'));
-        }
-        fn(obj);
-    });
-}
-
 exports = module.exports = {
 
     'POST /api/articles': function(req, res, next) {
@@ -109,7 +88,7 @@ exports = module.exports = {
          */
         utils.get_categories(function(err, array) {
             if (err) {
-                return res.send(api.error(err));
+                return next(err);
             }
             return res.send({ categories: array });
         });
@@ -123,7 +102,10 @@ exports = module.exports = {
          * @return {object} Category object.
          */
         utils.get_category(req.params.id, function(err, obj) {
-            return res.send(err ? api.error(err) : obj);
+            if (err) {
+                return next(err);
+            }
+            return res.send(obj);
         });
     },
 
@@ -139,7 +121,7 @@ exports = module.exports = {
         if (! name) {
             return res.send(api.invalid_param('name'));
         }
-        var description = utils.get_param('description', req);
+        var description = utils.get_param('description', '', req);
 
         Category.max('display_order').error(function(err) {
             return res.send(api.server_error(err));
@@ -168,7 +150,7 @@ exports = module.exports = {
          */
         var name = req.body.name.trim();
         var description = req.body.description.trim();
-        util.get_category(req.params.id, function(err, cat) {
+        utils.get_category(req.params.id, function(err, cat) {
             if (err) {
                 return res.send(api.server_error(err));
             }
@@ -192,7 +174,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Results like {"result": true}
          */
-        util.get_category(req.params.id, function(err, cat) {
+        utils.get_category(req.params.id, function(err, cat) {
             if (err) {
                 return res.send(api.server_error(err));
             }
@@ -200,7 +182,7 @@ exports = module.exports = {
             cat.destroy().error(function(err) {
                 return res.send(api.server_error(err));
             }).success(function() {
-                return res.send({result: true});
+                return res.send({ id: req.params.id });
             });
         });
     }
