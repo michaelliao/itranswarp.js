@@ -3,7 +3,7 @@
 console.log('init mysql with sequelize...');
 
 var
-    _ = require('underscore'),
+    _ = require('lodash'),
     Sequelize = require('sequelize'),
     next_id = require('./models/_id'),
     config = require('./config');
@@ -36,9 +36,9 @@ var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
 var models = _.filter(files, function(f) {
     return re.test(f);
 });
-_.each(models, function(file, index, list) {
+_.each(models, function(file) {
     var name = file.substring(0, file.length - 3);
-    console.log('Found model: ' + name);
+    console.log('found model: ' + name);
     dict[name] = sequelize.import(__dirname + '/models/' + name);
 });
 
