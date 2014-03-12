@@ -16,7 +16,7 @@ module.exports = {
         'maxIdleTime': 30
     },
     'oauth': {
-        'sinaweibo': {
+        'provider_name': {
             'app_key': '?',
             'app_secret': '?'
         }

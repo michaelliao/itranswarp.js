@@ -17,31 +17,14 @@ You should override some configurations in your own 'config_override.js', e.g.:
 **/
 
 var
-    _ = require('underscore'),
+    _ = require('lodash'),
     fs = require('fs'),
     cfg = require('./config_default');
-
-function merge(target, source) {
-    _.each(source, function(value, key, dict) {
-        if (typeof value=='object') {
-            // recursive merge:
-            if (key in target && (typeof target[key]=='object')) {
-                merge(target[key], value);
-            }
-            else {
-                target[key] = value;
-            }
-        }
-        else {
-            target[key] = value;
-        }
-    });
-}
 
 if (fs.existsSync(__dirname + '/config_override.js')) {
     console.log('loading config_override.js...');
     var ovr = require('./config_override');
-    merge(cfg, ovr);
+    cfg = _.merge(cfg, ovr);
 }
 
 console.log('configuration loaded:');
