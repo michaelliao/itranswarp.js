@@ -4,11 +4,12 @@ var
     fs = require('fs'),
     express = require('express'),
     ejs = require('ejs'),
-    _ = require('underscore');
+    _ = require('lodash');
 
 // load config:
 var
     config = require('./config'),
+    api = require('./api'),
     db = require('./db');
 
 // init http server:
@@ -54,13 +55,23 @@ app.use('/api/', function(req, res, next) {
 // auto set current user with each request:
 app.use(require('./controllers/_utils').extract_session_cookie);
 
+// api error handling:
+app.use(app.router);
+app.use(function(err, req, res, next) {
+    if (err instanceof api.APIError) {
+        console.log('send api error to client: ' + err.error);
+        return res.send(err);
+    }
+    next(err);
+});
+
 function load_controllers() {
     var files = require('fs').readdirSync(__dirname + '/controllers');
     var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
     var jss = _.filter(files, function(f) {
         return re.test(f);
     });
-    return _.map(jss, function(f, index, list) {
+    return _.map(jss, function(f) {
         return f.substring(0, f.length - 3);
     });
 }
@@ -68,7 +79,7 @@ function load_controllers() {
 // scan all modules:
 
 function process_api_doc(method, url, doclines) {
-    var ss = _.map(doclines.split('\n'), function(value, index, list) {
+    var ss = _.map(doclines.split('\n'), function(value) {
         return value.match(/^\s*\*?(.*)$/)[1].trim();
     });
     var doc = {
@@ -83,7 +94,7 @@ function process_api_doc(method, url, doclines) {
         errors: []
     };
     var continue_description = true;
-    _.each(ss, function(value, index, list) {
+    _.each(ss, function(value) {
         if (value.indexOf('@')==0) {
             continue_description = false;
         }
@@ -129,9 +140,9 @@ function process_api_doc(method, url, doclines) {
 
 var apidocs = [];
 
-_.each(load_controllers(), function(app_mod, index, list) {
+_.each(load_controllers(), function(app_mod) {
     var mod = require(__dirname + '/controllers/' + app_mod);
-    _.each(mod, function(fn, path, obj) {
+    _.each(mod, function(fn, path) {
         var ss = path.split(' ', 2);
         if (ss.length != 2) {
             console.log('ERROR in route definition: ' + path);
@@ -140,15 +151,15 @@ _.each(load_controllers(), function(app_mod, index, list) {
         var verb = ss[0];
         var route = ss[1];
         if (verb=='GET') {
-            console.log('Found api: GET ' + route + ' in ' + app_mod + '.js');
+            console.log('found api: GET ' + route + ' in ' + app_mod + '.js');
             app.get(route, fn);
         }
         else if (verb=='POST') {
-            console.log('Found api: POST ' + route + ' in ' + app_mod + '.js');
+            console.log('found api: POST ' + route + ' in ' + app_mod + '.js');
             app.post(route, fn);
         }
         else {
-            console.log('Error: Invalid verb: ' + verb);
+            console.log('error: Invalid verb: ' + verb);
             return;
         }
         if (route.indexOf('/api/')==0) {
@@ -161,6 +172,10 @@ _.each(load_controllers(), function(app_mod, index, list) {
             }
         }
     });
+});
+
+app.get('/error', function(req, res, next) {
+    next(new Error('test error.'));
 });
 
 app.listen(3000);
