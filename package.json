@@ -5,7 +5,7 @@
     "private": true,
     "dependencies": {
         "async": "0.2.x",
-        "underscore": "1.6.x",
+        "lodash": "2.4.x",
         "node-uuid": "1.4.x",
         "express": "3.x",
         "request": "2.x",
