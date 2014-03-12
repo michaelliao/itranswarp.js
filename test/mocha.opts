@@ -1,1 +1,1 @@
--u tdd --recursive --timeout 5000
+-u tdd --timeout 5000
