@@ -47,42 +47,26 @@ function sql(sql, params, fn) {
     });
 }
 
-var sql_init_admin_user = 'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', 0, \'Admin\', \'admin@itranswarp.com\', \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'\', \'http://about:blank\', 0, 1394542829892, 1394542829892, 0)';
-var sql_init_nopwd_user = 'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', 0, \'Special\', \'nopass@itranswarp.com\', \'\', 1, \'\', \'http://about:blank\', 0, 1396908390840, 1396908390840, 0)';
-var sql_init_locked_user = 'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000eeeeeeeeee0eeeeeeeeee0eeeeeeeeee000\', 0, \'Locked\', \'lock@itranswarp.com\', \'ff000111222333444555666777888999\', 1, \'\', \'http://about:blank\', 2000999999000, 1396908390840, 1396908390840, 0)';
+var init_sqls = [
+    'delete from t_category',
+    'delete from t_user',
+    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', 0, \'Admin\', \'admin@itranswarp.com\', \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'\', \'http://about:blank\', 0, 1394542829892, 1394542829892, 0)',
+    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', 0, \'Special\', \'nopass@itranswarp.com\', \'\', 1, \'\', \'http://about:blank\', 0, 1396908390840, 1396908390840, 0)',
+    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000eeeeeeeeee0eeeeeeeeee0eeeeeeeeee000\', 0, \'Locked\', \'lock@itranswarp.com\', \'ff000111222333444555666777888999\', 1, \'\', \'http://about:blank\', 2000999999000, 1396908390840, 1396908390840, 0)',
+    'select * from t_user'
+];
 
 var is_db_init = false;
 
 function init_db(done) {
     console.log('setup: init database first...');
-    async.series([
-        function(callback) {
-            sql('delete from t_category', null, function() {
+    async.series(_.map(init_sqls, function(s) {
+        return function(callback) {
+            sql(s, null, function() {
                 callback(null, true);
             });
-        },
-        function(callback) {
-            sql('delete from t_user', null, function() {
-                callback(null, true);
-            });
-        },
-        // create default users:
-        function(callback) {
-            sql(sql_init_admin_user, null, function() {
-                callback(null, true);
-            });
-        },
-        function(callback) {
-            sql(sql_init_nopwd_user, null, function() {
-                callback(null, true);
-            });
-        },
-        function(callback) {
-            sql(sql_init_locked_user, null, function() {
-                callback(null, true);
-            });
-        },
-    ], function(err, results) {
+        };
+    }), function(err, results) {
         return err ? done(err) : done();
     });
 }
