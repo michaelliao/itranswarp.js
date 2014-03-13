@@ -11,7 +11,7 @@ var api = {
         return new APIError('parameter:invalid', paramName, 'Invalid parameter: ' + paramName);
     },
     not_allowed: function(err_message) {
-        return new APIError('permission:notallowed', '', err_message);
+        return new APIError('permission:denied', 'permission', err_message);
     },
     not_found: function(err_data, err_message) {
         return new APIError('resource:notfound', err_data, err_message);

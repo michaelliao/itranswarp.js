@@ -10,7 +10,8 @@ var
 var
     config = require('./config'),
     api = require('./api'),
-    db = require('./db');
+    db = require('./db'),
+    api_console = require('./api_console');
 
 // init http server:
 var app = express();
@@ -65,7 +66,7 @@ app.use(function(err, req, res, next) {
     next(err);
 });
 
-function load_controllers() {
+function load_controller_filenames() {
     var files = require('fs').readdirSync(__dirname + '/controllers');
     var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
     var jss = _.filter(files, function(f) {
@@ -78,71 +79,18 @@ function load_controllers() {
 
 // scan all modules:
 
-function process_api_doc(method, url, doclines) {
-    var ss = _.map(doclines.split('\n'), function(value) {
-        return value.match(/^\s*\*?(.*)$/)[1].trim();
+function load_controllers() {
+    var ctrls = {};
+    _.each(load_controller_filenames(), function(filename) {
+        ctrls[filename] = require('./controllers/' + filename);
     });
-    var doc = {
-        description: '',
-        method: method,
-        url: url,
-        params: [],
-        result: {
-            type: '',
-            description: ''
-        },
-        errors: []
-    };
-    var continue_description = true;
-    _.each(ss, function(value) {
-        if (value.indexOf('@')==0) {
-            continue_description = false;
-        }
-        if (value.indexOf('@param')==0) {
-            var m = value.match(/^\@param\s+\{([\w\,\s]+)\}\s*(\:?\w+)\s*\-\s*(.*)$/);
-            if (m) {
-                var ms = m[1].replace(/\s/g,'').split(',');
-                var param = {
-                    name: m[2],
-                    type: ms[1],
-                    optional: _.contains(ms, 'optional'),
-                    description: m[3].trim()
-                };
-                doc.params.push(param);
-            }
-            else {
-                console.log('WARNING: invalid doc line: ' + value);
-            }
-        }
-        else if (value.indexOf('@return')==0) {
-            // @return {object} User object.
-            var m = value.match(/^\@return\s+\{(\w+)\}\s*(.*)$/);
-            if (m) {
-                doc.result.type = m[1];
-                doc.result.description = m[2].trim();
-            }
-            else {
-                console.log('WARNING: invalid doc line: ' + value);
-            }
-        }
-        else if (value.indexOf('@error')==0) {
-            // TODO:
-        }
-        else {
-            // append description:
-            if (continue_description) {
-                doc.description = doc.description + value;
-            }
-        }
-    });
-    return doc;
+    return ctrls;
 }
 
-var apidocs = [];
+var controllers = load_controllers();
 
-_.each(load_controllers(), function(app_mod) {
-    var mod = require(__dirname + '/controllers/' + app_mod);
-    _.each(mod, function(fn, path) {
+_.each(controllers, function(ctrl, fname) {
+    _.each(ctrl, function(fn, path) {
         var ss = path.split(' ', 2);
         if (ss.length != 2) {
             console.log('ERROR in route definition: ' + path);
@@ -151,11 +99,11 @@ _.each(load_controllers(), function(app_mod) {
         var verb = ss[0];
         var route = ss[1];
         if (verb=='GET') {
-            console.log('found api: GET ' + route + ' in ' + app_mod + '.js');
+            console.log('found api: GET ' + route + ' in ' + fname + '.js');
             app.get(route, fn);
         }
         else if (verb=='POST') {
-            console.log('found api: POST ' + route + ' in ' + app_mod + '.js');
+            console.log('found api: POST ' + route + ' in ' + fname + '.js');
             app.post(route, fn);
         }
         else {
@@ -165,7 +113,7 @@ _.each(load_controllers(), function(app_mod) {
         if (route.indexOf('/api/')==0) {
             var docs = fn.toString().match(/.*\/\*\*?([\d\D]*)\*?\*\/.*/);
             if (docs) {
-                var apidoc = process_api_doc(verb, route, docs[1]);
+                api_console.process_api_doc(fname, verb, route, docs[1]);
             }
             else {
                 console.log('WARNING: no api docs found for api: ' + route);
