@@ -11,7 +11,7 @@ suite('test authentication', function() {
     suite('#/api/authenticate', function() {
 
         test('auth should ok', function(done) {
-            api.post('/api/authenticate', {
+            api.post(api.guest, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: 'e8f98b1676572cd24c753c331aa6b02e'
             }, function(r) {
@@ -22,8 +22,19 @@ suite('test authentication', function() {
             });
         });
 
+        test('auth should failed', function(done) {
+            api.post(api.guest, '/api/authenticate', {
+                email: 'admin@itranswarp.com',
+                passwd: 'bad000000fffffffffffffffffffffff'
+            }, function(r) {
+                assert.equal(r.error, 'auth:failed', 'error code is wrong.');
+                assert.ok(r.message, 'error message not found.');
+                done();
+            });
+        });
+
         test('auth missing param', function(done) {
-            api.post('/api/authenticate', {
+            api.post(api.guest, '/api/authenticate', {
                 email: 'admin@itranswarp.com'
             }, function(r) {
                 assert.equal(r.error, 'parameter:invalid', 'error code is wrong.');
@@ -32,21 +43,10 @@ suite('test authentication', function() {
             });
         });
 
-        test('auth should failed', function(done) {
-            api.post('/api/authenticate', {
-                email: 'admin@itranswarp.com',
-                passwd: '00ffffffffffffffffffffffffffffff'
-            }, function(r) {
-                assert.equal(r.error, 'auth:failed', 'error code is wrong.');
-                assert.ok(r.message, 'error message not found.');
-                done();
-            });
-        });
-
-        test('auth should forbidden', function(done) {
-            api.post('/api/authenticate', {
+        test('auth should forbidden because password is empty', function(done) {
+            api.post(api.guest, '/api/authenticate', {
                 email: 'nopass@itranswarp.com',
-                passwd: 'xx'
+                passwd: '00000000000000000000000000000000'
             }, function(r) {
                 assert.equal(r.error, 'auth:failed', 'error code is wrong.');
                 assert.ok(r.message, 'error message not found.');
@@ -55,7 +55,7 @@ suite('test authentication', function() {
         });
 
         test('auth should locked', function(done) {
-            api.post('/api/authenticate', {
+            api.post(api.guest, '/api/authenticate', {
                 email: 'lock@itranswarp.com',
                 passwd: 'ff000111222333444555666777888999'
             }, function(r) {
