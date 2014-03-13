@@ -4,7 +4,8 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils');
+    utils = require('./_utils'),
+    constants = require('../constants');
 
 var
     User = db.user,
@@ -21,8 +22,8 @@ exports = module.exports = {
          * 
          * @return {object} The created article object.
          */
-        if ( ! req.user || req.user.role > 0) {
-            return res.send(api.notallowed('Permission denied.'));
+        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+            return res.send(api.not_allowed('Permission denied.'));
         }
         var name = req.body.name.trim();
         var description = req.body.description.trim();
@@ -117,6 +118,10 @@ exports = module.exports = {
          * @param {string,optional} description - The description of the category.
          * @return {object} Category object that was created.
          */
+        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+            return next(api.not_allowed('Permission denied.'));
+        }
+
         var name = utils.get_required_param('name', req);
         if (! name) {
             return res.send(api.invalid_param('name'));
@@ -132,7 +137,7 @@ exports = module.exports = {
                 description: description,
                 display_order: display_order
             }).error(function(err) {
-                return res.send(api.server_error(err));
+                return next(err);
             }).success(function(cat) {
                 return res.send(cat);
             });
@@ -148,11 +153,14 @@ exports = module.exports = {
          * @param {string,optional} description - The new description of the category.
          * @return {object} Category object that was updated.
          */
+        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+            return next(api.not_allowed('Permission denied.'));
+        }
         var name = req.body.name.trim();
         var description = req.body.description.trim();
         utils.get_category(req.params.id, function(err, cat) {
             if (err) {
-                return res.send(api.server_error(err));
+                return next(err);
             }
             cat.name = name;
             cat.description = description;
@@ -160,7 +168,7 @@ exports = module.exports = {
                 name: name,
                 description: description
             }).error(function(err) {
-                return res.send(api.server_error(err));
+                return next(err);
             }).success(function(cat) {
                 return res.send(cat);
             });
@@ -174,13 +182,16 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Results like {"result": true}
          */
+        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+            return next(api.not_allowed('Permission denied.'));
+        }
         utils.get_category(req.params.id, function(err, cat) {
             if (err) {
-                return res.send(api.server_error(err));
+                return next(err);
             }
             console.log('to be deleted category: ' + cat);
             cat.destroy().error(function(err) {
-                return res.send(api.server_error(err));
+                return next(err);
             }).success(function() {
                 return res.send({ id: req.params.id });
             });

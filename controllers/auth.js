@@ -33,7 +33,7 @@ exports = module.exports = {
                 email: email
             }
         }).error(function(err) {
-            return res.send(api.error(err));
+            return next(err);
         }).success(function(user) {
             if ( !user || !user.passwd || user.passwd!=passwd) {
                 return res.send(api.error('auth:failed', '', 'Bad email or password.'));
