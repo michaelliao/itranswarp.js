@@ -63,6 +63,7 @@ app.use(function(err, req, res, next) {
         console.log('send api error to client: ' + err.error);
         return res.send(err);
     }
+    console.log('ERROR >>> ' + JSON.stringify(err));
     next(err);
 });
 

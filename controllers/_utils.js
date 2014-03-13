@@ -1,6 +1,7 @@
 // utils for common functions.
 
 var
+    _ = require('lodash'),
     crypto = require('crypto'),
     config = require('../config'),
     api = require('../api'),
@@ -95,6 +96,24 @@ function parse_authorization(auth, fn) {
 
 exports = module.exports = {
 
+    format_tags: function(tags) {
+        var arr = _.map(tags.split(/[\,\;]/), function(value) {
+            return value.trim();
+        });
+        var dict = {};
+        return _.filter(arr, function(value) {
+            if (value) {
+                var lv = value.toLowerCase();
+                if (lv in dict) {
+                    return false;
+                }
+                dict[lv] = true;
+                return true;
+            }
+            return false;
+        }).join(',');
+    },
+
     // return parameter value as string, or default value if not exist. defaultValue is default to null.
     get_param: function(name, defaultValue, req) {
         if (name in req.body) {
@@ -188,12 +207,12 @@ exports = module.exports = {
         });
     },
 
-    get_category: function(id, fn) {
-        Category.find(id).error(function(err) {
+    get_entity: function(Type, id, fn) {
+        Type.find(id).error(function(err) {
             fn(err);
         }).success(function(obj) {
             if (! obj) {
-                return fn(api.not_found('category', 'Category not found.'));
+                return fn(api.not_found(Type.name, 'Category not found.'));
             }
             fn(null, obj);
         });

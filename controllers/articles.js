@@ -11,10 +11,22 @@ var
     User = db.user,
     Article = db.article,
     Category = db.category,
+    Text = db.text,
     sequelize = db.sequelize,
     next_id = db.next_id;
 
 exports = module.exports = {
+
+
+
+    'GET /api/articles/:id': function(req, res, next) {
+        utils.get_entity(Article, req.params.id, function(err, article) {
+            if (err) {
+                return next(err);
+            }
+            return res.send(article);
+        });
+    },
 
     'POST /api/articles': function(req, res, next) {
         /**
@@ -22,58 +34,64 @@ exports = module.exports = {
          * 
          * @return {object} The created article object.
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+        if ( ! req.user || req.user.role > constants.ROLE_EDITOR) {
             return res.send(api.not_allowed('Permission denied.'));
         }
-        var name = req.body.name.trim();
-        var description = req.body.description.trim();
+        var name = utils.get_required_param('name', req);
+        if ( ! name) {
+            return next(api.invalid_param('name'));
+        }
+        var category_id = utils.get_required_param('category_id', req);
+        if ( ! category_id) {
+            return next(api.invalid_param('category_id'));
+        }
+        var content = utils.get_required_param('content', req);
+        if ( ! content) {
+            return next(api.invalid_param('content'));
+        }
+        var description = utils.get_param('description', '', req);
+        var tags = utils.format_tags(utils.get_param('tags', '', req));
 
-        var category_id = req.body.category_id;
-
-        var content = req.body.content;
-        var tags = req.body.tags;
         var publish_time = Date.now(); //req.body.publish_time;
 
-        var cover_id = '';
+        var cover_id = 'xxx';
+        var content_id = next_id();
         var article_id = next_id();
 
-        var tasks = {
-            category: function(callback) {
-                utils.get_category(category_id, function(obj) {
-                    callback(null, obj);
-                });
-            },
-            text: function(callback) {
-                utils.create_object(Text, { ref_id: article_id, value: content }, tx, function(err, obj) {
-                    callback(err, obj);
-                });
-            },
-            article: function(callback) {
-                utils.create_object(Article, {
-                    id: article_id,
-                    user_id: req.user.id,
-                    category_id: category_id,
-                    cover_id: cover_id,
-                    name: name,
-                    description: description,
-                    publish_time: publish_time
-                }, tx, function(err, obj) {
-                    callback(err, obj);
-                });
-            }
-        };
-        if (cover_id) {
-            // TODO: add create cover task:
-        }
         sequelize.transaction(function(tx) {
-            async.series(tasks, function(err, results) {
+            async.series({
+                category: function(callback) {
+                    utils.get_entity(Category, category_id, callback);
+                },
+                text: function(callback) {
+                    utils.create_object(Text, {
+                        id: content_id,
+                        ref_id: article_id,
+                        value: content
+                    }, tx, callback);
+                },
+                article: function(callback) {
+                    utils.create_object(Article, {
+                        id: article_id,
+                        user_id: req.user.id,
+                        user_name: req.user.name,
+                        category_id: category_id,
+                        cover_id: cover_id,
+                        content_id: content_id,
+                        name: name,
+                        tags: tags,
+                        description: description,
+                        publish_time: publish_time
+                    }, tx, callback);
+                }
+            }, function(err, results) {
                 if (err) {
                     return tx.rollback().success(function() {
-                        res.send(api.server_error(err));
+                        return next(err);
                     });
                 }
                 tx.commit().error(function(err) {
-                    return res.send(api.server_error(err));
+                    return next(err);
                 }).success(function() {
                     return res.send(results.article);
                 });
@@ -102,7 +120,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Category object.
          */
-        utils.get_category(req.params.id, function(err, obj) {
+        utils.get_entity(Category, req.params.id, function(err, obj) {
             if (err) {
                 return next(err);
             }
@@ -158,7 +176,7 @@ exports = module.exports = {
         }
         var name = req.body.name.trim();
         var description = req.body.description.trim();
-        utils.get_category(req.params.id, function(err, cat) {
+        utils.get_entity(Category, req.params.id, function(err, cat) {
             if (err) {
                 return next(err);
             }
@@ -185,7 +203,7 @@ exports = module.exports = {
         if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
             return next(api.not_allowed('Permission denied.'));
         }
-        utils.get_category(req.params.id, function(err, cat) {
+        utils.get_entity(Category, req.params.id, function(err, cat) {
             if (err) {
                 return next(err);
             }
