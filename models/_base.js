@@ -1,8 +1,8 @@
 // base.js
 
-var Sequelize = require('sequelize');
-
-var next_id = require('./_id');
+var
+    Sequelize = require('sequelize'),
+    next_id = require('./_id');
 
 /**
  * automatically add following fields as well as hooks to each model:
@@ -19,7 +19,8 @@ function create(sequelize, DataTypes, tableName, fields) {
     };
     fields.created_at = {
         type: DataTypes.BIGINT,
-        allowNull: false
+        allowNull: false,
+        index: true
     };
     fields.updated_at = {
         type: DataTypes.BIGINT,
@@ -67,58 +68,65 @@ exports = module.exports = {
             allowNull: false
         };
     },
-    column_bigint: function() {
+    column_bigint: function(index) {
         return {
             type: Sequelize.BIGINT,
-            allowNull: false
+            allowNull: false,
+            index: index
         };
     },
-    column_timestamp: function() {
+    column_timestamp: function(index) {
         return {
             type: Sequelize.BIGINT,
-            allowNull: false
+            allowNull: false,
+            index: index
         };
     },
-    column_id: function() {
+    column_id: function(index) {
         return {
             type: Sequelize.STRING(50),
             allowNull: false,
             validate: {
                 notEmpty: true
-            }
+            },
+            index: index
         };
     },
-    column_name: function() {
+    column_name: function(index) {
         return {
             type: Sequelize.STRING(100),
             allowNull: false,
             validate: {
                 notEmpty: true
-            }
+            },
+            index: index
         };
     },
-    column_varchar_100: function() {
+    column_varchar_100: function(index) {
         return {
             type: Sequelize.STRING(100),
             allowNull: false,
             validate: {
                 notEmpty: true
-            }
+            },
+            index: index
         };
     },
-    column_varchar_200: function() {
+    column_varchar_200: function(index) {
         return {
             type: Sequelize.STRING(200),
             allowNull: false,
             validate: {
                 notEmpty: true
-            }
+            },
+            index: index
         };
     },
-    column_varchar_500: function() {
+    column_varchar_500: function(index) {
         return {
             type: Sequelize.STRING(500),
-            allowNull: false
+            allowNull: false,
+            index: index
         };
     },
     column_url: function() {

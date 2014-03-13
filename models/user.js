@@ -28,7 +28,7 @@ exports = module.exports = function(sequelize, DataTypes) {
         // which 3rd-part signin providers:
         binds: {
             type: DataTypes.STRING(100),
-            allowNull: false
+            allowNull: false,
         },
         // user's image url:
         image_url: Base.column_url(),

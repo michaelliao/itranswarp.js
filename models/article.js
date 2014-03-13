@@ -5,7 +5,7 @@ var Base = require('./_base.js');
 exports = module.exports = function(sequelize, DataTypes) {
     return Base.create(sequelize, DataTypes, 'Article', {
 
-        user_id: Base.column_id(),
+        user_id: Base.column_id(true),
         category_id: Base.column_id(),
         cover_id: Base.column_id(),
         content_id: Base.column_id(),
@@ -16,6 +16,6 @@ exports = module.exports = function(sequelize, DataTypes) {
         tags: Base.column_varchar_500(),
         description: Base.column_varchar_500(),
 
-        publish_time: Base.column_timestamp()
+        publish_time: Base.column_timestamp(true)
     });
 }
