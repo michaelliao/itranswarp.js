@@ -85,10 +85,11 @@ function http(role, method, path, params, fn) {
         if (opt.form) {
             console.log('>>> form: ' + querystring.stringify(opt.form));
         }
+        assert.ok(res && res.statusCode, 'Bad response');
         console.log('>>> response: ' + res.statusCode);
         console.log(body);
         assert.ok(err===null, 'An error occurred!');
-        assert.ok(res.statusCode==200, 'Bad response code: ' + res.statusCode);
+        assert.ok(res.statusCode && res.statusCode==200, 'Bad response code: ' + res.statusCode);
         var r = JSON.parse(body);
         assert.ok(r!=null, 'json result is null.');
         return fn(r);
@@ -96,6 +97,7 @@ function http(role, method, path, params, fn) {
 }
 
 var init_sqls = [
+    'delete from t_article',
     'delete from t_category',
     'delete from t_user',
     'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', ' + constants.ROLE_ADMIN + ',       \'Admin\',      \'admin@itranswarp.com\',   \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'\', \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
@@ -106,8 +108,6 @@ var init_sqls = [
     'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0eeeeeeeeee02222222222000\', ' + constants.ROLE_SUBSCRIBER + ',  \'Subscriber\', \'subs@itranswarp.com\',    \'ff001122334455667788990000000fff\', 1, \'\', \'http://about:blank\', 0,             1394542800090, 1394542800090, 0)',
     'select * from t_user'
 ];
-
-var is_db_init = false;
 
 function init_db(done) {
     console.log('setup: init database first...');
@@ -133,10 +133,6 @@ exports = module.exports = {
     setup: function(done) {
         async.series([
             function(callback) {
-                if (is_db_init) {
-                    return callback(null, true);
-                }
-                is_db_init = true;
                 init_db(function(err) {
                     callback(err, true);
                 });

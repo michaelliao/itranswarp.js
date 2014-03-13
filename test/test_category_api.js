@@ -1,48 +1,47 @@
 // test category api:
 
-var api = require('./_test');
+var api = require('./_test'),
+    should = require('should');
 
-var assert = require('assert');
-var log = console.log;
 
-suite('test categories', function() {
-    setup(api.setup);
+describe('#categories', function() {
 
-    suite('#/api/categories', function() {
+    before(api.setup);
 
-        test('should get empty categories', function(done) {
+    describe('#api', function() {
+
+        it('should get empty categories', function(done) {
             api.get(api.guest, '/api/categories', null, function(r) {
-                assert.ok(r.categories.length===0)
+                r.categories.length.should.equal(0);
                 done();
             });
         });
 
-        test('create a new category by admin', function(done) {
+        it('create a new category by admin', function(done) {
             api.post(api.admin, '/api/categories', {
                 name: ' Test Category  \n\n ',
                 description: '  this is a test category...  '
             }, function(r) {
-                assert.equal(r.display_order, 0, 'display order of the first category is not 0.');
-                assert.equal(r.name, 'Test Category', 'category name is wrong.');
-                assert.equal(r.description, 'this is a test category...', 'category description is wrong.');
-                assert.equal(r.version, 0, 'versoin must be 0.');
-                assert.ok(r.id.length==50, 'category id is invalid.');
+                r.display_order.should.equal(0);
+                r.name.should.equal('Test Category');
+                r.description.should.equal('this is a test category...');
+                r.version.should.equal(0);
+                r.id.should.be.ok.and.have.lengthOf(50);
                 // get by id:
                 api.get(api.guest, '/api/categories/' + r.id, null, function(r2) {
-                    assert.equal(r2.id, r.id, 'id must be equal.');
-                    assert.equal(r2.name, r.name, 'name must be equal.');
-                    assert.equal(r2.description, r.description, 'description must be equal.');
-                    assert.equal(r2.created_at, r.created_at, 'created_at must be equal.');
-                    assert.equal(r2.updated_at, r.updated_at, 'updated_at must be equal.');
+                    r2.id.should.equal(r.id);
+                    r2.name.should.equal(r.name);
+                    r2.description.should.equal(r.description);
+                    r2.created_at.should.equal(r.created_at);
+                    r2.updated_at.should.equal(r.updated_at);
                     // create another:
                     api.post(api.admin, '/api/categories', {
                         name: 'Another Category'
                     }, function(r3) {
-                        assert.equal(r3.display_order, 1, 'display order should be 1 for second category.');
+                        r3.display_order.should.equal(1);
                         // get all category:
                         api.get(api.guest, '/api/categories', {}, function(r4) {
-                            assert.ok(Array.isArray(r4.categories), 'no categories in result.');
-                            assert.equal(r4.categories.length, 2, 'should be 2 categories.');
+                            r4.categories.should.be.an.Array.and.have.lengthOf(2);
                             done();
                         });
                     });
@@ -50,29 +49,30 @@ suite('test categories', function() {
             });
         });
 
-        test('create new category with wrong parameter by admin', function(done) {
+        it('create new category with wrong parameter by admin', function(done) {
             api.post(api.admin, '/api/categories', {
                 description: '  no name parameter...  '
             }, function(r) {
-                assert.equal(r.error, 'parameter:invalid', 'error code is wrong.');
-                assert.equal(r.data, 'name', 'error data is wrong.');
+                r.error.should.equal('parameter:invalid');
+                r.data.should.equal('name');
+                r.message.should.be.ok;
                 done();
             });
         });
 
-        test('create new category by editor', function(done) {
+        it('create new category by editor', function(done) {
             api.post(api.editor, '/api/categories', {
                 name: 'by editor',
                 description: '  parameter...  '
             }, function(r) {
-                assert.equal(r.error, 'permission:denied', 'bad error code.');
-                assert.equal(r.data, 'permission', 'bad error data.');
-                assert.ok('message' in r, 'do not have a message.');
+                r.error.should.equal('permission:denied');
+                r.data.should.equal('permission');
+                r.message.should.be.ok;
                 done();
             });
         });
 
-        test('update a category by admin', function(done) {
+        it('update a category by admin', function(done) {
             api.post(api.admin, '/api/categories', {
                 name: ' Before Update   \n\n '
             }, function(r) {
@@ -81,18 +81,18 @@ suite('test categories', function() {
                     name: ' After Update\n   ',
                     description: '  added description...  \t  '
                 }, function(r2) {
-                    assert.equal(r2.id, r.id, 'id must be equal.');
-                    assert.equal(r2.name, 'After Update', 'name not updated.');
-                    assert.equal(r2.description, 'added description...', 'description not updated.');
-                    assert.equal(r2.created_at, r.created_at, 'created_at must be equal.');
-                    assert.ok(r2.updated_at > r.updated_at, 'updated_at must be greater.');
-                    assert.ok(r2.version, 1, 'version not increased.');
+                    r2.id.should.equal(r.id);
+                    r2.name.should.equal('After Update');
+                    r2.description.should.equal('added description...');
+                    r2.created_at.should.equal(r.created_at);
+                    r2.updated_at.should.greaterThan(r.updated_at);
+                    r2.version.should.equal(1);
                     done();
                 });
             });
         });
 
-        test('update a category by editor', function(done) {
+        it('update a category by editor', function(done) {
             api.post(api.admin, '/api/categories', {
                 name: ' Before Update   \n\n '
             }, function(r) {
@@ -101,54 +101,60 @@ suite('test categories', function() {
                     name: ' After Update\n   ',
                     description: '  added description...  \t  '
                 }, function(r2) {
-                    assert.equal(r2.error, 'permission:denied', 'bad error code.');
-                    assert.equal(r2.data, 'permission', 'bad error data.');
-                    assert.ok('message' in r2, 'do not have a message.');
+                    r2.error.should.equal('permission:denied');
+                    r2.data.should.equal('permission');
+                    r2.message.should.be.ok;
                     done();
                 });
             });
         });
 
-        test('delete a category by admin', function(done) {
+        it('delete a category by admin', function(done) {
             // create first:
             api.post(api.admin, '/api/categories', {
                 name: ' Before Delete   \t '
             }, function(r) {
-                assert.equal(r.name, 'Before Delete', 'category name is wrong.');
-                assert.equal(r.description, '', 'category description is wrong.');
-                assert.equal(r.version, 0, 'versoin must be 0.');
-                assert.ok(r.id.length==50, 'category id is invalid.');
+                r.name.should.equal('Before Delete');
+                r.description.should.equal('');
+                r.version.should.equal(0);
+                r.id.should.have.lengthOf(50);
                 // try delete:
                 api.post(api.admin, '/api/categories/' + r.id + '/delete', null, function(r2) {
-                    assert.equal(r2.id, r.id, 'id must be equal.');
-                    done();
+                    r2.id.should.equal(r.id);
+                    // try get again:
+                    api.get(api.guest, '/api/categories/' + r.id, null, function(r3) {
+                        r3.error.should.equal('resource:notfound');
+                        r3.data.should.equal('Category');
+                        r3.message.should.be.ok;
+                        done();
+                    });
                 });
             });
         });
 
-        test('delete a non-exist category by editor', function(done) {
+        it('delete a non-exist category by editor', function(done) {
             api.post(api.editor, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000/delete', null, function(r) {
-                assert.equal(r.error, 'permission:denied', 'bad error code.');
-                assert.equal(r.data, 'permission', 'bad error data.');
-                assert.ok('message' in r, 'do not have a message.');
+                r.error.should.equal('permission:denied');
+                r.data.should.equal('permission');
+                r.message.should.be.ok;
                 done();
             });
         });
 
-        test('delete a non-exist category by admin', function(done) {
+        it('delete a non-exist category by admin', function(done) {
             api.post(api.admin, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000/delete', null, function(r) {
-                assert.equal(r.error, 'resource:notfound', 'bad error code.');
-                assert.equal(r.data, 'category', 'bad error data.');
-                assert.ok('message' in r, 'do not have a message.');
+                r.error.should.equal('resource:notfound');
+                r.data.should.equal('Category');
+                r.message.should.be.ok;
                 done();
             });
         });
 
-        test('get non-exist category', function(done) {
+        it('get non-exist category', function(done) {
             api.get(api.guest, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000', null, function(r) {
-                assert.equal(r.error, 'resource:notfound', 'bad error code.');
-                assert.equal(r.data, 'category', 'bad error data.');
-                assert.ok('message' in r, 'do not have a message.');
+                r.error.should.equal('resource:notfound');
+                r.data.should.equal('Category');
+                r.message.should.be.ok;
                 done();
             });
         });
