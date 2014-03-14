@@ -28,13 +28,14 @@ exports = module.exports = {
         if (! passwd) {
             return res.send(api.invalid_param('passwd'));
         }
-        User.find({
+        utils.find(User, {
             where: {
                 email: email
             }
-        }).error(function(err) {
-            return next(err);
-        }).success(function(user) {
+        }, function(err, user) {
+            if (err) {
+                return next(err);
+            }
             if ( !user || !user.passwd || user.passwd!=passwd) {
                 return res.send(api.error('auth:failed', '', 'Bad email or password.'));
             }
