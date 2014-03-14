@@ -14,7 +14,7 @@ var api = {
         return new APIError('permission:denied', 'permission', err_message);
     },
     not_found: function(err_data, err_message) {
-        return new APIError('resource:notfound', err_data, err_message);
+        return new APIError('resource:notfound', err_data, err_message || (err_data + ' not found.'));
     },
     server_error: function(err_code, err_data, err_message) {
         if (err_code instanceof Error) {
