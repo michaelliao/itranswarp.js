@@ -5,7 +5,7 @@ var
     async=require('async'),
     should = require('should');
 
-var api = require('./_test');
+var remote = require('./_test');
 
 var log = console.log;
 
@@ -13,10 +13,10 @@ describe('#articles', function() {
 
     var category = null;
 
-    before(api.setup);
+    before(remote.setup);
 
     before(function(done) {
-        api.post(api.admin, '/api/categories', {
+        remote.post(remote.admin, '/api/categories', {
             name: 'Article Category'
         }, function(r) {
             r.name.should.equal('Article Category');
@@ -29,7 +29,7 @@ describe('#articles', function() {
     describe('#api', function() {
 
         it('should get empty articles', function(done) {
-            //api.get(api.guest, '/api/articles', null, function(r) {
+            //remote.get(remote.guest, '/api/articles', null, function(r) {
             //    assert.ok(r.categories.length===0)
                 done();
             //});
@@ -37,7 +37,7 @@ describe('#articles', function() {
 
         it('create and update article by editor', function(done) {
             // create article:
-            api.post(api.editor, '/api/articles', {
+            remote.post(remote.editor, '/api/articles', {
                 category_id: category.id,
                 name: 'Test Article   ',
                 description: '   blablabla\nhaha...  \n   ',
@@ -50,7 +50,7 @@ describe('#articles', function() {
                 r2.tags.should.equal('aaa,BBB,ccc');
 
                     // update article:
-                    //api.post(api.editor, '/api/articles/' + r2.id, {
+                    //remote.post(remote.editor, '/api/articles/' + r2.id, {
                     //    name: 'Name Changed'
                     //}, function(r3) {
                     //    assert.equal(r3.display_order, 1, 'display order should be 1 for second category.');
@@ -73,7 +73,7 @@ describe('#articles', function() {
             };
             var tests = _.map(['name', 'category_id', 'content'], function(param) {
                 return function(callback) {
-                    api.post(api.editor, '/api/articles', create_missing_params(param), function(r) {
+                    remote.post(remote.editor, '/api/articles', create_missing_params(param), function(r) {
                         r.error.should.equal('parameter:invalid');
                         r.data.should.equal(param);
                         r.message.should.be.ok;

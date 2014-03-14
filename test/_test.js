@@ -8,7 +8,7 @@
 var
     _ = require('lodash'),
     async = require('async'),
-    assert = require('assert'),
+    should = require('should'),
     request = require('request'),
     querystring = require('querystring'),
     constants = require('../constants');
@@ -79,19 +79,17 @@ function http(role, method, path, params, fn) {
     if (method!='GET') {
         opt.form = build_form(params);
     }
-
+    console.log('>>> request: ' + method + ' ' + opt.url);
+    if (opt.form) {
+        console.log('>>> form: ' + querystring.stringify(opt.form));
+    }
     request(opt, function(err, res, body) {
-        console.log('>>> request: ' + method + ' ' + opt.url);
-        if (opt.form) {
-            console.log('>>> form: ' + querystring.stringify(opt.form));
-        }
-        assert.ok(res && res.statusCode, 'Bad response');
+        should(err).not.be.ok;
+        res.should.have.status(200);
         console.log('>>> response: ' + res.statusCode);
         console.log(body);
-        assert.ok(err===null, 'An error occurred!');
-        assert.ok(res.statusCode && res.statusCode==200, 'Bad response code: ' + res.statusCode);
         var r = JSON.parse(body);
-        assert.ok(r!=null, 'json result is null.');
+        r.should.be.ok;
         return fn(r);
     });
 }

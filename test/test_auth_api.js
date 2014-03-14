@@ -1,17 +1,17 @@
 // test category api:
 
-var api = require('./_test');
+var remote = require('./_test');
 
 var should = require('should');
 
 describe('#authentication', function() {
 
-    before(api.setup);
+    before(remote.setup);
 
     describe('#api', function() {
 
         it('auth should ok', function(done) {
-            api.post(api.guest, '/api/authenticate', {
+            remote.post(remote.guest, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: 'e8f98b1676572cd24c753c331aa6b02e'
             }, function(r) {
@@ -23,7 +23,7 @@ describe('#authentication', function() {
         });
 
         it('auth should failed', function(done) {
-            api.post(api.guest, '/api/authenticate', {
+            remote.post(remote.guest, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: 'bad000000fffffffffffffffffffffff'
             }, function(r) {
@@ -34,7 +34,7 @@ describe('#authentication', function() {
         });
 
         it('auth missing param', function(done) {
-            api.post(api.guest, '/api/authenticate', {
+            remote.post(remote.guest, '/api/authenticate', {
                 email: 'admin@itranswarp.com'
             }, function(r) {
                 r.error.should.equal('parameter:invalid');
@@ -44,7 +44,7 @@ describe('#authentication', function() {
         });
 
         it('auth should forbidden because password is empty', function(done) {
-            api.post(api.guest, '/api/authenticate', {
+            remote.post(remote.guest, '/api/authenticate', {
                 email: 'nopass@itranswarp.com',
                 passwd: '00000000000000000000000000000000'
             }, function(r) {
@@ -55,7 +55,7 @@ describe('#authentication', function() {
         });
 
         it('auth should locked', function(done) {
-            api.post(api.guest, '/api/authenticate', {
+            remote.post(remote.guest, '/api/authenticate', {
                 email: 'lock@itranswarp.com',
                 passwd: 'ff000111222333444555666777888999'
             }, function(r) {
