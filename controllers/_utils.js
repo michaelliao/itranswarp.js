@@ -2,6 +2,7 @@
 
 var
     _ = require('lodash'),
+    async = require('async'),
     crypto = require('crypto'),
     config = require('../config'),
     api = require('../api'),
@@ -239,6 +240,34 @@ exports = module.exports = {
                 return fn(api.not_found('user', 'User not found.'));
             }
             fn(null, obj);
+        });
+    },
+
+    transaction: function(tx_tasks, fn) {
+        var options = { transaction: null };
+        var tasks = _.map(tx_tasks, function(fn) {
+            return function(callback) {
+                fn(options.transaction, callback);
+            };
+        });
+        sequelize.transaction(function(t) {
+            options.transaction = t;
+            async.series(tasks, function(err, results) {
+                if (err) {
+                    console.log('will be rollback...');
+                    t.rollback().success(function() {
+                        fn(err);
+                    });
+                }
+                else {
+                    t.commit().error(function(err) {
+                        console.log('commit failed. will be rollback...');
+                        fn(err);
+                    }).success(function() {
+                        fn(null, results);
+                    });
+                }
+            });
         });
     },
 

@@ -3,7 +3,6 @@
 var remote = require('./_test'),
     should = require('should');
 
-
 describe('#categories', function() {
 
     before(remote.setup);

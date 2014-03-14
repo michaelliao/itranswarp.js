@@ -95,6 +95,7 @@ function http(role, method, path, params, fn) {
 }
 
 var init_sqls = [
+    'delete from t_page',
     'delete from t_article',
     'delete from t_category',
     'delete from t_user',
