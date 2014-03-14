@@ -197,24 +197,37 @@ exports = module.exports = {
         next();
     },
 
-    get_categories: function(fn) {
-        Category.findAll({
-            order: 'display_order'
-        }).error(function(err) {
-            fn(err);
+    findAll: function(Type, options, fn) {
+        Type.findAll(options).error(function(err) {
+            return fn(err);
         }).success(function(arr) {
-            fn(null, arr);
+            return fn(null, arr);
         });
     },
 
-    get_entity: function(Type, id, fn) {
+    find: function(Type, id, fn) {
+        Type.find(id).error(function(err) {
+            return fn(err);
+        }).success(function(entity) {
+            if ( ! entity) {
+                return fn(api.not_found(Type.name));
+            }
+            return fn(null, entity);
+        });
+    },
+
+    destroy: function(Type, id, fn) {
         Type.find(id).error(function(err) {
             fn(err);
-        }).success(function(obj) {
-            if (! obj) {
-                return fn(api.not_found(Type.name, 'Category not found.'));
+        }).success(function(entity) {
+            if ( ! entity) {
+                return fn(api.not_found(Type.name));
             }
-            fn(null, obj);
+            entity.destroy().error(function(err) {
+                return fn(err);
+            }).success(function() {
+                return fn(null);
+            });
         });
     },
 
@@ -229,7 +242,7 @@ exports = module.exports = {
         });
     },
 
-    create_object: function(type, data, tx, fn) {
+    save: function(type, data, tx, fn) {
         type.create(data, { transaction: tx }).error(function(err) {
             fn(err);
         }).success(function(obj) {
