@@ -1,4 +1,4 @@
-// test article api:
+// test tags:
 
 var should = require('should');
 
