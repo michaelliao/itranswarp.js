@@ -32,19 +32,15 @@ exports = module.exports = {
         if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
             return res.send(api.not_allowed('Permission denied.'));
         }
-        var name = utils.get_required_param('name', req);
-        if ( ! name) {
-            return next(api.invalid_param('name'));
+        try {
+            var name = utils.get_required_param('name', req);
+            var alias = utils.get_required_param('alias', req).toLowerCase();
+            var content = utils.get_required_param('content', req).trim();
         }
-        var alias = utils.get_required_param('alias', req);
-        if ( ! alias) {
-            return next(api.invalid_param('alias'));
+        catch (e) {
+            return next(e);
         }
-        alias = alias.toLowerCase();
-        var content = utils.get_required_param('content', req);
-        if ( ! content) {
-            return next(api.invalid_param('content'));
-        }
+
         var draft = 'true' === utils.get_param('draft', '', req);
         var tags = utils.format_tags(utils.get_param('tags', '', req));
 
@@ -130,7 +126,7 @@ exports = module.exports = {
          * @return {object} Updated page object.
          */
         var attrs = {};
-        var name = utils.get_param('name', null, req);
+        var name = utils.get_param('name', req);
         if (name!==null) {
             if (name) {
                 attrs.name = name;
@@ -139,7 +135,7 @@ exports = module.exports = {
                 return res.send(api.invalid_param('name'));
             }
         }
-        var alias = utils.get_param('alias', null, req);
+        var alias = utils.get_param('alias', req);
         if (alias!==null) {
             if (alias) {
                 attrs.alias = alias.toLowerCase();
@@ -148,11 +144,11 @@ exports = module.exports = {
                 return res.send(api.invalid_param('alias'));
             }
         }
-        var tags = utils.get_param('tags', null, req);
+        var tags = utils.get_param('tags', req);
         if (tags!==null) {
             attrs.tags = utils.format_tags(tags);
         }
-        var content = utils.get_param('content', null, req);
+        var content = utils.get_param('content', req);
         if (content!==null) {
             if (content) {
                 attrs.content = content;

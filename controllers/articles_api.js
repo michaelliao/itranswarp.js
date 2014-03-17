@@ -32,17 +32,13 @@ exports = module.exports = {
         if ( ! req.user || req.user.role > constants.ROLE_EDITOR) {
             return res.send(api.not_allowed('Permission denied.'));
         }
-        var name = utils.get_required_param('name', req);
-        if ( ! name) {
-            return next(api.invalid_param('name'));
+        try {
+            var name = utils.get_required_param('name', req);
+            var category_id = utils.get_required_param('category_id', req);
+            var content = utils.get_required_param('content', req);
         }
-        var category_id = utils.get_required_param('category_id', req);
-        if ( ! category_id) {
-            return next(api.invalid_param('category_id'));
-        }
-        var content = utils.get_required_param('content', req);
-        if ( ! content) {
-            return next(api.invalid_param('content'));
+        catch (e) {
+            return next(e);
         }
         var description = utils.get_param('description', '', req);
         var tags = utils.format_tags(utils.get_param('tags', '', req));

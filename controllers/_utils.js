@@ -183,6 +183,31 @@ function format_tags(tags) {
     }).join(',');
 }
 
+// return trimed parameter value as string, or default value if not exist. defaultValue is default to null.
+function get_param(name, defaultValue, req) {
+    if (arguments.length===2) {
+        req = defaultValue;
+        defaultValue = null;
+    }
+    var s = defaultValue;
+    if (name in req.body) {
+        s = req.body[name].trim();
+    }
+    return s ? s : defaultValue;
+}
+
+// return trimed parameter value as string, if not exist or empty, throw APIError('param:invalid').
+function get_required_param(name, req) {
+    var s = null;
+    if (name in req.body) {
+        s = req.body[name].trim();
+    }
+    if (s) {
+        return s;
+    }
+    throw api.invalid_param(name);
+}
+
 exports = module.exports = {
 
     format_tags: format_tags,
@@ -191,21 +216,9 @@ exports = module.exports = {
 
     extract_session_cookie: extract_session_cookie,
 
-    // return parameter value as string, or default value if not exist. defaultValue is default to null.
-    get_param: function(name, defaultValue, req) {
-        if (name in req.body) {
-            return req.body[name].trim();
-        }
-        return defaultValue;
-    },
+    get_param: get_param,
 
-    // return parameter value as string, if not exist, return null.
-    get_required_param: function(name, req) {
-        if (name in req.body) {
-            return req.body[name].trim();
-        }
-        return null;
-    },
+    get_required_param: get_required_param,
 
     findAll: function(Type, options, fn) {
         Type.findAll(options).error(function(err) {

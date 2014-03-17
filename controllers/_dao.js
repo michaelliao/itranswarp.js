@@ -19,14 +19,37 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
-function find(Type, options, fn) {
-    //
+function find(Type, options, tx, fn) {
+    if (typeof(options)!=='object') {
+        options = {
+            where: {
+                id = options;
+            }
+        };
+    }
+    options = options || {}
+    if (typeof(tx)==='function') {
+        fn = tx;
+        tx = undefined;
+    }
+    if (tx) {
+        options.transaction = tx;
+    }
+    return Type.find(options).error(function(err) {
+        return fn(err);
+    }).success(function(entity) {
+        if (entity===null) {
+            return fn(api.not_found(Type.name));
+        }
+        return fn(null, entity);
+    });
 }
 
-function findAll(Type, options, fn) {
-    if (arguments.length==2 && typeof(options)=='function') {
-        fn = options;
-        options = {}
+function findAll(Type, options, tx, fn) {
+    options = options || {}
+    if (typeof(tx)==='function') {
+        fn = tx;
+        tx = undefined;
     }
     Type.findAll(options).error(function(err) {
         return fn(err);
