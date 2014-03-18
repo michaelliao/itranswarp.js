@@ -20,12 +20,12 @@ var app = express();
 app.engine('html', ejs.__express);
 
 // set for production:
-if ('production' == app.get('env')) {
+if ('production' === app.get('env')) {
     app.enable('trust proxy');
 }
 
 // set for development:
-if ('development' == app.get('env')) {
+if ('development' === app.get('env')) {
     app.use('/static', express.static(__dirname + '/static'));
     app.use('/api/', function(req, res, next) {
         setTimeout(function() {
