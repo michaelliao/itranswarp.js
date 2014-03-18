@@ -29,20 +29,20 @@ exports = module.exports = {
          * 
          * @return {object} The created page object.
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
-            return res.send(api.not_allowed('Permission denied.'));
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
+            return next(api.not_allowed('Permission denied.'));
         }
         try {
-            var name = utils.get_required_param('name', req);
-            var alias = utils.get_required_param('alias', req).toLowerCase();
-            var content = utils.get_required_param('content', req).trim();
+            var name = utils.get_required_param('name', req),
+                alias = utils.get_required_param('alias', req).toLowerCase(),
+                content = utils.get_required_param('content', req);
         }
         catch (e) {
             return next(e);
         }
 
-        var draft = 'true' === utils.get_param('draft', '', req);
-        var tags = utils.format_tags(utils.get_param('tags', '', req));
+        var draft = 'true' === utils.get_param('draft', '', req),
+            tags = utils.format_tags(utils.get_param('tags', '', req));
 
         var content_id = next_id();
         var page_id = next_id();
@@ -125,8 +125,15 @@ exports = module.exports = {
          * @param {string} :id - The id of the page.
          * @return {object} Updated page object.
          */
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
+            return next(api.not_allowed('Permission denied.'));
+        }
         var attrs = {};
-        var name = utils.get_param('name', req);
+        var name = utils.get_param('name', req),
+            alias = utils.get_param('alias', req),
+            tags = utils.get_param('tags', req),
+            content = utils.get_param('content', req);
+
         if (name!==null) {
             if (name) {
                 attrs.name = name;
@@ -135,7 +142,6 @@ exports = module.exports = {
                 return res.send(api.invalid_param('name'));
             }
         }
-        var alias = utils.get_param('alias', req);
         if (alias!==null) {
             if (alias) {
                 attrs.alias = alias.toLowerCase();
@@ -144,11 +150,9 @@ exports = module.exports = {
                 return res.send(api.invalid_param('alias'));
             }
         }
-        var tags = utils.get_param('tags', req);
         if (tags!==null) {
             attrs.tags = utils.format_tags(tags);
         }
-        var content = utils.get_param('content', req);
         if (content!==null) {
             if (content) {
                 attrs.content = content;
@@ -256,7 +260,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the page.
          * @return {object} Results contains id of the page, e.g. {"id": "12345"}
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
         // TODO: delete text
