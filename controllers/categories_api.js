@@ -55,13 +55,14 @@ exports = module.exports = {
          * @param {string,optional} description - The description of the category.
          * @return {object} Category object that was created.
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-
-        var name = utils.get_required_param('name', req);
-        if (! name) {
-            return res.send(api.invalid_param('name'));
+        try {
+            var name = utils.get_required_param('name', req);
+        }
+        catch (e) {
+            return next(e);
         }
         var description = utils.get_param('description', '', req);
 
@@ -90,25 +91,30 @@ exports = module.exports = {
          * @param {string,optional} description - The new description of the category.
          * @return {object} Category object that was updated.
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        var name = req.body.name.trim();
-        var description = req.body.description.trim();
+        var name = utils.get_param('name', req),
+            description = utils.get_param('description', req);
+        var attrs = {};
+        if (name!==null) {
+            attrs.name = name;
+        }
+        if (description!==null) {
+            attrs.description = description;
+        }
         utils.find(Category, req.params.id, function(err, cat) {
             if (err) {
                 return next(err);
             }
-            cat.name = name;
-            cat.description = description;
-            cat.updateAttributes({
-                name: name,
-                description: description
-            }).error(function(err) {
-                return next(err);
-            }).success(function(cat) {
-                return res.send(cat);
-            });
+            if (attrs) {
+                return cat.updateAttributes(attrs).error(function(err) {
+                    return next(err);
+                }).success(function(cat) {
+                    return res.send(cat);
+                });
+            }
+            return res.send(cat);
         });
     },
 
@@ -119,7 +125,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
-        if ( ! req.user || req.user.role > constants.ROLE_ADMIN) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
         utils.destroy(Category, req.params.id, function(err) {

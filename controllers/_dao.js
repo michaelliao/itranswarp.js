@@ -23,7 +23,7 @@ function find(Type, options, tx, fn) {
     if (typeof(options)!=='object') {
         options = {
             where: {
-                id = options;
+                id: options
             }
         };
     }
@@ -63,8 +63,6 @@ function create(Instance, tx, fn) {
 }
 
 exports = module.exports = {
-
-
 
     findAll: function(Type, options, fn) {
         Type.findAll(options).error(function(err) {
@@ -140,12 +138,17 @@ exports = module.exports = {
     },
 
     save: function(type, data, tx, fn) {
-        type.create(data, { transaction: tx }).error(function(err) {
+        var options = {};
+        if (typeof(tx)==='function') {
+            fn = tx;
+        }
+        else {
+            options.transaction = tx;
+        }
+        type.create(data, options).error(function(err) {
             fn(err);
         }).success(function(obj) {
             fn(null, obj);
         });
-    },
-
-    SESSION_COOKIE_NAME: SESSION_COOKIE_NAME
+    }
 }

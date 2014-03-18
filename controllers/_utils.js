@@ -164,6 +164,10 @@ function parse_authorization(auth, fn) {
     });
 }
 
+function isForbidden(req, role) {
+    return req.user===null || req.user.role > role;
+}
+
 // ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
 function format_tags(tags) {
     var arr = _.map(tags.split(/[\,\;]/), function(value) {
@@ -215,6 +219,8 @@ exports = module.exports = {
     make_session_cookie: make_session_cookie,
 
     extract_session_cookie: extract_session_cookie,
+
+    isForbidden: isForbidden,
 
     get_param: get_param,
 

@@ -29,19 +29,19 @@ exports = module.exports = {
          * 
          * @return {object} The created article object.
          */
-        if ( ! req.user || req.user.role > constants.ROLE_EDITOR) {
-            return res.send(api.not_allowed('Permission denied.'));
+        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
+            return next(api.not_allowed('Permission denied.'));
         }
         try {
-            var name = utils.get_required_param('name', req);
-            var category_id = utils.get_required_param('category_id', req);
-            var content = utils.get_required_param('content', req);
+            var name = utils.get_required_param('name', req),
+                category_id = utils.get_required_param('category_id', req),
+                content = utils.get_required_param('content', req);
         }
         catch (e) {
             return next(e);
         }
-        var description = utils.get_param('description', '', req);
-        var tags = utils.format_tags(utils.get_param('tags', '', req));
+        var description = utils.get_param('description', '', req),
+            tags = utils.format_tags(utils.get_param('tags', '', req));
 
         var publish_time = Date.now(); //req.body.publish_time;
 
