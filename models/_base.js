@@ -106,9 +106,6 @@ exports = module.exports = {
         return {
             type: Sequelize.STRING(100),
             allowNull: false,
-            validate: {
-                notEmpty: true
-            },
             index: index
         };
     },
@@ -116,9 +113,6 @@ exports = module.exports = {
         return {
             type: Sequelize.STRING(200),
             allowNull: false,
-            validate: {
-                notEmpty: true
-            },
             index: index
         };
     },
