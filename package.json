@@ -17,6 +17,8 @@
         "markdown": "0.5.x",
         "validator": "3.x",
         "nodemailer": "0.6.x",
+        "mime": "1.x",
+        "gm": "1.x",
         "less": "1.x"
     },
     "devDependencies": {
