@@ -20,7 +20,7 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
-function atta_file(req, res, next) {
+function downloadAttachment(req, res, next) {
     var size = req.params.size;
     if (size===undefined) {
         size = '0';
@@ -93,9 +93,29 @@ function atta_file(req, res, next) {
 
 exports = module.exports = {
 
-    'GET /files/attachments/:id': atta_file,
+    'GET /files/attachments/:id': downloadAttachment,
 
-    'GET /files/attachments/:id/:size': atta_file,
+    'GET /files/attachments/:id/:size': downloadAttachment,
+
+    'GET /api/attachments/:id': function(req, res, next) {
+        dao.find(Attachment, req.params.id, function(err, entity) {
+            if (err) {
+                return next(err);
+            }
+            return res.send(entity);
+        });
+    },
+
+    'GET /api/attachments': function(req, res, next) {
+        dao.findAll(Attachment, {
+            order: 'created_at desc'
+        }, function(err, entities) {
+            if (err) {
+                return next(err);
+            }
+            return res.send({'attachments': entities});
+        });
+    },
 
     'POST /api/attachments': function(req, res, next) {
         /**
@@ -103,9 +123,9 @@ exports = module.exports = {
          * 
          * @return {object} The created attachment object.
          */
-        //if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
-        //    return next(api.not_allowed('Permission denied.'));
-        //}
+        if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
+            return next(api.not_allowed('Permission denied.'));
+        }
         var user_id = 'xxx';
 
         try {
@@ -117,6 +137,10 @@ exports = module.exports = {
         var description = utils.get_param('description', '', req);
 
         var file = req.files.file;
+        if ( ! file) {
+            return next(api.invalid_param('file'));
+        }
+
         var size = file.size,
             type = mime.lookup(file.originalFilename);
 

@@ -5,6 +5,8 @@
 // post(path, params, fn)
 // upload(path, params, fn)
 
+var fs = require('fs');
+
 var
     _ = require('lodash'),
     async = require('async'),
@@ -40,7 +42,7 @@ function build_headers(role) {
         email = 'editor@itranswarp.com';
         passwd = 'ee001122334455667788990000000eee';
     }
-    else if (role==constants.ROLE_CONTRIBUTER) {
+    else if (role==constants.ROLE_CONTRIBUTOR) {
         email = 'contrib@itranswarp.com';
         passwd = 'dd001122334455667788990000000ddd';
     }
@@ -76,14 +78,7 @@ function http(role, method, path, params, fn) {
         headers: build_headers(role),
         url: method=='GET' ? build_url(path, params) : build_url(path)
     };
-    if (method!='GET') {
-        opt.form = build_form(params);
-    }
-    console.log('>>> request: ' + method + ' ' + opt.url);
-    if (opt.form) {
-        console.log('>>> form: ' + querystring.stringify(opt.form));
-    }
-    request(opt, function(err, res, body) {
+    var r = request(opt, function(err, res, body) {
         should(err).not.be.ok;
         res.should.have.status(200);
         console.log('>>> response: ' + res.statusCode);
@@ -92,6 +87,23 @@ function http(role, method, path, params, fn) {
         r.should.be.ok;
         return fn(r);
     });
+    params = params || {};
+    if (method!='GET') {
+        opt.form = r.form();
+        _.each(params, function(value, key) {
+            opt.form.append(key, value);
+        });
+    }
+    console.log('>>> request: ' + method + ' ' + opt.url);
+    if (opt.form) {
+        if (opt.form.file) {
+            console.log('>>> form: multipart/form-data');
+        }
+        else {
+            console.log('>>> form: ' + querystring.stringify(params));
+        }
+    }
+
 }
 
 var init_sqls = [
@@ -99,6 +111,8 @@ var init_sqls = [
     'delete from t_article',
     'delete from t_category',
     'delete from t_user',
+    'delete from t_attachment',
+    'delete from t_resource',
     'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', ' + constants.ROLE_ADMIN + ',       \'Admin\',      \'admin@itranswarp.com\',   \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'\', \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
     'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', ' + constants.ROLE_ADMIN + ',       \'Special\',    \'nopass@itranswarp.com\',  \'\',                                 1, \'\', \'http://about:blank\', 0,             1396908390840, 1396908390840, 0)',
     'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000eeeeeeeeee0eeeeeeeeee0eeeeeeeeee000\', ' + constants.ROLE_ADMIN + ',       \'Locked\',     \'lock@itranswarp.com\',    \'ff000111222333444555666777888999\', 1, \'\', \'http://about:blank\', 2000999999000, 1396907970807, 1396907970807, 0)',
@@ -151,6 +165,24 @@ exports = module.exports = {
 
     post: function(role, path, params, fn) {
         http(role, 'POST', path, params, fn);
+    },
+
+    download: function(path, fn) {
+        var url = build_url(path);
+        console.log('>>> request: GET ' + url);
+        request(url, function(err, res, body) {
+            should(err).not.be.ok;
+            res.should.have.status(200);
+            console.log('>>> response: ' + res.statusCode);
+            _.each(res.headers, function(value, key) {
+                console.log('    ' + key + ': ' + value);
+            });
+            return fn(res.headers['content-type'], parseInt(res.headers['content-length']), body);
+        });
+    },
+
+    createReadStream: function(path) {
+        return fs.createReadStream(path);
     },
 
     admin: constants.ROLE_ADMIN,
