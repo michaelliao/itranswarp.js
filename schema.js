@@ -16,6 +16,8 @@ var prefix = 'Executing (default): ';
 var log = function(s) {
     if (s.indexOf(prefix)==0) {
         s = s.substring(prefix.length);
+        s = s.replace(/BLOB/g, 'MEDIUMBLOB');
+        s = s.replace(/TEXT/g, 'MEDIUMTEXT');
     }
     console.log(s);
 };
