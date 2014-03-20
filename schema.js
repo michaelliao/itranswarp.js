@@ -15,7 +15,7 @@ var prefix = 'Executing (default): ';
 
 var log = function(s) {
     if (s.indexOf(prefix)==0) {
-        s = s.substring(prefix.length);
+        s = s.substring(prefix.length).replace('IF NOT EXISTS ', '');
         s = s.replace(/BLOB/g, 'MEDIUMBLOB');
         s = s.replace(/TEXT/g, 'MEDIUMTEXT');
     }
