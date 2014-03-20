@@ -12,10 +12,10 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
         keepAspect = true;
     }
     if (origin_width === resize_width && origin_height === resize_height) {
-        return null;
+        return { width: origin_width, height: origin_height };;
     }
     var
-        target_width = resize_width;
+        target_width = resize_width,
         target_height = resize_height;
     if (target_height <= 0) {
         target_height = target_width * origin_height / origin_width;
@@ -34,7 +34,7 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
             target_height = expected_height;
         }
     }
-    return { width: target_width, width: target_height };
+    return { width: target_width, height: target_height };
 }
 
 exports = module.exports = {
@@ -65,3 +65,5 @@ exports = module.exports = {
         return img.stream('jpeg', callback);
     }
 }
+
+calcScaleSize(1200, 1200, 800, 600);
