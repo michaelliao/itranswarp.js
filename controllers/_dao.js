@@ -19,6 +19,14 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
+/**
+ * find a single entity.
+ * 
+ * @param Type {object} - Object type.
+ * @param options {object} - Id or object has more complex where clause.
+ * @param tx {object,optional} - Transaction object.
+ * @param fn {function} - Callback function with signature (err, entity).
+ */
 function find(Type, options, tx, fn) {
     if (typeof(options)!=='object') {
         options = {
@@ -32,7 +40,7 @@ function find(Type, options, tx, fn) {
         fn = tx;
         tx = undefined;
     }
-    if (tx) {
+    else {
         options.transaction = tx;
     }
     return Type.find(options).error(function(err) {
@@ -45,11 +53,22 @@ function find(Type, options, tx, fn) {
     });
 }
 
+/**
+ * find entities. If no result, empty array returns.
+ * 
+ * @param Type {object} - Object type.
+ * @param options {object} - Object contains complex where clause.
+ * @param tx {object,optional} - Transaction object.
+ * @param fn {function} - Callback function with signature (err, array).
+ */
 function findAll(Type, options, tx, fn) {
     options = options || {}
     if (typeof(tx)==='function') {
         fn = tx;
         tx = undefined;
+    }
+    else {
+        options.transaction = tx;
     }
     Type.findAll(options).error(function(err) {
         return fn(err);
@@ -58,30 +77,29 @@ function findAll(Type, options, tx, fn) {
     });
 }
 
-function create(Instance, tx, fn) {
-    //
+function save(Type, data, tx, fn) {
+    var options = {};
+    if (typeof(tx)==='function') {
+        fn = tx;
+        tx = undefined;
+    }
+    else {
+        options.transaction = tx;
+    }
+    Type.create(data, options).error(function(err) {
+        fn(err);
+    }).success(function(obj) {
+        fn(null, obj);
+    });
 }
 
 exports = module.exports = {
 
-    findAll: function(Type, options, fn) {
-        Type.findAll(options).error(function(err) {
-            return fn(err);
-        }).success(function(arr) {
-            return fn(null, arr);
-        });
-    },
+    find: find,
 
-    find: function(Type, id, fn) {
-        Type.find(id).error(function(err) {
-            return fn(err);
-        }).success(function(entity) {
-            if ( ! entity) {
-                return fn(api.not_found(Type.name));
-            }
-            return fn(null, entity);
-        });
-    },
+    findAll: findAll,
+
+    save: save,
 
     destroy: function(Type, id, fn) {
         Type.find(id).error(function(err) {
@@ -134,21 +152,6 @@ exports = module.exports = {
                     });
                 }
             });
-        });
-    },
-
-    save: function(type, data, tx, fn) {
-        var options = {};
-        if (typeof(tx)==='function') {
-            fn = tx;
-        }
-        else {
-            options.transaction = tx;
-        }
-        type.create(data, options).error(function(err) {
-            fn(err);
-        }).success(function(obj) {
-            fn(null, obj);
         });
     }
 }

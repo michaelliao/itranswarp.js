@@ -7,7 +7,8 @@ var
     db = require('../db'),
     constants = require('../constants'),
     dao = require('./_dao'),
-    utils = require('./_utils');
+    utils = require('./_utils'),
+    images = require('./_images');
 
 var
     gm = require('gm'),
@@ -186,19 +187,15 @@ exports = module.exports = {
             var width = 0,
                 height = 0;
             if (type.indexOf('image/')===0) {
-                var img = imageMagick(fcontent);
-                img.size(function(err, size) {
+                return images.getSize(fcontent, function(err, size) {
                     if (err) {
-                        console.log('check image size failed: ' + err.name);
+                        return next(api.invalid_param('file', 'Invalid image file.'));
                     }
-                    else {
-                        width = size.width;
-                        height = size.height;
-                        console.log('check image size: ' + width + ' x ' + height);
-                    }
+                    width = size.width;
+                    height = size.height;
+                    console.log('check image size: ' + width + ' x ' + height);
                     saving();
                 });
-                return;
             }
             saving();
         });

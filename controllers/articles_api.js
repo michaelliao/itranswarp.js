@@ -43,9 +43,10 @@ exports = module.exports = {
         var description = utils.get_param('description', '', req),
             tags = utils.format_tags(utils.get_param('tags', '', req));
 
+        var cover = req.files.file;
+
         var publish_time = Date.now(); //req.body.publish_time;
 
-        var cover_id = 'xxx';
         var content_id = next_id();
         var article_id = next_id();
 
@@ -53,6 +54,12 @@ exports = module.exports = {
             async.series({
                 category: function(callback) {
                     utils.find(Category, category_id, callback);
+                },
+                cover: function(callback) {
+                    if (cover) {
+                        // check if cover exist:
+                    }
+                    callback(null, 'ok');
                 },
                 text: function(callback) {
                     utils.save(Text, {
