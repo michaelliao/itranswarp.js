@@ -8,15 +8,11 @@ var
 
 var images = require('../controllers/_images');
 
-var
-    calcScaleSize = images.calcScaleSize,
-    getSize = images.getSize;
-
 describe('#images', function() {
 
     it('#calcScaleSize', function() {
         var image_sizes = [
-            // [ori_w, ori_h, res_w, res_h, keepAspect, expected_w, expected_h]
+            // [ori_w, ori_h, res_w, res_h, keepAspect, expected_w, expected_h, resized]
             // square:
             [1200, 1200, 600, 600, false, 600, 600],
 
@@ -38,7 +34,8 @@ describe('#images', function() {
             [ 120,  120, 240, 360,  true, 240, 240],
             [ 120,  120, 720, 360,  true, 360, 360],
 
-            [ 120,  120, 120, 120, false, 120, 120],
+            [ 120,  120, 120, 120, false, 120, 120, false],
+            [ 120,  120, 120, 120,  true, 120, 120, false],
 
             // wide
             [1200,  800, 600, -10,  true, 600, 400],
@@ -56,6 +53,8 @@ describe('#images', function() {
             [ 120,   80, 260, 160,  true, 240, 160],
 
             [ 120,   80, 260, 140, false, 260, 140],
+
+            [1280,  720, 1920, 1080, true, 1920, 1080],
 
             // tall
             [ 800, 1200, 400, 600,  true, 400, 600],
@@ -76,21 +75,74 @@ describe('#images', function() {
                 res_h = arr[3],
                 keepAspect = arr[4],
                 expected_w = arr[5],
-                expected_h = arr[6];
-            var r = calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
+                expected_h = arr[6],
+                resized = arr[7];
+            var r = images.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
             console.log(ori_w + 'x' + ori_h + ' > ' + res_w + 'x' + res_h + ' ===> ' + r.width + 'x' + r.height);
             should(r).be.ok;
             r.width.should.equal(expected_w);
             r.height.should.equal(expected_h);
+            if (resized===false) {
+                r.resized.should.not.be.ok;
+            }
         });
     });
 
     it('#get-image-size', function(done) {
-        getSize(fs.readFileSync('./test/test-image.jpg'), function(err, size) {
+        images.getSize(fs.readFileSync('./test/test-image.jpg'), function(err, size) {
             should(err).not.be.ok;
-            size.width.should.equal(1366);
-            size.height.should.equal(768);
+            size.width.should.equal(1280);
+            size.height.should.equal(720);
             done();
         });
     });
+
+    it('#resize-small', function(done) {
+        var imgData = fs.readFileSync('./test/test-image.jpg');
+        images.resize(imgData, 1280, 720, 480, 270, { stream: false }, function(err, data) {
+            should(err).not.be.ok;
+            data.should.be.ok;
+            // check resized image:
+            images.getSize(data, function(err, size) {
+                should(err).not.be.ok;
+                size.width.should.equal(480);
+                size.height.should.equal(270);
+                fs.writeFileSync('./test/output/test-resize-smaller-480x270.jpg', data);
+                done();
+            });
+        });
+    }),
+
+    it('#resize-large', function(done) {
+        var imgData = fs.readFileSync('./test/test-image.jpg');
+        images.resize(imgData, 1280, 720, 1920, 0, { stream: false }, function(err, data) {
+            should(err).not.be.ok;
+            data.should.be.ok;
+            // check resized image:
+            images.getSize(data, function(err, size) {
+                should(err).not.be.ok;
+                size.width.should.equal(1280);
+                size.height.should.equal(720);
+                done();
+            });
+        });
+    }),
+
+    it('#resize-large-force', function(done) {
+        var imgData = fs.readFileSync('./test/test-image.jpg');
+        images.resize(imgData, 1280, 720, 1920, 0, { stream: false, force: true }, function(err, data) {
+            should(err).not.be.ok;
+            data.should.be.ok;
+            // check resized image:
+            images.getSize(data, function(err, size) {
+                should(err).not.be.ok;
+                size.width.should.equal(1920);
+                size.height.should.equal(1080);
+                fs.writeFileSync('./test/output/test-resize-larger-1920x1080.jpg', data);
+                //images.write('./test/output/sss.jpg', function(err) {});
+                done();
+            });
+        });
+    })
+
 });
