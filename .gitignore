@@ -19,6 +19,7 @@ node_modules
 ########################
 
 config_override.js
+output
 
 ###########################
 # generated bootstrap.css #
