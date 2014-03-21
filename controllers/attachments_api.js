@@ -11,10 +11,6 @@ var
     images = require('./_images');
 
 var
-    gm = require('gm'),
-    imageMagick = gm.subClass({ imageMagick : true });
-
-var
     User = db.user,
     Attachment = db.attachment,
     Resource = db.resource,
@@ -43,16 +39,13 @@ function downloadAttachment(req, res, next) {
             else {
                 var
                     origin_width = atta.width,
-                    origin_height = atta.height;
-                var
-                    target_width = origin_width,
-                    target_height = origin_height;
+                    origin_height = atta.height,
+                    target_width = origin_width;
                 var resize = false;
                 if (size==='s') {
                     // generate small image: 160 x N
                     if (origin_width > 160) {
                         target_width = 160;
-                        target_height = origin_height * target_width / origin_width;
                         resize = true;
                     }
                 }
@@ -60,7 +53,6 @@ function downloadAttachment(req, res, next) {
                     // generate medium image: 320 x N
                     if (origin_width > 320) {
                         target_width = 320;
-                        target_height = origin_height * target_width / origin_width;
                         resize = true;
                     }
                 }
@@ -68,7 +60,6 @@ function downloadAttachment(req, res, next) {
                     // generate large image: 640 x N
                     if (origin_width > 640) {
                         target_width = 640;
-                        target_height = origin_height * target_width / origin_width;
                         resize = true;
                     }
                 }
@@ -76,13 +67,12 @@ function downloadAttachment(req, res, next) {
                     return res.send(404, 'Not found.');
                 }
                 if (resize) {
-                    var img = imageMagick(data);
-                    return img.resize(target_width, target_height).stream('jpeg', function(err, stdout, stderr) {
+                    return images.resize(data, origin_width, origin_height, target_width, 0, function(err, stdout, stderr) {
                         if (err) {
                             return next(err);
                         }
                         res.type('image/jpeg');
-                        stdout.pipe(res);
+                        return stdout.pipe(res);
                     });
                 }
             }

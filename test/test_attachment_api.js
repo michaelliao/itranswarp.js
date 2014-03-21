@@ -42,11 +42,11 @@ describe('#attachment', function() {
                 file: remote.createReadStream('./test/res-image.jpg')
             }, function(r) {
                 r.name.should.equal('Test Image');
-                r.width.should.equal(1366);
-                r.height.should.equal(768);
-                r.size.should.equal(274692);
+                r.width.should.equal(1280);
+                r.height.should.equal(720);
+                r.size.should.equal(346158);
                 var atta_id = r.id;
-                async.series([
+                async.parallel([
                     function(callback) {
                         remote.get(remote.guest, '/api/attachments/' + atta_id, null, function(r2) {
                             r2.id.should.equal(r.id);
@@ -65,7 +65,7 @@ describe('#attachment', function() {
                     function(callback) {
                         remote.download('/files/attachments/' + atta_id, function(content_type, content_length, content) {
                             content_type.should.equal('image/jpeg');
-                            content_length.should.equal(274692);
+                            content_length.should.equal(346158);
                             callback(null, 'ok');
                         });
                     },

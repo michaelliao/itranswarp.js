@@ -59,6 +59,7 @@ exports = module.exports = {
             callback = options;
             options = {};
         }
+        options = options || {};
         var
             opt_force = options.force===undefined ? false : true,
             opt_stream = options.stream===undefined ? true : false;
