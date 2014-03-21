@@ -9,7 +9,7 @@ var remote = require('./_test');
 
 var log = console.log;
 
-describe('#articles', function() {
+describe.skip('#articles', function() {
 
     var category = null;
 
