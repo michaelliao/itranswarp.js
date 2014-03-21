@@ -14,17 +14,13 @@ results
 npm-debug.log
 node_modules
 
-########################
-# private config files #
-########################
-
+# private config files:
 config_override.js
+
+# temp output dir:
 output
 
-###########################
-# generated bootstrap.css #
-###########################
-
+# generated bootstrap.css:
 bootstrap.css
 
 ######################

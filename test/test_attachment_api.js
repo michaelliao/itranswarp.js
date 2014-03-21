@@ -26,7 +26,7 @@ describe('#attachment', function() {
             remote.post(remote.subscriber, '/api/attachments', {
                 name: 'Test Image   ',
                 description: '   blablabla\nhaha...  \n   ',
-                file: remote.createReadStream('./test/test-image.jpg')
+                file: remote.createReadStream('./test/res-image.jpg')
             }, function(r) {
                 r.error.should.equal('permission:denied');
                 r.message.should.be.ok;
@@ -39,7 +39,7 @@ describe('#attachment', function() {
             remote.post(remote.contributor, '/api/attachments', {
                 name: 'Test Image   ',
                 description: '   blablabla\nhaha...  \n   ',
-                file: remote.createReadStream('./test/test-image.jpg')
+                file: remote.createReadStream('./test/res-image.jpg')
             }, function(r) {
                 r.name.should.equal('Test Image');
                 r.width.should.equal(1366);
@@ -99,7 +99,7 @@ describe('#attachment', function() {
             remote.post(remote.contributor, '/api/attachments', {
                 name: ' Text   ',
                 description: '   blablabla\nhaha...  \n   ',
-                file: remote.createReadStream('./test/test-plain.txt')
+                file: remote.createReadStream('./test/res-plain.txt')
             }, function(r) {
                 r.name.should.equal('Text');
                 r.width.should.equal(0);

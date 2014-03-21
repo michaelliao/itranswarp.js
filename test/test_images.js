@@ -89,7 +89,7 @@ describe('#images', function() {
     });
 
     it('#get-image-size', function(done) {
-        images.getSize(fs.readFileSync('./test/test-image.jpg'), function(err, size) {
+        images.getSize(fs.readFileSync('./test/res-image.jpg'), function(err, size) {
             should(err).not.be.ok;
             size.width.should.equal(1280);
             size.height.should.equal(720);
@@ -98,23 +98,23 @@ describe('#images', function() {
     });
 
     it('#resize-small', function(done) {
-        var imgData = fs.readFileSync('./test/test-image.jpg');
+        var imgData = fs.readFileSync('./test/res-image.jpg');
         images.resize(imgData, 1280, 720, 480, 270, { stream: false }, function(err, data) {
             should(err).not.be.ok;
             data.should.be.ok;
+            fs.writeFileSync('./test/output/test-resize-smaller-480x270.jpg', data);
             // check resized image:
             images.getSize(data, function(err, size) {
                 should(err).not.be.ok;
                 size.width.should.equal(480);
                 size.height.should.equal(270);
-                fs.writeFileSync('./test/output/test-resize-smaller-480x270.jpg', data);
                 done();
             });
         });
     }),
 
     it('#resize-large', function(done) {
-        var imgData = fs.readFileSync('./test/test-image.jpg');
+        var imgData = fs.readFileSync('./test/res-image.jpg');
         images.resize(imgData, 1280, 720, 1920, 0, { stream: false }, function(err, data) {
             should(err).not.be.ok;
             data.should.be.ok;
@@ -129,16 +129,16 @@ describe('#images', function() {
     }),
 
     it('#resize-large-force', function(done) {
-        var imgData = fs.readFileSync('./test/test-image.jpg');
+        var imgData = fs.readFileSync('./test/res-image.jpg');
         images.resize(imgData, 1280, 720, 1920, 0, { stream: false, force: true }, function(err, data) {
             should(err).not.be.ok;
             data.should.be.ok;
+            fs.writeFileSync('./test/output/test-resize-larger-1920x1080.jpg', data);
             // check resized image:
             images.getSize(data, function(err, size) {
                 should(err).not.be.ok;
                 size.width.should.equal(1920);
                 size.height.should.equal(1080);
-                fs.writeFileSync('./test/output/test-resize-larger-1920x1080.jpg', data);
                 //images.write('./test/output/sss.jpg', function(err) {});
                 done();
             });
