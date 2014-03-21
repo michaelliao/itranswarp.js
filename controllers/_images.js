@@ -60,11 +60,12 @@ exports = module.exports = {
             options = {};
         }
         var
-            opt_force = options.force || false,
-            opt_stream = options.stream || true;
+            opt_force = options.force===undefined ? false : true,
+            opt_stream = options.stream===undefined ? true : false;
         var img = gm(imgData);
         var r = calcScaleSize(origin_width, origin_height, resize_width, resize_height, options.keepAspect || true);
         if (r.resized && (opt_force || !r.enlarge)) {
+            console.log('resized to ' + r.width + 'x' + r.height);
             img = img.resize(r.width, r.height);
         }
         if (opt_stream) {
