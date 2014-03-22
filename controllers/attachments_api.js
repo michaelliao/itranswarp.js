@@ -17,6 +17,70 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
+function checkAttachment(fileObj, callback) {
+    var result = {
+        name: fileObj.originalFilename,
+        description: fileObj.originalFilename,
+        size: fileObj.size,
+        mime: mime.lookup(fileObj.originalFilename),
+        meta: '',
+        width: 0,
+        height: 0,
+        isImage: false
+    };
+    fs.readFile(fileObj.path, function(err, fcontent) {
+        if (err) {
+            return callback(err);
+        }
+        result.content = fcontent;
+        if (result.mime.indexOf('image/')===0) {
+            // check if image is invalid:
+            return images.getSize(fcontent, function(err, size) {
+                if (err) {
+                    return callback(api.invalid_param('file', 'Invalid image file.'));
+                }
+                width = size.width;
+                height = size.height;
+                console.log('check image size: ' + width + ' x ' + height);
+                result.isImage = true;
+                result.width = width;
+                result.height = height;
+                callback(null, result);
+            });
+        }
+        callback(null, result);
+    });
+}
+
+// create function(tx, callback) with Attachment object returned in callback:
+function createAttachmentTaskInTransaction(attachmentFileObj, req) {
+    var att_id = next_id();
+    var res_id = next_id();
+    return function(tx, callback) {
+        dao.save(Resource, {
+            id: res_id,
+            ref_id: att_id,
+            value: attachmentFileObj.content
+        }, tx, function(err, entity) {
+            if (err) {
+                return callback(err);
+            }
+            dao.save(Attachment, {
+                id: att_id,
+                resource_id: res_id,
+                user_id: req.user.id,
+                size: attachmentFileObj.size,
+                mime: attachmentFileObj.mime,
+                meta: attachmentFileObj.meta,
+                width: attachmentFileObj.width,
+                height: attachmentFileObj.height,
+                name: attachmentFileObj.name,
+                description: attachmentFileObj.description
+            }, tx, callback);
+        });
+    };
+}
+
 function downloadAttachment(req, res, next) {
     var size = req.params.size;
     if (size===undefined) {
@@ -84,6 +148,10 @@ function downloadAttachment(req, res, next) {
 
 exports = module.exports = {
 
+    checkAttachment: checkAttachment,
+
+    createAttachmentTaskInTransaction: createAttachmentTaskInTransaction,
+
     'GET /files/attachments/:id': downloadAttachment,
 
     'GET /files/attachments/:id/:size': downloadAttachment,
@@ -132,63 +200,23 @@ exports = module.exports = {
             return next(api.invalid_param('file'));
         }
 
-        var size = file.size,
-            type = mime.lookup(file.originalFilename);
-
         console.log('file uploaded: ' + file.name);
 
-        fs.readFile(file.path, function(err, fcontent) {
+        checkAttachment(file, function(err, attachFileObject) {
             if (err) {
                 return next(err);
             }
-            var saving = function() {
-                var att_id = next_id();
-                var res_id = next_id();
-                dao.transaction([
-                    function(tx, callback) {
-                        dao.save(Attachment, {
-                            id: att_id,
-                            user_id: user_id,
-                            resource_id: res_id,
-                            size: size,
-                            mime: type,
-                            meta: '',
-                            width: width,
-                            height: height,
-                            name: name,
-                            description: description
-                        }, tx, callback);
-                    },
-                    function(tx, callback) {
-                        dao.save(Resource, {
-                            id: res_id,
-                            ref_id: att_id,
-                            value: fcontent
-                        }, tx, callback);
-                    }
-                ], function(err, results) {
-                    if (err) {
-                        return next(err);
-                    }
-                    return res.send(results[0]);
-                });
-            };
-            // for image type, check width & height:
-            var width = 0,
-                height = 0;
-            if (type.indexOf('image/')===0) {
-                return images.getSize(fcontent, function(err, size) {
-                    if (err) {
-                        return next(api.invalid_param('file', 'Invalid image file.'));
-                    }
-                    width = size.width;
-                    height = size.height;
-                    console.log('check image size: ' + width + ' x ' + height);
-                    saving();
-                });
-            }
-            saving();
+            // override name:
+            attachFileObject.name = name;
+            attachFileObject.description = description;
+            dao.transaction([
+                createAttachmentTaskInTransaction(attachFileObject, req)
+            ], function(err, results) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(results[0]);
+            });
         });
     }
-
 }

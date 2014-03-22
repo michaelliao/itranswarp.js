@@ -97,6 +97,13 @@ describe('#images', function() {
         });
     });
 
+    it('#get-image-size-with-bad-format', function(done) {
+        images.getSize(fs.readFileSync('./test/res-bad-image.jpg'), function(err, size) {
+            err.should.be.ok;
+            done();
+        });
+    });
+
     it('#resize-small', function(done) {
         var imgData = fs.readFileSync('./test/res-image.jpg');
         images.resize(imgData, 1280, 720, 480, 270, function(err, stdout, stderr) {

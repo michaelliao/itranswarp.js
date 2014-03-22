@@ -5,6 +5,7 @@ var
     api = require('../api'),
     db = require('../db'),
     utils = require('./_utils'),
+    images = require('./_images'),
     constants = require('../constants');
 
 var
@@ -43,12 +44,15 @@ exports = module.exports = {
         var description = utils.get_param('description', '', req),
             tags = utils.format_tags(utils.get_param('tags', '', req));
 
-        var cover = req.files.file;
+        var file = req.files.file;
 
         var publish_time = Date.now(); //req.body.publish_time;
 
         var content_id = next_id();
         var article_id = next_id();
+
+        var tx_tasks = [];
+
 
         sequelize.transaction(function(tx) {
             async.series({
