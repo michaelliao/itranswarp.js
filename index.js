@@ -54,7 +54,7 @@ app.use('/api/', function(req, res, next) {
 });
 
 // auto set current user with each request:
-app.use(require('./controllers/_utils').extract_session_cookie);
+app.use(require('./controllers/_utils').userIdentityParser);
 
 // api error handling:
 app.use(app.router);

@@ -3,6 +3,7 @@
 var
     api = require('../api'),
     db = require('../db'),
+    dao = require('./_dao'),
     utils = require('./_utils');
 
 var
@@ -20,15 +21,14 @@ exports = module.exports = {
     },
 
     'POST /api/authenticate': function(req, res, next) {
-        var email = utils.get_required_param('email', req),
-            passwd = utils.get_required_param('passwd', req);
-        if (! email) {
-            return res.send(api.invalid_param('email'));
+        try {
+            var email = utils.get_required_param('email', req),
+                passwd = utils.get_required_param('passwd', req);
         }
-        if (! passwd) {
-            return res.send(api.invalid_param('passwd'));
+        catch (e) {
+            return next(e);
         }
-        utils.find(User, {
+        dao.find(User, {
             where: {
                 email: email
             }

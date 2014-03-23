@@ -163,14 +163,14 @@ exports = module.exports = {
 
     updateAttributes: updateAttributes,
 
-    get_user: function(id, fn) {
+    get_user: function(id, callback) {
         User.find(id).error(function(err) {
-            fn(err);
+            callback(err);
         }).success(function(obj) {
             if (! obj) {
-                return fn(api.not_found('user', 'User not found.'));
+                return callback(api.not_found('user', 'User not found.'));
             }
-            fn(null, obj);
+            callback(null, obj);
         });
     },
 

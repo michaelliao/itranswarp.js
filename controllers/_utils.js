@@ -62,9 +62,8 @@ function make_session_cookie(provider, uid, passwd, expires) {
     return safe_b64encode([provider, uid, expires, md5].join(':'));
 }
 
-// middle ware for extract session cookie,
-// and bind User to request object:
-function extract_session_cookie(req, res, next) {
+// middle ware for bind user from session cookie or authorization header:
+function userIdentityParser(req, res, next) {
     req.user = null;
     var cookie = req.cookies[SESSION_COOKIE_NAME];
     if (cookie) {
@@ -218,25 +217,13 @@ exports = module.exports = {
 
     make_session_cookie: make_session_cookie,
 
-    extract_session_cookie: extract_session_cookie,
+    userIdentityParser: userIdentityParser,
 
     isForbidden: isForbidden,
 
     get_param: get_param,
 
     get_required_param: get_required_param,
-
-
-    get_user: function(id, fn) {
-        User.find(id).error(function(err) {
-            fn(err);
-        }).success(function(obj) {
-            if (! obj) {
-                return fn(api.not_found('user', 'User not found.'));
-            }
-            fn(null, obj);
-        });
-    },
 
     SESSION_COOKIE_NAME: SESSION_COOKIE_NAME
 }
