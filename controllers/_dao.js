@@ -109,6 +109,24 @@ function destroy(DataObject, tx, callback) {
     });
 }
 
+function destroyBy(Type, where, tx, callback) {
+    var options = {
+        where: where
+    };
+    if (typeof(tx)==='function') {
+        callback = tx;
+        tx = undefined;
+    }
+    else {
+        options.transaction = tx;
+    }
+    Type.destroy(options).error(function(err) {
+        callback(err);
+    }).success(function(num) {
+        callback(null, num);
+    });
+}
+
 function destroyById(Type, id, tx, callback) {
     var options = {
         where: {
