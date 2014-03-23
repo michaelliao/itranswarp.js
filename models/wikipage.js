@@ -4,7 +4,7 @@ var Base = require('./_base.js');
 
 exports = module.exports = function(sequelize, DataTypes) {
     return Base.create(sequelize, DataTypes, 'WikiPage', {
-        wiki_id: Base.column_id(true),
+        wiki_id: Base.column_id({ index: true }),
         parent_id: Base.column_id(),
 
         name: Base.column_varchar_100(),

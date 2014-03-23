@@ -61,6 +61,32 @@ function create(sequelize, DataTypes, tableName, fields) {
     });
 }
 
+function getOption(options, name, defaultValue) {
+    if (options) {
+        return options[name];
+    }
+    return defaultValue;
+}
+
+function columnVarchar(length, options) {
+    if (arguments.length===1) {
+        options = length;
+        length = 100;
+    }
+    options = options || {};
+    var def = {
+        type: Sequelize.STRING(length),
+        allowNull: getOption(options, 'allowNull', false),
+        index: getOption(options, 'index', false)
+    };
+    if (getOption(options, 'notEmpty', true)) {
+        def.validate = {
+            notEmpty: true
+        };
+    }
+    return def;
+}
+
 exports = module.exports = {
     column_boolean: function() {
         return {
@@ -82,25 +108,22 @@ exports = module.exports = {
             index: index
         };
     },
-    column_id: function(index) {
-        return {
+    column_id: function(options) {
+        options = options || {};
+        var def = {
             type: Sequelize.STRING(50),
-            allowNull: false,
-            validate: {
-                notEmpty: true
-            },
-            index: index
+            allowNull: getOption(options, 'allowNull', false),
+            index: getOption(options, 'index', false)
         };
+        if (getOption(options, 'notEmpty', true)) {
+            def.validate = {
+                notEmpty: true
+            };
+        }
+        return def;
     },
-    column_name: function(index) {
-        return {
-            type: Sequelize.STRING(100),
-            allowNull: false,
-            validate: {
-                notEmpty: true
-            },
-            index: index
-        };
+    column_name: function(options) {
+        return columnVarchar(50, options);
     },
     column_varchar_100: function(index) {
         return {
@@ -124,15 +147,15 @@ exports = module.exports = {
         };
     },
     column_url: function() {
-        return {
-            type: Sequelize.STRING(1000),
-            allowNull: false
-        };
+        return columnVarchar(1000, { notEmpty: false });
     },
     column_text: function() {
         return {
             type: Sequelize.TEXT,
-            allowNull: false
+            allowNull: false,
+            validate: {
+                notEmpty: true
+            }
         };
     },
     column_blob: function() {
