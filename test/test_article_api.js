@@ -1,5 +1,7 @@
 // test article api:
 
+var fs = require('fs');
+
 var
     _ = require('lodash'),
     async=require('async'),
@@ -42,12 +44,14 @@ describe('#articles', function() {
                 name: 'Test Article   ',
                 description: '   blablabla\nhaha...  \n   ',
                 tags: ' aaa,\n BBB,  \t ccc,CcC',
-                content: '  Long content'
+                content: '  Long content... '
             }, function(r2) {
                 r2.category_id.should.equal(category.id);
                 r2.name.should.equal('Test Article');
                 r2.description.should.equal('blablabla\nhaha...');
                 r2.tags.should.equal('aaa,BBB,ccc');
+                r2.content.should.equal('Long content...');
+                r2.cover_id.should.equal('');
 
                     // update article:
                     //remote.post(remote.editor, '/api/articles/' + r2.id, {
@@ -56,6 +60,37 @@ describe('#articles', function() {
                     //    assert.equal(r3.display_order, 1, 'display order should be 1 for second category.');
                     done();
                     //});
+            });
+        });
+
+        it('create article with cover by editor', function(done) {
+            // create article:
+            remote.post(remote.editor, '/api/articles', {
+                category_id: category.id,
+                name: ' Test Article With Cover  ',
+                description: '   blablabla\nhaha...  \n   ',
+                tags: ' cover,\n CoveR',
+                content: '  Article comes with cover...   ',
+                file: remote.createReadStream('./test/res-image.jpg')
+            }, function(r) {
+                r.category_id.should.equal(category.id);
+                r.name.should.equal('Test Article With Cover');
+                r.description.should.equal('blablabla\nhaha...');
+                r.tags.should.equal('cover');
+                r.content.should.equal('Article comes with cover...');
+                r.cover_id.should.be.ok;
+                // check cover:
+                remote.get(remote.guest, '/api/attachments/' + r.cover_id, null, function(r2) {
+                    r2.id.should.equal(r.cover_id);
+                    r2.name.should.equal(r.name);
+                    r2.size.should.equal(346158);
+                    // download image:
+                    remote.download('/files/attachments/' + r2.id, function(content_type, content_length, content) {
+                        content_type.should.equal('image/jpeg');
+                        content_length.should.equal(346158);
+                        done();
+                    });
+                });
             });
         });
 
