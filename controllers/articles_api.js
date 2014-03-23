@@ -9,7 +9,10 @@ var
     images = require('./_images'),
     constants = require('../constants');
 
-var attachmentsApi = require('./attachments_api');
+var
+    attachmentsApi = require('./attachments_api'),
+    checkAttachment = attachmentsApi.checkAttachment,
+    createAttachmentTaskInTransaction = attachmentsApi.createAttachmentTaskInTransaction;
 
 var
     User = db.user,
@@ -103,11 +106,12 @@ exports = module.exports = {
                     createTextTask,
                     createAttachmentTaskInTransaction(attachFileObject, req.user.id),
                     createArticleTask
-                ], function(err, result) {
+                ], function(err, article) {
                     if (err) {
                         return next(err);
                     }
-                    return res.send(result);
+                    article.dataValues.content = content;
+                    return res.send(article);
                 });
             });
         }
@@ -119,11 +123,12 @@ exports = module.exports = {
                     callback(null, null);
                 },
                 createArticleTask
-            ], function(err, result) {
+            ], function(err, article) {
                 if (err) {
                     return next(err);
                 }
-                return res.send(result);
+                article.dataValues.content = content;
+                return res.send(article);
             });
         }
     }
