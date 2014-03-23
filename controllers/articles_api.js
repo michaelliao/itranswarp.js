@@ -4,9 +4,12 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
+    dao = require('./_dao'),
     utils = require('./_utils'),
     images = require('./_images'),
     constants = require('../constants');
+
+var attachmentsApi = require('./attachments_api');
 
 var
     User = db.user,
@@ -19,8 +22,17 @@ var
 exports = module.exports = {
 
     'GET /api/articles/:id': function(req, res, next) {
-        utils.find(Article, req.params.id, function(err, entity) {
+        dao.find(Article, req.params.id, function(err, entity) {
             return err ? next(err) : res.send(entity);
+        });
+    },
+
+    'GET /api/articles': function(req, res, next) {
+        dao.findAll(Article, {
+            where: ['publish_time < ?', Date.now()],
+            order: 'publish_time desc'
+        }, function(err, entities) {
+            return err ? next(err) : res.send({ articles: entities });
         });
     },
 
@@ -50,54 +62,69 @@ exports = module.exports = {
 
         var content_id = next_id();
         var article_id = next_id();
+        var cover_id = '';
 
         var tx_tasks = [];
 
+        var checkCategoryTask = function(prev, tx, callback) {
+            dao.find(Category, category_id, tx, callback);
+        };
+        var createTextTask = function(prev, tx, callback) {
+            dao.save(Text, {
+                id: content_id,
+                ref_id: article_id,
+                value: content
+            }, tx, callback);
+        };
+        var createArticleTask = function(prev, tx, callback) {
+            dao.save(Article, {
+                id: article_id,
+                user_id: req.user.id,
+                user_name: req.user.name,
+                category_id: category_id,
+                cover_id: (prev && prev.id) || '',
+                content_id: content_id,
+                name: name,
+                tags: tags,
+                description: description,
+                publish_time: publish_time
+            }, tx, callback);
+        };
 
-        sequelize.transaction(function(tx) {
-            async.series({
-                category: function(callback) {
-                    utils.find(Category, category_id, callback);
-                },
-                cover: function(callback) {
-                    if (cover) {
-                        // check if cover exist:
-                    }
-                    callback(null, 'ok');
-                },
-                text: function(callback) {
-                    utils.save(Text, {
-                        id: content_id,
-                        ref_id: article_id,
-                        value: content
-                    }, tx, callback);
-                },
-                article: function(callback) {
-                    utils.save(Article, {
-                        id: article_id,
-                        user_id: req.user.id,
-                        user_name: req.user.name,
-                        category_id: category_id,
-                        cover_id: cover_id,
-                        content_id: content_id,
-                        name: name,
-                        tags: tags,
-                        description: description,
-                        publish_time: publish_time
-                    }, tx, callback);
-                }
-            }, function(err, results) {
+        if (file) {
+            return checkAttachment(file, function(err, attachFileObject) {
                 if (err) {
-                    return tx.rollback().success(function() {
-                        return next(err);
-                    });
-                }
-                tx.commit().error(function(err) {
                     return next(err);
-                }).success(function() {
-                    return res.send(results.article);
+                }
+                // override name:
+                attachFileObject.name = name;
+                dao.transaction([
+                    checkCategoryTask,
+                    createTextTask,
+                    createAttachmentTaskInTransaction(attachFileObject, req.user.id),
+                    createArticleTask
+                ], function(err, result) {
+                    if (err) {
+                        return next(err);
+                    }
+                    return res.send(result);
                 });
             });
-        });
+        }
+        else {
+            dao.transaction([
+                checkCategoryTask,
+                createTextTask,
+                function(prev, tx, callback) {
+                    callback(null, null);
+                },
+                createArticleTask
+            ], function(err, result) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(result);
+            });
+        }
     }
 }

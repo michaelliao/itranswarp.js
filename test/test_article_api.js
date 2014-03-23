@@ -9,7 +9,7 @@ var remote = require('./_test');
 
 var log = console.log;
 
-describe.skip('#articles', function() {
+describe('#articles', function() {
 
     var category = null;
 
@@ -29,10 +29,10 @@ describe.skip('#articles', function() {
     describe('#api', function() {
 
         it('should get empty articles', function(done) {
-            //remote.get(remote.guest, '/api/articles', null, function(r) {
-            //    assert.ok(r.categories.length===0)
+            remote.get(remote.guest, '/api/articles', null, function(r) {
+                r.articles.length.should.equal(0);
                 done();
-            //});
+            });
         });
 
         it('create and update article by editor', function(done) {
