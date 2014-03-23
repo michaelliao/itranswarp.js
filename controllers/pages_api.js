@@ -245,8 +245,21 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        // TODO: delete text
-        dao.destroyById(Page, req.params.id, function(err) {
+        dao.transaction([
+            function(prev, tx, callback) {
+                // get by id:
+                dao.find(Page, req.params.id, tx, callback);
+            },
+            function(prev, tx, callback) {
+                // delete all texts belong to page:
+                // TODO:
+                callback(null, null);
+            },
+            function(prev, tx, callback) {
+                // delete page object:
+                dao.destroyById(Page, req.params.id, callback);
+            }
+        ], function(err, result) {
             return err ? next(err) : res.send({ id: req.params.id });
         });
     }
