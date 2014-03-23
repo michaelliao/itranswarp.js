@@ -1,9 +1,10 @@
-// articles.js
+// pages.js
 
 var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
+    dao = require('./_dao'),
     utils = require('./_utils'),
     constants = require('../constants');
 
@@ -15,11 +16,52 @@ var
     sequelize = db.sequelize,
     next_id = db.next_id;
 
+function checkAliasAvailable(alias, tx, callback) {
+    Page.find({
+        where: {
+            alias: alias
+        },
+        transaction: tx
+    }).error(function(err) {
+        callback(err);
+    }).success(function(entity) {
+        if (entity) {
+            return callback(api.invalid_param('alias', 'duplicate alias.'));
+        }
+        callback(null, true);
+    });
+}
+
 exports = module.exports = {
 
     'GET /api/pages/:id': function(req, res, next) {
-        utils.find(Page, req.params.id, function(err, entity) {
+        dao.find(Page, req.params.id, function(err, entity) {
             return err ? next(err) : res.send(entity);
+        });
+    },
+
+    'GET /api/pages': function(req, res, next) {
+        /**
+         * Get all pages.
+         * 
+         * @return {object} Result as {"pages": [{page}, {page}...]}
+         */
+        dao.findAll(Page, {
+            order: 'alias'
+        }, function(err, entities) {
+            return err ? next(err) : res.send({ pages: entities });
+        });
+    },
+
+    'GET /api/pages/:id': function(req, res, next) {
+        /**
+         * Get page by id.
+         * 
+         * @param {string} :id - The id of the page.
+         * @return {object} Page object.
+         */
+        dao.find(Page, req.params.id, function(err, entity) {
+            return err ? next(err) : res.send({ pages: entities });
         });
     },
 
@@ -47,34 +89,23 @@ exports = module.exports = {
         var content_id = next_id();
         var page_id = next_id();
 
-        utils.transaction([
-            function(tx, callback) {
-                // check page exist:
-                Page.find({
-                    where: {
-                        alias: alias
-                    },
-                    transaction: tx
-                }).error(function(err) {
-                    callback(err);
-                }).success(function(entity) {
-                    if (entity) {
-                        return callback(api.invalid_param('alias', 'duplicate alias.'));
-                    }
-                    callback(null, 'check ok');
-                });
+        dao.transaction([
+            function(prev, tx, callback) {
+                // check if alias exist:
+                checkAliasAvailable(alias, tx, callback);
             },
-            function(tx, callback) {
+            function(prev, tx, callback) {
+                console.log('prev check alias available: ' + prev);
                 // create text:
-                utils.save(Text, {
+                dao.save(Text, {
                     id: content_id,
                     ref_id: page_id,
                     value: content
                 }, tx, callback);
             },
-            function(tx, callback) {
+            function(textObject, tx, callback) {
                 // create page:
-                utils.save(Page, {
+                dao.save(Page, {
                     id: page_id,
                     content_id: content_id,
                     alias: alias,
@@ -83,38 +114,12 @@ exports = module.exports = {
                     draft: draft
                 }, tx, callback);
             }
-        ], function(err, results) {
+        ], function(err, pageObject) {
             if (err) {
                 return next(err);
             }
-            var page = results[2];
-            page.dataValues.content = content;
-            res.send(page);
-        });
-    },
-
-    'GET /api/pages': function(req, res, next) {
-        /**
-         * Get all pages.
-         * 
-         * @return {object} Result as {"pages": [{page}, {page}...]}
-         */
-        utils.findAll(Page, {
-            order: 'alias'
-        }, function(err, entities) {
-            return err ? next(err) : res.send({ pages: entities });
-        });
-    },
-
-    'GET /api/pages/:id': function(req, res, next) {
-        /**
-         * Get page by id.
-         * 
-         * @param {string} :id - The id of the page.
-         * @return {object} Page object.
-         */
-        utils.find(Page, req.params.id, function(err, entity) {
-            return err ? next(err) : res.send({ pages: entities });
+            pageObject.dataValues.content = content;
+            res.send(pageObject);
         });
     },
 
@@ -161,94 +166,71 @@ exports = module.exports = {
                 return res.send(api.invalid_param('content'));
             }
         }
-        var page = null;
-        utils.transaction([
+        dao.transaction([
             // get page by id:
-            function(tx, callback) {
-                utils.find(Page, {
-                    where: {
-                        id: req.params.id
-                    },
-                    transaction: tx
-                }, function(err, entity) {
-                    if (! err) {
-                        page = entity;
+            function(prev, tx, callback) {
+                dao.find(Page, req.params.id, tx, function(err, entity) {
+                    if (err) {
+                        return callback(err);
                     }
-                    callback(err, entity);
+                    callback(null, entity);
                 });
             },
             // check alias:
-            function(tx, callback) {
-                if (attrs.alias) {
-                    if (page.alias===attrs.alias) {
-                        delete attrs.alias;
-                        return callback(null, 'no need to update alias.');
-                    }
-                    Page.find({
-                        where: {
-                            alias: attrs.alias
-                        },
-                        transaction: tx
-                    }).error(function(err) {
-                        return callback(err);
-                    }).success(function(entity) {
-                        if (entity) {
-                            return callback(api.invalid_param('alias', 'Duplicate alias.'));
-                        }
-                        return callback(null, 'check alias ok.');
-                    });
+            function(pageObject, tx, callback) {
+                if ( ! attrs.alias || pageObject.alias===attrs.alias) {
+                    // no need to update alias:
+                    delete attrs.alias;
+                    return callback(null, pageObject);
                 }
-                else {
-                    return callback(null, 'no need to update alias.');
-                }
+                // check if alias exist:
+                checkAliasAvailable(alias, tx, function(err, ok) {
+                    callback(err, pageObject);
+                });
             },
             // update text if needed:
-            function(tx, callback) {
-                if (attrs.content) {
-                    var content_id = next_id();
-                    var content = attrs.content;
-                    attrs.content_id = content_id;
-                    delete attrs.content;
-                    utils.save(Text, {
-                        id: content_id,
-                        ref_id: req.params.id,
-                        value: content
-                    }, tx, callback);
+            function(pageObject, tx, callback) {
+                if ( ! attrs.content) {
+                    return callback(null, pageObject);
                 }
-                else {
-                    callback(null, null);
-                }
+                console.log('Need update text...');
+                var content_id = next_id();
+                var content = attrs.content;
+                attrs.content_id = content_id;
+                delete attrs.content;
+                dao.save(Text, {
+                    id: content_id,
+                    ref_id: req.params.id,
+                    value: content
+                }, tx, function(err, text) {
+                    callback(err, pageObject);
+                });
             },
             // update attributes of page:
-            function(tx, callback) {
-                if (Object.getOwnPropertyNames(attrs).length > 0) {
-                    page.updateAttributes(attrs, {
-                        transaction: tx
-                    }).error(function(err) {
-                        callback(err);
-                    }).success(function() {
-                        callback(null, page);
-                    });
+            function(pageObject, tx, callback) {
+                if (Object.getOwnPropertyNames(attrs).length===0) {
+                    return callback(null, pageObject);
                 }
-                else {
-                    callback(null, page);
-                }
+                console.log('update page attrs: ' + JSON.stringify(attrs));
+                dao.updateAttributes(pageObject, attrs, tx, function(err, pageObject) {
+                    callback(null, pageObject);
+                });
             }
-        ], function(err, results) {
+        ], function(err, pageObject) {
             if (err) {
                 return next(err);
             }
             if (content!==null) {
-                page.dataValues.content = content;
-                return res.send(page);
+                pageObject.dataValues.content = content;
+                return res.send(pageObject);
             }
             // query content:
-            utils.find(Text, page.content_id, function(err, text) {
+            dao.find(Text, pageObject.content_id, function(err, text) {
                 if (err) {
                     return next(err);
                 }
-                page.dataValues.content = text.value;
-                res.send(page);
+                pageObject.dataValues.content = text.value;
+                res.send(pageObject);
             });
         });
     },
@@ -264,7 +246,7 @@ exports = module.exports = {
             return next(api.not_allowed('Permission denied.'));
         }
         // TODO: delete text
-        utils.destroy(Page, req.params.id, function(err) {
+        dao.destroyById(Page, req.params.id, function(err) {
             return err ? next(err) : res.send({ id: req.params.id });
         });
     }
