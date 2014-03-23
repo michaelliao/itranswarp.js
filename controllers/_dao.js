@@ -93,43 +93,59 @@ function save(Type, data, tx, fn) {
     });
 }
 
-function destroy(DataObject, tx, fn) {
+function destroy(DataObject, tx, callback) {
     var options = {};
     if (typeof(tx)==='function') {
-        fn = tx;
+        callback = tx;
         tx = undefined;
     }
     else {
         options.transaction = tx;
     }
     DataObject.destroy(options).error(function(err) {
-        return fn(err);
+        return callback(err);
     }).success(function() {
-        return fn(null);
+        return callback(null);
     });
 }
 
-function destroyById(Type, id, tx, fn) {
+function destroyById(Type, id, tx, callback) {
     var options = {
         where: {
             id: id
         }
     };
     if (typeof(tx)==='function') {
-        fn = tx;
+        callback = tx;
         tx = undefined;
     }
     else {
         options.transaction = tx;
     }
     Type.find(options).error(function(err) {
-        fn(err);
+        callback(err);
     }).success(function(entity) {
         if ( ! entity) {
-            return fn(api.not_found(Type.name));
+            return callback(api.not_found(Type.name));
         }
         console.log('destroyById::destroy: tx object is: ' + tx);
-        destroy(entity, tx, fn);
+        destroy(entity, tx, callback);
+    });
+}
+
+function updateAttributes(DataObject, attrs, tx, callback) {
+    var options = {};
+    if (typeof(tx)==='function') {
+        callback = tx;
+        tx = undefined;
+    }
+    else {
+        options.transaction = tx;
+    }
+    DataObject.updateAttributes(attrs, options).error(function(err) {
+        callback(err);
+    }).success(function() {
+        callback(null, DataObject);
     });
 }
 
@@ -145,6 +161,8 @@ exports = module.exports = {
 
     destroyById: destroyById,
 
+    updateAttributes: updateAttributes,
+
     get_user: function(id, fn) {
         User.find(id).error(function(err) {
             fn(err);
@@ -157,7 +175,7 @@ exports = module.exports = {
     },
 
     /**
-     * Execute each task serial with task function(prevResult, tx, callback).
+     * Execute each task serial with tasks: function(prevResult, tx, callback).
      */
     transaction: function(tx_tasks, callback) {
         // each tx_tasks: function(prevResult, callback)
@@ -169,7 +187,7 @@ exports = module.exports = {
         });
         tasks.unshift(function(callback) {
             // add first task to pass 'null' to next task:
-            callback(null, null);
+            callback(null, options.transaction);
         });
         sequelize.transaction(function(t) {
             options.transaction = t;
