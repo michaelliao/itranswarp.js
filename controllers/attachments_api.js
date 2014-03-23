@@ -52,11 +52,11 @@ function checkAttachment(fileObj, callback) {
     });
 }
 
-// create function(tx, callback) with Attachment object returned in callback:
-function createAttachmentTaskInTransaction(attachmentFileObj, req) {
+// create function(prev, tx, callback) with Attachment object returned in callback:
+function createAttachmentTaskInTransaction(attachmentFileObj, user_id) {
     var att_id = next_id();
     var res_id = next_id();
-    return function(tx, callback) {
+    return function(prev, tx, callback) {
         dao.save(Resource, {
             id: res_id,
             ref_id: att_id,
@@ -68,7 +68,7 @@ function createAttachmentTaskInTransaction(attachmentFileObj, req) {
             dao.save(Attachment, {
                 id: att_id,
                 resource_id: res_id,
-                user_id: req.user.id,
+                user_id: user_id,
                 size: attachmentFileObj.size,
                 mime: attachmentFileObj.mime,
                 meta: attachmentFileObj.meta,
@@ -86,11 +86,11 @@ function downloadAttachment(req, res, next) {
     if (size===undefined) {
         size = '0';
     }
-    utils.find(Attachment, req.params.id, function(err, atta) {
+    dao.find(Attachment, req.params.id, function(err, atta) {
         if (err) {
             return next(err);
         }
-        utils.find(Resource, atta.resource_id, function(err, resource) {
+        dao.find(Resource, atta.resource_id, function(err, resource) {
             if (err) {
                 return next(err);
             }
@@ -210,12 +210,12 @@ exports = module.exports = {
             attachFileObject.name = name;
             attachFileObject.description = description;
             dao.transaction([
-                createAttachmentTaskInTransaction(attachFileObject, req)
-            ], function(err, results) {
+                createAttachmentTaskInTransaction(attachFileObject, req.user.id)
+            ], function(err, result) {
                 if (err) {
                     return next(err);
                 }
-                return res.send(results[0]);
+                return res.send(result);
             });
         });
     }

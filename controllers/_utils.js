@@ -226,39 +226,6 @@ exports = module.exports = {
 
     get_required_param: get_required_param,
 
-    findAll: function(Type, options, fn) {
-        Type.findAll(options).error(function(err) {
-            return fn(err);
-        }).success(function(arr) {
-            return fn(null, arr);
-        });
-    },
-
-    find: function(Type, id, fn) {
-        Type.find(id).error(function(err) {
-            return fn(err);
-        }).success(function(entity) {
-            if ( ! entity) {
-                return fn(api.not_found(Type.name));
-            }
-            return fn(null, entity);
-        });
-    },
-
-    destroy: function(Type, id, fn) {
-        Type.find(id).error(function(err) {
-            fn(err);
-        }).success(function(entity) {
-            if ( ! entity) {
-                return fn(api.not_found(Type.name));
-            }
-            entity.destroy().error(function(err) {
-                return fn(err);
-            }).success(function() {
-                return fn(null);
-            });
-        });
-    },
 
     get_user: function(id, fn) {
         User.find(id).error(function(err) {
@@ -267,42 +234,6 @@ exports = module.exports = {
             if (! obj) {
                 return fn(api.not_found('user', 'User not found.'));
             }
-            fn(null, obj);
-        });
-    },
-
-    transaction: function(tx_tasks, fn) {
-        var options = { transaction: null };
-        var tasks = _.map(tx_tasks, function(fn) {
-            return function(callback) {
-                fn(options.transaction, callback);
-            };
-        });
-        sequelize.transaction(function(t) {
-            options.transaction = t;
-            async.series(tasks, function(err, results) {
-                if (err) {
-                    console.log('will be rollback...');
-                    t.rollback().success(function() {
-                        fn(err);
-                    });
-                }
-                else {
-                    t.commit().error(function(err) {
-                        console.log('commit failed. will be rollback...');
-                        fn(err);
-                    }).success(function() {
-                        fn(null, results);
-                    });
-                }
-            });
-        });
-    },
-
-    save: function(type, data, tx, fn) {
-        type.create(data, { transaction: tx }).error(function(err) {
-            fn(err);
-        }).success(function(obj) {
             fn(null, obj);
         });
     },

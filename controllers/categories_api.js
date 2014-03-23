@@ -4,6 +4,7 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
+    dao = require('./_dao'),
     utils = require('./_utils'),
     constants = require('../constants');
 
@@ -22,7 +23,7 @@ exports = module.exports = {
          * 
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
-        utils.findAll(Category, {
+        dao.findAll(Category, {
             order: 'display_order'
         }, function(err, array) {
             if (err) {
@@ -39,7 +40,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Category object.
          */
-        utils.find(Category, req.params.id, function(err, obj) {
+        dao.find(Category, req.params.id, function(err, obj) {
             if (err) {
                 return next(err);
             }
@@ -103,7 +104,7 @@ exports = module.exports = {
         if (description!==null) {
             attrs.description = description;
         }
-        utils.find(Category, req.params.id, function(err, cat) {
+        dao.find(Category, req.params.id, function(err, cat) {
             if (err) {
                 return next(err);
             }
@@ -128,7 +129,7 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        utils.destroy(Category, req.params.id, function(err) {
+        dao.destroyById(Category, req.params.id, function(err) {
             if (err) {
                 return next(err);
             }

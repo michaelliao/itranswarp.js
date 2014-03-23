@@ -93,6 +93,46 @@ function save(Type, data, tx, fn) {
     });
 }
 
+function destroy(DataObject, tx, fn) {
+    var options = {};
+    if (typeof(tx)==='function') {
+        fn = tx;
+        tx = undefined;
+    }
+    else {
+        options.transaction = tx;
+    }
+    DataObject.destroy(options).error(function(err) {
+        return fn(err);
+    }).success(function() {
+        return fn(null);
+    });
+}
+
+function destroyById(Type, id, tx, fn) {
+    var options = {
+        where: {
+            id: id
+        }
+    };
+    if (typeof(tx)==='function') {
+        fn = tx;
+        tx = undefined;
+    }
+    else {
+        options.transaction = tx;
+    }
+    Type.find(options).error(function(err) {
+        fn(err);
+    }).success(function(entity) {
+        if ( ! entity) {
+            return fn(api.not_found(Type.name));
+        }
+        console.log('destroyById::destroy: tx object is: ' + tx);
+        destroy(entity, tx, fn);
+    });
+}
+
 exports = module.exports = {
 
     find: find,
@@ -101,20 +141,9 @@ exports = module.exports = {
 
     save: save,
 
-    destroy: function(Type, id, fn) {
-        Type.find(id).error(function(err) {
-            fn(err);
-        }).success(function(entity) {
-            if ( ! entity) {
-                return fn(api.not_found(Type.name));
-            }
-            entity.destroy().error(function(err) {
-                return fn(err);
-            }).success(function() {
-                return fn(null);
-            });
-        });
-    },
+    destroy: destroy,
+
+    destroyById: destroyById,
 
     get_user: function(id, fn) {
         User.find(id).error(function(err) {
@@ -127,28 +156,36 @@ exports = module.exports = {
         });
     },
 
-    transaction: function(tx_tasks, fn) {
+    /**
+     * Execute each task serial with task function(prevResult, tx, callback).
+     */
+    transaction: function(tx_tasks, callback) {
+        // each tx_tasks: function(prevResult, callback)
         var options = { transaction: null };
         var tasks = _.map(tx_tasks, function(fn) {
-            return function(callback) {
-                fn(options.transaction, callback);
+            return function(prevResult, callback) {
+                fn(prevResult, options.transaction, callback);
             };
+        });
+        tasks.unshift(function(callback) {
+            // add first task to pass 'null' to next task:
+            callback(null, null);
         });
         sequelize.transaction(function(t) {
             options.transaction = t;
-            async.series(tasks, function(err, results) {
+            async.waterfall(tasks, function(err, result) {
                 if (err) {
                     console.log('will be rollback...');
                     t.rollback().success(function() {
-                        fn(err);
+                        callback(err);
                     });
                 }
                 else {
                     t.commit().error(function(err) {
                         console.log('commit failed. will be rollback...');
-                        fn(err);
+                        callback(err);
                     }).success(function() {
-                        fn(null, results);
+                        callback(null, result);
                     });
                 }
             });
