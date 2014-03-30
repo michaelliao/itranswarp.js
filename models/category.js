@@ -1,11 +1,13 @@
 // category.js
 
-var Base = require('./_base.js');
+var base = require('./_base.js');
 
-exports = module.exports = function(sequelize, DataTypes) {
-    return Base.create(sequelize, DataTypes, 'Category', {
-        name: Base.column_name(),
-        description: Base.column_varchar_500(),
-        display_order: Base.column_bigint()
+exports = module.exports = function(warp) {
+    return base.defineModel(warp, 'Comment', [
+        base.column_varchar_100('name'),
+        base.column_varchar_1000('description'),
+        base.column_bigint('display_order')
+    ], {
+        table: 'categories'
     });
-}
+};

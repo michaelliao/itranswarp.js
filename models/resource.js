@@ -1,10 +1,12 @@
-// text.js
+// resource.js
 
-var Base = require('./_base.js');
+var base = require('./_base.js');
 
-exports = module.exports = function(sequelize, DataTypes) {
-    return Base.create(sequelize, DataTypes, 'Resource', {
-        ref_id: Base.column_id(),
-        value: Base.column_blob()
+exports = module.exports = function(warp) {
+    return base.defineModel(warp, 'Resource', [
+        base.column_id('ref_id'),
+        base.column_blob('value')
+    ], {
+        table: 'resources'
     });
-}
+};

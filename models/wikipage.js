@@ -1,16 +1,15 @@
 // wikipage.js
 
-var Base = require('./_base.js');
+var base = require('./_base.js');
 
-exports = module.exports = function(sequelize, DataTypes) {
-    return Base.create(sequelize, DataTypes, 'WikiPage', {
-        wiki_id: Base.column_id({ index: true }),
-        parent_id: Base.column_id(),
-
-        name: Base.column_varchar_100(),
-
-        content_id: Base.column_id(),
-
-        display_order: Base.column_bigint()
+exports = module.exports = function(warp) {
+    return base.defineModel(warp, 'WikiPage', [
+        base.column_id('wiki_id'),
+        base.column_id('parent_id'),
+        base.column_id('content_id'),
+        base.column_varchar_100('name'),
+        base.column_bigint('display_order')
+    ], {
+        table: 'wikipages'
     });
-}
+};

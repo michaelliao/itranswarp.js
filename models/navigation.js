@@ -1,11 +1,13 @@
 // navigation.js
 
-var Base = require('./_base.js');
+var base = require('./_base.js');
 
-exports = module.exports = function(sequelize, DataTypes) {
-    return Base.create(sequelize, DataTypes, 'Navigation', {
-        name: Base.column_name(),
-        url: Base.column_url(),
-        display_order: Base.column_bigint()
+exports = module.exports = function(warp) {
+    return base.defineModel(warp, 'Navigation', [
+        base.column_varchar_100('name'),
+        base.column_varchar_1000('url'),
+        base.column_bigint('display_order')
+    ], {
+        table: 'navigations'
     });
-}
+};

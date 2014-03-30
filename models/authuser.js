@@ -1,15 +1,15 @@
 // authuser.js
 
-var Base = require('./_base.js');
+var base = require('./_base.js');
 
-exports = module.exports = function(sequelize, DataTypes) {
-    return Base.create(sequelize, DataTypes, 'AuthUser', {
-        user_id: Base.column_id(),
-
-        auth_provider: Base.column_varchar_100(),
-        auth_id: Base.column_varchar_200(true),
-        auth_token: Base.column_varchar_200(),
-
-        expires_time: Base.column_timestamp()
+exports = module.exports = function(warp) {
+    return base.defineModel(warp, 'AuthUser', [
+        base.column_id('user_id'),
+        base.column_varchar_50('auth_provider'),
+        base.column_varchar_100('auth_id', { unique: true }),
+        base.column_varchar_100('auth_token'),
+        base.column_bigint('expires_time')
+    ], {
+        table: 'auth_users'
     });
 };

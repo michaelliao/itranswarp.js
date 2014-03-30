@@ -3,6 +3,12 @@
 var util = require('util');
 var uuid = require('node-uuid');
 
+var paddings = [];
+
+for (var i = 1; i < 30; i++) {
+    paddings.push(new Array(i).join('0'));
+}
+
 /**
  * a id-generate function that generate 50-chars id string with:
  *   current timestamp;
@@ -12,5 +18,5 @@ var uuid = require('node-uuid');
 exports = module.exports = function() {
     // generate uuid with timestamp:
     var id = util.format('%d%s000', Date.now(), uuid.v4().replace(/\-/g, ''));
-    return id.length >= 50 ? id : new Array(50 - id.length + 1).join('0') + id;
+    return paddings[50 - id.length] + id;
 }
