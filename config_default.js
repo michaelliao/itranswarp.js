@@ -9,11 +9,10 @@ module.exports = {
     'db': {
         'host': 'localhost',
         'port': 3306,
-        'schema': 'itranswarp',
         'user': 'www',
         'password': 'www',
-        'maxConnections': 10,
-        'maxIdleTime': 30
+        'database': 'itranswarp',
+        'connectionLimit': 20
     },
     'oauth': {
         'provider_name': {

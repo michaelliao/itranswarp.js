@@ -1,45 +1,33 @@
-// init sequelize and expose all models under dir 'models':
+// init mysql-warp and expose all models under dir 'models':
 
-console.log('init mysql with sequelize...');
+console.log('init mysql with mysql-warp...');
 
 var
     _ = require('lodash'),
-    Sequelize = require('sequelize'),
+    Warp = require('mysql-warp'),
     next_id = require('./models/_id'),
     config = require('./config');
 
 // init database:
-var sequelize = new Sequelize(config.db.schema, config.db.user, config.db.password, {
-    logging: console.log,
-    dialect: 'mysql',
-    host: config.db.host,
-    port: config.db.port,
-    pool: {
-        maxConnections: config.db.maxConnections,
-        maxIdleTime: config.db.maxIdleTime
-    },
-    define: {
-        charset: 'utf8',
-        collate: 'utf8_general_ci'
-    }
-});
+var warp = Warp.create(config.db);
 
-// export sequelize and all model objects:
+// export warp and all model objects:
 var dict = {
-    sequelize: sequelize,
+    warp: warp,
     next_id: next_id
 };
 
 // load all models:
 var files = require('fs').readdirSync(__dirname + '/models');
 var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
-var models = _.filter(files, function(f) {
+var models = _.map(_.filter(files, function(f) {
     return re.test(f);
+}), function(fname) {
+    return fname.substring(0, fname.length - 3);
 });
-_.each(models, function(file) {
-    var name = file.substring(0, file.length - 3);
-    console.log('found model: ' + name);
-    dict[name] = sequelize.import(__dirname + '/models/' + name);
+_.each(models, function(model) {
+    console.log('found model: ' + model);
+    dict[model] = require('./models/' + model)(warp);
 });
 
 exports = module.exports = dict;

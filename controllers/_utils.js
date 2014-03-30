@@ -13,7 +13,7 @@ var
     Article = db.article,
     Category = db.category,
     Text = db.text,
-    sequelize = db.sequelize,
+    warp = db.warp,
     next_id = db.next_id;
 
 var SESSION_COOKIE_NAME = 'itranswarpsession';
@@ -121,9 +121,10 @@ function parse_session_cookie(s, fn) {
     if (!uid || !provider || !md5) {
         return fn(null, null);
     }
-    User.find(uid).error(function(err) {
-        fn(err);
-    }).success(function(user) {
+    User.find(uid, function(err, user) {
+        if (err) {
+            return fn(err);
+        }
         if (! user) {
             return fn(null, null);
         }
@@ -149,11 +150,10 @@ function parse_authorization(auth, fn) {
     if (!u || !p) {
         return fn(null, null);
     }
-    User.find({
-        where: { email: u }
-    }).error(function(err) {
-        return fn(err);
-    }).success(function(user) {
+    User.find({ where: 'email=?' }, [u], function(err, user) {
+        if (err) {
+            return fn(err);
+        }
         if (user && user.passwd===p) {
             console.log('binded user: ' + user.email);
             return fn(null, user);

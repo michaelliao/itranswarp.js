@@ -15,7 +15,7 @@ var
     querystring = require('querystring'),
     constants = require('../constants');
 
-var sequelize = require('../db').sequelize;
+var warp = require('../db').warp;
 
 var options = {
     url: 'http://localhost:3000',
@@ -62,14 +62,6 @@ function build_headers(role) {
 
 function build_form(params) {
     return params ? params : {};
-}
-
-function sql(sql, params, fn) {
-    sequelize.query(sql, null, { raw: true }, params || []).error(function(err) {
-        throw err;
-    }).success(function(r) {
-        fn(r);
-    });
 }
 
 function http(role, method, path, params, fn) {
@@ -126,9 +118,7 @@ function init_db(done) {
     console.log('setup: init database first...');
     async.series(_.map(init_sqls, function(s) {
         return function(callback) {
-            sql(s, null, function() {
-                callback(null, true);
-            });
+            warp.query(s, callback);
         };
     }), function(err, results) {
         return err ? done(err) : done();
@@ -191,5 +181,5 @@ exports = module.exports = {
     subscriber: constants.ROLE_SUBSCRIBER,
     guest: constants.ROLE_GUEST,
 
-    sql: sql
+    sql: warp.query
 };

@@ -4,7 +4,7 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    dao = require('./_dao'),
+
     utils = require('./_utils'),
     constants = require('../constants');
 
@@ -12,7 +12,6 @@ var
     User = db.user,
     Category = db.category,
     Text = db.text,
-    sequelize = db.sequelize,
     next_id = db.next_id;
 
 exports = module.exports = {
@@ -23,7 +22,7 @@ exports = module.exports = {
          * 
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
-        dao.findAll(Category, {
+        Category.findAll({
             order: 'display_order'
         }, function(err, array) {
             if (err) {
@@ -40,9 +39,12 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Category object.
          */
-        dao.find(Category, req.params.id, function(err, obj) {
+        Category.find(req.params.id, function(err, obj) {
             if (err) {
                 return next(err);
+            }
+            if (obj===null) {
+                return next(api.not_found('Category'));
             }
             return res.send(obj);
         });
@@ -67,18 +69,20 @@ exports = module.exports = {
         }
         var description = utils.get_param('description', '', req);
 
-        Category.max('display_order').error(function(err) {
-            return next(err);
-        }).success(function(max_display_order) {
-            var display_order = (max_display_order===null) ? 0 : max_display_order + 1;
-            Category.create({
+        Category.findNumber('max(display_order)', function(err, num) {
+            if (err) {
+                return next(err);
+            }
+            var display_order = (num===null) ? 0 : num + 1;
+            Category.save({
                 name: name,
                 description: description,
                 display_order: display_order
-            }).error(function(err) {
-                return next(err);
-            }).success(function(cat) {
-                return res.send(cat);
+            }, function(err, entity) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(entity);
             });
         });
     },
