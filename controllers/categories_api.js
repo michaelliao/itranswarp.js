@@ -146,15 +146,10 @@ exports = module.exports = {
         }
         var name = utils.get_param('name', req),
             description = utils.get_param('description', req);
-        var attrs = {};
         if (name!==null) {
             if (name==='') {
                 return next(api.invalid_param('name'));
             }
-            attrs.name = name;
-        }
-        if (description!==null) {
-            attrs.description = description;
         }
         Category.find(req.params.id, function(err, entity) {
             if (err) {
@@ -163,10 +158,13 @@ exports = module.exports = {
             if (entity===null) {
                 return next(api.not_found('Category'));
             }
-            if (_.isEmpty(attrs)) {
-                return res.send(entity);
+            if (name!==null) {
+                entity.name = name;
             }
-            entity.update(attrs, function(err, entity) {
+            if (description!==null) {
+                entity.description = description;
+            }
+            entity.update(function(err, entity) {
                 if (err) {
                     return next(err);
                 }

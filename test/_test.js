@@ -77,6 +77,7 @@ function http(role, method, path, params, fn) {
         console.log(body);
         var json = JSON.parse(body);
         should(json).be.ok;
+        console.log('>>> http done.');
         return fn(json);
     });
     params = params || {};
@@ -88,7 +89,7 @@ function http(role, method, path, params, fn) {
     }
     console.log('>>> request: ' + method + ' ' + opt.url);
     if (opt.form) {
-        if (opt.form.file) {
+        if ('file' in params) {
             console.log('>>> form: multipart/form-data');
         }
         else {
@@ -96,6 +97,36 @@ function http(role, method, path, params, fn) {
         }
     }
     console.log('>>> request sent.');
+    // build curl:
+    var curl = 'curl -v';
+    _.each(opt.headers, function(v, k) {
+        curl = curl + ' -H \"' + k + ': ' + v + '\"';
+    });
+    if (opt.form) {
+        if ('file' in params) {
+            curl = curl + ' ';
+            _.each(params, function(v, k) {
+                if (k!=='file') {
+                    curl = curl + ' --form ' + k + '=' + encodeURIComponent(v);
+                }
+            });
+            curl = curl + ' --form file=@/Users/michael/Desktop/test.jpg';
+        }
+        else {
+            curl = curl + ' -d \"';
+            _.each(params, function(v, k) {
+                curl = curl + k + '=' + encodeURIComponent(v) + '&';
+            });
+            curl = curl + '\"';
+        }
+    }
+    curl = curl + ' ' + opt.url;
+    console.log('>>> replay command with curl:');
+    console.log('--------------------------------------------------------------------------------');
+    console.log(curl);
+    console.log('--------------------------------------------------------------------------------');
+    console.log('// if you want to replay this http request,');
+    console.log('// you can run this command.');
 }
 
 var init_sqls = [

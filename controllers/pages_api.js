@@ -152,27 +152,20 @@ exports = module.exports = {
             alias = utils.get_param('alias', req),
             tags = utils.get_param('tags', req),
             content = utils.get_param('content', req);
-        var attrs = {};
-        if (name!==null) {
-            if (name==='') {
-                return next(api.invalid_param('name'));
-            }
-            attrs.name = name;
+        if (name!==null && name==='') {
+            return next(api.invalid_param('name'));
         }
         if (alias!==null) {
             if (alias==='') {
                 return next(api.invalid_param('alias'));
             }
-            attrs.alias = alias.toLowerCase();
+            alias = alias.toLowerCase();
         }
         if (tags!==null) {
-            attrs.tags = utils.format_tags(tags);
+            tags = utils.format_tags(tags);
         }
-        if (content!==null) {
-            if (content==='') {
-                return next(api.invalid_param('content'));
-            }
-            attrs.content = content;
+        if (content!==null && content==='') {
+            return next(api.invalid_param('content'));
         }
         warp.transaction(function(err, tx) {
             if (err) {
@@ -188,31 +181,28 @@ exports = module.exports = {
                         return callback(api.not_found('Page'));
                     }
                     // check alias:
-                    if (attrs.alias && page.alias!==attrs.alias) {
+                    if (alias!==null && page.alias!==alias) {
                         // check alias exist:
-                        return checkAliasAvailable(attrs.alias, tx, function(err, result) {
+                        return checkAliasAvailable(alias, tx, function(err, result) {
                             if (err) {
                                 return callback(err);
                             }
                             return callback(null, page);
                         });
                     }
-                    delete attrs.alias; // no need to update alias!
+                    // no need to update alias!
                     callback(null, page);
                 },
                 function(page, callback) {
                     // create Text if needed:
-                    if (attrs.content) {
+                    if (content!==null) {
                         console.log('Need update text...');
-                        var content_id = next_id();
-                        attrs.content_id = content_id;
-                        var contentValue = attrs.content;
-                        delete attrs.content;
                         Text.create({
-                            id: content_id,
+                            id: next_id(),
                             ref_id: page.id,
-                            value: contentValue
+                            value: content
                         }, tx, function(err, text) {
+                            page.content_id = text.id;
                             callback(err, page);
                         });
                         return;
@@ -221,8 +211,16 @@ exports = module.exports = {
                 },
                 function(page, callback) {
                     // update page:
-                    console.log('>>>>' + JSON.stringify(attrs));
-                    page.update(attrs, tx, callback);
+                    if (name!==null) {
+                        page.name = name;
+                    }
+                    if (alias!==null) {
+                        page.alias = alias;
+                    }
+                    if (tags!==null) {
+                        page.tags = tags;
+                    }
+                    page.update(tx, callback);
                 }
             ], function(err, result) {
                 tx.done(err, function(err) {

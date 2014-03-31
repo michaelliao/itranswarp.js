@@ -16,6 +16,49 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
+function Page(pageIndex, itemsPerPage) {
+    this.pageIndex = pageIndex ? pageIndex : 1;
+    this.itemsPerPage = itemsPerPage ? itemsPerPage : 20;
+    this.__totalItems = 0;
+
+    this.__defineGetter__('totalItems', function() {
+        return this.__totalItems;
+    });
+
+    this.__defineSetter__('totalItems', function(val) {
+        this.__totalItems = val;
+    });
+
+    this.__defineGetter__('totalPages', function() {
+        var total = this.__totalItems;
+        if (total===0) {
+            return 0;
+        }
+        return Math.floor(total / this.itemsPerPage) + (total % this.itemsPerPage===0 ? 0 : 1);
+    });
+
+    this.__defineGetter__('isEmpty', function() {
+        return this.__totalItems===0;
+    });
+
+    this.__defineGetter__('offset', function() {
+        return this.itemsPerPage * (this.pageIndex - 1);
+    });
+
+    this.__defineGetter__('limit', function() {
+        return this.itemsPerPage;
+    });
+
+    this.toJSON = function() {
+        return {
+            index: this.pageIndex,
+            itemsPerPage: this.itemsPerPage,
+            totalItems: this.totalItems,
+            totalPages: this.totalPages
+        };
+    }
+}
+
 var SESSION_COOKIE_NAME = 'itranswarpsession';
 var salt = config.session.salt;
 
@@ -186,6 +229,13 @@ function format_tags(tags) {
     }).join(',');
 }
 
+function get_page(req, pageSize) {
+    if (pageSize===undefined) {
+        pageSize = 20;
+    }
+
+}
+
 // return trimed parameter value as string, or default value if not exist. defaultValue is default to null.
 function get_param(name, defaultValue, req) {
     if (arguments.length===2) {
@@ -224,6 +274,15 @@ exports = module.exports = {
     get_param: get_param,
 
     get_required_param: get_required_param,
+
+    getPage: function(req, itemsPerPage) {
+        var index = parseInt(req.query.page);
+        return new Page(isNaN(index) ? 1 : index, itemsPerPage);
+    },
+
+    page: function(pageIndex, itemsPerPage) {
+        return new Page(pageIndex, itemsPerPage);
+    },
 
     SESSION_COOKIE_NAME: SESSION_COOKIE_NAME
 }

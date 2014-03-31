@@ -6,7 +6,6 @@ var
     api = require('../api'),
     db = require('../db'),
     constants = require('../constants'),
-    dao = require('./_dao'),
     utils = require('./_utils'),
     images = require('./_images');
 
@@ -52,11 +51,11 @@ function checkAttachment(fileObj, callback) {
     });
 }
 
-// create function(prev, tx, callback) with Attachment object returned in callback:
-function createAttachmentTaskInTransaction(attachmentFileObj, user_id) {
+// create function(callback) with Attachment object returned in callback:
+function createAttachmentTaskInTx(attachmentFileObj, tx, user_id) {
     var att_id = next_id();
     var res_id = next_id();
-    return function(prev, tx, callback) {
+    return function(callback) {
         Resource.create({
             id: res_id,
             ref_id: att_id,
@@ -65,7 +64,7 @@ function createAttachmentTaskInTransaction(attachmentFileObj, user_id) {
             if (err) {
                 return callback(err);
             }
-            dao.save(Attachment, {
+            Attachment.create({
                 id: att_id,
                 resource_id: res_id,
                 user_id: user_id,
@@ -156,7 +155,7 @@ exports = module.exports = {
 
     checkAttachment: checkAttachment,
 
-    createAttachmentTaskInTransaction: createAttachmentTaskInTransaction,
+    createAttachmentTaskInTx: createAttachmentTaskInTx,
 
     'GET /files/attachments/:id': downloadAttachment,
 
@@ -175,13 +174,31 @@ exports = module.exports = {
     },
 
     'GET /api/attachments': function(req, res, next) {
-        dao.findAll(Attachment, {
-            order: 'created_at desc'
-        }, function(err, entities) {
+        var page = utils.getPage(req);
+        Attachment.findNumber('count(*)', function(err, num) {
             if (err) {
                 return next(err);
             }
-            return res.send({'attachments': entities});
+            page.totalItems = num;
+            if (page.isEmpty) {
+                return res.send({
+                    page: page,
+                    attachments: []
+                });
+            }
+            Attachment.findAll({
+                offset: page.offset,
+                limit: page.limit,
+                order: 'created_at desc'
+            }, function(err, entities) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send({
+                    page: page,
+                    attachments: entities
+                });
+            })
         });
     },
 
@@ -218,13 +235,19 @@ exports = module.exports = {
             // override name:
             attachFileObject.name = name;
             attachFileObject.description = description;
-            dao.transaction([
-                createAttachmentTaskInTransaction(attachFileObject, req.user.id)
-            ], function(err, result) {
+            warp.transaction(function(err, tx) {
                 if (err) {
                     return next(err);
                 }
-                return res.send(result);
+                var fn = createAttachmentTaskInTx(attachFileObject, tx, req.user.id);
+                fn(function(err, atta) {
+                    tx.done(err, function(err) {
+                        if (err) {
+                            return next(err);
+                        }
+                        return res.send(atta);
+                    });
+                });
             });
         });
     }

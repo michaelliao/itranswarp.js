@@ -4,7 +4,6 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    dao = require('./_dao'),
     utils = require('./_utils'),
     images = require('./_images'),
     constants = require('../constants');
