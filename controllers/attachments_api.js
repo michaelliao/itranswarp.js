@@ -14,7 +14,7 @@ var
     User = db.user,
     Attachment = db.attachment,
     Resource = db.resource,
-    sequelize = db.sequelize,
+    warp = db.warp,
     next_id = db.next_id;
 
 function checkAttachment(fileObj, callback) {
@@ -57,7 +57,7 @@ function createAttachmentTaskInTransaction(attachmentFileObj, user_id) {
     var att_id = next_id();
     var res_id = next_id();
     return function(prev, tx, callback) {
-        dao.save(Resource, {
+        Resource.create({
             id: res_id,
             ref_id: att_id,
             value: attachmentFileObj.content
@@ -86,13 +86,19 @@ function downloadAttachment(req, res, next) {
     if (size===undefined) {
         size = '0';
     }
-    dao.find(Attachment, req.params.id, function(err, atta) {
+    Attachment.find(req.params.id, function(err, atta) {
         if (err) {
             return next(err);
         }
-        dao.find(Resource, atta.resource_id, function(err, resource) {
+        if (atta===null) {
+            return next(api.not_found('Attachment'));
+        }
+        Resource.find(atta.resource_id, function(err, resource) {
             if (err) {
                 return next(err);
+            }
+            if (resource===null) {
+                return next(api.not_found('Resource'));
             }
             //
             var mime = atta.mime,
@@ -157,9 +163,12 @@ exports = module.exports = {
     'GET /files/attachments/:id/:size': downloadAttachment,
 
     'GET /api/attachments/:id': function(req, res, next) {
-        dao.find(Attachment, req.params.id, function(err, entity) {
+        Attachment.find(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
+            }
+            if (entity===null) {
+                return next(api.not_found('Attachment'));
             }
             return res.send(entity);
         });
@@ -185,7 +194,7 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        var user_id = 'xxx';
+        var user_id = req.user.id;
 
         try {
             var name = utils.get_required_param('name', req);

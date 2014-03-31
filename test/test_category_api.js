@@ -21,6 +21,7 @@ describe('#categories', function() {
                 name: ' Test Category  \n\n ',
                 description: '  this is a test category...  '
             }, function(r) {
+                should(r.display_order).equal(0);
                 r.display_order.should.equal(0);
                 r.name.should.equal('Test Category');
                 r.description.should.equal('this is a test category...');

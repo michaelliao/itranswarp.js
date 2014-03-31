@@ -118,7 +118,7 @@ describe('#pages', function() {
                 if (err) {
                     return done(err);
                 }
-                // try update alias:
+                // try update alias 'abc' to 'xyz':
                 var id = results[0].id;
                 remote.post(remote.admin, '/api/pages/' + id, {
                     alias: 'xyz'

@@ -1,6 +1,7 @@
 // articles.js
 
 var
+    _ = require('lodash'),
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
@@ -12,6 +13,7 @@ var
     User = db.user,
     Category = db.category,
     Text = db.text,
+    warp = db.warp,
     next_id = db.next_id;
 
 exports = module.exports = {
@@ -73,16 +75,59 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            var display_order = (num===null) ? 0 : num + 1;
-            Category.save({
+            Category.create({
                 name: name,
                 description: description,
-                display_order: display_order
+                display_order: (num===null) ? 0 : num + 1
             }, function(err, entity) {
                 if (err) {
                     return next(err);
                 }
                 return res.send(entity);
+            });
+        });
+    },
+
+    'POST /api/categories/sort': function(req, res, next) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
+            return next(api.not_allowed('Permission denied.'));
+        }
+        Category.findAll(function(err, entities) {
+            if (err) {
+                return next(err);
+            }
+            var ids = req.body.id;
+            if (! Array.isArray(ids)) {
+                ids = [ids];
+            }
+            if (entities.length!==ids.length) {
+                return next(api.invalid_param('id', 'Invalid id list.'));
+            }
+            for (var i=0; i<entities.length; i++) {
+                var entity = entities[i];
+                var pos = ids.indexOf(entity.id);
+                if (pos===(-1)) {
+                    return next(api.invalid_param('id', 'Invalid id parameters.'));
+                }
+                entity.display_order = pos;
+            }
+            warp.transaction(function(err, tx) {
+                if (err) {
+                    return next(err);
+                }
+                async.series(_.map(entities, function(entity) {
+                    return function(callback) {
+                        entity.update(['display_order'], tx, callback);
+                    };
+                }), function(err, result) {
+                    tx.done(err, function(err) {
+                        console.log(err===null ? 'tx committed' : 'tx rollbacked');
+                        if (err) {
+                            return next(err);
+                        }
+                        return res.send({ sort: true });
+                    });
+                });
             });
         });
     },
@@ -103,23 +148,30 @@ exports = module.exports = {
             description = utils.get_param('description', req);
         var attrs = {};
         if (name!==null) {
+            if (name==='') {
+                return next(api.invalid_param('name'));
+            }
             attrs.name = name;
         }
         if (description!==null) {
             attrs.description = description;
         }
-        dao.find(Category, req.params.id, function(err, cat) {
+        Category.find(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
             }
-            if (attrs) {
-                return cat.updateAttributes(attrs).error(function(err) {
-                    return next(err);
-                }).success(function(cat) {
-                    return res.send(cat);
-                });
+            if (entity===null) {
+                return next(api.not_found('Category'));
             }
-            return res.send(cat);
+            if (_.isEmpty(attrs)) {
+                return res.send(entity);
+            }
+            entity.update(attrs, function(err, entity) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(entity);
+            });
         });
     },
 
@@ -133,11 +185,19 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        dao.destroyById(Category, req.params.id, function(err) {
+        Category.find(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
             }
-            return res.send({ id: req.params.id });
+            if (entity===null) {
+                return next(api.not_found('Category'));
+            }
+            entity.destroy(function(err, result) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send({ id: req.params.id });
+            });
         });
     }
 }

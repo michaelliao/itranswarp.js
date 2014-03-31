@@ -3,13 +3,11 @@
 var
     api = require('../api'),
     db = require('../db'),
-    dao = require('./_dao'),
     utils = require('./_utils');
 
 var
     User = db.user,
-    Article = db.article,
-    sequelize = db.sequelize;
+    warp = db.warp;
 
 exports = module.exports = {
 
@@ -28,19 +26,18 @@ exports = module.exports = {
         catch (e) {
             return next(e);
         }
-        dao.find(User, {
-            where: {
-                email: email
-            }
+        User.find({
+            where: 'email=?',
+            params: [email]
         }, function(err, user) {
             if (err) {
                 return next(err);
             }
-            if ( !user || !user.passwd || user.passwd!=passwd) {
-                return res.send(api.error('auth:failed', '', 'Bad email or password.'));
+            if ( !user || !user.passwd || user.passwd!==passwd) {
+                return next(api.error('auth:failed', '', 'Bad email or password.'));
             }
             if (user.locked_util > Date.now()) {
-                return res.send(api.error('auth:locked', '', 'User is locked.'));
+                return next(api.error('auth:locked', '', 'User is locked.'));
             }
             var expires = Date.now() + 604800000; // 7 days
             var cookie = utils.make_session_cookie('local', user.id, user.passwd, expires);

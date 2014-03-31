@@ -4,7 +4,7 @@ console.log('init mysql with mysql-warp...');
 
 var
     _ = require('lodash'),
-    Warp = require('mysql-warp'),
+    Warp = require('./warp'),
     next_id = require('./models/_id'),
     config = require('./config');
 

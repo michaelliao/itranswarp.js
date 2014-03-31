@@ -150,7 +150,7 @@ function parse_authorization(auth, fn) {
     if (!u || !p) {
         return fn(null, null);
     }
-    User.find({ where: 'email=?' }, [u], function(err, user) {
+    User.find({ where: 'email=?', params: [u] }, function(err, user) {
         if (err) {
             return fn(err);
         }

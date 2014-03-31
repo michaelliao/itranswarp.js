@@ -68,19 +68,19 @@ function http(role, method, path, params, fn) {
     var opt = {
         method: method,
         headers: build_headers(role),
-        url: method=='GET' ? build_url(path, params) : build_url(path)
+        url: method==='GET' ? build_url(path, params) : build_url(path)
     };
     var r = request(opt, function(err, res, body) {
         should(err).not.be.ok;
         res.should.have.status(200);
-        console.log('>>> response: ' + res.statusCode);
+        console.log('>>> response got: ' + res.statusCode);
         console.log(body);
-        var r = JSON.parse(body);
-        r.should.be.ok;
-        return fn(r);
+        var json = JSON.parse(body);
+        should(json).be.ok;
+        return fn(json);
     });
     params = params || {};
-    if (method!='GET') {
+    if (method!=='GET') {
         opt.form = r.form();
         _.each(params, function(value, key) {
             opt.form.append(key, value);
@@ -95,23 +95,23 @@ function http(role, method, path, params, fn) {
             console.log('>>> form: ' + querystring.stringify(params));
         }
     }
-
+    console.log('>>> request sent.');
 }
 
 var init_sqls = [
-    'delete from t_page',
-    'delete from t_article',
-    'delete from t_category',
-    'delete from t_user',
-    'delete from t_attachment',
-    'delete from t_resource',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', ' + constants.ROLE_ADMIN + ',       \'Admin\',      \'admin@itranswarp.com\',   \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'\', \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', ' + constants.ROLE_ADMIN + ',       \'Special\',    \'nopass@itranswarp.com\',  \'\',                                 1, \'\', \'http://about:blank\', 0,             1396908390840, 1396908390840, 0)',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000eeeeeeeeee0eeeeeeeeee0eeeeeeeeee000\', ' + constants.ROLE_ADMIN + ',       \'Locked\',     \'lock@itranswarp.com\',    \'ff000111222333444555666777888999\', 1, \'\', \'http://about:blank\', 2000999999000, 1396907970807, 1396907970807, 0)',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'00139000000000044444444440aaaaaaaaaa0bbbbbbbbbb000\', ' + constants.ROLE_EDITOR + ',      \'Editor\',     \'editor@itranswarp.com\',  \'ee001122334455667788990000000eee\', 1, \'\', \'http://about:blank\', 0,             1394510182911, 1394510182911, 0)',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'0013900000000009999999999f66666666660ffffffffff000\', ' + constants.ROLE_CONTRIBUTOR + ', \'Contrib\',    \'contrib@itranswarp.com\', \'dd001122334455667788990000000ddd\', 1, \'\', \'http://about:blank\', 0,             1394542892829, 1394542892829, 0)',
-    'insert into t_user (id, role, name, email, passwd, verified, binds, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0eeeeeeeeee02222222222000\', ' + constants.ROLE_SUBSCRIBER + ',  \'Subscriber\', \'subs@itranswarp.com\',    \'ff001122334455667788990000000fff\', 1, \'\', \'http://about:blank\', 0,             1394542800090, 1394542800090, 0)',
-    'select * from t_user'
+    'delete from pages',
+    'delete from articles',
+    'delete from categories',
+    'delete from users',
+    'delete from attachments',
+    'delete from resources',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', ' + constants.ROLE_ADMIN + ',       \'Admin\',      \'admin@itranswarp.com\',   \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', ' + constants.ROLE_ADMIN + ',       \'Special\',    \'nopass@itranswarp.com\',  \'\',                                 1, \'http://about:blank\', 0,             1396908390840, 1396908390840, 0)',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000eeeeeeeeee0eeeeeeeeee0eeeeeeeeee000\', ' + constants.ROLE_ADMIN + ',       \'Locked\',     \'lock@itranswarp.com\',    \'ff000111222333444555666777888999\', 1, \'http://about:blank\', 2000999999000, 1396907970807, 1396907970807, 0)',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'00139000000000044444444440aaaaaaaaaa0bbbbbbbbbb000\', ' + constants.ROLE_EDITOR + ',      \'Editor\',     \'editor@itranswarp.com\',  \'ee001122334455667788990000000eee\', 1, \'http://about:blank\', 0,             1394510182911, 1394510182911, 0)',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'0013900000000009999999999f66666666660ffffffffff000\', ' + constants.ROLE_CONTRIBUTOR + ', \'Contrib\',    \'contrib@itranswarp.com\', \'dd001122334455667788990000000ddd\', 1, \'http://about:blank\', 0,             1394542892829, 1394542892829, 0)',
+    'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0eeeeeeeeee02222222222000\', ' + constants.ROLE_SUBSCRIBER + ',  \'Subscriber\', \'subs@itranswarp.com\',    \'ff001122334455667788990000000fff\', 1, \'http://about:blank\', 0,             1394542800090, 1394542800090, 0)',
+    'select * from users'
 ];
 
 function init_db(done) {
