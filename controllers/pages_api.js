@@ -93,7 +93,7 @@ exports = module.exports = {
         }
 
         var draft = 'true' === utils.get_param('draft', '', req),
-            tags = utils.format_tags(utils.get_param('tags', '', req));
+            tags = utils.formatTags(utils.get_param('tags', '', req));
 
         var content_id = next_id();
         var page_id = next_id();
@@ -162,7 +162,7 @@ exports = module.exports = {
             alias = alias.toLowerCase();
         }
         if (tags!==null) {
-            tags = utils.format_tags(tags);
+            tags = utils.formatTags(tags);
         }
         if (content!==null && content==='') {
             return next(api.invalid_param('content'));

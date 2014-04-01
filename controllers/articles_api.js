@@ -110,7 +110,7 @@ exports = module.exports = {
             return next(e);
         }
         var description = utils.get_param('description', '', req),
-            tags = utils.format_tags(utils.get_param('tags', '', req));
+            tags = utils.formatTags(utils.get_param('tags', '', req));
 
         var file = req.files && req.files.file;
 
@@ -191,5 +191,153 @@ exports = module.exports = {
             });
         }
         return fnCreate(null);
+    },
+
+    'POST /api/articles/:id': function(req, res, next) {
+        /**
+         * Update an article.
+         * 
+         * @return {object} The updated article object.
+         */
+        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
+            return next(api.not_allowed('Permission denied.'));
+        }
+        var name = utils.get_param('name', req),
+            category_id = utils.get_param('category_id', req),
+            description = utils.get_param('description', req),
+            tags = utils.get_param('tags', req),
+            content = utils.get_param('content', req);
+
+        if (name!==null && name==='') {
+            return next(api.invalid_param('name'));
+        }
+        if (category_id!==null && category_id==='') {
+            return next(api.invalid_param('category_id'));
+        }
+        if (content!==null && content==='') {
+            return next(api.invalid_param('content'));
+        }
+        if (tags!==null) {
+            tags = utils.formatTags(tags);
+        }
+
+        var file = req.files && req.files.file;
+
+        //var spt = utils.get_param('publish_time', '', req);
+        //parse datetime
+        var publish_time = null; //Date.now();
+
+        var fnUpdate = function(fileObject) {
+            warp.transaction(function(err, tx) {
+                if (err) {
+                    return next(err);
+                }
+                async.waterfall([
+                    // query article:
+                    function(callback) {
+                        Article.find(req.params.id, tx, callback);
+                    },
+                    // update category?
+                    function(article, callback) {
+                        if (article===null) {
+                            return callback(api.not_found('Article'));
+                        }
+                        if (category_id===null || category_id===article.category_id) {
+                            return callback(null, article);
+                        }
+                        Category.find(category_id, tx, function(err, category) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            if (category===null) {
+                                return callback(api.invalid_param('category_id'));
+                            }
+                            article.category_id = category_id;
+                            callback(null, article);
+                        });
+                    },
+                    // update text?
+                    function(article, callback) {
+                        if (content===null) {
+                            return callback(null, article);
+                        }
+                        var content_id = next_id();
+                        Text.create({
+                            id: content_id,
+                            ref_id: article.id,
+                            value: content
+                        }, tx, function(err, text) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            article.content_id = content_id;
+                            callback(null, article);
+                        });
+                    },
+                    // update cover?
+                    function(article, callback) {
+                        if (fileObject) {
+                            var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
+                            return fn(function(err, atta) {
+                                if (err) {
+                                    return callback(err);
+                                }
+                                article.cover_id = atta.id;
+                                callback(null, article);
+                            });
+                        }
+                        callback(null, article);
+                    },
+                    // update article:
+                    function(article, callback) {
+                        if (name!==null) {
+                            article.name = name;
+                        }
+                        if (description!==null) {
+                            article.description = description;
+                        }
+                        if (tags!==null) {
+                            article.tags = tags;
+                        }
+                        if (publish_time!==null) {
+                            article.publish_time = publish_time;
+                        }
+                        article.update(tx, callback);
+                    }
+                ], function(err, result) {
+                    tx.done(err, function(err) {
+                        if (err) {
+                            return next(err);
+                        }
+                        if (content!==null) {
+                            result.content = content;
+                            return res.send(result);
+                        }
+                        Text.find(result.content_id, function(err, text) {
+                            if (err) {
+                                return next(err);
+                            }
+                            result.content = text.value;
+                            return res.send(result);
+                        });
+                    });
+                });
+            });
+        };
+
+        if (file) {
+            return checkAttachment(file, function(err, attachFileObject) {
+                if (err) {
+                    return next(err);
+                }
+                if (! attachFileObject.isImage) {
+                    return next(api.invalid_param('file', 'Invalid image file.'));
+                }
+                // override name:
+                attachFileObject.name = name;
+                fnUpdate(attachFileObject);
+            });
+        }
+        return fnUpdate(null);
     }
 }

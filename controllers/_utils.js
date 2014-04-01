@@ -211,7 +211,7 @@ function isForbidden(req, role) {
 }
 
 // ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
-function format_tags(tags) {
+function formatTags(tags) {
     var arr = _.map(tags.split(/[\,\;]/), function(value) {
         return value.trim();
     });
@@ -227,13 +227,6 @@ function format_tags(tags) {
         }
         return false;
     }).join(',');
-}
-
-function get_page(req, pageSize) {
-    if (pageSize===undefined) {
-        pageSize = 20;
-    }
-
 }
 
 // return trimed parameter value as string, or default value if not exist. defaultValue is default to null.
@@ -263,7 +256,7 @@ function get_required_param(name, req) {
 
 exports = module.exports = {
 
-    format_tags: format_tags,
+    formatTags: formatTags,
 
     make_session_cookie: make_session_cookie,
 
