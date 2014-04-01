@@ -110,7 +110,7 @@ function userIdentityParser(req, res, next) {
     req.user = null;
     var cookie = req.cookies[SESSION_COOKIE_NAME];
     if (cookie) {
-        return parse_session_cookie(cookie, function(err, user) {
+        return parseSessionCookie(cookie, function(err, user) {
             if (err) {
                 return next(err);
             }
@@ -147,8 +147,8 @@ function userIdentityParser(req, res, next) {
     return next();
 }
 
-// parse_session_cookie, with callback(err, user):
-function parse_session_cookie(s, fn) {
+// parseSessionCookie, with callback(err, user):
+function parseSessionCookie(s, fn) {
     var ss = safe_b64decode(s).split(':');
     if (ss.length != 4) {
         return fn(null, null);
