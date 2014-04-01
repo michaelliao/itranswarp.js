@@ -45,21 +45,31 @@ describe('#articles', function() {
                 description: '   blablabla\nhaha...  \n   ',
                 tags: ' aaa,\n BBB,  \t ccc,CcC',
                 content: '  Long content... '
-            }, function(r2) {
-                r2.category_id.should.equal(category.id);
-                r2.name.should.equal('Test Article');
-                r2.description.should.equal('blablabla\nhaha...');
-                r2.tags.should.equal('aaa,BBB,ccc');
-                r2.content.should.equal('Long content...');
-                r2.cover_id.should.equal('');
+            }, function(r1) {
+                r1.category_id.should.equal(category.id);
+                r1.name.should.equal('Test Article');
+                r1.description.should.equal('blablabla\nhaha...');
+                r1.tags.should.equal('aaa,BBB,ccc');
+                r1.content.should.equal('Long content...');
+                r1.cover_id.should.equal('');
 
-                    // update article:
-                    //remote.post(remote.editor, '/api/articles/' + r2.id, {
-                    //    name: 'Name Changed'
-                    //}, function(r3) {
-                    //    assert.equal(r3.display_order, 1, 'display order should be 1 for second category.');
-                    done();
-                    //});
+                // update article:
+                remote.post(remote.editor, '/api/articles/' + r1.id, {
+                    name: 'Name Changed  ',
+                    content: 'Changed!'
+                }, function(r2) {
+                    r2.name.should.equal('Name Changed');
+                    r2.content.should.equal('Changed!');
+                    // query:
+                    remote.get(remote.guest, '/api/articles/' + r1.id, null, function(r3) {
+                        r3.name.should.equal(r2.name);
+                        r3.content.should.equal(r2.content);
+                        // not updated:
+                        r3.tags.should.equal(r1.tags);
+                        r3.description.should.equal(r1.description);
+                        done();
+                    });
+                });
             });
         });
 
@@ -88,7 +98,22 @@ describe('#articles', function() {
                     remote.download('/files/attachments/' + r2.id, function(content_type, content_length, content) {
                         content_type.should.equal('image/jpeg');
                         content_length.should.equal(346158);
-                        done();
+                        // update cover:
+                        remote.post(remote.editor, '/api/articles/' + r.id, {
+                            name: 'Cover changed!',
+                            file: remote.createReadStream('./test/res-image-2.jpg')
+                        }, function(r3) {
+                            // check cover is ok:
+                            r3.cover_id.should.not.equal(r.cover_id);
+                            remote.get(remote.guest, '/api/attachments/' + r3.cover_id, null, function(r4) {
+                                r4.id.should.equal(r3.cover_id);
+                                // check article cover changed:
+                                remote.get(remote.guest, '/api/articles/' + r.id, null, function(r5) {
+                                    r5.cover_id.should.equal(r4.id);
+                                    done();
+                                });
+                            });
+                        });
                     });
                 });
             });
