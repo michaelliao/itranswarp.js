@@ -198,7 +198,7 @@ exports = module.exports = {
                     page: page,
                     attachments: entities
                 });
-            })
+            });
         });
     },
 
