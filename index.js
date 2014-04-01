@@ -67,7 +67,9 @@ app.use(function(err, req, res, next) {
     next(err);
 });
 
-function load_controller_filenames() {
+// scan all modules:
+
+function loadControllerFilenames() {
     var files = require('fs').readdirSync(__dirname + '/controllers');
     var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
     var jss = _.filter(files, function(f) {
@@ -78,17 +80,15 @@ function load_controller_filenames() {
     });
 }
 
-// scan all modules:
-
-function load_controllers() {
+function loadControllers() {
     var ctrls = {};
-    _.each(load_controller_filenames(), function(filename) {
+    _.each(loadControllerFilenames(), function(filename) {
         ctrls[filename] = require('./controllers/' + filename);
     });
     return ctrls;
 }
 
-var controllers = load_controllers();
+var controllers = loadControllers();
 
 _.each(controllers, function(ctrl, fname) {
     _.each(ctrl, function(fn, path) {
