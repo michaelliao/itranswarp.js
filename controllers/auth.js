@@ -40,8 +40,8 @@ exports = module.exports = {
                 return next(api.error('auth:locked', '', 'User is locked.'));
             }
             var expires = Date.now() + 604800000; // 7 days
-            var cookie = utils.make_session_cookie('local', user.id, user.passwd, expires);
-            res.cookie(utils.SESSION_COOKIE_NAME, utils.make_session_cookie('local', user.id, user.passwd, 0), {
+            var cookie = utils.makeSessionCookie('local', user.id, user.passwd, expires);
+            res.cookie(utils.SESSION_COOKIE_NAME, cookie, {
                 path: '/',
                 expires: new Date(expires)
             });

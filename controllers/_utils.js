@@ -87,7 +87,7 @@ function safe_b64decode(s) {
 
 // Generate a secure client session cookie by constructing string:
 // base64(provider:uid:expires:md5(uid:expires:passwd:salt)).
-function make_session_cookie(provider, uid, passwd, expires) {
+function makeSessionCookie(provider, uid, passwd, expires) {
     var now = Date.now();
     var min = now + 86400000; // 1 day
     var max = now + 2592000000; // 30 days
@@ -129,7 +129,7 @@ function userIdentityParser(req, res, next) {
     console.log('no session cookie found.');
     var auth = req.get('authorization');
     if (auth) {
-        return parse_authorization(auth, function(err, user) {
+        return parseAuthorization(auth, function(err, user) {
             if (err) {
                 return next(err);
             }
@@ -179,7 +179,7 @@ function parse_session_cookie(s, fn) {
 
 // parse header 'Authorization: Basic xxxx',
 // with callback(err, user):
-function parse_authorization(auth, fn) {
+function parseAuthorization(auth, fn) {
     console.log('try parse header: Authorization: ' + auth);
     if ((auth.length < 6) || (auth.substring(0, 6)!=='Basic ')) {
         return fn(null, null);
@@ -258,7 +258,7 @@ exports = module.exports = {
 
     formatTags: formatTags,
 
-    make_session_cookie: make_session_cookie,
+    makeSessionCookie: makeSessionCookie,
 
     userIdentityParser: userIdentityParser,
 
