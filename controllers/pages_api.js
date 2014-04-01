@@ -268,11 +268,11 @@ exports = module.exports = {
                     if (page===null) {
                         return callback(api.not_found('Page'));
                     }
-                    page.destroy(callback);
+                    page.destroy(tx, callback);
                 },
                 function(r, callback) {
                     // delete all texts:
-                    warp.update('delete from texts where ref_id=?', [req.params.id], callback);
+                    warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
                 }
             ], function(err, result) {
                 tx.done(err, function(err) {

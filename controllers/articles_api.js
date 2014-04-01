@@ -242,6 +242,9 @@ exports = module.exports = {
                         if (article===null) {
                             return callback(api.not_found('Article'));
                         }
+                        if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
+                            return next(api.not_allowed('Permission denied.'));
+                        }
                         if (category_id===null || category_id===article.category_id) {
                             return callback(null, article);
                         }
@@ -339,5 +342,47 @@ exports = module.exports = {
             });
         }
         return fnUpdate(null);
+    },
+
+    'POST /api/articles/:id/delete': function(req, res, next) {
+        /**
+         * Delete an article by its id.
+         * 
+         * @param {string} :id - The id of the article.
+         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         */
+        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
+            return next(api.not_allowed('Permission denied.'));
+        }
+        warp.transaction(function(err, tx) {
+            if (err) {
+                return next(err);
+            }
+            async.waterfall([
+                function(callback) {
+                    Article.find(req.params.id, tx, callback);
+                },
+                function(article, callback) {
+                    if (article===null) {
+                        return callback(api.not_found('Article'));
+                    }
+                    if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
+                        return next(api.not_allowed('Permission denied.'));
+                    }
+                    article.destroy(tx, callback);
+                },
+                function(r, callback) {
+                    // delete all texts:
+                    warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
+                }
+            ], function(err, result) {
+                tx.done(err, function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+                    res.send({ id: req.params.id });
+                });
+            });
+        });
     }
 }
