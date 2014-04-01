@@ -145,5 +145,28 @@ describe('#articles', function() {
                 done();
             });
         });
+
+        it('create and delete article by editor', function(done) {
+            // create article:
+            remote.post(remote.editor, '/api/articles', {
+                category_id: category.id,
+                name: ' To be delete...   ',
+                description: '   blablabla\nhaha...  \n   ',
+                content: '  Long long long content... '
+            }, function(r1) {
+                r1.category_id.should.equal(category.id);
+                r1.name.should.equal('To be delete...');
+                // delete article:
+                remote.post(remote.editor, '/api/articles/' + r1.id + '/delete', null, function(r2) {
+                    r2.id.should.equal(r1.id);
+                    // query:
+                    remote.get(remote.guest, '/api/articles/' + r1.id, null, function(r3) {
+                        r3.error.should.equal('resource:notfound');
+                        r3.data.should.equal('Article');
+                        done();
+                    });
+                });
+            });
+        });
     });
 });
