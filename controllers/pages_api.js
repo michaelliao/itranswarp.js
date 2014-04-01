@@ -92,8 +92,8 @@ exports = module.exports = {
             return next(e);
         }
 
-        var draft = 'true' === utils.get_param('draft', '', req),
-            tags = utils.formatTags(utils.get_param('tags', '', req));
+        var draft = 'true' === utils.getParam('draft', '', req),
+            tags = utils.formatTags(utils.getParam('tags', '', req));
 
         var content_id = next_id();
         var page_id = next_id();
@@ -148,10 +148,10 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        var name = utils.get_param('name', req),
-            alias = utils.get_param('alias', req),
-            tags = utils.get_param('tags', req),
-            content = utils.get_param('content', req);
+        var name = utils.getParam('name', req),
+            alias = utils.getParam('alias', req),
+            tags = utils.getParam('tags', req),
+            content = utils.getParam('content', req);
         if (name!==null && name==='') {
             return next(api.invalid_param('name'));
         }

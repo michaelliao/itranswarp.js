@@ -109,12 +109,12 @@ exports = module.exports = {
         catch (e) {
             return next(e);
         }
-        var description = utils.get_param('description', '', req),
-            tags = utils.formatTags(utils.get_param('tags', '', req));
+        var description = utils.getParam('description', '', req),
+            tags = utils.formatTags(utils.getParam('tags', '', req));
 
         var file = req.files && req.files.file;
 
-        //var spt = utils.get_param('publish_time', '', req);
+        //var spt = utils.getParam('publish_time', '', req);
         //parse datetime
         var publish_time = Date.now();
 
@@ -202,11 +202,11 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        var name = utils.get_param('name', req),
-            category_id = utils.get_param('category_id', req),
-            description = utils.get_param('description', req),
-            tags = utils.get_param('tags', req),
-            content = utils.get_param('content', req);
+        var name = utils.getParam('name', req),
+            category_id = utils.getParam('category_id', req),
+            description = utils.getParam('description', req),
+            tags = utils.getParam('tags', req),
+            content = utils.getParam('content', req);
 
         if (name!==null && name==='') {
             return next(api.invalid_param('name'));
@@ -223,7 +223,7 @@ exports = module.exports = {
 
         var file = req.files && req.files.file;
 
-        //var spt = utils.get_param('publish_time', '', req);
+        //var spt = utils.getParam('publish_time', '', req);
         //parse datetime
         var publish_time = null; //Date.now();
 

@@ -69,7 +69,7 @@ exports = module.exports = {
         catch (e) {
             return next(e);
         }
-        var description = utils.get_param('description', '', req);
+        var description = utils.getParam('description', '', req);
 
         Category.findNumber('max(display_order)', function(err, num) {
             if (err) {
@@ -144,8 +144,8 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        var name = utils.get_param('name', req),
-            description = utils.get_param('description', req);
+        var name = utils.getParam('name', req),
+            description = utils.getParam('description', req);
         if (name!==null) {
             if (name==='') {
                 return next(api.invalid_param('name'));

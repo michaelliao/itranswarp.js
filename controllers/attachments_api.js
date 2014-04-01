@@ -219,7 +219,7 @@ exports = module.exports = {
         catch (e) {
             return next(e);
         }
-        var description = utils.get_param('description', '', req);
+        var description = utils.getParam('description', '', req);
 
         var file = req.files.file;
         if ( ! file) {

@@ -230,7 +230,7 @@ function formatTags(tags) {
 }
 
 // return trimed parameter value as string, or default value if not exist. defaultValue is default to null.
-function get_param(name, defaultValue, req) {
+function getParam(name, defaultValue, req) {
     if (arguments.length===2) {
         req = defaultValue;
         defaultValue = null;
@@ -264,7 +264,7 @@ exports = module.exports = {
 
     isForbidden: isForbidden,
 
-    get_param: get_param,
+    getParam: getParam,
 
     getRequiredParam: getRequiredParam,
 
