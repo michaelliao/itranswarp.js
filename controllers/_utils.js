@@ -243,7 +243,7 @@ function get_param(name, defaultValue, req) {
 }
 
 // return trimed parameter value as string, if not exist or empty, throw APIError('param:invalid').
-function get_required_param(name, req) {
+function getRequiredParam(name, req) {
     var s = null;
     if (name in req.body) {
         s = req.body[name].trim();
@@ -266,7 +266,7 @@ exports = module.exports = {
 
     get_param: get_param,
 
-    get_required_param: get_required_param,
+    getRequiredParam: getRequiredParam,
 
     getPage: function(req, itemsPerPage) {
         var index = parseInt(req.query.page);

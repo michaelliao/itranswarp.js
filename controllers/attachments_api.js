@@ -214,7 +214,7 @@ exports = module.exports = {
         var user_id = req.user.id;
 
         try {
-            var name = utils.get_required_param('name', req);
+            var name = utils.getRequiredParam('name', req);
         }
         catch (e) {
             return next(e);

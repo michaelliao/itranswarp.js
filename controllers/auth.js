@@ -20,8 +20,8 @@ exports = module.exports = {
 
     'POST /api/authenticate': function(req, res, next) {
         try {
-            var email = utils.get_required_param('email', req),
-                passwd = utils.get_required_param('passwd', req);
+            var email = utils.getRequiredParam('email', req),
+                passwd = utils.getRequiredParam('passwd', req);
         }
         catch (e) {
             return next(e);

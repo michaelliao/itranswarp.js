@@ -64,7 +64,7 @@ exports = module.exports = {
             return next(api.not_allowed('Permission denied.'));
         }
         try {
-            var name = utils.get_required_param('name', req);
+            var name = utils.getRequiredParam('name', req);
         }
         catch (e) {
             return next(e);
