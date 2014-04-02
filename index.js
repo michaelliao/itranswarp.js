@@ -70,7 +70,7 @@ app.use(function(err, req, res, next) {
 // scan all modules:
 
 function loadControllerFilenames() {
-    var files = require('fs').readdirSync(__dirname + '/controllers');
+    var files = fs.readdirSync(__dirname + '/controllers');
     var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
     var jss = _.filter(files, function(f) {
         return re.test(f);
