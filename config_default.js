@@ -14,10 +14,11 @@ module.exports = {
         'database': 'itranswarp',
         'connectionLimit': 20
     },
-    'oauth': {
-        'provider_name': {
+    'oauth2': {
+        '<provider-name>': {
             'app_key': '?',
-            'app_secret': '?'
+            'app_secret': '?',
+            'redirect_uri': 'http://www.example.com/callback'
         }
     }
 }
