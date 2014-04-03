@@ -3,6 +3,7 @@
 var
     api = require('../api'),
     db = require('../db'),
+    auth = require('./_auth'),
     utils = require('./_utils');
 
 var
@@ -16,6 +17,32 @@ exports = module.exports = {
          * Display authentication page.
          */
         res.render('auth/signin.html', {});
+    },
+
+    'GET /auth/from/:name': function(req, res, next) {
+        var provider = auth[req.params.name];
+        if (provider) {
+            return res.redirect(provider.getAuthenticateURL());
+        }
+        return res.send(404, 'Not Found');
+    },
+
+    'GET /auth/callback/:name': function(req, res, next) {
+        var provider = auth[req.params.name];
+        if (! provider) {
+            return res.send(404, 'Not Found');
+        }
+        var code = req.query.code;
+        if (! code) {
+
+        }
+        provider.getAuthentication({
+            code: code
+        }, function(err, r) {
+            if (err) {
+                res.send(err);
+            }
+        });
     },
 
     'POST /api/authenticate': function(req, res, next) {
