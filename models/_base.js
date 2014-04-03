@@ -85,6 +85,13 @@ exports = module.exports = {
         }, options || {});
     },
 
+    column_varchar_500: function(name, options) {
+        return _.merge({
+            name: name,
+            type: 'varchar(500)',
+        }, options || {});
+    },
+
     column_varchar_1000: function(name, options) {
         return _.merge({
             name: name,
