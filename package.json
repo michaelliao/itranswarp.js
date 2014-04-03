@@ -11,6 +11,7 @@
         "request": "2.x",
         "swig": "1.3.x",
         "mysql-warp": "0.1.x",
+        "oauth2-warp": "0.1.x",
         "markdown": "0.5.x",
         "nodemailer": "0.6.x",
         "mime": "1.x",

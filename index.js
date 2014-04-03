@@ -3,7 +3,7 @@
 var
     fs = require('fs'),
     express = require('express'),
-    ejs = require('ejs'),
+    swig = require('swig'),
     _ = require('lodash');
 
 // load config:
@@ -11,13 +11,14 @@ var
     config = require('./config'),
     api = require('./api'),
     db = require('./db'),
+    utils = require('./controllers/_utils'),
     api_console = require('./api_console');
 
 // init http server:
 var app = express();
 
-// set engine to ejs:
-app.engine('html', ejs.__express);
+// set engine to swig:
+app.engine('html', swig.renderFile);
 
 // set for production:
 if ('production' === app.get('env')) {
@@ -26,6 +27,7 @@ if ('production' === app.get('env')) {
 
 // set for development:
 if ('development' === app.get('env')) {
+    swig.setDefaults({ cache: false });
     app.use('/static', express.static(__dirname + '/static'));
     app.use('/api/', function(req, res, next) {
         setTimeout(function() {
@@ -54,7 +56,7 @@ app.use('/api/', function(req, res, next) {
 });
 
 // auto set current user with each request:
-app.use(require('./controllers/_utils').userIdentityParser);
+app.use(utils.userIdentityParser);
 
 // api error handling:
 app.use(app.router);
@@ -94,17 +96,17 @@ _.each(controllers, function(ctrl, fname) {
     _.each(ctrl, function(fn, path) {
         var ss = path.split(' ', 2);
         if (ss.length != 2) {
-            console.log('ERROR in route definition: ' + path);
+            console.log('Not a route definition: ' + path);
             return;
         }
         var verb = ss[0];
         var route = ss[1];
         if (verb=='GET') {
-            console.log('found api: GET ' + route + ' in ' + fname + '.js');
+            console.log('found: GET ' + route + ' in ' + fname + '.js');
             app.get(route, fn);
         }
         else if (verb=='POST') {
-            console.log('found api: POST ' + route + ' in ' + fname + '.js');
+            console.log('found: POST ' + route + ' in ' + fname + '.js');
             app.post(route, fn);
         }
         else {
