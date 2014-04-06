@@ -11,6 +11,7 @@ var
     config = require('./config'),
     api = require('./api'),
     db = require('./db'),
+    constants = require('./constants'),
     utils = require('./controllers/_utils'),
     api_console = require('./api_console');
 
@@ -31,7 +32,7 @@ if ('development' === app.get('env')) {
     app.use('/static', express.static(__dirname + '/static'));
     app.use('/api/', function(req, res, next) {
         setTimeout(function() {
-            next(null);
+            next();
         }, 250 + Math.floor(Math.random() * 250));
     });
 }
@@ -50,13 +51,20 @@ app.use(express.multipart({ keepExtensions: true, uploadDir: tmp_upload_dir }));
 
 // set content type: json for api:
 app.use('/api/', function(req, res, next) {
-    console.log('set api response type: application/json');
     res.type('application/json');
     next();
 });
 
 // auto set current user with each request:
 app.use(utils.userIdentityParser);
+
+// check user for manage:
+app.use('/manage/', function(req, res, next) {
+    if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
+        return next();
+    }
+    res.redirect('/auth/');
+});
 
 // api error handling:
 app.use(app.router);
