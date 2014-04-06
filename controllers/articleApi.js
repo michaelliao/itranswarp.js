@@ -9,7 +9,7 @@ var
     constants = require('../constants');
 
 var
-    attachmentsApi = require('./attachments_api'),
+    attachmentsApi = require('./attachmentApi'),
     checkAttachment = attachmentsApi.checkAttachment,
     createAttachmentTaskInTx = attachmentsApi.createAttachmentTaskInTx;
 

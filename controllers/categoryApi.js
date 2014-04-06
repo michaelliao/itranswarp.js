@@ -16,7 +16,13 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
+function getCategories(callback) {
+    Category.findAll({ order: 'display_order' }, callback);
+}
+
 exports = module.exports = {
+
+    getCategories: getCategories,
 
     'GET /api/categories': function(req, res, next) {
         /**
@@ -24,9 +30,7 @@ exports = module.exports = {
          * 
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
-        Category.findAll({
-            order: 'display_order'
-        }, function(err, array) {
+        getCategories(function(err, array) {
             if (err) {
                 return next(err);
             }
