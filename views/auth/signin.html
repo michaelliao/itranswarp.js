@@ -4,25 +4,43 @@
     <meta charset="utf-8" />
     <title>Please Sign In</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" />
+    <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
     <script type="text/javascript" src="/static/js/jquery.min.js"></script>
     <script type="text/javascript" src="/static/js/jquery.postjson.js"></script>
     <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
     <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/vue.min.js"></script>
+    <script type="text/javascript" src="/static/js/itranswarp.js"></script>
     <script type="text/javascript" src="/static/js/manage.js"></script>
     <script type="text/javascript">
-function ajax_signin(form) {
-    var email = $.trim($('#email').val()).toLowerCase();
-    $('#md5-passwd').val($.md5(email + ':' + $('#origin-passwd').val()));
-    show_loading(true);
-    show_error(null);
-    $.postJSON($(form).attr('action'), $(form).serialize(), function(result) {
-        location.assign('/manage/');
-    }, function(e) {
-        show_loading(false);
-        show_error(e.message || e.error, e.data);
+$(function() {
+    var vmAuth = new Vue({
+        el: '#formAuth',
+        data: {
+            email: '',
+            passwd: ''
+        },
+        methods: {
+            onSubmit: function(event) {
+                event.preventDefault();
+                var email = this.email.trim().toLowerCase();
+                var passwd = $.md5(email + ':' + this.passwd);
+                showError();
+                showLoading(true);
+                postJSON('/api/authenticate', { email: email, passwd: passwd }, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    location.assign('/manage/');
+                });
+            }
+        }
     });
-    return false;
-}
+
+});
+
     </script>
 </head>
 <body>
@@ -33,17 +51,16 @@ function ajax_signin(form) {
             <div class="span8 offset2">
                 <div class="row">
                     <div class="span6 offset1">
-                        <form name="authenticate" action="/api/authenticate" method="post" onsubmit="return ajax_signin(this)">
+                        <form id="formAuth" v-on="submit: onSubmit">
                             <legend>Please sign in:</legend>
                             <div class="alert alert-error hide"></div>
                             <div style="margin: 16px 0;">
                                 <label class="control-label">Email:</label>
-                                <input type="text" id="email" name="email" maxlength="50" class="input-xlarge" />
+                                <input v-model="email" type="text" name="email" maxlength="50" class="input-xlarge" />
                             </div>
                             <div style="margin: 16px 0;">
                                 <label class="control-label">Password:</label>
-                                <input type="password" id="origin-passwd" maxlength="50" class="input-xlarge" />
-                                <input type="hidden" id="md5-passwd" name="passwd" />
+                                <input v-model="passwd" type="password" maxlength="50" class="input-xlarge" />
                             </div>
                             <div style="margin: 16px 0;">
                                 <button type="submit" class="btn btn-primary"><i class="icon-lock icon-white"></i> Sign In</button>
