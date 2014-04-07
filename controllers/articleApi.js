@@ -25,7 +25,7 @@ function getArticles(page, allArticles, callback) {
     var now = Date.now();
     var countOptions = allArticles ? 'count(*)' : {
         select: 'count(*)',
-        where: 'publish_time<?',
+        where: 'publish_at<?',
         params: [now]
     };
     Article.findNumber(countOptions, function(err, num) {
@@ -39,10 +39,10 @@ function getArticles(page, allArticles, callback) {
         var findOptions = {
             offset: page.offset,
             limit: page.limit,
-            order: 'publish_time desc'
+            order: 'publish_at desc'
         };
         if (! allArticles) {
-            findOptions.where = 'publish_time<?';
+            findOptions.where = 'publish_at<?';
             findOptions.params = [now];
         }
         Article.findAll(findOptions, function(err, entities) {
@@ -57,28 +57,39 @@ function getArticles(page, allArticles, callback) {
     });
 }
 
+function getArticle(id, callback) {
+    Article.find(id, function(err, article) {
+        if (err) {
+            return callback(err);
+        }
+        if (article===null) {
+            return callback(api.not_found('Article'));
+        }
+        Text.find(article.content_id, function(err, text) {
+            if (err) {
+                return callback(err);
+            }
+            if (text===null) {
+                return callback(api.not_found('Text'));
+            }
+            article.content = text.value;
+            callback(null, article);
+        });
+    });
+}
+
 exports = module.exports = {
 
     getArticles: getArticles,
 
+    getArticle: getArticle,
+
     'GET /api/articles/:id': function(req, res, next) {
-        Article.find(req.params.id, function(err, article) {
+        getArticle(req, params.id, function(err, article) {
             if (err) {
                 return next(err);
             }
-            if (article===null) {
-                return next(api.not_found('Article'));
-            }
-            Text.find(article.content_id, function(err, text) {
-                if (err) {
-                    return next(err);
-                }
-                if (text===null) {
-                    return next(api.not_found('Text'));
-                }
-                article.content = text.value;
-                return res.send(article);
-            });
+            return res.send(article);
         });
     },
 
@@ -114,9 +125,9 @@ exports = module.exports = {
 
         var file = req.files && req.files.file;
 
-        //var spt = utils.getParam('publish_time', '', req);
+        //var spt = utils.getParam('publish_at', '', req);
         //parse datetime
-        var publish_time = Date.now();
+        var publish_at = Date.now();
 
         var content_id = next_id();
         var article_id = next_id();
@@ -162,7 +173,7 @@ exports = module.exports = {
                             name: name,
                             tags: tags,
                             description: description,
-                            publish_time: publish_time
+                            publish_at: publish_at
                         }, tx, callback);
                     }
                 ], function(err, result) {
@@ -223,9 +234,9 @@ exports = module.exports = {
 
         var file = req.files && req.files.file;
 
-        //var spt = utils.getParam('publish_time', '', req);
+        //var spt = utils.getParam('publish_at', '', req);
         //parse datetime
-        var publish_time = null; //Date.now();
+        var publish_at = null; //Date.now();
 
         var fnUpdate = function(fileObject) {
             warp.transaction(function(err, tx) {
@@ -302,8 +313,8 @@ exports = module.exports = {
                         if (tags!==null) {
                             article.tags = tags;
                         }
-                        if (publish_time!==null) {
-                            article.publish_time = publish_time;
+                        if (publish_at!==null) {
+                            article.publish_at = publish_at;
                         }
                         article.update(tx, callback);
                     }
