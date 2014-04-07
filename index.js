@@ -61,6 +61,11 @@ app.use(utils.userIdentityParser);
 // check user for manage:
 app.use('/manage/', function(req, res, next) {
     if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
+        res.manage = function(view, model) {
+            var m = model || {};
+            m.__user__ = req.user;
+            return res.render(view, m);
+        };
         return next();
     }
     res.redirect('/auth/');
