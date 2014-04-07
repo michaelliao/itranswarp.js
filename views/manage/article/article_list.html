@@ -1,0 +1,99 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Articles
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var page = {{ page|safe }};
+    var categories = {{ categories|safe }};
+    var articles = {{ articles|safe }};
+    // bind category_name to article:
+    for (var i = 0; i < articles.length; i ++) {
+        var a = articles[i];
+        for (var n = 0; n < categories.length; n ++) {
+            if (a.category_id===categories[n].id) {
+                a.category_name = categories[n].name;
+                break;
+            }
+        }
+    }
+    var vmArticles = new Vue({
+        el: '#articles',
+        data: {
+            articles: articles,
+            page: page
+        },
+        methods: {
+            editArticle: function(id) {
+                location.assign('edit_article?id=' + id);
+            },
+            deleteArticle: function(id) {
+                //
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="articles">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All Articles (<span v-text="page.totalItems"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="category_list" class="btn" style="float:left"><i class="icon-list"></i> Categories</a>
+        <a href="javascript:refresh()" class="btn btn-info"><i class="icon-refresh icon-white"></i> Refresh</a>
+        <a href="create_article" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Article</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="20%"></th>
+                <th width="35%">Name</th>
+                <th width="15%">Author/Category</th>
+                <th width="15%">Publish / Created</th>
+                <th width="15%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="a: articles">
+                <td>
+                    <img v-attr="src: '/files/attachments/' + a.cover_id + '/s'" />
+                </td>
+                <td>
+                    <p v-text="a.name" style="font-weight:bold;"></p>
+                    <p v-text="a.description"></p><i class="icon-tag"></i>
+                </td>
+                <td>
+                    <p><i class="icon-list"></i> <span v-text="a.category_name"></span></p>
+                    <p><i class="icon-user"></i> <span v-text="a.user_name"></span></p>
+                </td>
+                <td>
+                    <p><span v-text="a.publish_at.toDateTime('yy-MM-dd hh:mm')"></span></p>
+                    <p><span v-text="a.created_at.toDateTime('yy-MM-dd hh:mm')"></span></p>
+                </td>
+                <td>
+                    <a v-on="click: editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-on="click: deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+{% endblock%}

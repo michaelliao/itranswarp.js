@@ -1,0 +1,278 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+{{ form.name }}
+{% endblock %}
+
+{% block head %}
+
+<script src="/static/js/markdown.js"></script>
+<script src="/static/js/markdown-editor.js"></script>
+<script>
+var vmArticle = null;
+var initial_content = '{{ article.content|addslashes }}';
+
+function beforeUnload() {
+    if (isChanged()) {
+        return 'Content has been changed.';
+    }
+};
+
+function isChanged() {
+    return vmArticle.content !== initial_content;
+}
+
+function checkVm() {
+    // check cover image:
+    var
+        MIN_WIDTH = 640,
+        MIN_HEIGHT = 360;
+    var
+        $file = $('#file'),
+        $preview = $('#preview');
+    $file.removeAttr('name');
+    if (vmArticle.id==='' && ($file.val()==='' || $preview.data('width')===0)) {
+        showError('Must upload a cover image.', 'cover');
+        return false;
+    }
+    if ($preview.data('width') < MIN_WIDTH || $preview.data('height') < MIN_HEIGHT) {
+        showError('Cover is too small (Must be equal or greater than ' + MIN_WIDTH + ' x ' + MIN_HEIGHT + ').', 'cover');
+        return false;
+    }
+    $file.attr('name', 'file');
+    // check fields:
+    if (vmArticle.name.trim()==='') {
+        showError('Name cannot be empty.', 'name');
+        return false;
+    }
+    if (vmArticle.description.trim()==='') {
+        showError('Description cannot be empty.', 'description');
+        return false;
+    }
+    if (vmArticle.content.trim()==='') {
+        showError('Content cannot be empty.', 'content');
+        return false;
+    }
+    var spat = vmArticle.publish_at_str.trim();
+    if (spat==='') {
+        vmArticle.publish_at = '';
+    }
+    else {
+        var pt = parseDateTime(spat);
+        if (isNaN(pt)) {
+            showError('Invalid date format.', 'publish_at_str');
+            return false;
+        }
+        vmArticle.publish_at = pt.toString();
+    }
+    return true;
+}
+
+function ajaxPostMultipart() {
+    if (isChanged()) {
+        // update content only if it is changed:
+        $('#markdown-editor').attr('name', 'content');
+    }
+    else {
+        $('#markdown-editor').removeAttr('name');
+    }
+    var form = $('#formArticle').get(0);
+    window.onbeforeunload = null;
+    showLoading(true);
+    var data = null;
+    try {
+        data = form.getFormData();
+    }
+    catch(e) {
+        data = new FormData(form);
+    }
+    $.ajax({
+        url: '{{ form.action }}',
+        data: data,
+        contentType: false,
+        processData: false,
+        type: 'POST'
+    }).done(function(data) {
+        if (data && data.error) {
+            showError(data.message || data.error, data.data);
+            showLoading(false);
+            window.onbeforeunload = beforeUnload;
+        }
+        else {
+            location.assign('{{ form.redirect }}');
+        }
+    }).fail(function(jqXHR, textStatus) {
+        showError('Network error (HTTP ' + jqXHR.status + ')');
+        showLoading(false);
+        window.onbeforeunload = beforeUnload;
+    });
+}
+
+$(function() {
+    var categories = {{ categories|safe }};
+    vmArticle = new Vue({
+        el: '#formArticle',
+        data: {
+            categories: categories,
+            category_id: '{{ article.category_id }}',
+            id: '{{ article.id }}',
+            cover_id: '{{ article.cover_id }}',
+            name: '{{ article.name|addslashes }}',
+            publish_at: '{{ article.publish_at }}',
+            publish_at_str: '',
+            description: '{{ article.description|addslashes }}',
+            content: initial_content,
+        },
+        methods: {
+            onSubmit: function(event) {
+                event.preventDefault();
+                showError();
+                if (! checkVm()) {
+                    return;
+                }
+                ajaxPostMultipart();
+            }
+        }
+    });
+    if (vmArticle.publish_at!=='') {
+        vmArticle.publish_at_str = parseInt(vmArticle.publish_at).toDateTime();
+    }
+    if (! vmArticle.category_id && vmArticle.categories.length > 0) {
+        vmArticle.category_id = vmArticle.categories[0].id;
+    }
+    var
+        $file = $('#file'),
+        $preview = $('#preview');
+    if (vmArticle.cover_id) {
+        $preview.css('background-image', 'url(/files/attachments/' + vmArticle.cover_id + ')');
+    }
+    // when unload:
+    window.onbeforeunload = beforeUnload;
+    // when file change:
+    $file.change(function() {
+        showError();
+        $preview.css('background-image', '');
+        $preview.data('width', 0).data('height', 0);
+        var f = $file.val();
+        if (f!=='') {
+            try {
+                var lf = $file.get(0).files[0];
+                var ft = lf.type;
+                if (ft=='image/png' || ft=='image/jpeg' || ft=='image/gif') {
+                    // check image size:
+                    var img = new Image()
+                    img.onload = function() {
+                        $preview.data('width', this.width).data('height', this.height);
+                    }
+                    img.src = getObjectURL(lf);
+                    $preview.css('background-image', 'url(' + getObjectURL(lf) + ')');
+                }
+                else {
+                    showError('Invalid image.');
+                    $('.field-cover').addClass('error');
+                }
+            }
+            catch(e) {}
+        }
+    });
+});
+
+
+
+$(function() {
+
+//{% if cover_id %}
+    
+//{% endif %}
+
+    g_initial_text = $('#markdown-editor').val();
+    $('#markdown-editor').removeAttr('disabled');
+    $('#markdown-editor').markdown({
+        'upload_image_url': '/api/images/create',
+    });
+    window.onbeforeunload = function() {
+        if (is_changed()) {
+            return 'Content has been changed.';
+        }
+    };
+
+    
+});
+
+</script>
+
+{% endblock %}
+
+{% block main %}
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/article/">All Articles</a> <span class="divider">/</span></li>
+        <li class="active">{{ form.name }}</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <form v-on="submit: onSubmit" id="formArticle" enctype="multipart/form-data" class="form-horizontal">
+        <legend>{{ form.name }}</legend>
+        <fieldset>
+            <div class="field-cover control-group">
+                <label class="control-label">Cover:</label>
+                <div class="controls">
+                    <div id="preview" style="border:solid 1px #ccc;width:612px;height:344px;background-size:cover;background-position:center center;"></div>
+                    <div style="margin-top:10px;"><input id="file" type="file" name="file" /></div>
+                </div>
+            </div>
+            <div class="field-name control-group">
+                <label class="control-label">Name:</label>
+                <div class="controls">
+                    <input v-model="name" name="name" type="text" class="input-xlarge" style="width:600px;" />
+                </div>
+            </div>
+            <div class="field-category_id control-group">
+                <label class="control-label">Category:</label>
+                <div class="controls">
+                    <label v-repeat="c: categories" class="radio">
+                        <input v-model="category_id" name="category_id" type="radio" v-attr="value: c.id" />
+                        <span v-text="c.name"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="field-tags control-group">
+                <label class="control-label">Tags:</label>
+                <div class="controls">
+                    <input name="tags" type="text" value="{{ tags|e }}" class="input-xlarge" style="width:600px;" />
+                    <span class="help-inline">Tags seperated by ,</span>
+                </div>
+            </div>
+            <div class="field-publish_at control-group">
+                <label class="control-label">Publish Date:</label>
+                <div class="controls">
+                    <input v-model="publish_at" name="publish_at" type="hidden" />
+                    <input v-model="publish_at_str" type="text" />
+                    <span class="help-inline">yyyy-mm-dd HH:MM:SS Leave empty for now.</span>
+                </div>
+            </div>
+            <div class="field-description control-group">
+                <label class="control-label">Description:</label>
+                <div class="controls">
+                    <textarea v-model="description" name="description" rows="5" style="width:600px; resize:none;"></textarea>
+                </div>
+            </div>
+            <div class="field-content control-group">
+                <label class="control-label">Content:</label>
+                <div class="controls">
+                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <input v-model="id" type="hidden" name="id" />
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}

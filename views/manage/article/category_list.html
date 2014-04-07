@@ -1,0 +1,141 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Categories
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var categories = {{ categories|safe }};
+    var vmCategories = new Vue({
+        el: '#categories',
+        data: {
+            categories: categories
+        },
+        methods: {
+            sort: function(event) {
+                var ids = [];
+                for (var i = 0; i < this.categories.length; i ++) {
+                    ids.push('id=' + this.categories[i].id);
+                }
+                showError();
+                showLoading(true);
+                postJSON('/api/categories/sort', ids.join('&'), function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    refresh();
+                });
+            },
+            find: function(id) {
+                for (var i = 0; i < this.categories.length; i ++) {
+                    var c = this.categories[i];
+                    if (this.categories[i].id===id) {
+                        return i;
+                    }
+                }
+                return (-1);
+            },
+            swap: function(index1, index2) {
+                var obj = this.categories[index2];
+                this.categories.splice(index2, 1);
+                this.categories.splice(index1, 0, obj);
+                $('#sort').show();
+            },
+            moveUp: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===0) {
+                    return;
+                }
+                this.swap(index - 1, index);
+            },
+            moveDown: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===(this.categories.length-1)) {
+                    return;
+                }
+                this.swap(index, index + 1);
+            },
+            onEditCategory: function(id) {
+                location.assign('edit_category?id=' + id);
+            },
+            onDeleteCategory: function(id) {
+                var index = this.find(id);
+                if (index !== (-1)) {
+                    var categories = this.categories;
+                    var c = categories[index];
+                    showConfirm('Confirm Deletion', 'Category \"' + c.name + '\" will be deleted. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            categories.splice(index, 1);
+                        });
+                    });
+                }
+            },
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="categories">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/article/">All Articles</a> <span class="divider">/</span></li>
+        <li class="active">All Categories (<span v-text="categories.length"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="create_category" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Category</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="30%">Name</th>
+                <th width="40%">Description</th>
+                <th width="15%">Created At</th>
+                <th width="15%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="c: categories">
+                <td>
+                    <a v-text="c.name" v-attr="href: '/category/'+c.id" target="_blank"></a>
+                </td>
+                <td><span v-text="c.description"></span></td>
+                <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on="click: moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
+                    <a v-on="click: moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
+                    <a v-on="click: onEditCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-on="click: onDeleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div>
+        <div id="sort" class="btn-toolbar hide" style="text-align:right;">
+            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> Save Orders</button>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}
