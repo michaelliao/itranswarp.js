@@ -1,0 +1,48 @@
+// ----------------------------------------------------------------------------
+// Management Console Style
+// ----------------------------------------------------------------------------
+
+@import "variables.less"; // Modify this for custom colors, font-sizes, etc
+@import "mixins.less";
+
+html, body {
+    height: 100%;
+}
+
+@footerHeight: 30px;
+
+#main {
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    margin-bottom: -@footerHeight;
+}
+
+#menus {
+    padding: 8px 0;
+    margin: 14px 14px 14px 0;
+}
+
+#footer {
+    height: @footerHeight;
+    background-color: #eee;
+    p {
+        margin: 0;
+        padding: 0;
+        font-size: 12px;
+        line-height: (@footerHeight - 1);
+    }
+}
+
+#push {
+    height: @footerHeight;
+}
+
+#footer, #push {
+    clear: both;
+}
+
+.x-loading {
+    background-image: url(/static/img/loading.gif);
+    background-position: 0 0;
+}
