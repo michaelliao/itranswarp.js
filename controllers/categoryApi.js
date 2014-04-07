@@ -20,9 +20,15 @@ function getCategories(callback) {
     Category.findAll({ order: 'display_order' }, callback);
 }
 
+function getCategory(id, callback) {
+    Category.find(id, callback);
+}
+
 exports = module.exports = {
 
     getCategories: getCategories,
+
+    getCategory: getCategory,
 
     'GET /api/categories': function(req, res, next) {
         /**
@@ -45,7 +51,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the category.
          * @return {object} Category object.
          */
-        Category.find(req.params.id, function(err, obj) {
+        getCategory(req.params.id, function(err, obj) {
             if (err) {
                 return next(err);
             }
