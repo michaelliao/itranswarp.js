@@ -12,7 +12,7 @@ exports = module.exports = function(warp) {
         base.column_varchar_100('name'),
         base.column_varchar_1000('tags'),
         base.column_varchar_1000('description'),
-        base.column_bigint('publish_time', { index: true, defaultValue: Date.now })
+        base.column_bigint('publish_at', { index: true, defaultValue: Date.now })
     ], {
         table: 'articles'
     });
