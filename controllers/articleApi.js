@@ -63,14 +63,14 @@ function getArticle(id, callback) {
             return callback(err);
         }
         if (article===null) {
-            return callback(api.not_found('Article'));
+            return callback(api.notFound('Article'));
         }
         Text.find(article.content_id, function(err, text) {
             if (err) {
                 return callback(err);
             }
             if (text===null) {
-                return callback(api.not_found('Text'));
+                return callback(api.notFound('Text'));
             }
             article.content = text.value;
             callback(null, article);
@@ -112,7 +112,7 @@ exports = module.exports = {
          * @return {object} The created article object.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         try {
             var name = utils.getRequiredParam('name', req),
@@ -130,7 +130,7 @@ exports = module.exports = {
 
         if (publish_at!==null) {
             if ( ! RE_TIMESTAMP.test(publish_at)) {
-                return next(api.invalid_param('publish_at'));
+                return next(api.invalidParam('publish_at'));
             }
             publish_at = parseInt(publish_at);
         }
@@ -154,7 +154,7 @@ exports = module.exports = {
                     // create text:
                     function(category, callback) {
                         if (category===null) {
-                            return callback(api.invalid_param('category_id'));
+                            return callback(api.invalidParam('category_id'));
                         }
                         Text.create({
                             id: content_id,
@@ -203,7 +203,7 @@ exports = module.exports = {
                     return next(err);
                 }
                 if (! attachFileObject.isImage) {
-                    return next(api.invalid_param('file', 'Invalid image file.'));
+                    return next(api.invalidParam('file', 'Invalid image file.'));
                 }
                 // override name:
                 attachFileObject.name = name;
@@ -220,7 +220,7 @@ exports = module.exports = {
          * @return {object} The updated article object.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         var name = utils.getParam('name', req),
             category_id = utils.getParam('category_id', req),
@@ -230,17 +230,17 @@ exports = module.exports = {
             content = utils.getParam('content', req);
 
         if (name!==null && name==='') {
-            return next(api.invalid_param('name'));
+            return next(api.invalidParam('name'));
         }
         if (category_id!==null && category_id==='') {
-            return next(api.invalid_param('category_id'));
+            return next(api.invalidParam('category_id'));
         }
         if (content!==null && content==='') {
-            return next(api.invalid_param('content'));
+            return next(api.invalidParam('content'));
         }
         if (publish_at!==null) {
             if (! RE_TIMESTAMP.test(publish_at)) {
-                return next(api.invalid_param('publish_at'));
+                return next(api.invalidParam('publish_at'));
             }
             publish_at = parseInt(publish_at);
         }
@@ -263,10 +263,10 @@ exports = module.exports = {
                     // update category?
                     function(article, callback) {
                         if (article===null) {
-                            return callback(api.not_found('Article'));
+                            return callback(api.notFound('Article'));
                         }
                         if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
-                            return next(api.not_allowed('Permission denied.'));
+                            return next(api.notAllowed('Permission denied.'));
                         }
                         if (category_id===null || category_id===article.category_id) {
                             return callback(null, article);
@@ -276,7 +276,7 @@ exports = module.exports = {
                                 return callback(err);
                             }
                             if (category===null) {
-                                return callback(api.invalid_param('category_id'));
+                                return callback(api.invalidParam('category_id'));
                             }
                             article.category_id = category_id;
                             callback(null, article);
@@ -357,7 +357,7 @@ exports = module.exports = {
                     return next(err);
                 }
                 if (! attachFileObject.isImage) {
-                    return next(api.invalid_param('file', 'Invalid image file.'));
+                    return next(api.invalidParam('file', 'Invalid image file.'));
                 }
                 // override name:
                 attachFileObject.name = name;
@@ -375,7 +375,7 @@ exports = module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         warp.transaction(function(err, tx) {
             if (err) {
@@ -387,10 +387,10 @@ exports = module.exports = {
                 },
                 function(article, callback) {
                     if (article===null) {
-                        return callback(api.not_found('Article'));
+                        return callback(api.notFound('Article'));
                     }
                     if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
-                        return next(api.not_allowed('Permission denied.'));
+                        return next(api.notAllowed('Permission denied.'));
                     }
                     article.destroy(tx, callback);
                 },

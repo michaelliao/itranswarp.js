@@ -57,7 +57,7 @@ exports = module.exports = {
                 return next(err);
             }
             if (obj===null) {
-                return next(api.not_found('Category'));
+                return next(api.notFound('Category'));
             }
             return res.send(obj);
         });
@@ -72,7 +72,7 @@ exports = module.exports = {
          * @return {object} Category object that was created.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         try {
             var name = utils.getRequiredParam('name', req);
@@ -101,7 +101,7 @@ exports = module.exports = {
 
     'POST /api/categories/sort': function(req, res, next) {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         Category.findAll(function(err, entities) {
             if (err) {
@@ -112,13 +112,13 @@ exports = module.exports = {
                 ids = [ids];
             }
             if (entities.length!==ids.length) {
-                return next(api.invalid_param('id', 'Invalid id list.'));
+                return next(api.invalidParam('id', 'Invalid id list.'));
             }
             for (var i=0; i<entities.length; i++) {
                 var entity = entities[i];
                 var pos = ids.indexOf(entity.id);
                 if (pos===(-1)) {
-                    return next(api.invalid_param('id', 'Invalid id parameters.'));
+                    return next(api.invalidParam('id', 'Invalid id parameters.'));
                 }
                 entity.display_order = pos;
             }
@@ -153,13 +153,13 @@ exports = module.exports = {
          * @return {object} Category object that was updated.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         var name = utils.getParam('name', req),
             description = utils.getParam('description', req);
         if (name!==null) {
             if (name==='') {
-                return next(api.invalid_param('name'));
+                return next(api.invalidParam('name'));
             }
         }
         Category.find(req.params.id, function(err, entity) {
@@ -167,7 +167,7 @@ exports = module.exports = {
                 return next(err);
             }
             if (entity===null) {
-                return next(api.not_found('Category'));
+                return next(api.notFound('Category'));
             }
             if (name!==null) {
                 entity.name = name;
@@ -192,7 +192,7 @@ exports = module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         async.waterfall([
             function(callback) {
@@ -200,7 +200,7 @@ exports = module.exports = {
             },
             function(category, callback) {
                 if (category===null) {
-                    return callback(api.not_found('Category'));
+                    return callback(api.notFound('Category'));
                 }
                 Article.findNumber({
                     select: 'count(*)',

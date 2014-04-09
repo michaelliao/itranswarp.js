@@ -36,7 +36,7 @@ function checkAttachment(fileObj, callback) {
             // check if image is invalid:
             return images.getSize(fcontent, function(err, size) {
                 if (err) {
-                    return callback(api.invalid_param('file', 'Invalid image file.'));
+                    return callback(api.invalidParam('file', 'Invalid image file.'));
                 }
                 width = size.width;
                 height = size.height;
@@ -90,14 +90,14 @@ function downloadAttachment(req, res, next) {
             return next(err);
         }
         if (atta===null) {
-            return next(api.not_found('Attachment'));
+            return next(api.notFound('Attachment'));
         }
         Resource.find(atta.resource_id, function(err, resource) {
             if (err) {
                 return next(err);
             }
             if (resource===null) {
-                return next(api.not_found('Resource'));
+                return next(api.notFound('Resource'));
             }
             //
             var mime = atta.mime,
@@ -167,7 +167,7 @@ exports = module.exports = {
                 return next(err);
             }
             if (entity===null) {
-                return next(api.not_found('Attachment'));
+                return next(api.notFound('Attachment'));
             }
             return res.send(entity);
         });
@@ -209,7 +209,7 @@ exports = module.exports = {
          * @return {object} The created attachment object.
          */
         if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         var user_id = req.user.id;
 
@@ -223,7 +223,7 @@ exports = module.exports = {
 
         var file = req.files.file;
         if ( ! file) {
-            return next(api.invalid_param('file'));
+            return next(api.invalidParam('file'));
         }
 
         console.log('file uploaded: ' + file.name);

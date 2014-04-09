@@ -23,7 +23,7 @@ function checkAliasAvailable(alias, tx, callback) {
             return callback(err);
         };
         if (entity!==null) {
-            return callback(api.invalid_param('alias', 'duplicate alias'));
+            return callback(api.invalidParam('alias', 'duplicate alias'));
         }
         callback(null, true);
     });
@@ -39,14 +39,14 @@ function getPage(id, callback) {
             return callback(err);
         }
         if (page===null) {
-            return callback(api.not_found('Page'));
+            return callback(api.notFound('Page'));
         }
         Text.find(page.content_id, function(err, text) {
             if (err) {
                 return callback(err);
             }
             if (text===null) {
-                return callback(api.not_found('Text'));
+                return callback(api.notFound('Text'));
             }
             page.content = text.value;
             return callback(null, page);
@@ -96,7 +96,7 @@ exports = module.exports = {
          * @return {object} The created page object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         try {
             var name = utils.getRequiredParam('name', req),
@@ -161,18 +161,18 @@ exports = module.exports = {
          * @return {object} Updated page object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         var name = utils.getParam('name', req),
             alias = utils.getParam('alias', req),
             tags = utils.getParam('tags', req),
             content = utils.getParam('content', req);
         if (name!==null && name==='') {
-            return next(api.invalid_param('name'));
+            return next(api.invalidParam('name'));
         }
         if (alias!==null) {
             if (alias==='') {
-                return next(api.invalid_param('alias'));
+                return next(api.invalidParam('alias'));
             }
             alias = alias.toLowerCase();
         }
@@ -180,7 +180,7 @@ exports = module.exports = {
             tags = utils.formatTags(tags);
         }
         if (content!==null && content==='') {
-            return next(api.invalid_param('content'));
+            return next(api.invalidParam('content'));
         }
         warp.transaction(function(err, tx) {
             if (err) {
@@ -193,7 +193,7 @@ exports = module.exports = {
                 },
                 function(page, callback) {
                     if (page===null) {
-                        return callback(api.not_found('Page'));
+                        return callback(api.notFound('Page'));
                     }
                     // check alias:
                     if (alias!==null && page.alias!==alias) {
@@ -251,7 +251,7 @@ exports = module.exports = {
                             return next(err);
                         }
                         if (text===null) {
-                            return next(api.not_found('Text'));
+                            return next(api.notFound('Text'));
                         }
                         result.content = text.value;
                         res.send(result);
@@ -269,7 +269,7 @@ exports = module.exports = {
          * @return {object} Results contains id of the page, e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.not_allowed('Permission denied.'));
+            return next(api.notAllowed('Permission denied.'));
         }
         warp.transaction(function(err, tx) {
             if (err) {
@@ -281,7 +281,7 @@ exports = module.exports = {
                 },
                 function(page, callback) {
                     if (page===null) {
-                        return callback(api.not_found('Page'));
+                        return callback(api.notFound('Page'));
                     }
                     page.destroy(tx, callback);
                 },

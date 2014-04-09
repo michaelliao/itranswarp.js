@@ -251,7 +251,7 @@ function getRequiredParam(name, req) {
     if (s) {
         return s;
     }
-    throw api.invalid_param(name);
+    throw api.invalidParam(name);
 }
 
 exports = module.exports = {
