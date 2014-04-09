@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css" />
+    <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.postjson.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/vue.min.js"></script>
+    <script type="text/javascript" src="/static/js/itranswarp.js"></script>
+    <script type="text/javascript" src="/static/js/manage.js"></script>
+{% block head %}<!-- block head  -->{% endblock %}
+</head>
+
+{% macro pagination(page_obj, url) %}
+    {% set page_index = page_obj.page_index %}
+    {% set page_list = page_obj.page_list() %}
+                <div class="x-pagination pagination">
+                    <ul>
+        {% for index in page_list %}
+            {% if index == page_index %}
+                        <li class="active"><span>{{ index }}</span></li>
+            {% elif index %}
+                        <li><a href="{{ url }}{{ index }}">{{ index }}</a></li>
+            {% else %}
+                        <li class="disabled"><span>...</span></li>
+            {% endif %}
+        {% endfor %}
+                    </ul>
+                </div>
+{% endmacro %}
+
+<body>
+    <div id="header">
+        <div class="navbar navbar-fixed-top navbar-blue">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="brand" href="/" target="_blank">Home</a>
+                    <ul id="top-nav" class="nav">
+                        <li><a href="/manage/article/">Articles</a></li>
+                        <li><a href="/manage/page/">Pages</a></li>
+                    </ul>
+                    <ul class="nav pull-right">
+                        <li class="dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">{{ __user__.name|e }} <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/manage/users/profile">My Profile</a></li>
+                                <li class="divider"></li>
+                                <li><a href="/auth/signout?redirect=/">Sign Out</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div id="main" class="container">
+        <div class="row" style="height:61px;"></div>
+        <div class="row" style="overflow:hidden;">
+
+        {% block main %}
+
+            <div class="span2">
+                <div id="menus" class="well">
+                    <ul class="nav nav-list">
+                        {% block menu %}
+                        <li class="nav-header">Sample Menu</li>
+                        <li class="active">Menu Item</li>
+                        {% endblock %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="span10">
+                {% block content %}
+                <h3>Content</h3>
+                {% endblock %}
+            </div>
+
+        {% endblock %}
+
+        </div>
+        <div id="push"></div>
+    </div>
+
+    <div id="footer">
+        <div style="border-top: solid 1px #ccc;">
+            <div class="container">
+                <div class="row">
+                    <div class="span12" style="text-align:center;">
+                        <p>Powered by iTranswarp.js. Copyright&copy;2014, <a href="http://www.itranswarp.com/" target="_blank">www.itranswarp.com</a>, all rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// init tooltips after mvvm initialized:
+$(function() {
+    //
+});
+</script>
+</body>
+</html>
