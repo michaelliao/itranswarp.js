@@ -11,6 +11,7 @@ var
 var
     User = db.user,
     Article = db.article,
+    Category = db.category,
     warp = db.warp;
 
 var
@@ -121,7 +122,7 @@ exports = module.exports = {
                 return next(err);
             }
             if (obj===null) {
-                return next(api.not_found('Category'));
+                return next(api.notFound('Category'));
             }
             return res.manage('manage/article/category_form.html', {
                 form: {
