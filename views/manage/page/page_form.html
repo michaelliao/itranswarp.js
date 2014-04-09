@@ -1,0 +1,136 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+{{ form.name }}
+{% endblock %}
+
+{% block head %}
+
+<script src="/static/js/markdown.js"></script>
+<script src="/static/js/markdown-editor.js"></script>
+<script>
+
+var vmPage = null;
+var initial_content = '{{ page.content|addslashes }}';
+
+function beforeUnload() {
+    if (isChanged()) {
+        return 'Content has been changed.';
+    }
+};
+
+function isChanged() {
+    return vmPage.content !== initial_content;
+}
+
+$(function() {
+    vmPage = new Vue({
+        el: '#formPage',
+        data: {
+            name: '{{ page.name|addslashes }}',
+            alias: '{{ page.alias }}',
+            tags: '{{ page.tags|addslashes }}',
+            draft: {{ page.draft|safe }},
+            content: initial_content
+        },
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                showError();
+                var fieldNames = ['name', 'alias', 'content'];
+                for (var i = 0; i < fieldNames.length; i++) {
+                    var f = fieldNames[i];
+                    if (this[f].trim()==='') {
+                        showError(f + ' cannot be empty.', f.toLowerCase());
+                        return;
+                    }
+                }
+                var data = {
+                    name: this.name,
+                    alias: this.alias,
+                    tags: this.tags,
+                    draft: this.draft
+                };
+                if (isChanged()) {
+                    data.content = this.content;
+                }
+                showLoading(true);
+                postJSON('{{ form.action }}', data, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    window.beforeUnload = null;
+                    location.assign('{{ form.redirect }}');
+                });
+            }
+        }
+    });
+
+    $('#markdown-editor').markdown({
+        'upload_image_url': '/api/images/create',
+    });
+});
+
+</script>
+
+{% endblock %}
+
+{% block main %}
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/page/">All Pages</a> <span class="divider">/</span></li>
+        <li class="active">{{ form.name }}</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <form v-on="submit: submit" id="formPage" class="form-horizontal">
+        <legend>{{ form.name }}</legend>
+        <fieldset>
+            <div class="field-name control-group">
+                <label class="control-label">Name:</label>
+                <div class="controls">
+                    <input v-model="name" name="name" type="text" class="input-xlarge" style="width:600px;" />
+                </div>
+            </div>
+            <div class="field-alias control-group">
+                <label class="control-label">Alias:</label>
+                <div class="controls">
+                    <input v-model="alias" name="alias" type="text" class="input-xlarge" style="width:600px;" />
+                    <span class="help-inline">Alphabet and numeric characters only.</span>
+                </div>
+            </div>
+            <div class="field-tags control-group">
+                <label class="control-label">Tags:</label>
+                <div class="controls">
+                    <input v-model="tags" name="tags" type="text" class="input-xlarge" style="width:600px;" />
+                    <span class="help-inline">Tags seperated by ,</span>
+                </div>
+            </div>
+            <div class="field-draft control-group">
+                <label class="control-label">Draft:</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input v-model="draft" name="draft" type="checkbox" /> Draft
+                    </label>
+                </div>
+            </div>
+            <div class="field-content control-group">
+                <label class="control-label">Content:</label>
+                <div class="controls">
+                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}

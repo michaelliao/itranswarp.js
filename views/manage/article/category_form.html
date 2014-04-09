@@ -15,7 +15,7 @@ $(function() {
             description: '{{ category.description|addslashes }}'
         },
         methods: {
-            onSubmit: function(event) {
+            submit: function(event) {
                 event.preventDefault();
                 showError();
                 showLoading(true);
@@ -59,7 +59,7 @@ function ajax_post(form) {
 </div>
 
 <div class="span12">
-    <form id="formCategory" v-on="submit: onSubmit" class="form-horizontal">
+    <form id="formCategory" v-on="submit: submit" class="form-horizontal">
         <legend>{{ form.name }}</legend>
         <fieldset>
             <div class="alert alert-error hide"></div>

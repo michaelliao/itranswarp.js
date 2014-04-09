@@ -62,7 +62,7 @@ function checkVm() {
     else {
         var pt = parseDateTime(spat);
         if (isNaN(pt)) {
-            showError('Invalid date format.', 'publish_at_str');
+            showError('Invalid date format.', 'publish_at');
             return false;
         }
         vmArticle.publish_at = pt.toString();
@@ -81,7 +81,6 @@ function ajaxPostMultipart() {
         $('#markdown-editor').removeAttr('name');
     }
     var form = $('#formArticle').get(0);
-    window.onbeforeunload = null;
     showLoading(true);
     var data = null;
     try {
@@ -103,12 +102,12 @@ function ajaxPostMultipart() {
             window.onbeforeunload = beforeUnload;
         }
         else {
+            window.onbeforeunload = null;
             location.assign('{{ form.redirect }}');
         }
     }).fail(function(jqXHR, textStatus) {
         showError('Network error (HTTP ' + jqXHR.status + ')');
         showLoading(false);
-        window.onbeforeunload = beforeUnload;
     });
 }
 
@@ -122,13 +121,14 @@ $(function() {
             id: '{{ article.id }}',
             cover_id: '{{ article.cover_id }}',
             name: '{{ article.name|addslashes }}',
+            tags: '{{ article.tags|addslashes }}',
             publish_at: '{{ article.publish_at }}',
             publish_at_str: '',
             description: '{{ article.description|addslashes }}',
             content: initial_content,
         },
         methods: {
-            onSubmit: function(event) {
+            submit: function(event) {
                 event.preventDefault();
                 showError();
                 if (! checkVm()) {
@@ -179,28 +179,10 @@ $(function() {
             catch(e) {}
         }
     });
-});
 
-
-
-$(function() {
-
-//{% if cover_id %}
-    
-//{% endif %}
-
-    g_initial_text = $('#markdown-editor').val();
-    $('#markdown-editor').removeAttr('disabled');
     $('#markdown-editor').markdown({
         'upload_image_url': '/api/images/create',
     });
-    window.onbeforeunload = function() {
-        if (is_changed()) {
-            return 'Content has been changed.';
-        }
-    };
-
-    
 });
 
 </script>
@@ -218,7 +200,7 @@ $(function() {
 
 <div class="span12">
     <div class="alert alert-error hide"></div>
-    <form v-on="submit: onSubmit" id="formArticle" enctype="multipart/form-data" class="form-horizontal">
+    <form v-on="submit: submit" id="formArticle" enctype="multipart/form-data" class="form-horizontal">
         <legend>{{ form.name }}</legend>
         <fieldset>
             <div class="field-cover control-group">
@@ -246,7 +228,7 @@ $(function() {
             <div class="field-tags control-group">
                 <label class="control-label">Tags:</label>
                 <div class="controls">
-                    <input name="tags" type="text" value="{{ tags|e }}" class="input-xlarge" style="width:600px;" />
+                    <input v-model="tags" name="tags" type="text" class="input-xlarge" style="width:600px;" />
                     <span class="help-inline">Tags seperated by ,</span>
                 </div>
             </div>

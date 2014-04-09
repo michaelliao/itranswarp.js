@@ -1,0 +1,103 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Pages
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var pages = {{ pages|safe }};
+    var vmPages = new Vue({
+        el: '#pages',
+        data: {
+            pages: pages
+        },
+        methods: {
+            find: function(id) {
+                for (var i = 0; i < this.pages.length; i ++) {
+                    var p = this.pages[i];
+                    if (p.id===id) {
+                        return i;
+                    }
+                }
+                return (-1);
+            },
+            editPage: function(id) {
+                location.assign('edit_page?id=' + id);
+            },
+            deletePage: function(id) {
+                var index = this.find(id);
+                if (index!==(-1)) {
+                    var pages = this.pages;
+                    var p = pages[index];
+                    showConfirm('Confirm Deletion', 'Page \"' + p.name + '\" will be deleted. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/pages/' + p.id + '/delete', function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            pages.splice(index, 1);
+                        });
+                    });
+                }
+            }
+        }
+    });
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="pages">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All Pages (<span v-text="pages.length"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="create_page" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Page</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="45%">Name</th>
+                <th width="20%">Alias</th>
+                <th width="10%">Draft</th>
+                <th width="15%">Created At</th>
+                <th width="10%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="p: pages">
+                <td>
+                    <a v-text="p.name" v-attr="href: '/page/'+p.alias" target="_blank"></a>
+                </td>
+                <td><span v-text="p.alias"></span></td>
+                <td><span v-text="p.draft?'Draft':''"></span></td>
+                <td><span v-text="p.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on="click: editPage(p.id)" data-toggle="tooltip" title="Edit Page" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-on="click: deletePage(p.id)" data-toggle="tooltip" title="Delete Page" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                </td>
+            </tr>
+            <tr v-if="pages.length===0">
+                <td colspan="5">No page found.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock%}

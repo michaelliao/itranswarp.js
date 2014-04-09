@@ -94,7 +94,7 @@ $(function() {
             <tr>
                 <th width="20%"></th>
                 <th width="35%">Name</th>
-                <th width="15%">Author/Category</th>
+                <th width="15%">Author / Category</th>
                 <th width="15%">Publish / Created</th>
                 <th width="15%"></th>
             </tr>
@@ -120,6 +120,9 @@ $(function() {
                     <a v-on="click: editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="icon-edit"></i></a>
                     <a v-on="click: deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="icon-trash"></i></a>
                 </td>
+            </tr>
+            <tr v-if="page.totalItems===0">
+                <td colspan="5">No article found.</td>
             </tr>
         </tbody>
     </table>

@@ -33,7 +33,7 @@ $(function() {
             find: function(id) {
                 for (var i = 0; i < this.categories.length; i ++) {
                     var c = this.categories[i];
-                    if (this.categories[i].id===id) {
+                    if (c.id===id) {
                         return i;
                     }
                 }
@@ -59,10 +59,10 @@ $(function() {
                 }
                 this.swap(index, index + 1);
             },
-            onEditCategory: function(id) {
+            editCategory: function(id) {
                 location.assign('edit_category?id=' + id);
             },
-            onDeleteCategory: function(id) {
+            deleteCategory: function(id) {
                 var index = this.find(id);
                 if (index !== (-1)) {
                     var categories = this.categories;
@@ -80,7 +80,7 @@ $(function() {
                         });
                     });
                 }
-            },
+            }
         }
     });
 });
@@ -124,9 +124,12 @@ $(function() {
                 <td>
                     <a v-on="click: moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
                     <a v-on="click: moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
-                    <a v-on="click: onEditCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="icon-edit"></i></a>
-                    <a v-on="click: onDeleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                    <a v-on="click: editCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-on="click: deleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="icon-trash"></i></a>
                 </td>
+            </tr>
+            <tr v-if="categories.length===0">
+                <td colspan="5">No category found.</td>
             </tr>
         </tbody>
     </table>
