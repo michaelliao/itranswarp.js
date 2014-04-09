@@ -106,6 +106,9 @@ exports = module.exports = {
         catch (e) {
             return next(e);
         }
+        if (! /^[a-z0-9\-\_]{1,100}$/.test(alias)) {
+            return next(api.invalidParam('alias'));
+        }
 
         var draft = 'true' === utils.getParam('draft', '', req),
             tags = utils.formatTags(utils.getParam('tags', '', req));
@@ -171,10 +174,10 @@ exports = module.exports = {
             return next(api.invalidParam('name'));
         }
         if (alias!==null) {
-            if (alias==='') {
+            alias = alias.toLowerCase();
+            if (alias==='' || ! /^[a-z0-9\-\_]{1,100}$/.test(alias)) {
                 return next(api.invalidParam('alias'));
             }
-            alias = alias.toLowerCase();
         }
         if (tags!==null) {
             tags = utils.formatTags(tags);
