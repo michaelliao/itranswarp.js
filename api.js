@@ -16,6 +16,9 @@ var api = {
     not_found: function(err_data, err_message) {
         return new APIError('resource:notfound', err_data, err_message || (err_data + ' not found.'));
     },
+    resourceConflictError: function(err_data, err_message) {
+        return new APIError('resource:conflict', err_data, err_message || (err_data + ' conflict.'));
+    },
     server_error: function(err_code, err_data, err_message) {
         if (err_code instanceof Error) {
             return new APIError('500', err_code.message, err_code.stack);
