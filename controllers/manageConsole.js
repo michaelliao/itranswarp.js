@@ -16,7 +16,8 @@ var
 
 var
     categoryApi = require('./categoryApi'),
-    articleApi = require('./articleApi');
+    articleApi = require('./articleApi'),
+    pageApi = require('./pageApi');
 
 // do management console
 
@@ -25,6 +26,8 @@ exports = module.exports = {
     'GET /manage/': function(req, res, next) {
         return res.render('manage/overview/overview.html', {});
     },
+
+    // article ////////////////////////////////////////////////////////////////
 
     'GET /manage/article/(index)?': function(req, res, next) {
         var page = utils.getPage(req);
@@ -134,6 +137,55 @@ exports = module.exports = {
             });
         });
     },
+
+    // page ///////////////////////////////////////////////////////////////////
+
+    'GET /manage/page/(index)?': function(req, res, next) {
+        pageApi.getPages(function(err, pages) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/page/page_list.html', {
+                pages: JSON.stringify(pages)
+            });
+        });
+    },
+
+    'GET /manage/page/create_page': function(req, res, next) {
+        return res.manage('manage/page/page_form.html', {
+            form: {
+                name: 'Create Page',
+                action: '/api/pages/',
+                redirect: '/manage/page/'
+            },
+            page: {
+                tags: '',
+                name: '',
+                alias: '',
+                draft: false,
+                content: '',
+            }
+        });
+    },
+
+    'GET /manage/page/edit_page': function(req, res, next) {
+        var id = req.query.id;
+        pageApi.getPage(id, function(err, page) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/page/page_form.html', {
+                form: {
+                    name: 'Edit Page',
+                    action: '/api/pages/' + id,
+                    redirect: '/manage/page/'
+                },
+                page: page
+            });
+        });
+    },
+
+    // FIXME ////////////////////////////////////////////////////////////////
 
     'GET /api/users/:id': function(req, res, next) {
         /**
