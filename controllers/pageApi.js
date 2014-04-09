@@ -29,7 +29,36 @@ function checkAliasAvailable(alias, tx, callback) {
     });
 }
 
+function getPages(callback) {
+    Page.findAll({ order: 'alias' }, callback);
+}
+
+function getPage(id, callback) {
+    Page.find(id, function(err, page) {
+        if (err) {
+            return callback(err);
+        }
+        if (page===null) {
+            return callback(api.not_found('Page'));
+        }
+        Text.find(page.content_id, function(err, text) {
+            if (err) {
+                return callback(err);
+            }
+            if (text===null) {
+                return callback(api.not_found('Text'));
+            }
+            page.content = text.value;
+            return callback(null, page);
+        });
+    });
+}
+
 exports = module.exports = {
+
+    getPages: getPages,
+
+    getPage: getPage,
 
     'GET /api/pages/:id': function(req, res, next) {
         /**
@@ -38,23 +67,11 @@ exports = module.exports = {
          * @param {string} :id - The id of the page.
          * @return {object} Page object.
          */
-        Page.find(req.params.id, function(err, page) {
+        getPage(req.params.id, function(err, page) {
             if (err) {
                 return next(err);
             }
-            if (page===null) {
-                return next(api.not_found('Page'));
-            }
-            Text.find(page.content_id, function(err, text) {
-                if (err) {
-                    return next(err);
-                }
-                if (text===null) {
-                    return next(api.not_found('Text'));
-                }
-                page.content = text.value;
-                return res.send(page);
-            });
+            return res.send(page);
         });
     },
 
@@ -64,13 +81,11 @@ exports = module.exports = {
          * 
          * @return {object} Result as {"pages": [{page}, {page}...]}
          */
-        Page.findAll({
-            order: 'alias'
-        }, function(err, entities) {
+        getPages(function(err, pages) {
             if (err) {
                 return next(err);
             }
-            res.send({ pages: entities });
+            res.send({ pages: pages });
         });
     },
 

@@ -78,6 +78,8 @@ function getArticle(id, callback) {
     });
 }
 
+var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
+
 exports = module.exports = {
 
     getArticles: getArticles,
@@ -85,7 +87,7 @@ exports = module.exports = {
     getArticle: getArticle,
 
     'GET /api/articles/:id': function(req, res, next) {
-        getArticle(req, params.id, function(err, article) {
+        getArticle(req.params.id, function(err, article) {
             if (err) {
                 return next(err);
             }
@@ -121,13 +123,20 @@ exports = module.exports = {
             return next(e);
         }
         var description = utils.getParam('description', '', req),
-            tags = utils.formatTags(utils.getParam('tags', '', req));
+            tags = utils.formatTags(utils.getParam('tags', '', req)),
+            publish_at = utils.getParam('publish_at', null, req);
 
         var file = req.files && req.files.file;
 
-        //var spt = utils.getParam('publish_at', '', req);
-        //parse datetime
-        var publish_at = Date.now();
+        if (publish_at!==null) {
+            if ( ! RE_TIMESTAMP.test(publish_at)) {
+                return next(api.invalid_param('publish_at'));
+            }
+            publish_at = parseInt(publish_at);
+        }
+        else {
+            publish_at = Date.now();
+        }
 
         var content_id = next_id();
         var article_id = next_id();
@@ -217,6 +226,7 @@ exports = module.exports = {
             category_id = utils.getParam('category_id', req),
             description = utils.getParam('description', req),
             tags = utils.getParam('tags', req),
+            publish_at = utils.getParam('publish_at', req),
             content = utils.getParam('content', req);
 
         if (name!==null && name==='') {
@@ -228,15 +238,17 @@ exports = module.exports = {
         if (content!==null && content==='') {
             return next(api.invalid_param('content'));
         }
+        if (publish_at!==null) {
+            if (! RE_TIMESTAMP.test(publish_at)) {
+                return next(api.invalid_param('publish_at'));
+            }
+            publish_at = parseInt(publish_at);
+        }
         if (tags!==null) {
             tags = utils.formatTags(tags);
         }
 
         var file = req.files && req.files.file;
-
-        //var spt = utils.getParam('publish_at', '', req);
-        //parse datetime
-        var publish_at = null; //Date.now();
 
         var fnUpdate = function(fileObject) {
             warp.transaction(function(err, tx) {

@@ -11,6 +11,7 @@ var
 
 var
     User = db.user,
+    Article = db.article,
     Category = db.category,
     Text = db.text,
     warp = db.warp,
@@ -193,19 +194,36 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.not_allowed('Permission denied.'));
         }
-        Category.find(req.params.id, function(err, entity) {
+        async.waterfall([
+            function(callback) {
+                Category.find(req.params.id, callback);
+            },
+            function(category, callback) {
+                if (category===null) {
+                    return callback(api.not_found('Category'));
+                }
+                Article.findNumber({
+                    select: 'count(*)',
+                    where: 'category_id=?',
+                    params: [category.id]
+                }, function(err, num) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    if (num > 0) {
+                        return callback(api.resourceConflictError('Category', 'Category is in use and cannot be deleted.'));
+                    }
+                    callback(null, category);
+                });
+            },
+            function(category, callback) {
+                category.destroy(callback);
+            }
+        ], function(err, result) {
             if (err) {
                 return next(err);
             }
-            if (entity===null) {
-                return next(api.not_found('Category'));
-            }
-            entity.destroy(function(err, result) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send({ id: req.params.id });
-            });
+            return res.send({ id: req.params.id });
         });
     }
 }
