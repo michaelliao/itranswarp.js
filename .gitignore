@@ -15,7 +15,7 @@ npm-debug.log
 node_modules
 
 # private config files:
-config_override.js
+config_override.json
 
 # temp output dir:
 output
