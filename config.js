@@ -19,11 +19,11 @@ You should override some configurations in your own 'config_override.js', e.g.:
 var
     _ = require('lodash'),
     fs = require('fs'),
-    cfg = require('./config_default');
+    cfg = require('./config_default.json');
 
-if (fs.existsSync(__dirname + '/config_override.js')) {
-    console.log('loading config_override.js...');
-    var ovr = require('./config_override');
+if (fs.existsSync(__dirname + '/config_override.json')) {
+    console.log('loading config_override.json...');
+    var ovr = require('./config_override.json');
     cfg = _.merge(cfg, ovr);
 }
 
