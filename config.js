@@ -30,4 +30,4 @@ if (fs.existsSync(__dirname + '/config_override.js')) {
 console.log('configuration loaded:');
 console.log(JSON.stringify(cfg));
 
-module.exports = cfg;
+exports = module.exports = cfg;

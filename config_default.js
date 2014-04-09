@@ -2,7 +2,7 @@
 
 // make a copy to 'config_override.js' and override some of the settings you needed:
 
-module.exports = {
+exports = module.exports = {
     'session': {
         'salt': 'iTranswarp.js',
     },
