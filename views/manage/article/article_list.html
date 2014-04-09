@@ -30,9 +30,40 @@ $(function() {
             editArticle: function(id) {
                 location.assign('edit_article?id=' + id);
             },
+            find: function(id) {
+                for (var i = 0; i < this.articles.length; i ++) {
+                    var c = this.articles[i];
+                    if (c.id===id) {
+                        return c;
+                    }
+                }
+                return null;
+            },
             deleteArticle: function(id) {
-                //
-            }
+                var a = this.find(id);
+                if (a!==null) {
+                    showConfirm('Confirm Deletion', 'Article \"' + a.name + '\" will be deleted. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/articles/' + a.id + '/delete', function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            // reload page:
+                            var pageIndex = page.index;
+                            if (this.articles.length===1) {
+                                pageIndex --;
+                            }
+                            if (pageIndex < 1) {
+                                pageIndex = 1;
+                            }
+                            location.assign('index?page=' + pageIndex);
+                        });
+                    });
+                }
+            },
         }
     });
 });

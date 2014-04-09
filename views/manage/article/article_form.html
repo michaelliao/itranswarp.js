@@ -39,7 +39,9 @@ function checkVm() {
         showError('Cover is too small (Must be equal or greater than ' + MIN_WIDTH + ' x ' + MIN_HEIGHT + ').', 'cover');
         return false;
     }
-    $file.attr('name', 'file');
+    if ($file.val()!=='') {
+        $file.attr('name', 'file');
+    }
     // check fields:
     if (vmArticle.name.trim()==='') {
         showError('Name cannot be empty.', 'name');
@@ -64,6 +66,8 @@ function checkVm() {
             return false;
         }
         vmArticle.publish_at = pt.toString();
+        // fixme: dom not change:
+        $('#publish_at').val(vmArticle.publish_at).attr('name', 'publish_at');
     }
     return true;
 }
@@ -249,7 +253,7 @@ $(function() {
             <div class="field-publish_at control-group">
                 <label class="control-label">Publish Date:</label>
                 <div class="controls">
-                    <input v-model="publish_at" name="publish_at" type="hidden" />
+                    <input v-model="publish_at" id="publish_at" type="hidden" />
                     <input v-model="publish_at_str" type="text" />
                     <span class="help-inline">yyyy-mm-dd HH:MM:SS Leave empty for now.</span>
                 </div>
