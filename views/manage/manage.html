@@ -5,13 +5,87 @@
     <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" />
     <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
-    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/js/jquery.postjson.js"></script>
-    <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
-    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/static/js/vue.min.js"></script>
-    <script type="text/javascript" src="/static/js/itranswarp.js"></script>
-    <script type="text/javascript" src="/static/js/manage.js"></script>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery.postjson.js"></script>
+    <script src="/static/js/jquery.md5.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/vue.min.js"></script>
+    <script src="/static/js/itranswarp.js"></script>
+    <script src="/static/js/manage.js"></script>
+<script>
+// {% raw %}
+// custom component: pagination
+Object.prototype.__defineSetter__('ext_pagination', function(value) {});
+Object.prototype.__defineGetter__('ext_pagination', function() {
+    var
+        index = this.index,
+        total = this.totalPages;
+    var range = function(n) {
+        if (n < 1) {
+            return 1;
+        }
+        if (n > total) {
+            return total;
+        }
+        return n;
+    }
+    if (index <= 0) {
+        return [];
+    }
+    var
+        min = range(index - 5),
+        max = range(index + 5),
+        arr = [];
+    if (min >= 2) {
+        arr.push({ text: '1', href: 1, css: '' });
+    }
+    if (min === 3) {
+        arr.push({ text: '2', href: 2, css: '' });
+    }
+    if (min > 3) {
+        arr.push({ text: '...', href: '', css: 'disabled' });
+    }
+    for (var i = min; i <= max; i ++) {
+        var o = { text: i + '', css: '', href: '' };
+        if (i===index) {
+            o.css = 'active';
+        }
+        else {
+            o.href = i;
+        }
+        arr.push(o);
+    }
+    if (max < (total - 2)) {
+        arr.push({ text: '...', href: '', css: 'disabled' });
+    }
+    if (max === (total-2)) {
+        arr.push({ text: (total - 1) + '', href: total - 1, css: '' });
+    }
+    if (max < total) {
+        arr.push({ text: total + '', href: total, css: '' });
+    }
+    return arr;
+});
+
+function gotoPage(index) {
+    if (index) {
+        var search = location.search;
+        var hasPageParam = search.search(/page\=\d+\&?/)!==(-1);
+        if (hasPageParam) {
+            search = search.replace(/page\=\d+\&?/g, '');
+        }
+        search = (search==='' || search==='?') ? ('?page=' + index) : (search + '&page=' + index);
+        location.assign(search);
+    }
+}
+
+Vue.component('vc-pagination', {
+    template: '<div class="pagination"><ul><li v-repeat="p: page.ext_pagination" v-attr="class: p.css">' +
+    '<a href="javascript:gotoPage({{ p.href }})">{{ p.text }}</a>' +
+    '</li></div>'
+});
+// {% endraw %}
+</script>
 {% block head %}<!-- block head  -->{% endblock %}
 </head>
 
