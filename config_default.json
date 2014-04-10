@@ -11,10 +11,5 @@
         "connectionLimit": 20
     },
     "oauth2": {
-        "<provider-name>": {
-            "app_key": "?",
-            "app_secret": "?",
-            "redirect_uri": "http://www.example.com/callback"
-        }
     }
 }
