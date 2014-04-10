@@ -16,7 +16,11 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function checkAttachment(fileObj, callback) {
+function checkAttachment(fileObj, expectImage, callback) {
+    if (arguments.length===2) {
+        callback = expectImage;
+        expectImage = undefined;
+    }
     var result = {
         name: fileObj.originalFilename,
         description: fileObj.originalFilename,
@@ -32,7 +36,7 @@ function checkAttachment(fileObj, callback) {
             return callback(err);
         }
         result.content = fcontent;
-        if (result.mime.indexOf('image/')===0) {
+        if (expectImage || result.mime.indexOf('image/')===0) {
             // check if image is invalid:
             return images.getSize(fcontent, function(err, size) {
                 if (err) {

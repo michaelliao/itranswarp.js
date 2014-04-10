@@ -198,12 +198,9 @@ exports = module.exports = {
         };
 
         if (file) {
-            return checkAttachment(file, function(err, attachFileObject) {
+            return checkAttachment(file, true, function(err, attachFileObject) {
                 if (err) {
                     return next(err);
-                }
-                if (! attachFileObject.isImage) {
-                    return next(api.invalidParam('file', 'Invalid image file.'));
                 }
                 // override name:
                 attachFileObject.name = name;
