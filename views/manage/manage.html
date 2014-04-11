@@ -15,72 +15,53 @@
 <script>
 // {% raw %}
 // custom component: pagination
-Object.prototype.__defineSetter__('ext_pagination', function(value) {});
-Object.prototype.__defineGetter__('ext_pagination', function() {
-    var
-        index = this.index,
-        total = this.totalPages;
-    var range = function(n) {
-        if (n < 1) {
-            return 1;
+// usage:
+// var page = definePagination(page);
+function definePagination(page) {
+    var buildArray = function() {
+        var
+            index = page.index,
+            total = page.totalPages;
+        var range = function(n) {
+            if (n < 1) {
+                return 1;
+            }
+            if (n > total) {
+                return total;
+            }
+            return n;
         }
-        if (n > total) {
-            return total;
+        if (index <= 0) {
+            return [];
         }
-        return n;
-    }
-    if (index <= 0) {
-        return [];
-    }
-    var
-        min = range(index - 5),
-        max = range(index + 5),
-        arr = [];
-    if (min >= 2) {
-        arr.push({ text: '1', href: 1, css: '' });
-    }
-    if (min === 3) {
-        arr.push({ text: '2', href: 2, css: '' });
-    }
-    if (min > 3) {
-        arr.push({ text: '...', href: '', css: 'disabled' });
-    }
-    for (var i = min; i <= max; i ++) {
-        var o = { text: i + '', css: '', href: '' };
-        if (i===index) {
-            o.css = 'active';
+        var
+            min = range(index - 5),
+            max = range(index + 5),
+            arr = [];
+        if (min >= 2) { arr.push({ text: '1', href: 1, css: '' }); }
+        if (min === 3) { arr.push({ text: '2', href: 2, css: '' }); }
+        if (min > 3) { arr.push({ text: '...', href: '', css: 'disabled' }); }
+        for (var i = min; i <= max; i ++) {
+            var o = { text: i + '', css: '', href: '' };
+            if (i===index) {
+                o.css = 'active';
+            }
+            else {
+                o.href = i;
+            }
+            arr.push(o);
         }
-        else {
-            o.href = i;
-        }
-        arr.push(o);
+        if (max < (total - 2)) { arr.push({ text: '...', href: '', css: 'disabled' }); }
+        if (max === (total-2)) { arr.push({ text: (total - 1) + '', href: total - 1, css: '' }); }
+        if (max < total) { arr.push({ text: total + '', href: total, css: '' }); }
+        return arr;
     }
-    if (max < (total - 2)) {
-        arr.push({ text: '...', href: '', css: 'disabled' });
-    }
-    if (max === (total-2)) {
-        arr.push({ text: (total - 1) + '', href: total - 1, css: '' });
-    }
-    if (max < total) {
-        arr.push({ text: total + '', href: total, css: '' });
-    }
-    return arr;
-});
-
-function gotoPage(index) {
-    if (index) {
-        var search = location.search;
-        var hasPageParam = search.search(/page\=\d+\&?/)!==(-1);
-        if (hasPageParam) {
-            search = search.replace(/page\=\d+\&?/g, '');
-        }
-        search = (search==='' || search==='?') ? ('?page=' + index) : (search + '&page=' + index);
-        location.assign(search);
-    }
+    page.pagination = buildArray();
+    return page;
 }
 
 Vue.component('vc-pagination', {
-    template: '<div class="pagination"><ul><li v-repeat="p: page.ext_pagination" v-attr="class: p.css">' +
+    template: '<div class="pagination"><ul><li v-repeat="p: page.pagination" v-attr="class: p.css">' +
     '<a href="javascript:gotoPage({{ p.href }})">{{ p.text }}</a>' +
     '</li></div>'
 });
@@ -88,25 +69,6 @@ Vue.component('vc-pagination', {
 </script>
 {% block head %}<!-- block head  -->{% endblock %}
 </head>
-
-{% macro pagination(page_obj, url) %}
-    {% set page_index = page_obj.page_index %}
-    {% set page_list = page_obj.page_list() %}
-                <div class="x-pagination pagination">
-                    <ul>
-        {% for index in page_list %}
-            {% if index == page_index %}
-                        <li class="active"><span>{{ index }}</span></li>
-            {% elif index %}
-                        <li><a href="{{ url }}{{ index }}">{{ index }}</a></li>
-            {% else %}
-                        <li class="disabled"><span>...</span></li>
-            {% endif %}
-        {% endfor %}
-                    </ul>
-                </div>
-{% endmacro %}
-
 <body>
     <div id="header">
         <div class="navbar navbar-fixed-top navbar-blue">
@@ -116,6 +78,7 @@ Vue.component('vc-pagination', {
                     <ul id="top-nav" class="nav">
                         <li><a href="/manage/article/">Articles</a></li>
                         <li><a href="/manage/page/">Pages</a></li>
+                        <li><a href="/manage/attachment/">Attachments</a></li>
                     </ul>
                     <ul class="nav pull-right">
                         <li class="dropdown">

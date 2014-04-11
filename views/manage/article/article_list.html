@@ -24,7 +24,7 @@ $(function() {
         el: '#articles',
         data: {
             articles: articles,
-            page: page
+            page: definePagination(page)
         },
         methods: {
             editArticle: function(id) {
@@ -40,7 +40,8 @@ $(function() {
                 return null;
             },
             deleteArticle: function(id) {
-                var a = this.find(id);
+                var that = this;
+                var a = that.find(id);
                 if (a!==null) {
                     showConfirm('Confirm Deletion', 'Article \"' + a.name + '\" will be deleted. Continue?', function(modal) {
                         showError();
@@ -53,7 +54,7 @@ $(function() {
                             }
                             // reload page:
                             var pageIndex = page.index;
-                            if (this.articles.length===1) {
+                            if (that.articles.length===1) {
                                 pageIndex --;
                             }
                             if (pageIndex < 1) {
@@ -113,8 +114,8 @@ $(function() {
                     <p><i class="icon-user"></i> <span v-text="a.user_name"></span></p>
                 </td>
                 <td>
-                    <p><span v-text="a.publish_at.toDateTime('yy-MM-dd hh:mm')"></span></p>
-                    <p><span v-text="a.created_at.toDateTime('yy-MM-dd hh:mm')"></span></p>
+                    <p><span v-text="a.publish_at.toDateTime('yyyy-MM-dd hh:mm')"></span></p>
+                    <p><span v-text="a.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></p>
                 </td>
                 <td>
                     <a v-on="click: editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="icon-edit"></i></a>
