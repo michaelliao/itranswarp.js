@@ -57,7 +57,11 @@ function getArticles(page, allArticles, callback) {
     });
 }
 
-function getArticle(id, callback) {
+function getArticle(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
     Article.find(id, function(err, article) {
         if (err) {
             return callback(err);

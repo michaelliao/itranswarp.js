@@ -168,7 +168,7 @@ function parseSessionCookie(s, fn) {
         if (err) {
             return fn(err);
         }
-        if (! user) {
+        if (user===null) {
             return fn(null, null);
         }
         var secure = [provider, uid, user.passwd, salt].join(':');

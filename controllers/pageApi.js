@@ -33,15 +33,19 @@ function getPages(callback) {
     Page.findAll({ order: 'alias' }, callback);
 }
 
-function getPage(id, callback) {
-    Page.find(id, function(err, page) {
+function getPage(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    Page.find(id, tx, function(err, page) {
         if (err) {
             return callback(err);
         }
         if (page===null) {
             return callback(api.notFound('Page'));
         }
-        Text.find(page.content_id, function(err, text) {
+        Text.find(page.content_id, tx, function(err, text) {
             if (err) {
                 return callback(err);
             }

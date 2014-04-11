@@ -10,7 +10,55 @@ var
     User = db.user,
     warp = db.warp;
 
+function getUsers(page, callback) {
+    User.findNumber('count(*)', function(err, num) {
+        if (err) {
+            return callback(err);
+        }
+        page.totalItems = num;
+        if (page.isEmpty) {
+            return callback(null, {
+                page: page,
+                users: []
+            });
+        }
+        User.findAll({
+            offset: page.offset,
+            limit: page.limit,
+            order: 'created_at desc'
+        }, function(err, users) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, {
+                page: page,
+                users: users
+            });
+        });
+    });
+}
+
+function getUser(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    User.find(id, tx, function(err, user) {
+        if (err) {
+            return callback(err);
+        }
+        if (user===null) {
+            return callback(api.notFound('User'));
+        }
+        callback(null, user);
+    });
+}
+
 exports = module.exports = {
+
+    getUser: getUser,
+
+    getUsers: getUsers,
 
     'GET /auth/': function(req, res, next) {
         /**

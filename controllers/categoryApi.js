@@ -21,8 +21,20 @@ function getCategories(callback) {
     Category.findAll({ order: 'display_order' }, callback);
 }
 
-function getCategory(id, callback) {
-    Category.find(id, callback);
+function getCategory(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    Category.find(id, tx, function(err, category) {
+        if (err) {
+            return callback(err);
+        }
+        if (category===null) {
+            return callback(api.notFound('Category'));
+        }
+        callback(null, category);
+    });
 }
 
 exports = module.exports = {
@@ -55,9 +67,6 @@ exports = module.exports = {
         getCategory(req.params.id, function(err, obj) {
             if (err) {
                 return next(err);
-            }
-            if (obj===null) {
-                return next(api.notFound('Category'));
             }
             return res.send(obj);
         });
@@ -196,12 +205,9 @@ exports = module.exports = {
         }
         async.waterfall([
             function(callback) {
-                Category.find(req.params.id, callback);
+                getCategory(req.params.id, callback);
             },
             function(category, callback) {
-                if (category===null) {
-                    return callback(api.notFound('Category'));
-                }
                 Article.findNumber({
                     select: 'count(*)',
                     where: 'category_id=?',
