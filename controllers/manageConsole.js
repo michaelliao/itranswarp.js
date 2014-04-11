@@ -17,7 +17,8 @@ var
 var
     categoryApi = require('./categoryApi'),
     articleApi = require('./articleApi'),
-    pageApi = require('./pageApi');
+    pageApi = require('./pageApi'),
+    attachmentApi = require('./attachmentApi');
 
 // do management console
 
@@ -185,7 +186,23 @@ exports = module.exports = {
         });
     },
 
-    // FIXME ////////////////////////////////////////////////////////////////
+    // attachment /////////////////////////////////////////////////////////////
+
+    'GET /manage/attachment/(index)?': function(req, res, next) {
+        var page = utils.getPage(req);
+        attachmentApi.getAttachments(page, function(err, results) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/attachment/attachment_list.html', {
+                page: JSON.stringify(results.page),
+                attachments: JSON.stringify(results.attachments)
+            });
+        });
+    },
+
+
+    // FIXME //////////////////////////////////////////////////////////////////
 
     'GET /api/users/:id': function(req, res, next) {
         /**
