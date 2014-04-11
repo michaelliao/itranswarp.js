@@ -1,6 +1,7 @@
 // test article api:
 
 var
+    _ = require('lodash'),
     async=require('async'),
     should = require('should');
 
@@ -94,7 +95,7 @@ describe('#attachment', function() {
             });
         });
 
-        it('upload text file by contributor', function(done) {
+        it('upload text file by contributor then delete', function(done) {
             // create attachment:
             remote.post(remote.contributor, '/api/attachments', {
                 name: ' Text   ',
@@ -105,7 +106,29 @@ describe('#attachment', function() {
                 r.width.should.equal(0);
                 r.height.should.equal(0);
                 r.size.should.equal(25197);
-                done();
+                // try delete by another users:
+                var tasks = _.map([remote.subscriber, remote.editor], function(user) {
+                    return function(callback) {
+                        remote.post(user, '/api/attachments/' + r.id + '/delete', {}, function(r2) {
+                            should(r2).be.ok;
+                            should(r2.error).be.ok;
+                            r2.error.should.equal('permission:denied');
+                            r2.message.should.be.ok;
+                            callback();
+                        });
+                    };
+                });
+                async.parallel(tasks, function(err, results) {
+                    should(err===null).be.ok;
+                    // delete by admin:
+                    remote.post(remote.admin, '/api/attachments/' + r.id + '/delete', {}, function(r3) {
+                        should(r3).be.ok;
+                        should(r3.error).not.be.ok;
+                        should(r3.id).be.ok;
+                        r3.id.should.equal(r.id);
+                        done();
+                    });
+                });
             });
         });
 

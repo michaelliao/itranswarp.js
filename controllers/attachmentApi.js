@@ -2,6 +2,7 @@
 
 var
     fs = require('fs'),
+    async = require('async'),
     mime = require('mime'),
     api = require('../api'),
     db = require('../db'),
@@ -155,7 +156,55 @@ function downloadAttachment(req, res, next) {
     });
 }
 
+function getAttachment(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    Attachment.find(id, tx, function(err, entity) {
+        if (err) {
+            return callback(err);
+        }
+        if (entity===null) {
+            return callback(api.notFound('Attachment'));
+        }
+        return callback(null, entity);
+    });
+}
+
+function getAttachments(page, callback) {
+    Attachment.findNumber('count(*)', function(err, num) {
+        if (err) {
+            return callback(err);
+        }
+        page.totalItems = num;
+        if (page.isEmpty) {
+            return callback(null, {
+                page: page,
+                attachments: []
+            });
+        }
+        Attachment.findAll({
+            offset: page.offset,
+            limit: page.limit,
+            order: 'created_at desc'
+        }, function(err, attachments) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, {
+                page: page,
+                attachments: attachments
+            });
+        });
+    });
+}
+
 exports = module.exports = {
+
+    getAttachment: getAttachment,
+
+    getAttachments: getAttachments,
 
     checkAttachment: checkAttachment,
 
@@ -166,12 +215,9 @@ exports = module.exports = {
     'GET /files/attachments/:id/:size': downloadAttachment,
 
     'GET /api/attachments/:id': function(req, res, next) {
-        Attachment.find(req.params.id, function(err, entity) {
+        getAttachment(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
-            }
-            if (entity===null) {
-                return next(api.notFound('Attachment'));
             }
             return res.send(entity);
         });
@@ -179,28 +225,51 @@ exports = module.exports = {
 
     'GET /api/attachments': function(req, res, next) {
         var page = utils.getPage(req);
-        Attachment.findNumber('count(*)', function(err, num) {
+        getAttachments(page, function(err, results) {
             if (err) {
                 return next(err);
             }
-            page.totalItems = num;
-            if (page.isEmpty) {
-                return res.send({
-                    page: page,
-                    attachments: []
-                });
+            return res.send(results);
+        });
+    },
+
+    'POST /api/attachments/:id/delete': function(req, res, next) {
+        /**
+         * Delete a attachment by its id.
+         * 
+         * @param {string} :id - The id of the attachment.
+         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         */
+        if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        warp.transaction(function(err, tx) {
+            if (err) {
+                return next(err);
             }
-            Attachment.findAll({
-                offset: page.offset,
-                limit: page.limit,
-                order: 'created_at desc'
-            }, function(err, entities) {
-                if (err) {
-                    return next(err);
+            async.waterfall([
+                // step: query attachment by id:
+                function(callback) {
+                    getAttachment(req.params.id, tx, callback);
+                },
+                function(atta, callback) {
+                    // check user permission:
+                    if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==atta.user_id) {
+                        return callback(api.notAllowed('Permission denied.'));
+                    }
+                    // delete:
+                    atta.destroy(tx, callback);
+                },
+                function(r, callback) {
+                    // delete all resources:
+                    warp.update('delete from resources where ref_id=?', [req.params.id], tx, callback);
                 }
-                return res.send({
-                    page: page,
-                    attachments: entities
+            ], function(err, result) {
+                tx.done(err, function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+                    res.send({ id: req.params.id });
                 });
             });
         });
