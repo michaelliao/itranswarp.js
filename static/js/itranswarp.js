@@ -74,6 +74,22 @@ if (! Number.prototype.toDateTime) {
     };
 }
 
+if (! Number.prototype.toFileSize) {
+    Number.prototype.toFileSize = function() {
+        var size = this;
+        if (size < 1024)
+            return size + ' bytes';
+        size = size / 1024.0;
+        if (size < 1024)
+            return size.toFixed(2) + ' KB';
+        size = size / 1024.0;
+        if (size < 1024)
+            return size.toFixed(2) + ' MB';
+        size = size / 1024.0;
+        return size.toFixed(2) + ' GB';
+    };
+}
+
 // global functions:
 
 var parseDateTime = (function() {
@@ -162,6 +178,18 @@ var parseDateTime = (function() {
         return NaN;
     };
 })();
+
+function gotoPage(index) {
+    if (index) {
+        var search = location.search;
+        var hasPageParam = search.search(/page\=\d+\&?/)!==(-1);
+        if (hasPageParam) {
+            search = search.replace(/page\=\d+\&?/g, '');
+        }
+        search = (search==='' || search==='?') ? ('?page=' + index) : (search + '&page=' + index);
+        location.assign(search);
+    }
+}
 
 function refresh() {
     var
