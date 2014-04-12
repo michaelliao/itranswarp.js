@@ -4,11 +4,14 @@ var
     api = require('../api'),
     db = require('../db'),
     auth = require('./_auth'),
-    utils = require('./_utils');
+    utils = require('./_utils'),
+    config = require('../config');
 
 var
     User = db.user,
-    warp = db.warp;
+    AuthUser = db.AuthUser,
+    warp = db.warp,
+    next_id = db.next_id;
 
 function getUsers(page, callback) {
     User.findNumber('count(*)', function(err, num) {
@@ -54,11 +57,92 @@ function getUser(id, tx, callback) {
     });
 }
 
+function createAuthUser(user, authUser, callback) {
+    warp.transaction(function(err, tx) {
+        if (err) {
+            return callback(err);
+        }
+        async.series({
+            auth_user: function(callback) {
+                AuthUser.create(authUser, tx, callback);
+            },
+            user: function(callback) {
+                User.create(user, tx, callback);
+            }
+        }, function(err, result) {
+            tx.done(err, function(err) {
+                if (err) {
+                    return callback(err);
+                }
+                return callback(null, result);
+            });
+        });
+    });
+}
+
+function processAuthentication(provider, authentication, callback) {
+    var auth_id = provider + ':' + authentication.auth_id;
+    AuthUser.find({
+        where: 'auth_id=?',
+        params: [auth_id]
+    }, function(err, au) {
+        if (err) {
+            return callback(err);
+        }
+        if (au===null) {
+            var user_id = next_id();
+            var user = {
+                id: user_id,
+                email: user_id + '@itranswarp.org',
+                name: authentication.name,
+                passwd: '',
+                image_url: '',
+            };
+            var authUser = {
+                user_id: user_id,
+                auth_provider: provider,
+                auth_id: auth_id,
+                auth_token: authentication.access_token,
+                expires_at: Date.now() + authentication.expires_in
+            };
+            createAuthUser(user, authUser, function(err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                callback(null, authUser);
+            });
+        }
+        else {
+            // update auth user:
+            au.auth_token = authentication.access_token;
+            au.expires_at = Date.now() + authentication.expires_in;
+            au.update(function(err, result) {
+                // also update user:
+                warp.update('update users set name=?, image_url=? where id=?', [authentication.name, authentication.image_url, au.user_id], function(err, result) {
+                    callback(null, au);
+                });
+            });
+        }
+    });
+}
+
+var httpPrefix = 'http://' + config.domain;
+var httpsPrefix = 'https://' + config.domain;
+
 exports = module.exports = {
 
     getUser: getUser,
 
     getUsers: getUsers,
+
+    'GET /auth/signout': function(req, res, next) {
+        res.clearCookie(utils.SESSION_COOKIE_NAME);
+        var referer = req.get('referer') || '/';
+        if (referer.indexOf('/manage/')>=0 || referer.indexOf('/auth/')>=0) {
+            referer = '/';
+        }
+        res.redirect(referer);
+    },
 
     'GET /auth/': function(req, res, next) {
         /**
@@ -70,7 +154,18 @@ exports = module.exports = {
     'GET /auth/from/:name': function(req, res, next) {
         var provider = auth[req.params.name];
         if (provider) {
-            return res.redirect(provider.getAuthenticateURL());
+            var redirect = req.get('referer');
+            if (redirect.indexOf('/auth/')>=0 || redirect.indexOf('/manage')>=0) {
+                redirect = '/';
+            }
+            var redirect_uri = 'http://' + req.host + '/auth/callback/' + req.params.name + '?redirect=' + encodeURIComponent(redirect);
+            var jscallback = req.query.jscallback;
+            if (jscallback) {
+                redirect_uri = redirect_uri + '&jscallback=' + jscallback;
+            }
+            return res.redirect(provider.getAuthenticateURL({
+                redirect_uri: redirect_uri
+            }));
         }
         return res.send(404, 'Not Found');
     },
@@ -90,6 +185,16 @@ exports = module.exports = {
             if (err) {
                 res.send(err);
             }
+            // check AuthUser:
+            processAuthentication(provider, r, function(err, authUser) {
+                var cookieStr = utils.makeSessionCookie(provider, authUser.id, authUser.auth_token, authUser.expires_at);
+                res.cookie(utils.SESSION_COOKIE_NAME, cookieStr, {
+                    path: '/',
+                    expires: new Date(expires)
+                });
+                var redirect = req.query.redirect || '/';
+                res.send(JSON.stringify(r));
+            });
         });
     },
 
