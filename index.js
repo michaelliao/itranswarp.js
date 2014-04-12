@@ -37,6 +37,28 @@ if ('development' === app.get('env')) {
     });
 }
 
+// set theme functions:
+
+var themePath = 'themes/' + config.theme + '/';
+
+var processThemeView = function(path) {
+    return themePath + path;
+}
+
+var processThemeModel = function(model, req) {
+    var m = model || {};
+    m.__theme__ = themePath;
+    m.__user__ = req.user;
+    m.__time__ = Date.now();
+    m.__website__ = {
+        name: 'Website Name',
+        description: 'website blablabla...',
+        custom_header: '',
+        custom_footer: ''
+    };
+    return m;
+};
+
 app.use(express.cookieParser());
 
 // set upload dir:
@@ -58,17 +80,25 @@ app.use('/api/', function(req, res, next) {
 // auto set current user with each request:
 app.use(utils.userIdentityParser);
 
-// check user for manage:
-app.use('/manage/', function(req, res, next) {
-    if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
-        res.manage = function(view, model) {
-            var m = model || {};
-            m.__user__ = req.user;
-            return res.render(view, m);
-        };
-        return next();
+// check user for manage and theme:
+app.use(function(req, res, next) {
+    var prefix = req.path.substring(0, 8);
+    if (prefix==='/manage/') {
+        if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
+            res.manage = function(view, model) {
+                var m = model || {};
+                m.__user__ = req.user;
+                return res.render(view, m);
+            };
+            return next();
+        }
+        return res.redirect('/auth/');
     }
-    res.redirect('/auth/');
+    // add theme for other page:
+    res.theme = function(view, model) {
+        return res.render(processThemeView(view), processThemeModel(model, req));
+    }
+    next();
 });
 
 // api error handling:
