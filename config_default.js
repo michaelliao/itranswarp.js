@@ -1,4 +1,4 @@
-{
+exports = module.exports = {
     "session": {
         "salt": "iTranswarp.js"
     },
@@ -10,6 +10,8 @@
         "database": "itranswarp",
         "connectionLimit": 20
     },
+    "domain": "www.example.com",
+    "theme": "default",
     "oauth2": {
     }
 }
