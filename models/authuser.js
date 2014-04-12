@@ -8,7 +8,7 @@ exports = module.exports = function(warp) {
         base.column_varchar_50('auth_provider'),
         base.column_varchar_100('auth_id', { unique: true }),
         base.column_varchar_500('auth_token'),
-        base.column_bigint('expires_time')
+        base.column_bigint('expires_at')
     ], {
         table: 'auth_users'
     });
