@@ -9,6 +9,7 @@ var
     db = require('../db');
 
 var
+    AuthUser = db.authuser,
     User = db.user,
     Article = db.article,
     Category = db.category,
@@ -121,7 +122,7 @@ function userIdentityParser(req, res, next) {
             }
             else {
                 console.log('invalid session cookie. cleared.');
-                res.clearCookie(SESSION_COOKIE_NAME, {path: '/'});
+                res.clearCookie(SESSION_COOKIE_NAME);
             }
             return next();
         });
@@ -155,25 +156,56 @@ function parseSessionCookie(s, fn) {
     }
     var
         provider = ss[0],
-        uid = ss[1],
+        theId = ss[1],
         expires = parseInt(ss[2]),
         md5 = ss[3];
     if (isNaN(expires) || expires < Date.now()) {
         return fn(null, null);
     }
-    if (!uid || !provider || !md5) {
+    if (!theId || !provider || !md5) {
         return fn(null, null);
     }
-    User.find(uid, function(err, user) {
+    if (provider==='local') {
+        User.find(theId, function(err, user) {
+            if (err) {
+                return fn(err);
+            }
+            if (user===null) {
+                return fn(null, null);
+            }
+            // check:
+            var secure = [provider, theId, user.passwd, salt].join(':');
+            var expected = crypto.createHash('md5').update(secure).digest('hex');
+            fn(null, md5===expected ? user : null);
+        });
+        return;
+    }
+    AuthUser.find({
+        where: 'auth_id=?',
+        params: [theId]
+    }, function(err, authuser) {
         if (err) {
             return fn(err);
         }
-        if (user===null) {
+        if (authuser===null) {
             return fn(null, null);
         }
-        var secure = [provider, uid, user.passwd, salt].join(':');
+        if (authuser.auth_provider!==provider) {
+            return fn(null, null);
+        }
+        // check:
+        var secure = [provider, theId, authuser.auth_token, salt].join(':');
         var expected = crypto.createHash('md5').update(secure).digest('hex');
-        fn(null, md5===expected ? user : null);
+        if (md5!==expected) {
+            return fn(null, null);
+        }
+        // find user:
+        User.find(authuser.user_id, function(err, user) {
+            if (err) {
+                return fn(err);
+            }
+            return fn(null, user);
+        });
     });
 }
 
