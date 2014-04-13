@@ -33,7 +33,7 @@ if ('development' === app.get('env')) {
     app.use('/api/', function(req, res, next) {
         setTimeout(function() {
             next();
-        }, 250 + Math.floor(Math.random() * 250));
+        }, Math.floor(Math.random() * 50));
     });
 }
 
@@ -177,3 +177,7 @@ app.get('/error', function(req, res, next) {
 
 app.listen(3000);
 console.log('Start app on port 3000...');
+
+process.on('uncaughtException', function(err) {
+    console.log('>>>>>> UNCAUGHT EXCEPTION >>>>>> ' + err);
+});
