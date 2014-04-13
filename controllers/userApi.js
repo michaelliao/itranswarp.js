@@ -193,7 +193,13 @@ exports = module.exports = {
         }
         var code = req.query.code;
         if (! code) {
-
+            // something error:
+            console.log('oauth signin failed...');
+            var jscallback = req.query.jscallback;
+            if (jscallback) {
+                return res.send('<html><body><script> self.close(); </script></body></html>');
+            }
+            return res.redirect(req.query.redirect || '/');
         }
         provider.getAuthentication({
             code: code
