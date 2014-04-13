@@ -247,7 +247,34 @@ describe('#wikis', function() {
                                         np3.wiki_id.should.equal(w1.id);
                                         np3.parent_id.should.equal(p2.id);
                                         np3.display_order.should.equal(0);
-                                        done();
+                                        // move p4 to ROOT at index 0:
+                                        // w1
+                                        // +- p4 <----- move to here
+                                        // +- p1
+                                        //    +- p2
+                                        //       +- p3
+                                        remote.post(remote.editor, '/api/wikis/wikipages/' + p4.id + '/move/ROOT', {
+                                            index: 0
+                                        }, function(np4) {
+                                            should(np4.error).not.be.ok;
+                                            np4.wiki_id.should.equal(w1.id);
+                                            np4.parent_id.should.equal('');
+                                            np4.display_order.should.equal(0);
+                                            // move p1 to p3 to make a recursive:
+                                            // w1
+                                            // +- p4
+                                            // +- p1       <----- i'm to here
+                                            //    +- p2
+                                            //       +- p3
+                                            //          +- <----- to here, but not allowed!
+                                            remote.post(remote.editor, '/api/wikis/wikipages/' + p1.id + '/move/' + p3.id, {
+                                                index: 0
+                                            }, function(r4) {
+                                                should(r4.error).be.ok;
+                                                r4.error.should.equal('resource:conflict');
+                                                done();
+                                            });
+                                        });
                                     });
                                 });
                             });
