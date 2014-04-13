@@ -112,11 +112,11 @@ function getWikiPages(wiki_id, returnAsDict, callback) {
             pdict[p.id] = p;
         });
         if (returnAsDict) {
-            return pdict;
+            return callback(null, pdict);
         }
         var proot = { id: '' };
         treeIterate(pdict, proot);
-        return proot.children;
+        return callback(null, proot.children);
     });
 }
 
@@ -169,10 +169,11 @@ function createWikiPage(wp, callback) {
             if (wp.wiki_id!==entity.wiki_id) {
                 return callback(api.invalidParam('parent_id'));
             }
-            doCreateWikiPage();
+            return doCreateWikiPage();
         });
+        return;
     }
-    doCreateWikiPage();
+    return doCreateWikiPage();
 }
 
 // get wiki page by id:
@@ -488,7 +489,7 @@ exports = module.exports = {
         return fnUpdate(null);
     },
 
-    'POST /api/wikis/wikipages/:wpid/move/:targetId': function(req, res, next) {
+    'POST /api/wikis/wikipages/:id/move/:target_id': function(req, res, next) {
         /**
          * Move a wikipage to another node.
          * 
@@ -498,8 +499,8 @@ exports = module.exports = {
             return next(api.notAllowed('Permission denied.'));
         }
         var
-            wpid = req.params.wpid,
-            targetId = req.params.targetId;
+            wpid = req.params.id,
+            target_id = req.params.target_id;
         try {
             var index = parseInt(utils.getRequiredParam('index', req));
         }
@@ -521,15 +522,15 @@ exports = module.exports = {
             },
             function(w, callback) {
                 wiki = w;
-                if (targetId==='ROOT') {
+                if (target_id==='ROOT') {
                     return callback(null, null);
                 }
-                getWikiPage(targetId, callback);
+                getWikiPage(target_id, callback);
             },
             function(wp, callback) {
                 parentPage = wp;
                 if (parentPage!==null && parentPage.wiki_id!==wiki.id) {
-                    return callback(api.invalidParam('targetId'));
+                    return callback(api.invalidParam('target_id'));
                 }
                 callback(null, null);
             },
@@ -572,15 +573,20 @@ exports = module.exports = {
             L.splice(index, 0, movingPage);
             // update display order and movingPage:
             warp.transaction(function(err, tx) {
-                var tasks = [];
-                _.each(L, function(p, index) {
-                    warp.update('update wikipages set display_order=? where id=?', [index, p.id], tx, callback);
+                if (err) {
+                    return next(err);
+                }
+                var tasks = _.map(L, function(p, index) {
+                    return function(callback) {
+                        warp.update('update wikipages set display_order=? where id=?', [index, p.id], tx, callback);
+                    };
                 });
                 tasks.push(function(callback) {
+                    movingPage.display_order = index; // <-- already updated, but need to pass to result
                     movingPage.parent_id = parentId;
                     movingPage.update(['parent_id', 'updated_at', 'version'], tx, callback);
                 });
-                async.serial(tasks, function(err, results) {
+                async.series(tasks, function(err, results) {
                     tx.done(err, function(err) {
                         if (err) {
                             return next(err);

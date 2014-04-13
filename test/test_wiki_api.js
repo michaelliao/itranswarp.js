@@ -165,21 +165,23 @@ describe('#wikis', function() {
         it('create wikipage and try delete wiki', function(done) {
             // create wiki:
             remote.post(remote.editor, '/api/wikis', {
-                name: ' To be delete...   ',
+                name: ' Tree   ',
                 description: '   blablabla\nhaha...  \n   ',
                 content: '  Long long long content... '
             }, function(w1) {
                 // create wiki page:
+                // w1
+                // +- p1
                 remote.post(remote.editor, '/api/wikis/' + w1.id + '/wikipages', {
                     parent_id: 'ROOT',
-                    name: ' First Wiki Page   ',
+                    name: ' P1 - First Wiki Page   ',
                     content: ' This is a first wiki page...   '
                 }, function(p1) {
                     should(p1.error).not.be.ok;
                     p1.wiki_id.should.equal(w1.id);
                     p1.parent_id.should.equal('');
                     p1.display_order.should.equal(0);
-                    p1.name.should.equal('First Wiki Page');
+                    p1.name.should.equal('P1 - First Wiki Page');
                     p1.content.should.equal('This is a first wiki page...');
                     // try delete wiki:
                     remote.post(remote.editor, '/api/wikis/' + w1.id + '/delete', {}, function(r2) {
@@ -191,13 +193,13 @@ describe('#wikis', function() {
                         //    +- p2
                         remote.post(remote.editor, '/api/wikis/' + w1.id + '/wikipages', {
                             parent_id: p1.id,
-                            name: 'Under P1',
+                            name: 'P2',
                             content: 'child wiki page...\n\n'
                         }, function(p2) {
                             should(p2.error).not.be.ok;
                             p2.wiki_id.should.equal(w1.id);
                             p2.parent_id.should.equal(p1.id);
-                            p2.name.should.equal('Under P1');
+                            p2.name.should.equal('P2');
                             p2.content.should.equal('child wiki page...');
                             // try create wiki page under w1:
                             // w1
@@ -215,7 +217,39 @@ describe('#wikis', function() {
                                 p3.display_order.should.equal(1);
                                 p3.name.should.equal('P3');
                                 p3.content.should.equal('p3');
-                                done();
+                                // try create wiki page under p2:
+                                // w1
+                                // +- p1
+                                // |  +- p2
+                                // |     +- p4
+                                // +- p3
+                                remote.post(remote.editor, '/api/wikis/' + w1.id + '/wikipages', {
+                                    parent_id: p2.id,
+                                    name: 'P4',
+                                    content: 'p4'
+                                }, function(p4) {
+                                    should(p4.error).not.be.ok;
+                                    p4.wiki_id.should.equal(w1.id);
+                                    p4.parent_id.should.equal(p2.id);
+                                    p4.display_order.should.equal(0);
+                                    p4.name.should.equal('P4');
+                                    p4.content.should.equal('p4');
+                                    // move p3 to p2 at index 0:
+                                    // w1
+                                    // +- p1
+                                    //    +- p2
+                                    //       +- p3 <----- move to here
+                                    //       +- p4
+                                    remote.post(remote.editor, '/api/wikis/wikipages/' + p3.id + '/move/' + p2.id, {
+                                        index: 0
+                                    }, function(np3) {
+                                        should(np3.error).not.be.ok;
+                                        np3.wiki_id.should.equal(w1.id);
+                                        np3.parent_id.should.equal(p2.id);
+                                        np3.display_order.should.equal(0);
+                                        done();
+                                    });
+                                });
                             });
                         });
                     });
