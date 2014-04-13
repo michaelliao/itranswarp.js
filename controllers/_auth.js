@@ -2,7 +2,7 @@
 
 var
     _ = require('lodash'),
-    oauth2 = require('../oauth2');
+    oauth2 = require('oauth2-warp');
 
 var config = require('../config');
 
