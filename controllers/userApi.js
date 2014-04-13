@@ -65,7 +65,7 @@ function createAuthUser(user, authUser, callback) {
             return callback(err);
         }
         async.series({
-            auth_user: function(callback) {
+            authuser: function(callback) {
                 AuthUser.create(authUser, tx, callback);
             },
             user: function(callback) {
@@ -76,7 +76,7 @@ function createAuthUser(user, authUser, callback) {
                 if (err) {
                     return callback(err);
                 }
-                return callback(null, result.auth_user, result.user);
+                return callback(null, result.authuser, result.user);
             });
         });
     });
@@ -112,14 +112,14 @@ function processAuthentication(provider, authentication, callback) {
                 if (err) {
                     return callback(err);
                 }
-                callback(null, au, u);
+                return callback(null, au, u);
             });
             return;
         }
         // update auth user:
         au.auth_token = authentication.access_token;
         au.expires_at = Date.now() + authentication.expires_in;
-        au.update(function(err, result) {
+        au.update(['auth_token', 'expires_at', 'updated_at', 'version'], function(err, result) {
             getUser(au.user_id, function(err, u) {
                 if (err) {
                     return callback(err);
@@ -134,7 +134,7 @@ function processAuthentication(provider, authentication, callback) {
                     if (err) {
                         return callback(err);
                     }
-                    callback(null, au, u);
+                    return callback(null, au, u);
                 });
             });
         });
