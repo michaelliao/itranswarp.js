@@ -104,12 +104,15 @@ app.use(function(req, res, next) {
 // api error handling:
 app.use(app.router);
 app.use(function(err, req, res, next) {
-    if (err instanceof api.APIError) {
-        console.log('send api error to client: ' + err.error);
-        return res.send(err);
+    if (err) {
+        if (err instanceof api.APIError) {
+            console.log('send api error to client: ' + err.error);
+            return res.send(err);
+        }
+        console.log('ERROR >>> ' + JSON.stringify(err));
+        return res.send(500, 'Internal Server Error');
     }
-    console.log('ERROR >>> ' + JSON.stringify(err));
-    next(err);
+    return next();
 });
 
 // scan all modules:
