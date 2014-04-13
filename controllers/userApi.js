@@ -1,6 +1,8 @@
 // auth.js
 
 var
+    async = require('async');
+var
     api = require('../api'),
     db = require('../db'),
     auth = require('./_auth'),
@@ -9,7 +11,7 @@ var
 
 var
     User = db.user,
-    AuthUser = db.AuthUser,
+    AuthUser = db.authuser,
     warp = db.warp,
     next_id = db.next_id;
 
@@ -74,13 +76,14 @@ function createAuthUser(user, authUser, callback) {
                 if (err) {
                     return callback(err);
                 }
-                return callback(null, result);
+                return callback(null, result.auth_user, result.user);
             });
         });
     });
 }
 
 function processAuthentication(provider, authentication, callback) {
+    console.log(JSON.stringify(authentication));
     var auth_id = provider + ':' + authentication.auth_id;
     AuthUser.find({
         where: 'auth_id=?',
@@ -105,24 +108,36 @@ function processAuthentication(provider, authentication, callback) {
                 auth_token: authentication.access_token,
                 expires_at: Date.now() + authentication.expires_in
             };
-            createAuthUser(user, authUser, function(err, result) {
+            createAuthUser(user, authUser, function(err, au, u) {
                 if (err) {
                     return callback(err);
                 }
-                callback(null, authUser);
+                callback(null, au, u);
             });
+            return;
         }
-        else {
-            // update auth user:
-            au.auth_token = authentication.access_token;
-            au.expires_at = Date.now() + authentication.expires_in;
-            au.update(function(err, result) {
-                // also update user:
-                warp.update('update users set name=?, image_url=? where id=?', [authentication.name, authentication.image_url, au.user_id], function(err, result) {
-                    callback(null, au);
+        // update auth user:
+        au.auth_token = authentication.access_token;
+        au.expires_at = Date.now() + authentication.expires_in;
+        au.update(function(err, result) {
+            getUser(au.user_id, function(err, u) {
+                if (err) {
+                    return callback(err);
+                }
+                if (u.name===authentication.name && u.image_url===authentication.image_url) {
+                    return callback(null, au, u);
+                }
+                // update user:
+                u.name = authentication.name;
+                u.image_url = authentication.image_url;
+                u.update(function(err, u) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    callback(null, au, u);
                 });
             });
-        }
+        });
     });
 }
 
@@ -171,6 +186,7 @@ exports = module.exports = {
     },
 
     'GET /auth/callback/:name': function(req, res, next) {
+        var providerName = req.params.name;
         var provider = auth[req.params.name];
         if (! provider) {
             return res.send(404, 'Not Found');
@@ -181,19 +197,26 @@ exports = module.exports = {
         }
         provider.getAuthentication({
             code: code
-        }, function(err, r) {
+        }, function(err, authentication) {
             if (err) {
                 res.send(err);
             }
             // check AuthUser:
-            processAuthentication(provider, r, function(err, authUser) {
-                var cookieStr = utils.makeSessionCookie(provider, authUser.id, authUser.auth_token, authUser.expires_at);
+            processAuthentication(providerName, authentication, function(err, authUser, user) {
+                var cookieStr = utils.makeSessionCookie(providerName, authUser.id, authUser.auth_token, authUser.expires_at);
                 res.cookie(utils.SESSION_COOKIE_NAME, cookieStr, {
                     path: '/',
-                    expires: new Date(expires)
+                    expires: new Date(authUser.expires_at)
                 });
-                var redirect = req.query.redirect || '/';
-                res.send(JSON.stringify(r));
+                var jscallback = req.query.jscallback;
+                if (jscallback) {
+                    return res.send('<html><body><script> window.opener.' + jscallback + '(' + JSON.stringify({
+                        id: user.id,
+                        name: user.name,
+                        image_url: user.image_url
+                    }) + ');self.close(); </script></body></html>');
+                }
+                res.redirect(req.query.redirect || '/');
             });
         });
     },

@@ -103,7 +103,9 @@ function makeSessionCookie(provider, uid, passwd, expires) {
     }
     var secure = [provider, uid, passwd, salt].join(':');
     var md5 = crypto.createHash('md5').update(secure).digest('hex');
-    return safe_b64encode([provider, uid, expires, md5].join(':'));
+    var str = [provider, uid, expires, md5].join(':');
+    console.log('make session cookie: ' + str);
+    return safe_b64encode(str);
 }
 
 // middle ware for bind user from session cookie or authorization header:
@@ -180,10 +182,7 @@ function parseSessionCookie(s, fn) {
         });
         return;
     }
-    AuthUser.find({
-        where: 'auth_id=?',
-        params: [theId]
-    }, function(err, authuser) {
+    AuthUser.find(theId, function(err, authuser) {
         if (err) {
             return fn(err);
         }
