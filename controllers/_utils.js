@@ -113,7 +113,7 @@ function userIdentityParser(req, res, next) {
     req.user = null;
     var cookie = req.cookies[SESSION_COOKIE_NAME];
     if (cookie) {
-        return parseSessionCookie(cookie, function(err, user) {
+        parseSessionCookie(cookie, function(err, user) {
             if (err) {
                 return next(err);
             }
@@ -128,24 +128,26 @@ function userIdentityParser(req, res, next) {
             }
             return next();
         });
+        return;
     }
     console.log('no session cookie found.');
     var auth = req.get('authorization');
     if (auth) {
-        return parseAuthorization(auth, function(err, user) {
+        parseAuthorization(auth, function(err, user) {
             if (err) {
                 return next(err);
             }
             if (user) {
                 user.passwd = '******'
                 req.user = user;
-                console.log('bind user from authorization: ' + user.email);
+                console.log('bind user from authorization: ' + user.name);
             }
             else {
                 console.log('invalid authorization header.');
             }
             return next();
         });
+        return;
     }
     return next();
 }
@@ -224,12 +226,15 @@ function parseAuthorization(auth, fn) {
     if (!u || !p) {
         return fn(null, null);
     }
-    User.find({ where: 'email=?', params: [u] }, function(err, user) {
+    User.find({
+        where: 'email=?',
+        params: [u]
+    }, function(err, user) {
         if (err) {
             return fn(err);
         }
         if (user && user.passwd===p) {
-            console.log('binded user: ' + user.email);
+            console.log('binded user: ' + user.name);
             return fn(null, user);
         }
         console.log('invalid authorization header.');
