@@ -8,56 +8,25 @@
 
 <script src="/static/js/markdown.js"></script>
 <script src="/static/js/markdown-editor.js"></script>
+
 <script>
-var vmArticle = null;
-var initial_content = '{{ article.content|addslashes }}';
-
-function beforeUnload() {
-    if (isChanged()) {
-        return 'Content has been changed.';
-    }
-};
-
-function isChanged() {
-    return vmArticle.content !== initial_content;
-}
-
-function checkVm() {
-    // check cover image:
-    var
-        MIN_WIDTH = 640,
-        MIN_HEIGHT = 360;
-    var
-        $file = $('#file'),
-        $preview = $('#preview');
-    $file.removeAttr('name');
-    if (vmArticle.id==='' && ($file.val()==='' || $preview.data('width')===0)) {
-        showError('Must upload a cover image.', 'cover');
-        return false;
-    }
-    if ($preview.data('width') < MIN_WIDTH || $preview.data('height') < MIN_HEIGHT) {
-        showError('Cover is too small (Must be equal or greater than ' + MIN_WIDTH + ' x ' + MIN_HEIGHT + ').', 'cover');
-        return false;
-    }
-    if ($file.val()!=='') {
-        $file.attr('name', 'file');
-    }
+function checkVm(vm) {
     // check fields:
-    if (vmArticle.name.trim()==='') {
+    if (vm.name.trim()==='') {
         showError('Name cannot be empty.', 'name');
         return false;
     }
-    if (vmArticle.description.trim()==='') {
+    if (vm.description.trim()==='') {
         showError('Description cannot be empty.', 'description');
         return false;
     }
-    if (vmArticle.content.trim()==='') {
+    if (vm.content.trim()==='') {
         showError('Content cannot be empty.', 'content');
         return false;
     }
-    var spat = vmArticle.publish_at_str.trim();
+    var spat = vm.publish_at_str.trim();
     if (spat==='') {
-        vmArticle.publish_at = '';
+        vm.publish_at = '';
     }
     else {
         var pt = parseDateTime(spat);
@@ -65,53 +34,16 @@ function checkVm() {
             showError('Invalid date format.', 'publish_at');
             return false;
         }
-        vmArticle.publish_at = pt.toString();
+        vm.publish_at = pt.toString();
         // fixme: dom not change:
-        $('#publish_at').val(vmArticle.publish_at).attr('name', 'publish_at');
+        $('#publish_at').val(vm.publish_at).attr('name', 'publish_at');
     }
     return true;
 }
 
-function ajaxPostMultipart() {
-    if (isChanged()) {
-        // update content only if it is changed:
-        $('#markdown-editor').attr('name', 'content');
-    }
-    else {
-        $('#markdown-editor').removeAttr('name');
-    }
-    var form = $('#formArticle').get(0);
-    showLoading(true);
-    var data = null;
-    try {
-        data = form.getFormData();
-    }
-    catch(e) {
-        data = new FormData(form);
-    }
-    $.ajax({
-        url: '{{ form.action }}',
-        data: data,
-        contentType: false,
-        processData: false,
-        type: 'POST'
-    }).done(function(data) {
-        if (data && data.error) {
-            showError(data.message || data.error, data.data);
-            showLoading(false);
-            window.onbeforeunload = beforeUnload;
-        }
-        else {
-            window.onbeforeunload = null;
-            location.assign('{{ form.redirect }}');
-        }
-    }).fail(function(jqXHR, textStatus) {
-        showError('Network error (HTTP ' + jqXHR.status + ')');
-        showLoading(false);
-    });
-}
-
 $(function() {
+    var vmArticle = null;
+    var helper = null;
     var categories = {{ categories|safe }};
     vmArticle = new Vue({
         el: '#formArticle',
@@ -125,16 +57,19 @@ $(function() {
             publish_at: '{{ article.publish_at }}',
             publish_at_str: '',
             description: '{{ article.description|addslashes }}',
-            content: initial_content,
+            content: '{{ article.content|addslashes }}',
         },
         methods: {
             submit: function(event) {
                 event.preventDefault();
                 showError();
-                if (! checkVm()) {
+                if (! helper.checkImageBeforeUpload($('#file'), $('#preview'))) {
                     return;
                 }
-                ajaxPostMultipart();
+                if (! checkVm(this)) {
+                    return;
+                }
+                helper.ajaxPostMultipart($('#markdown-editor'), $('#formArticle'), '{{ form.action}}', '{{ form.redirect }}');
             }
         }
     });
@@ -144,41 +79,18 @@ $(function() {
     if (! vmArticle.category_id && vmArticle.categories.length > 0) {
         vmArticle.category_id = vmArticle.categories[0].id;
     }
+
+    helper = createAjaxUploadUtils(vmArticle);
+
     var
         $file = $('#file'),
         $preview = $('#preview');
     if (vmArticle.cover_id) {
         $preview.css('background-image', 'url(/files/attachments/' + vmArticle.cover_id + ')');
     }
-    // when unload:
-    window.onbeforeunload = beforeUnload;
+
     // when file change:
-    $file.change(function() {
-        showError();
-        $preview.css('background-image', '');
-        $preview.data('width', 0).data('height', 0);
-        var f = $file.val();
-        if (f!=='') {
-            try {
-                var lf = $file.get(0).files[0];
-                var ft = lf.type;
-                if (ft=='image/png' || ft=='image/jpeg' || ft=='image/gif') {
-                    // check image size:
-                    var img = new Image()
-                    img.onload = function() {
-                        $preview.data('width', this.width).data('height', this.height);
-                    }
-                    img.src = getObjectURL(lf);
-                    $preview.css('background-image', 'url(' + getObjectURL(lf) + ')');
-                }
-                else {
-                    showError('Invalid image.');
-                    $('.field-cover').addClass('error');
-                }
-            }
-            catch(e) {}
-        }
-    });
+    $file.change(helper.onFileChange($file, $preview));
 
     $('#markdown-editor').markdown({
         'upload_image_url': '/api/images/create',
@@ -253,7 +165,6 @@ $(function() {
                 </div>
             </div>
             <div class="form-actions">
-                <input v-model="id" type="hidden" name="id" />
                 <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
                 <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
             </div>
