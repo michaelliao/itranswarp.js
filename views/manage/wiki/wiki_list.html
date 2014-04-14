@@ -1,0 +1,105 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Wikis
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var wikis = {{ wikis|safe }};
+    var vmWikis = new Vue({
+        el: '#wikis',
+        data: {
+            wikis: wikis
+        },
+        methods: {
+            find: function(id) {
+                for (var i = 0; i < this.wikis.length; i ++) {
+                    var p = this.wikis[i];
+                    if (p.id===id) {
+                        return i;
+                    }
+                }
+                return (-1);
+            },
+            listWiki: function(id) {
+                location.assign('list_wiki?id=' + id);
+            },
+            deleteWiki: function(id) {
+                var index = this.find(id);
+                if (index!==(-1)) {
+                    var wikis = this.wikis;
+                    var w = wikis[index];
+                    showConfirm('Confirm Deletion', 'Wiki \"' + w.name + '\" will be deleted. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/wikis/' + w.id + '/delete', function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            wikis.splice(index, 1);
+                        });
+                    });
+                }
+            }
+        }
+    });
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+<div id="wikis">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All Wikis (<span v-text="wikis.length"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="create_wiki" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Wiki</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="20%">Cover</th>
+                <th width="55%">Name &amp; Description</th>
+                <th width="15%">Created At</th>
+                <th width="10%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="w: wikis">
+                <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
+                <td>
+                    <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
+                    <p v-text="w.description"></p>
+                </td>
+                <td><span v-text="w.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on="click: listWiki(w.id)" data-toggle="tooltip" title="List Wiki" href="#0" class="x-btn"><i class="icon-list"></i></a>
+                    <a v-on="click: deleteWiki(w.id)" data-toggle="tooltip" title="Delete wiki" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                </td>
+            </tr>
+            <tr v-if="wikis.length===0">
+                <td colspan="4">
+                    No wiki found.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock %}

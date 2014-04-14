@@ -1,0 +1,136 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+{{ form.name }}
+{% endblock %}
+
+{% block head %}
+
+<script src="/static/js/markdown.js"></script>
+<script src="/static/js/markdown-editor.js"></script>
+
+<script>
+function checkVm(vm) {
+    // check fields:
+    if (vm.name.trim()==='') {
+        showError('Name cannot be empty.', 'name');
+        return false;
+    }
+    if (vm.description.trim()==='') {
+        showError('Description cannot be empty.', 'description');
+        return false;
+    }
+    if (vm.content.trim()==='') {
+        showError('Content cannot be empty.', 'content');
+        return false;
+    }
+    return true;
+}
+
+$(function() {
+    var vm = null;
+    var helper = null;
+    vm = new Vue({
+        el: '#formWiki',
+        data: {
+            id: '{{ wiki.id }}',
+            cover_id: '{{ wiki.cover_id }}',
+            name: '{{ wiki.name|addslashes }}',
+            tags: '{{ wiki.tags|addslashes }}',
+            description: '{{ wiki.description|addslashes }}',
+            content: '{{ wiki.content|addslashes }}',
+        },
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                showError();
+                if (! helper.checkImageBeforeUpload($('#file'), $('#preview'))) {
+                    return;
+                }
+                if (! checkVm(this)) {
+                    return;
+                }
+                helper.ajaxPostMultipart($('#markdown-editor'), $('#formWiki'), '{{ form.action}}', '{{ form.redirect }}');
+            }
+        }
+    });
+    helper = createAjaxUploadUtils(vm);
+
+    var
+        $file = $('#file'),
+        $preview = $('#preview');
+    if (vm.cover_id) {
+        $preview.css('background-image', 'url(/files/attachments/' + vm.cover_id + ')');
+    }
+
+    // when file change:
+    $file.change(helper.onFileChange($file, $preview));
+
+    $('#markdown-editor').markdown({
+        'upload_image_url': '/api/images/create',
+    });
+
+f=helper;
+});
+
+var f;
+
+</script>
+
+{% endblock %}
+
+{% block main %}
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/wiki/">All Wikis</a> <span class="divider">/</span></li>
+        <li class="active">{{ form.name }}</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <form v-on="submit: submit" id="formWiki" enctype="multipart/form-data" class="form-horizontal">
+        <legend>{{ form.name }}</legend>
+        <fieldset>
+            <div class="field-cover control-group">
+                <label class="control-label">Cover:</label>
+                <div class="controls">
+                    <div id="preview" style="border:solid 1px #ccc;width:612px;height:344px;background-size:cover;background-position:center center;"></div>
+                    <div style="margin-top:10px;"><input id="file" type="file" name="file" /></div>
+                </div>
+            </div>
+            <div class="field-name control-group">
+                <label class="control-label">Name:</label>
+                <div class="controls">
+                    <input v-model="name" name="name" type="text" class="input-xlarge" style="width:600px;" />
+                </div>
+            </div>
+            <div class="field-tags control-group">
+                <label class="control-label">Tags:</label>
+                <div class="controls">
+                    <input v-model="tags" name="tags" type="text" class="input-xlarge" style="width:600px;" />
+                    <span class="help-inline">Tags seperated by ,</span>
+                </div>
+            </div>
+            <div class="field-description control-group">
+                <label class="control-label">Description:</label>
+                <div class="controls">
+                    <textarea v-model="description" name="description" rows="5" style="width:600px; resize:none;"></textarea>
+                </div>
+            </div>
+            <div class="field-content control-group">
+                <label class="control-label">Content:</label>
+                <div class="controls">
+                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}

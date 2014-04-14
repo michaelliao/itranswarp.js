@@ -18,6 +18,7 @@ var
     categoryApi = require('./categoryApi'),
     articleApi = require('./articleApi'),
     pageApi = require('./pageApi'),
+    wikiApi = require('./wikiApi'),
     attachmentApi = require('./attachmentApi');
 
 // do management console
@@ -186,6 +187,56 @@ exports = module.exports = {
         });
     },
 
+    // article ////////////////////////////////////////////////////////////////
+
+    'GET /manage/wiki/(index)?': function(req, res, next) {
+        wikiApi.getWikis(function(err, wikis) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/wiki/wiki_list.html', {
+                wikis: JSON.stringify(wikis)
+            });
+        });
+    },
+
+    'GET /manage/wiki/create_wiki': function(req, res, next) {
+        return res.manage('manage/wiki/wiki_form.html', {
+            form: {
+                name: 'Create Wiki',
+                action: '/api/wikis/',
+                redirect: '/manage/wiki/'
+            },
+            wiki: {}
+        });
+    },
+
+    'GET /manage/wiki/list_wiki': function(req, res, next) {
+        var id = req.query.id;
+        wikiApi.getWiki(id, function(err, wiki) {
+            return res.manage('manage/wiki/wiki_tree.html', {
+                wiki: wiki
+            });
+        });
+    },
+
+    'GET /manage/wiki/edit_wiki': function(req, res, next) {
+        var id = req.query.id;
+        wikiApi.getWikiWithContent(id, function(err, wiki) {
+            if (err) {
+                return next(err);
+            }            
+            return res.manage('manage/wiki/wiki_form.html', {
+                form: {
+                    name: 'Edit Wiki',
+                    action: '/api/wikis/' + id + '/',
+                    redirect: '/manage/wiki/tree?id=' + id
+                },
+                wiki: wiki
+            });
+        });
+    },
+
     // attachment /////////////////////////////////////////////////////////////
 
     'GET /manage/attachment/(index)?': function(req, res, next) {
@@ -211,17 +262,7 @@ exports = module.exports = {
          * @param {string} :id - The id of the user.
          * @return {object} User object.
          */
-        User.find(req.params.id)
-            .error(function(err) {
-                return res.send(api.error(err));
-            })
-            .success(function(user) {
-                if ( ! user) {
-                    return res.send(api.notfound('user', 'User not found.'));
-                }
-                user.passwd = '******';
-                return res.send(user);
-            });
+        return res.send('');
     },
 
     'POST /api/users/:id': function(req, res, next) {
@@ -232,33 +273,7 @@ exports = module.exports = {
          * @param {string,optional} name - The new name of the user.
          * @return {object} User object.
          */
-        User.find(req.params.id)
-            .error(function(err) {
-                return res.send(api.error(err));
-            })
-            .success(function(user) {
-                if ( ! user) {
-                    return res.send(api.notfound('user', 'User not found.'));
-                }
-                // update user's properties:
-                user.passwd = '******';
-                var attrs = ['updated_at', 'version'];
-                if ('name' in req.body) {
-                    user.name = req.body.name.trim();
-                    attrs.push('name');
-                }
-                if (attrs.length > 0) {
-                    user.save(attrs).success(function() {
-                        res.send(user);
-                    })
-                    .error(function(err) {
-                        res.send(api.error(err));
-                    });
-                }
-                else {
-                    res.send(user);
-                }
-            });
+        return res.send('');
     }
 
 }
