@@ -23,14 +23,9 @@ var
     next_id = db.next_id;
 
 function getWikis(callback) {
-    Wiki.findAll(function(err, entities) {
-        if (err) {
-            return callback(err);
-        }
-        return callback(null, {
-            wikis: entities
-        });
-    });
+    Wiki.findAll({
+        order: 'name asc'
+    }, callback);
 }
 
 function getWiki(id, tx, callback) {
@@ -75,24 +70,38 @@ function treeIterate(nodes, root) {
     var rid = root.id;
     root.children = [];
     var removes = [];
-    for (nid in nodes) {
-        node = nodes[nid];
+    _.each(nodes, function(node, nid) {
         if (node.parent_id===rid) {
             root.children.push(node);
             removes.push(nid);
         }
-    }
-    for (key in removes) {
-        delete nodes[key];
-    }
-    if (root.children.length>0) {
+    });
+    _.each(removes, function(nid) {
+        delete nodes[nid];
+    });
+    if (root.children.length > 0) {
         root.children.sort(function(n1, n2) {
             return n1.display_order < n2.display_order ? (-1) : 1;
         });
-        for (ch in root.children) {
-            treeIterate(nodes, ch);
-        }
+        _.each(root.children, function(child) {
+            treeIterate(nodes, child);
+        });
     }
+}
+
+function getWikiTree(id, callback) {
+    getWiki(id, function(err, wiki) {
+        if (err) {
+            return callback(err);
+        }
+        getWikiPages(id, function(err, children) {
+            if (err) {
+                return callback(err);
+            }
+            wiki.children = children;
+            return callback(null, wiki);
+        });
+    });
 }
 
 function getWikiPages(wiki_id, returnAsDict, callback) {
@@ -221,8 +230,6 @@ exports = module.exports = {
     getWiki: getWiki,
 
     getWikis: getWikis,
-
-    getWikiPages: getWikiPages,
 
     getWikiWithContent: getWikiWithContent,
 
@@ -364,8 +371,27 @@ exports = module.exports = {
         });
     },
 
+    'GET /api/wikis/wikipages/:id': function(req, res, next) {
+        getWikiPageWithContent(req.params.id, function(err, wp) {
+            if (err) {
+                return next(err);
+            }
+            return res.send(wp);
+        });
+    },
+
     'GET /api/wikis/:id/wikipages': function(req, res, next) {
-        //
+        /**
+         * Get wiki pages as a tree list.
+         * 
+         * @return {object} The full tree object.
+         */
+        getWikiTree(req.params.id, function(err, wiki) {
+            if (err) {
+                return next(err);
+            }
+            return res.send(wiki);
+        });
     },
 
     'POST /api/wikis/:id': function(req, res, next) {
@@ -596,6 +622,14 @@ exports = module.exports = {
                 });
             });
         });
+    },
+
+    'POST /api/wikis/wikipages/:id/delete': function(req, res, next) {
+        /**
+         * Delete a wikipage if it has no child wikipage.
+         *
+         * @param id {string} - The id of the wikipage.
+         */
     },
 
     'POST /api/wikis/:id/delete': function(req, res, next) {
