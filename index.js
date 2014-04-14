@@ -17,17 +17,17 @@ var
 
 // init http server:
 var app = express();
+var productionMode = 'production' === app.get('env');
 
 // set engine to swig:
 app.engine('html', swig.renderFile);
 
-// set for production:
-if ('production' === app.get('env')) {
+if (productionMode) {
+    // set for production:
     app.enable('trust proxy');
 }
-
-// set for development:
-if ('development' === app.get('env')) {
+else {
+    // set for development:
     swig.setDefaults({ cache: false });
     app.use('/static', express.static(__dirname + '/static'));
     app.use('/api/', function(req, res, next) {
@@ -109,10 +109,12 @@ app.use(function(err, req, res, next) {
             console.log('send api error to client: ' + err.error);
             return res.send(err);
         }
-        console.log('ERROR >>> ' + JSON.stringify(err));
-        return res.send(500, 'Internal Server Error');
+        if (productionMode) {
+            console.log('ERROR >>> ' + err);
+            return res.send(500, 'Internal Server Error');
+        }
     }
-    return next();
+    return next(err);
 });
 
 // scan all modules:
@@ -178,6 +180,8 @@ app.get('/error', function(req, res, next) {
 app.listen(3000);
 console.log('Start app on port 3000...');
 
-process.on('uncaughtException', function(err) {
-    console.log('>>>>>> UNCAUGHT EXCEPTION >>>>>> ' + err);
-});
+if (productionMode) {
+    process.on('uncaughtException', function(err) {
+        console.log('>>>>>> UNCAUGHT EXCEPTION >>>>>> ' + err);
+    });
+}
