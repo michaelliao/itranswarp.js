@@ -52,12 +52,12 @@ $(function() {
             category_id: '{{ article.category_id }}',
             id: '{{ article.id }}',
             cover_id: '{{ article.cover_id }}',
-            name: '{{ article.name|addslashes }}',
-            tags: '{{ article.tags|addslashes }}',
+            name: {{ article.name|json|safe }},
+            tags: {{ article.tags|json|safe }},
             publish_at: '{{ article.publish_at }}',
             publish_at_str: '',
-            description: '{{ article.description|addslashes }}',
-            content: '{{ article.content|addslashes }}',
+            description: {{ article.description|json|safe }},
+            content: {{ article.content|json|safe }},
         },
         methods: {
             submit: function(event) {
