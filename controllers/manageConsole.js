@@ -176,6 +176,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
+            page.content = page.content.split(/script/);
             return res.manage('manage/page/page_form.html', {
                 form: {
                     name: 'Edit Page',

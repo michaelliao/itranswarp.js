@@ -6,13 +6,13 @@
 
 {% block head %}
 
-<script src="/static/js/markdown.js"></script>
+<script src="/static/js/marked.js"></script>
 <script src="/static/js/markdown-editor.js"></script>
 
 <script>
 
 var vmPage = null;
-var initial_content = '{{ page.content|addslashes }}';
+var initial_content = {{ page.content|json|safe }}.join('script');
 
 function beforeUnload() {
     if (isChanged()) {
@@ -28,9 +28,9 @@ $(function() {
     vmPage = new Vue({
         el: '#formPage',
         data: {
-            name: '{{ page.name|addslashes }}',
+            name: {{ page.name|json|safe }},
             alias: '{{ page.alias }}',
-            tags: '{{ page.tags|addslashes }}',
+            tags: {{ page.tags|json|safe }},
             draft: {{ page.draft|safe }},
             content: initial_content
         },
