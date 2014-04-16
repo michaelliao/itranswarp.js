@@ -11,8 +11,8 @@ $(function() {
     var vmCategory = new Vue({
         el: '#formCategory',
         data: {
-            name: '{{ category.name|addslashes }}',
-            description: '{{ category.description|addslashes }}'
+            name: {{ category.name|json|safe }},
+            description: {{ category.description|json|safe }},
         },
         methods: {
             submit: function(event) {
@@ -31,20 +31,6 @@ $(function() {
         }
     });
 });
-
-
-function ajax_post(form) {
-    show_error(null);
-    show_loading(true);
-    $.postJSON($(form).attr('action'), $(form).serialize(), function(result) {
-        location.assign('/manage/article/categories');
-    }, function(e) {
-        show_loading(false);
-        show_error(e.message || e.error, e.data);
-    });
-    return false;
-}
-
 </script>
 
 {% endblock %}
