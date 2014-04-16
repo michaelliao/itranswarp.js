@@ -237,6 +237,33 @@ exports = module.exports = {
         });
     },
 
+    'GET /manage/wiki/edit_wikipage': function(req, res, next) {
+        var id = req.query.id;
+        var wikipage = null;
+        async.waterfall([
+            function(callback) {
+                wikiApi.getWikiPageWithContent(id, callback);
+            },
+            function(wp, callback) {
+                wikipage = wp;
+                wikiApi.getWiki(wp.wiki_id, callback);
+            }
+        ], function(err, wiki) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/wiki/wikipage_form.html', {
+                form: {
+                    name: 'Edit Wiki Page',
+                    action: '/api/wikis/wikipages/' + id + '/',
+                    redirect: '/manage/wiki/list_wiki?id=' + wiki.id
+                },
+                wikipage: wikipage,
+                wiki: wiki
+            });
+        });
+    },
+
     // attachment /////////////////////////////////////////////////////////////
 
     'GET /manage/attachment/(index)?': function(req, res, next) {

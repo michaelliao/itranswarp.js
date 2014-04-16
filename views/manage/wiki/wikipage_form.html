@@ -1,0 +1,119 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+Edit Wiki Page
+{% endblock %}
+
+{% block head %}
+
+<script src="/static/js/marked.js"></script>
+<script src="/static/js/markdown.js"></script>
+<script src="/static/js/markdown-editor.js"></script>
+
+<script>
+var vm = null;
+var g_initial_text = {{ wikipage.content|json|safe }};
+
+function isChanged() {
+    return vm.content !== g_initial_text;
+}
+
+window.onbeforeunload = function() {
+    if (isChanged()) {
+        return 'Content has been changed.';
+    }
+};
+
+function checkVm() {
+    // check fields:
+    if (vm.name.trim()==='') {
+        showError('Name cannot be empty.', 'name');
+        return false;
+    }
+    if (vm.content.trim()==='') {
+        showError('Content cannot be empty.', 'content');
+        return false;
+    }
+    return true;
+}
+
+$(function() {
+    vm = new Vue({
+        el: '#formWikiPage',
+        data: {
+            name: {{ wikipage.name|json|safe }},
+            content: g_initial_text,
+        },
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                showError();
+                if (! checkVm()) {
+                    return;
+                }
+                showLoading(true);
+                var data = {
+                    name: vm.name
+                };
+                if (isChanged()) {
+                    data.content = vm.content;
+                }
+                postJSON('{{ form.action }}', data, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    window.onbeforeunload = null;
+                    location.assign('{{ form.redirect }}');
+                });
+            }
+        }
+    });
+
+    $('#markdown-editor').markdown({
+        'upload_image_url': '/api/images/create',
+    });
+});
+</script>
+
+{% endblock %}
+
+{% block main %}
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/wiki/">All Wikis</a> <span class="divider">/</span></li>
+        <li><a href="/manage/wiki/list_wiki?id={{ wiki.id }}">{{ wiki.name }}</a> <span class="divider">/</span></li>
+        <li class="active">{{ form.name }}</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+</div>
+
+<div class="span12">
+    <form id="formWikiPage" v-on="submit: submit" class="form-horizontal">
+        <legend>{{ form.name }}</legend>
+        <fieldset>
+            <div class="field-name control-group">
+                <label class="control-label">Name:</label>
+                <div class="controls">
+                    <input v-model="name" type="text" class="input-xlarge" />
+                </div>
+            </div>
+            <div class="field-content control-group">
+                <label class="control-label">Content:</label>
+                <div class="controls">
+                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}

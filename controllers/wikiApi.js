@@ -624,6 +624,71 @@ exports = module.exports = {
         });
     },
 
+    'POST /api/wikis/wikipages/:id': function(req, res, next) {
+        var
+            id = req.params.id,
+            name = utils.getParam('name', req),
+            content = utils.getParam('content', req);
+        if (name!==null && name==='') {
+            return next(api.invalidParam('name'));
+        }
+        if (content!==null && content==='') {
+            return next(api.invalidParam('content'));
+        }
+        var content_id = next_id();
+        warp.transaction(function(err, tx) {
+            if (err) {
+                return next(err);
+            }
+            async.waterfall([
+                // query wiki page:
+                function(callback) {
+                    getWikiPage(id, tx, callback);
+                },
+                function(wp, callback) {
+                    if (content!==null) {
+                        Text.create({
+                            id: content_id,
+                            ref_id: id,
+                            value: content
+                        }, tx, function(err, text) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            wp.content_id = content_id;
+                            callback(null, wp);
+                        });
+                        return;
+                    }
+                    callback(null, wp);
+                },
+                function(wp, callback) {
+                    if (name!==null) {
+                        wp.name = name;
+                    }
+                    wp.update(tx, callback);
+                }
+            ], function(err, wp) {
+                tx.done(err, function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+                    if (content!==null) {
+                        wp.content = content;
+                        return res.send(wp);
+                    }
+                    Text.find(wp.content_id, function(err, text) {
+                        if (err) {
+                            return next(err);
+                        }
+                        wp.content = text.value;
+                        return res.send(wp);
+                    });
+                });
+            });
+        });
+    },
+
     'POST /api/wikis/wikipages/:id/delete': function(req, res, next) {
         /**
          * Delete a wikipage if it has no child wikipage.
