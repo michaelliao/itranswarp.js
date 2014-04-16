@@ -187,7 +187,7 @@ exports = module.exports = {
         });
     },
 
-    // article ////////////////////////////////////////////////////////////////
+    // wiki ///////////////////////////////////////////////////////////////////
 
     'GET /manage/wiki/(index)?': function(req, res, next) {
         wikiApi.getWikis(function(err, wikis) {
@@ -230,7 +230,7 @@ exports = module.exports = {
                 form: {
                     name: 'Edit Wiki',
                     action: '/api/wikis/' + id + '/',
-                    redirect: '/manage/wiki/tree?id=' + id
+                    redirect: '/manage/wiki/list_wiki?id=' + id
                 },
                 wiki: wiki
             });

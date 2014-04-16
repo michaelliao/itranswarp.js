@@ -630,6 +630,30 @@ exports = module.exports = {
          *
          * @param id {string} - The id of the wikipage.
          */
+        var id = req.params.id;
+        getWikiPage(id, function(err, wp) {
+            if (err) {
+                return next(err);
+            }
+            WikiPage.findNumber({
+                select: 'count(id)',
+                where: 'parent_id=?',
+                params: [id]
+            }, function(err, num) {
+                if (err) {
+                    return next(err);
+                }
+                if (num > 0) {
+                    return next(api.resourceConflictError('WikiPage', 'Cannot delete a non-empty wiki pages.'));
+                }
+                wp.destroy(function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+                    return res.send({id: id});
+                });
+            });
+        });
     },
 
     'POST /api/wikis/:id/delete': function(req, res, next) {
@@ -664,7 +688,7 @@ exports = module.exports = {
                             return callback(err);
                         }
                         if (num > 0) {
-                            return callback(api.resourceConflictError('Wiki is not empty.'));
+                            return callback(api.resourceConflictError('Wiki', 'Wiki is not empty.'));
                         }
                         callback(null, wiki);
                     });
