@@ -6,6 +6,7 @@
 
 {% block head %}
 
+<script src="/static/js/marked.js"></script>
 <script src="/static/js/markdown.js"></script>
 <script src="/static/js/markdown-editor.js"></script>
 
@@ -35,10 +36,10 @@ $(function() {
         data: {
             id: '{{ wiki.id }}',
             cover_id: '{{ wiki.cover_id }}',
-            name: '{{ wiki.name|addslashes }}',
-            tags: '{{ wiki.tags|addslashes }}',
-            description: '{{ wiki.description|addslashes }}',
-            content: '{{ wiki.content|addslashes }}',
+            name: {{ wiki.name|json|safe }},
+            tags: {{ wiki.tags|json|safe }},
+            description: {{ wiki.description|json|safe }},
+            content: {{ wiki.content|json|safe }}
         },
         methods: {
             submit: function(event) {

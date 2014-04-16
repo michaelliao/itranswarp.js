@@ -7,13 +7,12 @@ Wiki List
 {% block head %}
 
 <script src="/static/js/marked.js"></script>
-<script src="/static/js/markdown.js"></script>
 <script src="/static/js/tree.jquery.js"></script>
 
 <script>
 
 var g_wiki_id = '{{ wiki.id }}';
-var g_wiki_name = '{{ wiki.name|addslashes }}';
+var g_wiki_name = {{ wiki.name|json|safe }};
 var g_ajaxing = false;
 
 function is_ajaxing() {
@@ -60,11 +59,11 @@ function index_of_me(node) {
 function move_api(moved, parent, index) {
     start_ajax();
     var pid = parent.id || 'ROOT';
-    $.postJSON('/api/wikis/wikipages/' + moved.id + '/move/' + pid, { 'index': index }, function(result) {
-    }, function(err) {
-        showError(err);
-    }, function() {
+    postJSON('/api/wikis/wikipages/' + moved.id + '/move/' + pid, { 'index': index }, function(err, result) {
         end_ajax();
+        if (err) {
+            return showError(err);
+        }
     });
 }
 
@@ -112,22 +111,20 @@ function preview_wiki(node) {
     $('#wiki-preview-name').html('<a href="' + preview_url + '" target="_blank">' + $('<div/>').text(node.name).html() + '</a>');
     $('#wiki-preview-content').text('Loading...');
     var url = node.id==='' ? '/api/wikis/' + g_wiki_id : '/api/wikis/wikipages/' + node.id;
-    $.getJSON(url, function(result) {
-        if (result.error) {
-            set_preview_error(result.message || result.error);
+    getJSON(url, function(err, result) {
+        if (err) {
+            set_preview_error(err.message || err.error);
             return;
         }
         $('#wiki-preview-content').html(marked.parse(result.content));
-    }).fail(function() {
-        set_preview_error('HTTP Error!');
     });
 }
 
 $(function() {
     // load tree data:
-    $.getJSON('/api/wikis/{{ wiki.id }}/wikipages').success(function(result) {
-        if (result.error) {
-            var err = result.error;
+    getJSON('/api/wikis/{{ wiki.id }}/wikipages', function(err, result) {
+        $('#loading').hide();
+        if (err) {
             return showError(err);
         }
         $('#tree-wikipages').tree({
@@ -156,21 +153,23 @@ $(function() {
         $('#tree-wikipages').bind('tree.move', function(event) {
             move_node(event.move_info.moved_node, event.move_info.target_node, event.move_info.position, event.move_info.previous_parent);
         });
-    }).error(function() {
-        showError('Error when load wiki pages.');
-    }).complete(function() {
-        $('#loading').hide();
     });
 
     $('#btn-add').click(function() {
         var $tree = $('#tree-wikipages');
         var node = $tree.tree('getSelectedNode');
-        $.postJSON('/api/wikis/' + g_wiki_id + '/wikipages/', {'name': 'New Wiki Page', 'content': 'New Wiki Page content', 'parent_id': node.id}, function(result) {
+        postJSON('/api/wikis/' + g_wiki_id + '/wikipages/', {
+            name: 'New Wiki Page',
+            content: 'New wiki page content',
+            parent_id: node.id==='' ? 'ROOT' : node.id
+        }, function(err, result) {
+            if (err) {
+                showError(err);
+                return;
+            }
             $tree.tree('appendNode', result, node);
             $tree.tree('openNode', node);
             $tree.tree('selectNode', $tree.tree('getNodeById', result.id));
-        }, function(err) {
-            showError(err);
         });
     });
 
