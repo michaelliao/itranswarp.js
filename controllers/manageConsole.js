@@ -87,6 +87,7 @@ exports = module.exports = {
                 return next(err);
             }
             var article = results.article;
+            article.safe_content = JSON.stringify(article.content).replace(/script/g, 'scr\" + \"ipt');
             return res.manage('manage/article/article_form.html', {
                 form: {
                     name: 'Edit Article',
@@ -176,7 +177,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            page.content = page.content.split(/script/);
+            page.safe_content = JSON.stringify(page.content).replace(/script/g, 'scr\" + \"ipt');
             return res.manage('manage/page/page_form.html', {
                 form: {
                     name: 'Edit Page',
@@ -226,7 +227,8 @@ exports = module.exports = {
         wikiApi.getWikiWithContent(id, function(err, wiki) {
             if (err) {
                 return next(err);
-            }            
+            }
+            wiki.safe_content = JSON.stringify(wiki.content).replace(/script/g, 'scr\" + \"ipt');
             return res.manage('manage/wiki/wiki_form.html', {
                 form: {
                     name: 'Edit Wiki',
@@ -253,6 +255,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
+            wikipage.safe_content = JSON.stringify(wikipage.content).replace(/script/g, 'scr\" + \"ipt');
             return res.manage('manage/wiki/wikipage_form.html', {
                 form: {
                     name: 'Edit Wiki Page',

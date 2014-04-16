@@ -57,7 +57,7 @@ $(function() {
             publish_at: '{{ article.publish_at }}',
             publish_at_str: '',
             description: {{ article.description|json|safe }},
-            content: {{ article.content|json|safe }},
+            content: {{ article.safe_content|safe }},
         },
         methods: {
             submit: function(event) {
