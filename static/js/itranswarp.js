@@ -245,7 +245,7 @@ function _httpJSON(method, url, data, callback) {
         data = {};
     }
     $.ajax({
-        type: 'POST',
+        type: method,
         url: url,
         data: data,
         dataType: 'json'
