@@ -101,31 +101,31 @@ var parseDateTime = (function() {
             }
         },
         'MM': {
-            re: '(0?[1-9]|1[0-2])',
+            re: '(0[1-9]|1[0-2]|[0-9])',
             fn: function(dt, value) {
                 dt.setMonth(value - 1);
             }
         },
         'dd': {
-            re: '(0?[1-9]|1[0-9]|2[0-9]|3[0-1])',
+            re: '(0[1-9]|1[0-9]|2[0-9]|3[0-1]|[0-9])',
             fn: function(dt, value) {
                 dt.setDate(value);
             }
         },
         'hh': {
-            re: '(0?[0-9]|1[0-9]|2[0-3])',
+            re: '(0[0-9]|1[0-9]|2[0-3]|[0-9])',
             fn: function(dt, value) {
                 dt.setHours(value);
             }
         },
         'mm': {
-            re: '(0?[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])',
+            re: '(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])',
             fn: function(dt, value) {
                 dt.setMinutes(value);
             }
         },
         'ss': {
-            re: '(0?[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])',
+            re: '(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])',
             fn: function(dt, value) {
                 dt.setSeconds(value);
             }
