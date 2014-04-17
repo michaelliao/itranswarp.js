@@ -93,7 +93,7 @@ $(function() {
     $file.change(helper.onFileChange($file, $preview));
 
     $('#markdown-editor').markdown({
-        'upload_image_url': '/api/images/create',
+        'upload_image_url': '/api/attachments?image=true&url=true'
     });
 });
 

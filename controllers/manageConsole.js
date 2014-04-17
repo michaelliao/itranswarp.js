@@ -64,7 +64,9 @@ exports = module.exports = {
                     redirect: '/manage/article/'
                 },
                 categories: JSON.stringify(categories),
-                article: {}
+                article: {
+                    safe_content: '\'\''
+                }
             });
         });
     },
@@ -167,6 +169,7 @@ exports = module.exports = {
                 alias: '',
                 draft: false,
                 content: '',
+                safe_content: '\'\''
             }
         });
     },
@@ -209,7 +212,9 @@ exports = module.exports = {
                 action: '/api/wikis/',
                 redirect: '/manage/wiki/'
             },
-            wiki: {}
+            wiki: {
+                safe_content: '\'\''
+            }
         });
     },
 

@@ -288,17 +288,16 @@ exports = module.exports = {
         var expectImage = req.query.image==='true';
         var includeUrl = req.query.url==='true';
 
-        try {
-            var name = utils.getRequiredParam('name', req);
-        }
-        catch (e) {
-            return next(e);
-        }
-        var description = utils.getParam('description', '', req);
+        var
+            name = utils.getParam('name', '', req),
+            description = utils.getParam('description', '', req);
 
         var file = req.files.file;
         if ( ! file) {
             return next(api.invalidParam('file'));
+        }
+        if (! name) {
+            name = file.name;
         }
 
         console.log('file uploaded: ' + file.name);
