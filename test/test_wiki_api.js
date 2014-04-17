@@ -18,8 +18,8 @@ describe('#wikis', function() {
     describe('#getwikis', function() {
 
         it('should get empty wikis', function(done) {
-            remote.get(remote.guest, '/api/wikis', null, function(r) {
-                r.wikis.length.should.equal(0);
+            remote.get(remote.guest, '/api/wikis', null, function(wikis) {
+                wikis.length.should.equal(0);
                 done();
             });
         });
