@@ -285,6 +285,8 @@ exports = module.exports = {
             return next(api.notAllowed('Permission denied.'));
         }
         var user_id = req.user.id;
+        var expectImage = req.query.image==='true';
+        var includeUrl = req.query.url==='true';
 
         try {
             var name = utils.getRequiredParam('name', req);
@@ -301,7 +303,7 @@ exports = module.exports = {
 
         console.log('file uploaded: ' + file.name);
 
-        checkAttachment(file, function(err, attachFileObject) {
+        checkAttachment(file, expectImage, function(err, attachFileObject) {
             if (err) {
                 return next(err);
             }
@@ -317,6 +319,9 @@ exports = module.exports = {
                     tx.done(err, function(err) {
                         if (err) {
                             return next(err);
+                        }
+                        if (includeUrl) {
+                            atta.url = '/files/attachments/' + atta.id;
                         }
                         return res.send(atta);
                     });

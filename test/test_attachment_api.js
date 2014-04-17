@@ -37,7 +37,7 @@ describe('#attachment', function() {
 
         it('upload image by contributor', function(done) {
             // create attachment:
-            remote.post(remote.contributor, '/api/attachments', {
+            remote.post(remote.contributor, '/api/attachments?url=true', {
                 name: 'Test Image   ',
                 description: '   blablabla\nhaha...  \n   ',
                 file: remote.createReadStream('./test/res-image.jpg')
@@ -46,6 +46,8 @@ describe('#attachment', function() {
                 r.width.should.equal(1280);
                 r.height.should.equal(720);
                 r.size.should.equal(346158);
+                should(r.url).be.ok;
+                r.url.should.equal('/files/attachments/' + r.id);
                 var atta_id = r.id;
                 async.parallel([
                     function(callback) {
@@ -92,6 +94,21 @@ describe('#attachment', function() {
                     should(err).not.be.ok;
                     done();
                 });
+            });
+        });
+
+
+        it('upload text file but expect image', function(done) {
+            // create attachment:
+            remote.post(remote.contributor, '/api/attachments?image=true', {
+                name: ' Text   ',
+                description: '   blablabla\nhaha...  \n   ',
+                file: remote.createReadStream('./test/res-plain.txt')
+            }, function(r) {
+                should(r.error).be.ok;
+                r.error.should.equal('parameter:invalid');
+                r.data.should.equal('file');
+                done();
             });
         });
 
