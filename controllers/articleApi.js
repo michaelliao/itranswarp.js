@@ -1,4 +1,4 @@
-// articles.js
+// article api
 
 var
     async = require('async'),

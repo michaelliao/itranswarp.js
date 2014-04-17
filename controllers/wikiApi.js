@@ -1,4 +1,4 @@
-// wiki.js
+// wiki api
 
 var
     _ = require('lodash'),

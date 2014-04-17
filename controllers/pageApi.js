@@ -1,4 +1,4 @@
-// pages.js
+// page api
 
 var
     async = require('async'),

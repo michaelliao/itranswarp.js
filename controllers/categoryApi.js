@@ -1,4 +1,4 @@
-// articles.js
+// category api
 
 var
     _ = require('lodash'),

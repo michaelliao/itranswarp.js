@@ -1,4 +1,4 @@
-// attachments.js
+// attachment api
 
 var
     fs = require('fs'),

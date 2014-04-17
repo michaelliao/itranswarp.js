@@ -1,4 +1,4 @@
-// auth.js
+// user api
 
 var
     async = require('async');
