@@ -338,6 +338,34 @@ exports = module.exports = {
         return fnCreate(null);
     },
 
+    'POST /api/wikis/:id/comments': function(req, res, next) {
+        /**
+         * Create a comment on a wiki.
+         * 
+         * @return {object} The created comment object.
+         */
+        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        try {
+            var content = utils.getRequiredParam('content', req);
+        }
+        catch (e) {
+            return next(e);
+        }
+        Wiki.find(req.params.id, function(err, wiki) {
+            if (err) {
+                return next(err);
+            }
+            commentApi.createComment('wiki', wiki.id, req.user, content, function(err, c) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(c);
+            });
+        });
+    },
+
     'POST /api/wikis/:id/wikipages': function(req, res, next) {
         /**
          * Create a wiki page.
@@ -685,6 +713,34 @@ exports = module.exports = {
                         return res.send(wp);
                     });
                 });
+            });
+        });
+    },
+
+    'POST /api/wikis/wikipages/:id/comments': function(req, res, next) {
+        /**
+         * Create a comment on a wiki page.
+         * 
+         * @return {object} The created comment object.
+         */
+        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        try {
+            var content = utils.getRequiredParam('content', req);
+        }
+        catch (e) {
+            return next(e);
+        }
+        WikiPage.find(req.params.id, function(err, wikipage) {
+            if (err) {
+                return next(err);
+            }
+            commentApi.createComment('wikipage', wikipage.id, req.user, content, function(err, c) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(c);
             });
         });
     },
