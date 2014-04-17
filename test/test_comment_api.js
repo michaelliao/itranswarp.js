@@ -1,7 +1,8 @@
 // test category api:
 
 var remote = require('./_test'),
-    should = require('should');
+    should = require('should'),
+    async = require('async');
 
 var commentApi = require('../controllers/commentApi');
 var utils = require('../controllers/_utils');
@@ -98,7 +99,35 @@ describe('#comments', function() {
         });
    
         it('create lots of comments on article', function(done) {
-            done();
+            var tasks = [];
+            for (var i=0; i<100; i++) {
+                var n = i;
+                tasks.push(function(callback) {
+                    remote.post(remote.subscriber, '/api/articles/' + article.id + '/comments', { content: '   Test & ' + n }, function(c) {
+                        should(c.error).not.be.ok;
+                        c.ref_id.should.equal(article.id);
+                        c.content.should.equal('Test &amp; ' + n);
+                        callback(null, c);
+                    });
+                });
+            }
+            async.series(tasks, function(err, results) {
+                if (err) {
+                    return done(err);
+                }
+                // get comments:
+                commentApi.getComments(article.id, utils.page(1, 10), function(err, r1) {
+                    should(err===null).be.ok;
+                    r1.page.totalItems.should.equal(101);
+                    r1.comments.should.be.an.Array.and.have.length(10);
+                    commentApi.getComments(article.id, utils.page(11, 10), function(err, r2) {
+                        should(err===null).be.ok;
+                        r2.page.totalItems.should.equal(101);
+                        r2.comments.should.be.an.Array.and.have.length(1);
+                        done();
+                    });
+                });
+            });
         });
     });
 });

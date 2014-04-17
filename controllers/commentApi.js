@@ -15,7 +15,7 @@ var
     next_id = db.next_id;
 
 function formatComment(s) {
-    return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
+    return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
 }
 
 function createComment(ref_type, ref_id, user, content, tx, callback) {
@@ -23,13 +23,17 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
         callback = tx;
         tx = undefined;
     }
+    var fc = formatComment(content);
+    if (fc.length > 1000) {
+        return callback(api.invalidParam('content', 'Content is too long.'));
+    }
     Comment.create({
         ref_type: ref_type,
         ref_id: ref_id,
         user_id: user.id,
         user_name: user.name,
         user_image_url: user.image_url,
-        content: formatComment(content)
+        content: fc
     }, tx, function(err, entity) {
         if (err) {
             return callback(err);
@@ -39,11 +43,20 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
 }
 
 function getComments(ref_id, page, callback) {
-    Comment.findNumber({
-        select: 'count(id)',
-        where: 'ref_id=?',
-        params: [ref_id]
-    }, function(err, num) {
+    if (arguments.length===2) {
+        callback = page;
+        page = ref_id;
+        ref_id = undefined;
+    }
+    console.log('PAGE -----> ' + JSON.stringify(page));
+    var query = {
+        select: 'count(id)'
+    };
+    if (ref_id) {
+        query.where = 'ref_id=?';
+        query.params = [ref_id];
+    }
+    Comment.findNumber(query, function(err, num) {
         if (err) {
             return callback(err);
         }
@@ -54,13 +67,18 @@ function getComments(ref_id, page, callback) {
                 comments: []
             });
         }
-        Comment.findAll({
-            where: 'ref_id=?',
-            params: [ref_id],
+        console.log('PAGE -----> ' + JSON.stringify(page));
+        var query2 = {
+            select: '*',
             offset: page.offset,
             limit: page.limit,
             order: 'created_at desc'
-        }, function(err, comments) {
+        };
+        if (ref_id) {
+            query2.where = 'ref_id=?';
+            query2.params = [ref_id];
+        }
+        Comment.findAll(query2, function(err, comments) {
             if (err) {
                 return callback(err);
             }

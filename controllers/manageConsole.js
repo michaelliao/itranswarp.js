@@ -15,6 +15,7 @@ var
     warp = db.warp;
 
 var
+    commentApi = require('./commentApi'),
     categoryApi = require('./categoryApi'),
     articleApi = require('./articleApi'),
     pageApi = require('./pageApi'),
@@ -27,6 +28,21 @@ exports = module.exports = {
 
     'GET /manage/': function(req, res, next) {
         return res.render('manage/overview/overview.html', {});
+    },
+
+    // comment ////////////////////////////////////////////////////////////////
+
+    'GET /manage/comments/(index)?': function(req, res, next) {
+        var page = utils.getPage(req);
+        commentApi.getComments(page, function(err, r) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/comment/comment_list.html', {
+                page: JSON.stringify(r.page),
+                comments: JSON.stringify(r.comments)
+            });
+        });
     },
 
     // article ////////////////////////////////////////////////////////////////
@@ -287,7 +303,6 @@ exports = module.exports = {
             });
         });
     },
-
 
     // FIXME //////////////////////////////////////////////////////////////////
 
