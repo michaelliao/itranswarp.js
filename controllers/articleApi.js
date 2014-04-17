@@ -9,9 +9,10 @@ var
     constants = require('../constants');
 
 var
-    attachmentsApi = require('./attachmentApi'),
-    checkAttachment = attachmentsApi.checkAttachment,
-    createAttachmentTaskInTx = attachmentsApi.createAttachmentTaskInTx;
+    commentApi = require('./commentApi'),
+    attachmentApi = require('./attachmentApi'),
+    checkAttachment = attachmentApi.checkAttachment,
+    createAttachmentTaskInTx = attachmentApi.createAttachmentTaskInTx;
 
 var
     User = db.user,
@@ -363,6 +364,34 @@ exports = module.exports = {
             });
         }
         return fnUpdate(null);
+    },
+
+    'POST /api/articles/:id/comments': function(req, res, next) {
+        /**
+         * Create a comment on an article.
+         * 
+         * @return {object} The created comment object.
+         */
+        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        try {
+            var content = utils.getRequiredParam('content', req);
+        }
+        catch (e) {
+            return next(e);
+        }
+        Article.find(req.params.id, function(err, article) {
+            if (err) {
+                return next(err);
+            }
+            commentApi.createComment('article', article.id, req.user, content, function(err, c) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(c);
+            });
+        });
     },
 
     'POST /api/articles/:id/delete': function(req, res, next) {

@@ -47,6 +47,7 @@ describe('#comments', function() {
         it('create a new comment by subscriber', function(done) {
             remote.post(remote.subscriber, '/api/articles/' + article.id + '/comments', { content: '\n Hello\r\n\n\n\r\n<a>Hack</a>' }, function(c) {
                 c.ref_id.should.equal(article.id);
+                c.ref_type.should.equal('article');
                 c.content.should.equal('Hello\n&lt;a&gt;Hack&lt;/a&gt;');
                 done();
             });

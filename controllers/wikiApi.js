@@ -10,9 +10,9 @@ var
     constants = require('../constants');
 
 var
-    attachmentsApi = require('./attachmentApi'),
-    checkAttachment = attachmentsApi.checkAttachment,
-    createAttachmentTaskInTx = attachmentsApi.createAttachmentTaskInTx;
+    attachmentApi = require('./attachmentApi'),
+    checkAttachment = attachmentApi.checkAttachment,
+    createAttachmentTaskInTx = attachmentApi.createAttachmentTaskInTx;
 
 var
     User = db.user,
