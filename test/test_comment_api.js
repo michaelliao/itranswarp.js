@@ -9,6 +9,8 @@ var utils = require('../controllers/_utils');
 describe('#comments', function() {
 
     var article = null;
+    var wiki = null;
+    var wikipage = null;
 
     before(remote.setup);
 
@@ -33,6 +35,30 @@ describe('#comments', function() {
         });
     });
 
+    before(function(done) {
+        // create wiki:
+        remote.post(remote.admin, '/api/wikis', {
+            name: 'Wiki for Comment',
+            description: 'for Comment...',
+            content: 'Wiki for Comment...'
+        }, function(w) {
+            should(w.error).not.be.ok;
+            w.id.should.be.ok.and.have.lengthOf(50);
+            wiki = w;
+            // create wikipage:
+            remote.post(remote.editor, '/api/wikis/' + wiki.id + '/wikipages', {
+                parent_id: 'ROOT',
+                name: 'Wiki Page for Comment',
+                content: 'Wiki Page for Comment...'
+            }, function(wp) {
+                should(wp.error).not.be.ok;
+                wp.wiki_id.should.equal(wiki.id);
+                wikipage = wp;
+                done();
+            });
+        });
+    });
+
     describe('#api', function() {
 
         it('get comments on article', function(done) {
@@ -44,13 +70,35 @@ describe('#comments', function() {
             });
         });
 
-        it('create a new comment by subscriber', function(done) {
+        it('create a new comment on article by subscriber', function(done) {
             remote.post(remote.subscriber, '/api/articles/' + article.id + '/comments', { content: '\n Hello\r\n\n\n\r\n<a>Hack</a>' }, function(c) {
                 c.ref_id.should.equal(article.id);
                 c.ref_type.should.equal('article');
                 c.content.should.equal('Hello\n&lt;a&gt;Hack&lt;/a&gt;');
                 done();
             });
+        });
+
+        it('create a new comment on wiki by subscriber', function(done) {
+            remote.post(remote.subscriber, '/api/wikis/' + wiki.id + '/comments', { content: '\n Hello\r\n\n\n\r\n<a>Hack</a>' }, function(c) {
+                c.ref_id.should.equal(wiki.id);
+                c.ref_type.should.equal('wiki');
+                c.content.should.equal('Hello\n&lt;a&gt;Hack&lt;/a&gt;');
+                done();
+            });
+        });
+
+        it('create a new comment on wikipage by subscriber', function(done) {
+            remote.post(remote.subscriber, '/api/wikis/wikipages/' + wikipage.id + '/comments', { content: '\n Hello\r\n\n\n\r\n<a>Hack</a>' }, function(c) {
+                c.ref_id.should.equal(wikipage.id);
+                c.ref_type.should.equal('wikipage');
+                c.content.should.equal('Hello\n&lt;a&gt;Hack&lt;/a&gt;');
+                done();
+            });
+        });
+
+        it('create lots of comments on article', function(done) {
+            done();
         });
     });
 });
