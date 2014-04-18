@@ -1,0 +1,129 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Users
+{% endblock %}
+
+{% block head %}
+<script>
+
+$(function() {
+    var now = {{ now|safe }};
+    var page = {{ page|safe }};
+    var users = {{ users|safe }};
+    for (var i = 0; i < users.length; i ++) {
+        var u = users[i];
+        u.locked = u.locked_util > now;
+    }
+    var vmUsers = new Vue({
+        el: '#users',
+        data: {
+            num: '',
+            unit: 'd',
+            selectedUser: null,
+            users: users,
+            page: definePagination(page)
+        },
+        methods: {
+            selectUser: function(id) {
+                showError();
+                this.selectedUser = null;
+                this.num = '';
+                this.unit = 'd';
+                for (var i = 0; i < this.users.length; i ++) {
+                    var u = this.users[i];
+                    if (u.id===id) {
+                        this.selectedUser = u;
+                        $('#lockModal').modal('show');
+                        break;
+                    }
+                }
+            },
+            lockUser: function() {
+                if (this.selectedUser!==null) {
+                    postJSON('/api/users/' + this.selectedUser.id + '/lock', { time: this.num + this.unit }, function(err, r) {
+                        $('#lockModal').modal('hide');
+                        if (err) {
+                            showError(err);
+                        }
+                    });
+                }
+            }
+        }
+    });
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+<div id="users">
+
+<div id="lockModal" class="modal hide fade" data-backdrop="static">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Lock User</h3>
+    </div>
+    <div class="modal-body">
+        <p>Lock user <span v-model="selectedUser && selectedUser.name"></span> (<span v-model="selectedUser && selectedUser.email"></span>) for:</p>
+        <form class="form-inline">
+            <input v-model="num" type="text" class="input-small" />
+            <select v-model="unit">
+                <option value="d">Days</option>
+                <option value="w">Weeks</option>
+                <option value="m">Month</option>
+                <option value="y">Years</option>
+            </select>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a v-on="click: lockUser" href="#0" class="btn btn-primary">OK</a>
+        <a href="#0" class="btn" data-dismiss="modal">Cancel</a>
+    </div>
+</div>
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All Users ({{ page.item_count }})</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="javascript:refresh()" class="btn btn-info"><i class="icon-refresh icon-white"></i> Refresh</a>
+        <a href="create_user" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New User</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="20%">Name</th>
+                <th width="50%">Email</th>
+                <th width="15%">Created At</th>
+                <th width="15%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="u: users">
+                <td>
+                    <span v-text="u.name"></span>
+                    <i v-if="u.locked" class="icon-lock"></i>
+                </td>
+                <td><span v-text="u.email"></span></td>
+                <td><span v-text="u.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-if="! u.locked" v-on="click: selectUser(u.id)" title="Lock User" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div v-component="vc-pagination"></div>
+</div>
+
+</div>
+
+{% endblock%}
