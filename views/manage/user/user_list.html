@@ -104,7 +104,7 @@ $(function() {
                 <th width="20%">Name</th>
                 <th width="50%">Email</th>
                 <th width="15%">Created At</th>
-                <th width="15%">&nbsp;</th>
+                <th width="15%">Lock</th>
             </tr>
         </thead>
         <tbody>
@@ -117,6 +117,7 @@ $(function() {
                 <td><span v-text="u.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
                 <td>
                     <a v-if="! u.locked" v-on="click: selectUser(u.id)" title="Lock User" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
+                    <span v-if="u.locked" v-text="u.locked_util.toDateTime('yyyy-MM-dd hh:mm')"></span>
                 </td>
             </tr>
         </tbody>

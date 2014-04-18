@@ -7,8 +7,8 @@ function APIError(err_code, err_data, err_message) {
 }
 
 var api = {
-    invalidParam: function(paramName) {
-        return new APIError('parameter:invalid', paramName, 'Invalid parameter: ' + paramName);
+    invalidParam: function(paramName, message) {
+        return new APIError('parameter:invalid', paramName, message || 'Invalid parameter: ' + paramName);
     },
     notAllowed: function(err_message) {
         return new APIError('permission:denied', 'permission', err_message);

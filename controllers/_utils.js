@@ -137,7 +137,7 @@ function userIdentityParser(req, res, next) {
             if (err) {
                 return next(err);
             }
-            if (user) {
+            if (user && (user.locked_util < Date.now())) {
                 user.passwd = '******'
                 req.user = user;
                 console.log('bind user from authorization: ' + user.name);
@@ -174,7 +174,7 @@ function parseSessionCookie(s, fn) {
             if (err) {
                 return fn(err);
             }
-            if (user===null) {
+            if (user===null || (user.locked_util > Date.now())) {
                 return fn(null, null);
             }
             // check:
@@ -204,6 +204,9 @@ function parseSessionCookie(s, fn) {
         User.find(authuser.user_id, function(err, user) {
             if (err) {
                 return fn(err);
+            }
+            if (user &&  (user.locked_util > Date.now())) {
+                return fn(null, null);
             }
             return fn(null, user);
         });
