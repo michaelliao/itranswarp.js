@@ -20,7 +20,8 @@ var
     articleApi = require('./articleApi'),
     pageApi = require('./pageApi'),
     wikiApi = require('./wikiApi'),
-    attachmentApi = require('./attachmentApi');
+    attachmentApi = require('./attachmentApi'),
+    userApi = require('./userApi');
 
 // do management console
 
@@ -304,27 +305,20 @@ exports = module.exports = {
         });
     },
 
-    // FIXME //////////////////////////////////////////////////////////////////
+    // user ///////////////////////////////////////////////////////////////////
 
-    'GET /api/users/:id': function(req, res, next) {
-        /**
-         * Get user by id.
-         * 
-         * @param {string} :id - The id of the user.
-         * @return {object} User object.
-         */
-        return res.send('');
-    },
-
-    'POST /api/users/:id': function(req, res, next) {
-        /**
-         * Update user.
-         * 
-         * @param {string} :id - The id of the user.
-         * @param {string,optional} name - The new name of the user.
-         * @return {object} User object.
-         */
-        return res.send('');
+    'GET /manage/user/(index)?': function(req, res, next) {
+        var page = utils.getPage(req);
+        userApi.getUsers(page, function(err, results) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/user/user_list.html', {
+                now: Date.now(),
+                page: JSON.stringify(results.page),
+                users: JSON.stringify(results.users)
+            });
+        });
     }
 
 }

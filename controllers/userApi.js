@@ -7,13 +7,34 @@ var
     db = require('../db'),
     auth = require('./_auth'),
     utils = require('./_utils'),
-    config = require('../config');
+    config = require('../config'),
+    constants = require('../constants');
 
 var
     User = db.user,
     AuthUser = db.authuser,
     warp = db.warp,
     next_id = db.next_id;
+
+var LOCK_TIMES = {
+    d: 86400000,
+    w: 604800000,
+    m: 2592000000,
+    y: 31536000000
+};
+
+function lockUser(id, time, callback) {
+    getUser(id, function(err, user) {
+        if (err) {
+            return callback(err);
+        }
+        if (user.role===constants.ROLE_ADMIN) {
+            return callback(api.invalidParam('time'));
+        }
+        user.locked_util = time;
+        user.update(['locked_util', 'updated_at', 'version'], callback);
+    });
+}
 
 function getUsers(page, callback) {
     User.findNumber('count(*)', function(err, num) {
@@ -141,14 +162,41 @@ function processAuthentication(provider, authentication, callback) {
     });
 }
 
-var httpPrefix = 'http://' + config.domain;
-var httpsPrefix = 'https://' + config.domain;
-
 exports = module.exports = {
 
     getUser: getUser,
 
     getUsers: getUsers,
+
+    'POST /api/users/:id/lock': function(req, res, next) {
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        try {
+            var t = utils.getRequiredParam('time', req);
+        }
+        catch (e) {
+            return next(e);
+        }
+        var userId = req.params.id;
+        var now = Date.now();
+        if (typeof(t)==='string') {
+            var m = t.match(/^(\d{1,4})(d|w|m|y)$/);
+            if (m===null) {
+                return next(api.invalidParam('time', 'Invalid time.'));
+            }
+            t = now + parseInt(m[1]) * LOCK_TIMES[m[2]];
+        }
+        else if (typeof(t)!=='number') {
+            return next(api.invalidParam('time', 'Invalid time.'));
+        }
+        lockUser(userId, t, function(err, r) {
+            if (err) {
+                return next(err);
+            }
+            return res.send({ id: userId, locked_util: t, now: now });
+        });
+    },
 
     'GET /auth/signout': function(req, res, next) {
         res.clearCookie(utils.SESSION_COOKIE_NAME);
