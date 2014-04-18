@@ -13,9 +13,17 @@ var
     Text = db.text,
     warp = db.warp;
 
+var
+    articleApi = require('./articleApi'),
+    categoryApi = require('./categoryApi'),
+    wikiApi = require('./wikiApi'),
+    commentApi = require('./commentApi'),
+    pageApi = require('./pageApi'),
+    userApi = require('./userApi');
+
 exports = module.exports = {
 
-    'GET /': function(req, res, next) {
+    'GET /article/:id': function(req, res, next) {
         return res.theme('index.html');
     }
 };
