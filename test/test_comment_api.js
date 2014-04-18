@@ -101,15 +101,16 @@ describe('#comments', function() {
         it('create lots of comments on article', function(done) {
             var tasks = [];
             for (var i=0; i<100; i++) {
-                var n = i;
-                tasks.push(function(callback) {
-                    remote.post(remote.subscriber, '/api/articles/' + article.id + '/comments', { content: '   Test & ' + n }, function(c) {
-                        should(c.error).not.be.ok;
-                        c.ref_id.should.equal(article.id);
-                        c.content.should.equal('Test &amp; ' + n);
-                        callback(null, c);
+                (function(n) {
+                    tasks.push(function(callback) {
+                        remote.post(remote.subscriber, '/api/articles/' + article.id + '/comments', { content: '   Test & ' + n }, function(c) {
+                            should(c.error).not.be.ok;
+                            c.ref_id.should.equal(article.id);
+                            c.content.should.equal('Test &amp; ' + n);
+                            callback(null, c);
+                        });
                     });
-                });
+                })(i);
             }
             async.series(tasks, function(err, results) {
                 if (err) {

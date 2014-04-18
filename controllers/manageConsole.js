@@ -32,7 +32,7 @@ exports = module.exports = {
 
     // comment ////////////////////////////////////////////////////////////////
 
-    'GET /manage/comments/(index)?': function(req, res, next) {
+    'GET /manage/comment/(index)?': function(req, res, next) {
         var page = utils.getPage(req);
         commentApi.getComments(page, function(err, r) {
             if (err) {
