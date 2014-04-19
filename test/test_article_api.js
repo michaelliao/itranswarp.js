@@ -21,6 +21,7 @@ describe('#articles', function() {
         remote.post(remote.admin, '/api/categories', {
             name: 'Article Category'
         }, function(r) {
+            should(r).be.ok;
             r.name.should.equal('Article Category');
             r.id.should.be.ok.and.have.lengthOf(50);
             category = r;
