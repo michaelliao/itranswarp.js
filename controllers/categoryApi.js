@@ -18,7 +18,9 @@ var
     next_id = db.next_id;
 
 function getCategories(callback) {
-    Category.findAll({ order: 'display_order' }, callback);
+    Category.findAll({
+        order: 'display_order'
+    }, callback);
 }
 
 function getCategory(id, tx, callback) {
@@ -37,11 +39,27 @@ function getCategory(id, tx, callback) {
     });
 }
 
+function getNavigationMenus(callback) {
+    getCategories(function(err, cats) {
+        if (err) {
+            return callback(err);
+        }
+        callback(null, _.map(cats, function(cat) {
+            return {
+                name: cat.name,
+                url: '/category/' + cat.id
+            };
+        }));
+    });
+}
+
 exports = module.exports = {
 
     getCategories: getCategories,
 
     getCategory: getCategory,
+
+    getNavigationMenus: getNavigationMenus,
 
     'GET /api/categories': function(req, res, next) {
         /**
@@ -137,7 +155,7 @@ exports = module.exports = {
                 }
                 async.series(_.map(entities, function(entity) {
                     return function(callback) {
-                        entity.update(['display_order'], tx, callback);
+                        entity.update(['display_order', 'updated_at', 'version'], tx, callback);
                     };
                 }), function(err, result) {
                     tx.done(err, function(err) {
