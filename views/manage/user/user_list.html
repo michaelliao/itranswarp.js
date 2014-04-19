@@ -44,8 +44,9 @@ $(function() {
                     postJSON('/api/users/' + this.selectedUser.id + '/lock', { time: this.num + this.unit }, function(err, r) {
                         $('#lockModal').modal('hide');
                         if (err) {
-                            showError(err);
+                            return showError(err);
                         }
+                        refresh();
                     });
                 }
             }
