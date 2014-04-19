@@ -24,6 +24,13 @@ var
 exports = module.exports = {
 
     'GET /article/:id': function(req, res, next) {
-        return res.theme('index.html');
+        articleApi.getArticle(req.params.id, function(err, article) {
+            if (err) {
+                return next(err);
+            }
+            return res.theme('article/article.html', {
+                article: article
+            });
+        });
     }
 };
