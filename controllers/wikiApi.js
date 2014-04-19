@@ -226,7 +226,23 @@ function getWikiPageWithContent(id, tx, callback) {
     });
 }
 
+function getNavigationMenus(callback) {
+    getWikis(function(err, ws) {
+        if (err) {
+            return callback(err);
+        }
+        callback(null, _.map(ws, function(w) {
+            return {
+                name: w.name,
+                url: '/wiki/' + w.id
+            };
+        }));
+    });
+}
+
 exports = module.exports = {
+
+    getNavigationMenus: getNavigationMenus,
 
     getWiki: getWiki,
 
