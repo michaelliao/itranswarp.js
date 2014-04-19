@@ -8,8 +8,8 @@
 
 <script>
 $(function() {
-    var vmCategory = new Vue({
-        el: '#formCategory',
+    var vm = new Vue({
+        el: '#formVm',
         data: {
             name: {{ category.name|json|safe }},
             description: {{ category.description|json|safe }},
@@ -40,12 +40,12 @@ $(function() {
     <ul class="breadcrumb">
         <li><a href="/manage/article/">All Articles</a> <span class="divider">/</span></li>
         <li><a href="/manage/article/category_list">All Categories</a> <span class="divider">/</span></li>
-        <li class="active">{{ form_title }}</li>
+        <li class="active">{{ form.name }}</li>
     </ul>
 </div>
 
 <div class="span12">
-    <form id="formCategory" v-on="submit: submit" class="form-horizontal">
+    <form id="formVm" v-on="submit: submit" class="form-horizontal">
         <legend>{{ form.name }}</legend>
         <fieldset>
             <div class="alert alert-error hide"></div>
