@@ -19,6 +19,7 @@ $(function() {
                 break;
             }
         }
+        a.tags = a.tags ? a.tags.split(',') : [];
     }
     var vmArticles = new Vue({
         el: '#articles',
@@ -106,8 +107,9 @@ $(function() {
                     <img v-attr="src: '/files/attachments/' + a.cover_id + '/s'" />
                 </td>
                 <td>
-                    <p v-text="a.name" style="font-weight:bold;"></p>
-                    <p v-text="a.description"></p><i class="icon-tag"></i>
+                    <p><a v-text="a.name" v-attr="href: '/article/' + a.id " target="_blank"></a></p>
+                    <p v-text="a.description"></p>
+                    <p><span v-repeat="t: a.tags" style="padding-right:1em;"><i class="icon-tag"></i><span v-text="t"></span></span></p>
                 </td>
                 <td>
                     <p><i class="icon-list"></i> <span v-text="a.category_name"></span></p>
