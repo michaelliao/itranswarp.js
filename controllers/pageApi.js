@@ -1,6 +1,7 @@
 // page api
 
 var
+    _ = require('lodash'),
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
@@ -58,7 +59,23 @@ function getPage(id, tx, callback) {
     });
 }
 
+function getNavigationMenus(callback) {
+    getPages(function(err, ps) {
+        if (err) {
+            return callback(err);
+        }
+        callback(null, _.map(ps, function(p) {
+            return {
+                name: p.name,
+                url: '/page/' + p.alias
+            };
+        }));
+    });
+}
+
 exports = module.exports = {
+
+    getNavigationMenus: getNavigationMenus,
 
     getPages: getPages,
 
