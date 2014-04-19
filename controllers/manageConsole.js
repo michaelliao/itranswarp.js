@@ -1,6 +1,8 @@
 // manage.js
 
 var
+    _ = require('lodash'),
+    fs = require('fs'),
     async = require('async');
 
 var
@@ -21,14 +23,37 @@ var
     pageApi = require('./pageApi'),
     wikiApi = require('./wikiApi'),
     attachmentApi = require('./attachmentApi'),
-    userApi = require('./userApi');
+    navigationApi = require('./navigationApi'),
+    userApi = require('./userApi'),
+    zzzApi = require('./zzzApi');
+
+var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, attachmentApi, navigationApi, userApi, zzzApi];
+
+function getAllNavigationMenus(callback) {
+    var fns = _.map(apisList, function(theApi) {
+        // return [menu1, menu2, ... ]
+        if (typeof(theApi.getNavigationMenus)==='function') {
+            return theApi.getNavigationMenus;
+        }
+        return function(callback) {
+            callback(null, []);
+        };
+    });
+    async.series(fns, function(err, results) {
+        var menus = _.flatten(results);
+        _.each(menus, function(m, index) {
+            m.index = '' + index;
+        });
+        return callback(null, menus);
+    });
+}
 
 // do management console
 
 exports = module.exports = {
 
     'GET /manage/': function(req, res, next) {
-        return res.render('manage/overview/overview.html', {});
+        return res.redirect('/manage/comment/');
     },
 
     // comment ////////////////////////////////////////////////////////////////
@@ -319,6 +344,50 @@ exports = module.exports = {
                 users: JSON.stringify(results.users)
             });
         });
-    }
+    },
 
+    // navigation /////////////////////////////////////////////////////////////
+
+    'GET /manage/navigation/(index)?': function(req, res, next) {
+        navigationApi.getNavigations(function(err, navigations) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/navigation/navigation_list.html', {
+                navigations: JSON.stringify(navigations)
+            });
+        });
+    },
+
+    'GET /manage/navigation/create_navigation': function(req, res, next) {
+        getAllNavigationMenus(function(err, menus) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/navigation/navigation_menu_form.html', {
+                form: {
+                    name: 'Create Navigation',
+                    action: '/api/navigations/',
+                    redirect: '/manage/navigation/'
+                },
+                menus: menus
+            });
+        });
+    },
+
+    'GET /manage/navigation/edit_navigation': function(req, res, next) {
+        navigationApi.getNavigation(req.query.id, function(err, obj) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/navigation/navigation_form.html', {
+                form: {
+                    name: 'Edit Navigation',
+                    action: '/api/navigations/' + obj.id + '/',
+                    redirect: '/manage/navigation/'
+                },
+                navigation: obj
+            });
+        });
+    },
 }

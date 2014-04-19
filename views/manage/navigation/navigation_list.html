@@ -1,0 +1,141 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+All Navigations
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var navigations = {{ navigations|safe }};
+    var vm = new Vue({
+        el: '#navigations',
+        data: {
+            navigations: navigations
+        },
+        methods: {
+            sort: function(event) {
+                var ids = [];
+                for (var i = 0; i < this.navigations.length; i ++) {
+                    ids.push('id=' + this.navigations[i].id);
+                }
+                showError();
+                showLoading(true);
+                postJSON('/api/navigations/sort', ids.join('&'), function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    refresh();
+                });
+            },
+            find: function(id) {
+                for (var i = 0; i < this.navigations.length; i ++) {
+                    var c = this.navigations[i];
+                    if (c.id===id) {
+                        return i;
+                    }
+                }
+                return (-1);
+            },
+            swap: function(index1, index2) {
+                var obj = this.navigations[index2];
+                this.navigations.splice(index2, 1);
+                this.navigations.splice(index1, 0, obj);
+                $('#sort').show();
+            },
+            moveUp: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===0) {
+                    return;
+                }
+                this.swap(index - 1, index);
+            },
+            moveDown: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===(this.navigations.length-1)) {
+                    return;
+                }
+                this.swap(index, index + 1);
+            },
+            editNavigation: function(id) {
+                location.assign('edit_navigation?id=' + id);
+            },
+            deleteNavigation: function(id) {
+                var index = this.find(id);
+                if (index !== (-1)) {
+                    var navigations = this.navigations;
+                    var n = navigations[index];
+                    showConfirm('Confirm Deletion', 'Navigation \"' + n.name + '\" will be deleted. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/navigations/' + n.id + '/delete', function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            navigations.splice(index, 1);
+                        });
+                    });
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="navigations">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All Navigations (<span v-text="navigations.length"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="create_navigation" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Navigation</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="15%">Name</th>
+                <th width="55%">URL</th>
+                <th width="15%">Created At</th>
+                <th width="15%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="n: navigations">
+                <td><a v-text="n.name" v-attr="href: n.url" target="_blank"></a></td>
+                <td><a v-text="n.url" v-attr="href: n.url" target="_blank"></a></td>
+                <td><span v-text="n.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on="click: moveUp(n.id)" title="Move this navigation up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
+                    <a v-on="click: moveDown(n.id)" title="Move this navigation down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
+                    <a v-on="click: editNavigation(n.id)" title="Edit this navigation" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-on="click: deleteNavigation(n.id)" title="Delete this navigation" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                </td>
+            </tr>
+            <tr v-if="navigations.length===0">
+                <td colspan="5">No navigation found.</td>
+            </tr>
+        </tbody>
+    </table>
+    <div>
+        <div id="sort" class="btn-toolbar hide" style="text-align:right;">
+            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> Save Orders</button>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}
