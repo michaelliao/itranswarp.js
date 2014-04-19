@@ -62,7 +62,7 @@ $(function() {
         }
     });
 
-    // go-top:
+    // goto-top:
     $('div.x-goto-top').click(function() {
         $('html, body').animate({scrollTop: 0}, 1000);
     });
@@ -71,6 +71,10 @@ $(function() {
     $('.x-smartdate').each(function() {
         $(this).text(toSmartDate($(this).attr('date')));
     });
+
+    // add '_blank' for all external links:
+    $('.x-content a[href^="http://"]').attr('target', '_blank');
+    $('.x-content a[href^="https://"]').attr('target', '_blank');
 
     // search query:
     var input_search = $('input.search-query');
@@ -302,10 +306,11 @@ function create_comment(form) {
 
 function delete_comment(cid) {
     if (confirm('delete this comment?')) {
-        $.postJSON('/api/comments/' + cid + '/delete', '', function(result) {
+        postJSON('/api/comments/' + cid + '/delete', '', function(err, result) {
+            if (err) {
+                return alert('Error: ' + (e.message || e.error));
+            }
             location.reload();
-        }, function(e) {
-            alert('Error: ' + (e.message || e.error));
         });
     }
 }
