@@ -222,6 +222,7 @@ function showError(err, fieldName) {
     $('div.control-group').removeClass('error');
     // set error:
     if (err) {
+        fieldName = fieldName || err.data;
         if (fieldName) {
             $('.field-' + fieldName).addClass('error');
         }
