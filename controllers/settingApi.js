@@ -17,8 +17,8 @@ var
 var website = {
     name: 'My Website',
     description: 'Powered by iTranswarp.js',
-    custom_header: '<!-- custom header --> AAA <script> alert </script> haha',
-    custom_footer: '<!-- custom footer --> AAA <script> alert </script> haha',
+    custom_header: '<!-- custom header -->',
+    custom_footer: '<!-- custom footer -->',
 };
 
 var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
