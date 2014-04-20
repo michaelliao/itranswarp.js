@@ -77,5 +77,30 @@ describe('#settings', function() {
                 });
             });
         });
+
+        it('set settings', function(done) {
+            var s = {
+                s1: '1+1',
+                s2: '2+2',
+                s3: '3+3'
+            };
+            settingApi.setSettings('sss', s, function(err) {
+                should(err===null).be.ok;
+                // get settings:
+                settingApi.getSettingsByDefaults('sss', {
+                    s1: 'x1',
+                    s2: 'x2',
+                    s3: 'x3',
+                    s4: 'x4'
+                }, function(err, r) {
+                    should(err===null).be.ok;
+                    r.s1.should.equal('1+1');
+                    r.s2.should.equal('2+2');
+                    r.s3.should.equal('3+3');
+                    r.s4.should.equal('x4');
+                    done();
+                });
+            });
+        });
     });
 });
