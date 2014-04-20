@@ -140,6 +140,7 @@ var init_sqls = [
     'delete from wikis',
     'delete from wikipages',
     'delete from comments',
+    'delete from settings',
     'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001380000abc000fff0000fff0fff9999fff0fff1010fff000\', ' + constants.ROLE_ADMIN + ',       \'Michael\',    \'root@itranswarp.com\',    \'38b851e6ee1753811d4050a6916d642a\', 1, \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
     'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000ffffffffff0ffffffffff0ffffffffff000\', ' + constants.ROLE_ADMIN + ',       \'Admin\',      \'admin@itranswarp.com\',   \'e8f98b1676572cd24c753c331aa6b02e\', 1, \'http://about:blank\', 0,             1394542829892, 1394542829892, 0)',
     'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'001390000000000aaaaaaaaaa0bbbbbbbbbb0cccccccccc000\', ' + constants.ROLE_ADMIN + ',       \'Special\',    \'nopass@itranswarp.com\',  \'\',                                 1, \'http://about:blank\', 0,             1396908390840, 1396908390840, 0)',
