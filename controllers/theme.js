@@ -55,6 +55,9 @@ function appendSettings(model, callback) {
 
 function processTheme(view, model, req, res, next) {
     model.__user__ = req.user;
+    model.__request__ = {
+        host: req.host
+    };
     appendSettings(model, function(err) {
         if (err) {
             return next(err);
