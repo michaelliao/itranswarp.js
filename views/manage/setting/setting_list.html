@@ -1,0 +1,74 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+Settings
+{% endblock %}
+
+{% block head %}
+<script>
+
+$(function() {
+    var vm = new Vue({
+        el: '#formSettings',
+        data: JSON.parse(decodeURIComponent({{ model|safe }})),
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                showError();
+                showLoading(true);
+                postJSON('{{ form.action }}', this.$data, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    refresh();
+                });
+            }
+        }
+    });
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">Settings</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+</div>
+
+<div class="span12">
+    <form id="formSettings" v-on="submit: submit" class="form-horizontal">
+    {% for group in settings %}
+        <legend>{{ group.label }}</legend>
+        <fieldset>
+        {% for field in group.fields %}
+            <div class="field-{{ field.name }} control-group">
+                <label class="control-label">{{ field.label }}:</label>
+                <div class="controls">
+                {% if field.type==='textarea' %}
+                    <textarea v-model="{{ group.name }}.{{ field.name }}" rows="5" style="width:600px; resize:none;"></textarea>
+                {% else %}
+                    <input v-model="{{ group.name }}.{{ field.name }}" type="text" class="input-xlarge" />
+                {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        </fieldset>
+    {% endfor %}
+        </fieldset>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <a href="javascript:refresh()" class="btn"><i class="icon-remove"></i> Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock%}
