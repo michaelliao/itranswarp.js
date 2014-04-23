@@ -5,32 +5,42 @@
  * then edit the settings.
  */
 exports = module.exports = {
-    'session': {
+    session: {
         // used to generate secure session cookie, can be set to any random string:
-        'salt': 'iTranswarp.js'
+        salt: 'iTranswarp.js'
     },
-    'db': {
+    db: {
         // host or ip address of mysql, e.g. '192.168.1.123':
-        'host': 'localhost',
+        host: 'localhost',
         // port of mysql, default to 3306:
-        'port': 3306,
+        port: 3306,
         // user to login to mysql, change to your mysql user:
-        'user': 'www',
+        user: 'www',
         // password to login to mysql, change to your mysql password:
-        'password': 'www',
+        password: 'www',
         // database used in mysql, default to 'itranswarp':
-        'database': 'itranswarp',
+        database: 'itranswarp',
         // timeout before initial a connection to mysql, default to 3 seconds:
-        'connectTimeout': 3000,
+        connectTimeout: 3000,
         // maximum concurrent db connections:
-        'connectionLimit': 20
+        connectionLimit: 20
+    },
+    cache: {
+        // host or ip address of memcached:
+        host: 'localhost',
+        // port of memcached, default to 11211:
+        port: 11211,
+        // connection timeout:
+        timeout: 1000,
+        // retries when failed:
+        retries: 3,
     },
     // server domain name:
-    'domain': 'www.example.com',
+    domain: 'www.example.com',
     // the theme used, default to 'default':
-    'theme': 'default',
+    theme: 'default',
     // oauth2 providers that allow sign in from other oauth2 providers:
-    'oauth2': {
+    oauth2: {
         // e.g. facebook oauth2 configuration:
         // 'faceook': {
         //     'app_key': 'your-app-id',
