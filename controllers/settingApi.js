@@ -19,6 +19,7 @@ var website = {
     description: 'Powered by iTranswarp.js',
     custom_header: '<!-- custom header -->',
     custom_footer: '<!-- custom footer -->',
+    xmlns: '',
 };
 
 var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
