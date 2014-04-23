@@ -41,24 +41,6 @@ else {
 
 var themePath = 'themes/' + config.theme + '/';
 
-var processThemeView = function(path) {
-    return themePath + path;
-}
-
-var processThemeModel = function(model, req) {
-    var m = model || {};
-    m.__theme__ = themePath;
-    m.__user__ = req.user;
-    m.__time__ = Date.now();
-    m.__website__ = {
-        name: 'Website Name',
-        description: 'website blablabla...',
-        custom_header: '',
-        custom_footer: ''
-    };
-    return m;
-};
-
 app.use(express.cookieParser());
 
 // set upload dir:
@@ -94,10 +76,8 @@ app.use(function(req, res, next) {
         }
         return res.redirect('/auth/');
     }
-    // add theme for other page:
-    res.theme = function(view, model) {
-        return res.render(processThemeView(view), processThemeModel(model, req));
-    }
+    // add theme path:
+    res.themePath = themePath;
     next();
 });
 
