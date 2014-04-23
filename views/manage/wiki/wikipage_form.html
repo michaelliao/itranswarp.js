@@ -12,7 +12,7 @@ Edit Wiki Page
 
 <script>
 var vm = null;
-var g_initial_text = {{ wikipage.safe_content|safe }};
+var g_initial_text = JSON.parse(decodeURIComponent({{ wikipage.safe_content|safe }}));
 
 function isChanged() {
     return vm.content !== g_initial_text;

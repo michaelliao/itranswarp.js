@@ -12,7 +12,7 @@
 <script>
 
 var vmPage = null;
-var initial_content = {{ page.safe_content|safe }};
+var initial_content = JSON.parse(decodeURIComponent({{ page.safe_content|safe }}));
 
 function beforeUnload() {
     if (isChanged()) {

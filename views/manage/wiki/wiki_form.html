@@ -39,7 +39,7 @@ $(function() {
             name: {{ wiki.name|json|safe }},
             tags: {{ wiki.tags|json|safe }},
             description: {{ wiki.description|json|safe }},
-            content: {{ wiki.safe_content|safe }}
+            content: JSON.parse(decodeURIComponent({{ wiki.safe_content|safe }}))
         },
         methods: {
             submit: function(event) {

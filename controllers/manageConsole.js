@@ -25,9 +25,9 @@ var
     attachmentApi = require('./attachmentApi'),
     navigationApi = require('./navigationApi'),
     userApi = require('./userApi'),
-    zzzApi = require('./zzzApi');
+    settingApi = require('./settingApi');
 
-var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, attachmentApi, navigationApi, userApi, zzzApi];
+var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, attachmentApi, navigationApi, userApi, settingApi];
 
 function getAllNavigationMenus(callback) {
     var fns = _.map(apisList, function(theApi) {
@@ -46,6 +46,10 @@ function getAllNavigationMenus(callback) {
         });
         return callback(null, menus);
     });
+}
+
+function safeEncodeJSON(obj) {
+    return '\'' + encodeURIComponent(JSON.stringify(obj)).replace(/\'/g, '\\\'') + '\'';
 }
 
 // do management console
@@ -107,7 +111,7 @@ exports = module.exports = {
                 },
                 categories: JSON.stringify(categories),
                 article: {
-                    safe_content: '\'\''
+                    safe_content: safeEncodeJSON('')
                 }
             });
         });
@@ -131,7 +135,7 @@ exports = module.exports = {
                 return next(err);
             }
             var article = results.article;
-            article.safe_content = JSON.stringify(article.content).replace(/script/g, 'scr\" + \"ipt');
+            article.safe_content = safeEncodeJSON(article.content);
             return res.manage('manage/article/article_form.html', {
                 form: {
                     name: 'Edit Article',
@@ -211,7 +215,7 @@ exports = module.exports = {
                 alias: '',
                 draft: false,
                 content: '',
-                safe_content: '\'\''
+                safe_content: safeEncodeJSON('')
             }
         });
     },
@@ -222,7 +226,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            page.safe_content = JSON.stringify(page.content).replace(/script/g, 'scr\" + \"ipt');
+            page.safe_content = safeEncodeJSON(page.content);
             return res.manage('manage/page/page_form.html', {
                 form: {
                     name: 'Edit Page',
@@ -255,7 +259,7 @@ exports = module.exports = {
                 redirect: '/manage/wiki/'
             },
             wiki: {
-                safe_content: '\'\''
+                safe_content: safeEncodeJSON('')
             }
         });
     },
@@ -275,7 +279,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            wiki.safe_content = JSON.stringify(wiki.content).replace(/script/g, 'scr\" + \"ipt');
+            wiki.safe_content = safeEncodeJSON(wiki.content);
             return res.manage('manage/wiki/wiki_form.html', {
                 form: {
                     name: 'Edit Wiki',
@@ -302,7 +306,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            wikipage.safe_content = JSON.stringify(wikipage.content).replace(/script/g, 'scr\" + \"ipt');
+            wikipage.safe_content = safeEncodeJSON(wikipage.content);
             return res.manage('manage/wiki/wikipage_form.html', {
                 form: {
                     name: 'Edit Wiki Page',
@@ -388,6 +392,75 @@ exports = module.exports = {
                 },
                 navigation: obj
             });
+        });
+    },
+
+    // setting ////////////////////////////////////////////////////////////////
+
+    'GET /manage/setting/(index)?': function(req, res, next) {
+        var makeField = function(name, value, label, type) {
+            return {
+                name: name,
+                value: value,
+                label: label || (name.charAt(0) + name.substring(1)),
+                type: type || 'text'
+            };
+        };
+        settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function(err, website) {
+            if (err) {
+                return next(err);
+            }
+            return res.manage('manage/setting/setting_list.html', {
+                form: {
+                    name: 'Settings',
+                    action: '/manage/setting/save'
+                },
+                model: safeEncodeJSON({
+                    website: website,
+                    datetime: {
+                        timezone: 'GMT+08:00',
+                        date_format: 'yyyy-MM-dd',
+                        time_format: 'hh:mm:ss'
+                    }
+                }),
+                settings: [
+                    {
+                        name: 'website',
+                        label: 'Website',
+                        fields: [
+                            makeField('name', website.name, 'Name'),
+                            makeField('description', website.description, 'Description'),
+                            makeField('custom_header', website.custom_header, 'Custom Header', 'textarea'),
+                            makeField('custom_footer', website.custom_footer, 'Custom Footer', 'textarea')
+                        ]
+                    },
+                    {
+                        name: 'datetime',
+                        label: 'Date and Time',
+                        fields: [
+                            makeField('timezone', website.timezone, 'Timezone', 'select'),
+                            makeField('date_format', website.date_format, 'Date Format', 'select'),
+                            makeField('time_format', website.time_format, 'Time Format', 'select')
+                        ]
+                    }
+                ]
+            });
+        });
+    },
+
+    'POST /manage/setting/save': function(req, res, next) {
+        var settings = ['website', 'datetime'];
+        var tasks = [];
+        _.each(settings, function(group) {
+            tasks.push(function(callback) {
+                settingApi.setSettings(group, req.body[group], callback);
+            })
+        });
+        async.series(tasks, function(err, results) {
+            if (err) {
+                return next(err);
+            }
+            return res.send({ result: true });
         });
     },
 }
