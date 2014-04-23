@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
+<head>
+    <meta charset="utf-8" />
+    {% block meta %}<!-- block meta  -->{% endblock %}
+    <title>{% block title %}<!-- block title  -->{% endblock %} - {{ __website__.name }}</title>
+    <!--[if lt IE 9]>
+        <script src="/static/themes/default/static/js/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="/static/themes/default/css/itranswarp-theme-default.css" />
+    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+    <style>
+{% if __user__ %}
+        .x-auth-not-signed { display: none; }
+{% else %}
+        .x-auth-signed { display: none; }
+{% endif %}
+    </style>
+    <script>
+        g_time = parseFloat('{{ __time__ }}');
+//{% if __user__ %}
+        g_user_name = '{{ __user__.name|addslashes }}';
+        g_user_image = '{{ __user__.image_url }}';
+//{% else %}
+        g_user_name = '';
+        g_user_image = 'about:blank';
+//{% endif %}
+    </script>
+    <script src="/static/themes/default/js/jquery.min.js"></script>
+    <script src="/static/themes/default/js/bootstrap.min.js"></script>
+    <script src="/static/themes/default/js/itranswarp.js"></script>
+    <script src="/static/themes/default/js/itranswarp.theme.default.js"></script>
+    {% block beforehead %}<!-- before head  -->{% endblock %}
+<!-- BEGIN custom_header -->
+{{ __website__.custom_header|safe }}
+<!-- END custom_header -->
+</head>
+<body>
+    <div class="x-goto-top">
+        <div class="x-arrow"></div>
+        <div class="x-stick"></div>
+    </div>
+    <div id="header">
+        <div class="x-top"></div>
+        <div class="container" style="height:100px;">
+            <div class="row">
+                <div class="span6">
+                    <div style="margin:24px 0 10px 0;"><a href="/" style="font-size:28px;font-weight:bold;">{{ __website__.name }}</a></div>
+                    <div>{{ __website__.description }}</div>
+                </div>
+                <div class="span6">
+                    <div class="x-head-right pull-right" style="margin-top:20px;">
+                        <p class="x-auth-signed"><img src="about:blank" class="x-user-image x-user-image-small" style="margin-right:12px;" />Welcome, <span class="x-user-name"><script> document.write(g_user_name); </script></span> | <a href="/auth/signout">Sign out</a></p>
+                        <p class="x-auth-not-signed"><a href="javascript:void(0)" onclick="auth_from('weibo')"><img src="/static/img/signin-with-weibo.png" /></a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="navbar" class="navbar navbar-static-top navbar-blue">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a href="/" class="brand x-auto-display" style="display:none;">{{ __website__.name }}</a>
+                    <ul id="main-nav-bar" class="nav">
+                        <li><a href="/">Home</a></li>
+{% for nav in __navigations__ %}
+                        <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+{% endfor %}
+                    </ul>
+                    <ul class="nav pull-right x-auto-display" style="display:none">
+                        <li class="navbar-text">&nbsp;</li>
+                        <li class="dropdown x-auth-signed">
+                            <a href="javascript:void(0)" class="dropdown-toggle x-user-dropdown" data-toggle="dropdown"><span class="x-user-name"><script> document.write(g_user_name); </script></span> <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/me/message"><i class="icon-comment"></i> Messages</a></li>
+                                <li><a href="/me/profile"><i class="icon-edit"></i> Profile</a></li>
+                                <li><a href="/auth/signout"><i class="icon-off"></i> Sign out</a></li>
+                            </ul>
+                        </li>
+                        <li class="navbar-text x-auth-not-signed">&nbsp;Please sign in&nbsp;</li>
+                        <li class="x-auth-not-signed"><a href="javascript:void(0)" onclick="authFrom('weibo')" class="x-signin x-signin-weibo">　</a></li>
+                    </ul>
+
+                    <form class="navbar-search pull-right" action="#" onsubmit="return search($('input.search-query').val())">
+                        <input type="text" name="q" maxlength="50" class="search-query" placeholder="Search" style="width:80px;" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div class="container x-main">
+{% block container %}
+        <div class="row">
+            <div class="span8">
+                <div id="main">
+                    <!-- block main -->
+{% block main %}
+{% endblock %}
+                    <!-- // block main -->
+                </div><!-- // main -->
+            </div>
+            <div class="span4">
+                <div class="x-sidebar-right">
+                    <!-- block sidebar -->
+{% block sidebar %}
+{% endblock %}
+                    <!-- // block sidebar -->
+                </div>
+            </div>
+        </div>
+{% endblock %}
+        <div class="row">
+            <div class="span12">
+                <!-- google ad -->
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- lxf-auto-width -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:960px;height:90px"
+     data-ad-client="ca-pub-6727358730461554"
+     data-ad-slot="7140997512"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+                <!-- // google ad -->
+            </div>
+        </div>
+    </div>
+
+    <div id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="span4">
+                    <h4>关于廖雪峰的官方网站</h4>
+                    <p>廖雪峰的官方网站专注于互联网产品和技术，所有文章全部原创，欢迎访问！</p>
+                </div>
+                <div class="span3 offset1">
+                    <h4>保持联系</h4>
+                    <div class="x-contact">
+                        <a href="http://weibo.com/liaoxuefeng"><i class="x-icon-weibo"></i> 欢迎关注官方微博<i class="x-r-icon"></i></a>
+                    </div>
+                    <div class="x-contact">
+                        <a href="/contact/weibo"><i class="x-icon-weixin"></i> 欢迎关注微信公众号<i class="x-r-icon"></i></a>
+                    </div>
+                    <div class="x-contact">
+                        <a href="/contact/weibo"><i class="x-icon-rss"></i> 欢迎订阅RSS<i class="x-r-icon"></i></a>
+                    </div>
+                    <div class="x-contact">
+                        <a href="/contact/weibo"><i class="x-icon-mail"></i> 欢迎给我来信<i class="x-r-icon"></i></a>
+                    </div>
+                </div>
+                <div class="span3 offset1">
+                    <h4>合作伙伴</h4>
+                    <p>小伙伴A</p>
+                    <p>小伙伴B</p>
+                    <p>小伙伴C</p>
+                    <p>小伙伴D</p>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                    <div class="x-footer-copy text-align-center">
+                        <a href="/">廖雪峰的官方网站</a>&copy;2013 - <a href="#">联系方式</a> - <a href="#">版权声明</a> - <a href="javascript:void(0)" onclick="location.assign(decodeURIComponent('%6Dail'+'to%3Aask%78ue%'+'66eng%40%67mai%6C.com%3Fsubject%3D%25E6%2584%258F%25E8%25A7%2581%25E5%258F%258D%25E9%25A6%2588%25EF%25BC%259Axxxxxx%26body%3D%25E8%25AF%25B7%25E5%2586%2599%25E4%25B8%258B%25E6%2582%25A8%25E7%259A%2584%25E5%25AE%259D%25E8%25B4%25B5%25E6%2584%258F%25E8%25A7%2581%25E6%2588%2596%25E5%25BB%25BA%25E8%25AE%25AE...'))">意见反馈</a> - 京ICP备13005808号
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- BEGIN custom_footer -->
+{{ __website__.custom_footer|safe }}
+<!-- END custom_footer -->
+</body>
+</html>

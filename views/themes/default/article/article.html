@@ -1,0 +1,67 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/category/{{ article.category_id }}" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="http://{{ __request__.host }}/article/{{ article._id }}" />
+    <meta property="og:title" content="{{ article.name }}" />
+    <meta property="og:description" content="{{ article.name }}" />
+    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" />
+{% endblock %}
+
+{% block title %}{{ article.name }}{% endblock %}
+
+{% block beforehead %}
+<script>
+var model = {
+    article: {
+        id: '{{ article.id }}',
+        category_id: '{{ article.category_id }}',
+        name: {{ article.name|json|safe }},
+    }
+};
+</script>
+{% endblock %}
+
+{% block main %}
+
+<div class="x-article">
+    <div class="x-article-title">
+        <h4>{{ article.name|e }}</h4>
+    </div>
+    <div class="x-article-info">
+        <a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> • <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> • <span class="x-smartdate" date="{{ article.publish_time }}">...</span> • {{ article.reads }}次阅读
+    </div>
+    <div class="x-article-cover-large">
+        <img src="/files/attachments/{{ article.cover_id }}/0" />
+    </div>
+    <div class="x-article-content">
+        {{ article.content }}
+    </div>
+</div>
+
+<h4>评论……</h4>
+
+{{ make_comments('/api/articles/%s/comments/create' % article._id, comments) }}
+
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+        <h4>喜欢这篇文章？</h4>
+        <div style="height:66px">
+            <wb:like appkey="2f89Ml"></wb:like>
+        </div>
+    </div>
+    <div class="x-sidebar-section">
+        <h4>分享给朋友</h4>
+        <div style="height:66px">
+            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="《{{ article.name|e }}》{{ article.summary|e }}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" picture_search="false"></wb:share-button>
+        </div>
+    </div>
+    <div class="x-sidebar-section">
+        <h4>关于作者</h4>
+        <iframe width="278" height="330" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=zh_cn&width=278&height=330&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=1&uid=1658384301&verifier=078cedea&colors=0088cc,ffffff,333333,0082cb,d14836&dpc=1&rnd={{ __time__ }}"></iframe>
+    </div>
+{% endblock %}
