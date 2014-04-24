@@ -1,4 +1,63 @@
 <!DOCTYPE html>
+{% macro makeComments(url, comments) %}
+
+<!-- show sign in -->
+<form class="x-comment-box x-auth-not-signed">
+    <div class="x-comment-signin">
+        <p>Please sign in to comment:</p>
+    {% for s in __signins__ %}
+        <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+    {% endfor %}
+    </div>
+</form>
+<!-- // show sign in -->
+
+<!-- make a comment -->
+<form url="{{ url }}" onsubmit="return create_comment(this);" class="x-comment-box x-auth-signed x-comment-form">
+    <div class="x-comment-user-img">
+        <img src="about:blank" class="x-user-image x-user-image-small" />
+    </div>
+    <div class="x-comment-input-area">
+        <div class="x-comment-prompt">
+            <span class="x-user-name"><script> document.write(g_user_name); </script></span> <span class="x-comment-error"></span>
+        </div>
+        <div class="x-comment-input">
+            <textarea name="content" placeholder="Say something..." rows="4"></textarea>
+        </div>
+        <div class="x-comment-submit">
+            <span>请发表有价值的信息，恶意评论将被删除并永久屏蔽账号。</span>
+            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Comment</button>
+        </div>
+    </div>
+</form>
+<!-- // make a comment -->
+
+<!-- comment list -->
+<div class="x-comments-list"></div>
+
+<script>
+
+$(function() {
+    var $list = $('div.x-comments-list');
+    {% for c in comments %}
+    $list.append(addComment({
+        'id': '{{ c._id }}',
+        'user_name': '{{ c.user_name }}',
+        'user_image_url': '{{ c.user_image_url }}',
+        'created_at': {{ c.created_at }},
+        'content': {{ c.content|json|safe }}
+    }));
+    {% endfor %}
+    {% if __user__.role===0 %}
+    $('a.x-delete-comment').css('display', '');
+    {% endif %}
+});
+
+</script>
+<!-- // comment list -->
+
+{% endmacro %}
+
 <html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
 <head>
     <meta charset="utf-8" />
@@ -17,13 +76,13 @@
 {% endif %}
     </style>
     <script>
-        g_time = parseFloat('{{ __time__ }}');
+        var g_time = parseFloat('{{ __time__ }}');
 //{% if __user__ %}
-        g_user_name = '{{ __user__.name|addslashes }}';
-        g_user_image = '{{ __user__.image_url }}';
+        var g_user_name = '{{ __user__.name|addslashes }}';
+        var g_user_image = '{{ __user__.image_url }}';
 //{% else %}
-        g_user_name = '';
-        g_user_image = 'about:blank';
+        var g_user_name = '';
+        var g_user_image = 'about:blank';
 //{% endif %}
     </script>
     <script src="/static/themes/default/js/jquery.min.js"></script>
@@ -50,8 +109,13 @@
                 </div>
                 <div class="span6">
                     <div class="x-head-right pull-right" style="margin-top:20px;">
+                        <!-- if sign in -->
                         <p class="x-auth-signed"><img src="about:blank" class="x-user-image x-user-image-small" style="margin-right:12px;" />Welcome, <span class="x-user-name"><script> document.write(g_user_name); </script></span> | <a href="/auth/signout">Sign out</a></p>
-                        <p class="x-auth-not-signed"><a href="javascript:void(0)" onclick="auth_from('weibo')"><img src="/static/img/signin-with-weibo.png" /></a></p>
+                        <!-- else -->
+                    {% for s in __signins__ %}
+                        <p class="x-auth-not-signed"><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+                    {% endfor %}
+                        <!-- end signin -->
                     </div>
                 </div>
             </div>
@@ -68,6 +132,7 @@
                     </ul>
                     <ul class="nav pull-right x-auto-display" style="display:none">
                         <li class="navbar-text">&nbsp;</li>
+                        <!-- if sign in -->
                         <li class="dropdown x-auth-signed">
                             <a href="javascript:void(0)" class="dropdown-toggle x-user-dropdown" data-toggle="dropdown"><span class="x-user-name"><script> document.write(g_user_name); </script></span> <b class="caret"></b></a>
                             <ul class="dropdown-menu">
@@ -76,8 +141,12 @@
                                 <li><a href="/auth/signout"><i class="icon-off"></i> Sign out</a></li>
                             </ul>
                         </li>
+                        <!-- else -->
                         <li class="navbar-text x-auth-not-signed">&nbsp;Please sign in&nbsp;</li>
-                        <li class="x-auth-not-signed"><a href="javascript:void(0)" onclick="authFrom('weibo')" class="x-signin x-signin-weibo">　</a></li>
+                    {% for s in __signins__ %}
+                        <li class="x-auth-not-signed"><a href="#0" onclick="authFrom('{{ s }}')" class="x-signin x-signin-small" style="width:24px; background-image:url(/static/themes/default/img/signin.{{ s }}.small.png);">&nbsp;</a></li>
+                    {% endfor %}
+                        <!-- end sign in -->
                     </ul>
 
                     <form class="navbar-search pull-right" action="#" onsubmit="return search($('input.search-query').val())">
