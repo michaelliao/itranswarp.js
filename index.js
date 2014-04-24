@@ -22,6 +22,11 @@ var productionMode = 'production' === app.get('env');
 // set engine to swig:
 app.engine('html', swig.renderFile);
 
+// set i18n filter:
+swig.setFilter('i18n', function(input) {
+  return input;
+});
+
 if (productionMode) {
     // set for production:
     app.enable('trust proxy');
