@@ -25,6 +25,12 @@ var onAuthCallback = function(u) {
     $('.x-auth-not-signed').hide();
 }
 
+function makeSmartDate() {
+    $('.x-smartdate').each(function() {
+        $(this).removeClass('x-smartdate').text(toSmartDate($(this).attr('date')));
+    });
+}
+
 $(function() {
     // set user image:
     $('img.x-user-image').attr('src', g_user_image);
@@ -68,9 +74,7 @@ $(function() {
     });
 
     // smart date:
-    $('.x-smartdate').each(function() {
-        $(this).text(toSmartDate($(this).attr('date')));
-    });
+    makeSmartDate();
 
     // add '_blank' for all external links:
     $('.x-content a[href^="http://"]').attr('target', '_blank');
@@ -156,7 +160,7 @@ function toSmartDate(timestamp) {
 function find_prev(li) {
     function find_last_child(li) {
         var ul = li.children('ul');
-        if (ul.length == 0) {
+        if (ul.length === 0) {
             return li.find('a');
         }
         return find_last_child(ul.children('li:last'));
@@ -167,7 +171,7 @@ function find_prev(li) {
         return find_last_child(n);
     }
     var p = li.parents('li:first');
-    if (p.length==0) {
+    if (p.length === 0) {
         return $('.x-wiki-title h4').find('a:first');
     }
     return p.find('a:first');
@@ -183,11 +187,11 @@ function find_next(li) {
         return n.find('a:first');
     }
     var p = li.parents('li:first');
-    if (p.length==0) {
+    if (p.length === 0) {
         return null;
     }
     var n = p.next();
-    if (n.length==0) {
+    if (n.length === 0) {
         return null;
     }
     return n.find('a:first'); 
@@ -198,23 +202,11 @@ function search(keyword) {
     return false;
 }
 
-
 // create comment by ajax:
 
-function _set_comment_error($form, s) {
+function setCommentError($form, s) {
+    s = s || '';
     $form.find('span.x-comment-error').text(s);
-}
-
-function _set_comment_posting($btn, posting) {
-    var $i = $btn.find('i')
-    if (posting) {
-        $btn.attr('disabled', 'disabled');
-        $i.addClass('x-loading');
-    }
-    else {
-        $btn.removeAttr('disabled');
-        $i.removeClass('x-loading');
-    }
 }
 
 var _comment_template = '<!-- comment template -->' +
@@ -229,14 +221,14 @@ var _comment_template = '<!-- comment template -->' +
     '        <div class="x-comment-content"></div>' +
     '        <div class="x-comment-prompt">' +
     '            <span>' +
-    '                <a href="#0" onclick="reply_comment(this)">回复</a>' +
-    '                <a href="javascript:delete_comment(\'$_ID\')" class="x-delete-comment" style="display:none">删除</a>' +
+    '                <a href="#0" onclick="replyComment(this)">回复</a>' +
+    '                <a href="javascript:deleteComment(\'$ID\')" class="x-delete-comment" style="display:none">Delete</a>' +
     '            </span>' +
     '        </div>' +
     '    </div>' +
     '</div>';
 
-function reply_comment(a) {
+function replyComment(a) {
     var p = $(a);
     while (! p.hasClass('x-comment-li')) {
         if (p.get(0)===document) {
@@ -252,7 +244,7 @@ function reply_comment(a) {
     $textarea.get(0).setSelectionRange(u.length + 1, u.length + 1);
 }
 
-function _format_lines(s) {
+function md2html(s) {
     var ss = s.split('\n');
     var L = [];
     $.each(ss, function(index, value) {
@@ -264,12 +256,13 @@ function _format_lines(s) {
     return L.join('');
 }
 
-function _add_comment(c) {
-    var $dom = $(_comment_template.replace('$_ID', c._id));
+function addComment(c) {
+    var $dom = $(_comment_template.replace('$ID', c.id));
     $dom.find('span.x-comment-username').text(c.user_name);
-    $dom.find('span.x-comment-date').text(c.creation_time);
+    $dom.find('span.x-comment-date').text(toSmartDate(c.created_at));
     $dom.find('div.x-comment-img img').attr('src', c.user_image_url);
-    $dom.find('div.x-comment-content').html(_format_lines(c.content));
+    $dom.find('div.x-comment-content').html(md2html(c.content));
+    $dom.attr('id', 'comment-' + c.id);
     return $dom;
 }
 
@@ -279,42 +272,40 @@ function create_comment(form) {
         var $btn = $form.find('button[type=submit]');
         var $textarea = $form.find('textarea[name=content]');
         var s = $textarea.val();
-        if ($.trim(s).length==0) {
-            _set_comment_error($form, '请输入评论内容！');
+        if (s.trim().length===0) {
+            setCommentError($form, '请输入评论内容！');
             return false;
         }
 
-        _set_comment_error($form, '');
-        _set_comment_posting($btn, true);
+        setCommentError($form, '');
+        showLoading(true);
 
-        $.postJSON($form.attr('action'), $form.serialize(), function(result) {
+        postJSON($form.attr('url'), $form.serialize(), function(err, result) {
+            showLoading(false);
+            if (err) {
+                setCommentError($form, err.message || err.error);
+                return;
+            }
             $textarea.val('');
-            result.creation_time = '1分钟前';
-            var $dom = _add_comment(result);
-            $dom.css('display', 'none');
+            var $dom = addComment(result);
             $('div.x-comments-list').prepend($dom);
+            $dom.css('display', 'none');
             $dom.slideDown();
-        }, function(e) {
-            _set_comment_error($form, e.message || e.error);
-        }, function() {
-            _set_comment_posting($btn, false);
         });
     }
     catch (e) {}
     return false;
 }
 
-function delete_comment(cid) {
+function deleteComment(cid) {
     if (confirm('delete this comment?')) {
-        postJSON('/api/comments/' + cid + '/delete', '', function(err, result) {
+        postJSON('/api/comments/' + cid + '/delete', function(err, result) {
             if (err) {
-                return alert('Error: ' + (e.message || e.error));
+                return alert('Error: ' + (err.message || err.error));
             }
-            location.reload();
+            $('#comment-' + cid).remove();
         });
     }
 }
 
-
-
-
+// END create comment by ajax.
