@@ -4,8 +4,13 @@ var
     _ = require('lodash'),
     async = require('async'),
     db = require('../db'),
+    config = require('../config'),
     utils = require('./_utils'),
     constants = require('../constants');
+
+var signins = _.map(config.oauth2, function(value, key) {
+    return key;
+});
 
 var
     User = db.user,
@@ -24,19 +29,6 @@ var
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
 
-var __website__ = {
-    title: 'My Website',
-    subtitle: 'Powered by iTranswarp.js',
-    custom_header: '<!-- custom header -->',
-    custom_footer: '<!-- custom footer -->',
-};
-
-var __website__keys__ = _.filter(_.map(__website__, function(key) {
-    return __website__.hasOwnProperty(key) ? key : ''
-}), function(key) {
-    return key.length > 0;
-});
-
 function appendSettings(model, callback) {
     settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function(err, r) {
         if (err) {
@@ -54,15 +46,38 @@ function appendSettings(model, callback) {
 }
 
 function processTheme(view, model, req, res, next) {
-    model.__user__ = req.user;
-    model.__request__ = {
-        host: req.host
-    };
     appendSettings(model, function(err) {
         if (err) {
             return next(err);
         }
+        model.__signins__ = signins;
+        model.__user__ = req.user;
+        model.__time__ = Date.now();
+        model.__request__ = {
+            host: req.host
+        };
         return res.render(res.themePath + view, model);
+    });
+}
+
+function createCommentByType(ref_type, checkFunction, req, res, next) {
+    if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+        return next(api.notAllowed('Permission denied.'));
+    }
+    try {
+        var content = utils.getRequiredParam('content', req);
+    }
+    catch (e) {
+        return next(e);
+    }
+    var ref_id = req.params.id;
+    checkFunction(ref_id, function(err, entity) {
+        if (err) {
+            return next(err);
+        }
+        commentApi.createComment(ref_type, ref_id, req.user, content, function(err, comment) {
+            return res.send(comment);
+        });
     });
 }
 
@@ -90,12 +105,44 @@ exports = module.exports = {
                 model.category = category;
                 commentApi.getComments(model.article.id, callback);
             }
-        ], function(err, comments) {
+        ], function(err, r) {
             if (err) {
                 return next(err);
             }
-            model.comments = comments;
+            model.article.html_content = utils.md2html(model.article.content);
+            model.comments = r.comments;
             return processTheme('article/article.html', model, req, res, next);
+        });
+    },
+
+    'POST /article/:id/comment': function(req, res, next) {
+        createCommentByType('article', function(id, callback) {
+            articleApi.getArticle(id, callback);
+        }, req, res, next);
+    },
+
+    'POST /wiki/:id/comment': function(req, res, next) {
+        createCommentByType('wiki', function(id, callback) {
+            wikiApi.getWiki(id, callback);
+        }, req, res, next);
+    },
+
+    'POST /wikipage/:id/comment': function(req, res, next) {
+        createCommentByType('wikipage', function(id, callback) {
+            wikiApi.getWikiPage(id, callback);
+        }, req, res, next);
+    },
+
+    'GET /page/:alias': function(req, res, next) {
+        pageApi.getPageByAlias(req.params.alias, function(err, page) {
+            if (err) {
+                return next(err);
+            }
+            page.html_content = utils.md2html(page.content);
+            var model = {
+                page: page
+            };
+            return processTheme('page/page.html', model, req, res, next);
         });
     },
 
