@@ -4,6 +4,7 @@ var
     _ = require('lodash'),
     async = require('async'),
     crypto = require('crypto'),
+    marked = require('marked'),
     config = require('../config'),
     api = require('../api'),
     db = require('../db');
@@ -293,7 +294,17 @@ function getRequiredParam(name, req) {
     throw api.invalidParam(name);
 }
 
+function md2html(md, id, callback) {
+    if (arguments.length===3) {
+        // async:
+        return callback(null, marked(md));
+    }
+    return marked(md);
+}
+
 exports = module.exports = {
+
+    md2html: md2html,
 
     formatTags: formatTags,
 
