@@ -18,7 +18,12 @@ var model = {
     article: {
         id: '{{ article.id }}',
         category_id: '{{ article.category_id }}',
+        cover_id: '{{ article.cover_id }}',
+        cover_url: 'http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0',
         name: {{ article.name|json|safe }},
+        description: {{ article.description|json|safe }},
+        user_id: '{{ article.user_id }}',
+        user_name: {{ article.user_name|json|safe }}
     }
 };
 </script>
@@ -37,13 +42,13 @@ var model = {
         <img src="/files/attachments/{{ article.cover_id }}/0" />
     </div>
     <div class="x-article-content">
-        {{ article.content }}
+        {{ article.html_content|safe }}
     </div>
 </div>
 
 <h4>评论……</h4>
 
-{{ make_comments('/api/articles/%s/comments/create' % article._id, comments) }}
+{{ makeComments('/article/' + article.id + '/comment', comments) }}
 
 {% endblock %}
 
