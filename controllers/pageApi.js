@@ -34,12 +34,8 @@ function getPages(callback) {
     Page.findAll({ order: 'alias' }, callback);
 }
 
-function getPage(id, tx, callback) {
-    if (arguments.length===2) {
-        callback = tx;
-        tx = undefined;
-    }
-    Page.find(id, tx, function(err, page) {
+function doFindPage(cond, tx, callback) {
+    Page.find(cond, tx, function(err, page) {
         if (err) {
             return callback(err);
         }
@@ -57,6 +53,25 @@ function getPage(id, tx, callback) {
             return callback(null, page);
         });
     });
+}
+
+function getPage(id, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    doFindPage(id, tx, callback);
+}
+
+function getPageByAlias(alias, tx, callback) {
+    if (arguments.length===2) {
+        callback = tx;
+        tx = undefined;
+    }
+    doFindPage({
+        where: 'alias=?',
+        params: [alias]
+    }, tx, callback);
 }
 
 function getNavigationMenus(callback) {
@@ -80,6 +95,8 @@ exports = module.exports = {
     getPages: getPages,
 
     getPage: getPage,
+
+    getPageByAlias: getPageByAlias,
 
     'GET /api/pages/:id': function(req, res, next) {
         /**
