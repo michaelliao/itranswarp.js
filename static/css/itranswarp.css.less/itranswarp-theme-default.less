@@ -41,6 +41,18 @@ div.x-goto-top {
     }
 }
 
+a.x-signin-small {
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+img.x-user-image-small {
+  .border-radius(6px);
+  width: 50px;
+  height: 50px;
+  border: none;
+}
+
 .x-main {
   margin-top: 20px;
   margin-bottom: 20px;
@@ -59,6 +71,99 @@ div.x-goto-top {
   border-left: 1px solid #ccc;
   overflow: hidden;
 }
+
+.x-img-profile {
+  width: 48px;
+  height: 48px;
+  border-width: 0;
+  border-radius: 6px;
+}
+
+// comments:
+
+.x-comment-box {
+  .border-radius(6px);
+  border: 1px solid #ddd;
+  margin: 36px 0;
+  padding: 12px;
+  background-color: #f5f5f5;
+
+  div.x-comment-signin {
+    padding: 10px 0 0 10px;
+    p {
+      font-size: 14px;
+      line-height: 34px;
+    }
+  }
+
+  div.x-comment-user-img {
+    width: 50px;
+    float: left;
+  }
+
+  div.x-comment-input-area {
+    margin-left: 70px;
+
+    div.x-comment-prompt {
+      margin: 0 0 6px 0;
+      span.x-comment-error {
+        margin-right: 18px;
+        color: @red;
+        float: right;
+        .clearfix();
+      }
+    }
+
+    div.x-comment-input {
+      textarea {
+        width: 95%;
+        resize: none;
+      }
+    }
+
+    div.x-comment-submit {
+      span {
+        color: #666;
+        font-size: 12px;
+      }
+      button {
+        float:right;
+        margin-right: 24px;
+      }
+    }
+  }
+  .clearfix();
+}
+
+div.x-comment-li {
+  margin: 36px 0;
+  padding: 12px;
+
+  div.x-comment-img {
+    width: 50px;
+    float: left;
+  }
+
+  div.x-comment-main {
+    margin-left: 70px;
+
+    div.x-comment-prompt {
+      color: #666;
+
+      a.x-delete-comment {
+        color: @linkColorHover !important;
+      }
+    }
+
+    div.x-comment-content {
+      margin: 6px 0;
+    }
+  }
+
+  .clearfix();
+}
+
+// END comments
 
 
 
