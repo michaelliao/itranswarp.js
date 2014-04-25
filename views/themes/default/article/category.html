@@ -1,0 +1,48 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/category/{{ category.id }}" />
+{% endblock %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block main %}
+
+{% for a in articles %}
+    <div class="x-article">
+        <div class="x-article-title">
+            <h4><a href="/article/{{ a.id }}">{{ a.name }}</a></h4>
+        </div>
+        <div class="x-article-cover-small">
+            <a href="/article/{{ a.id }}"><img src="/files/attachments/{{ a.cover_id }}/s" /></a>
+        </div>
+        <div class="x-article-right">
+            <div class="x-article-info">
+                <a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> • <a href="/category/{{ a.category_id }}">{{ category.name }}</a> • <span class="x-smartdate" date="{{ a.publish_at }}">...</span> • {{ a.reads }}次阅读
+            </div>
+            <div class="x-article-description">
+                <p>{{ a.description }}</p>
+                <p><a href="/article/{{ a.id }}" class="x-readmore">继续阅读 »</a></p>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+    <div class="x-page">
+        {{ pagination(page, '?page=') }}
+    </div>
+
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+        <h4>热门排行</h4>
+        <ol class="x-hot-ol">
+            <li><a href="aa">继续阅读A继续阅读AA</a></li>
+            <li><a href="aa">继续阅读A继续阅读AA</a></li>
+            <li><a href="aa">继续阅读A继续阅读AA</a></li>
+            <li><a href="aa">继续阅读A继续阅读AA</a></li>
+            <li><a href="aa">继续阅读A继续阅读AA</a></li>
+        </ol>
+    </div>
+{% endblock %}
