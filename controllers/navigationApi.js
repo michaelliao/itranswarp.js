@@ -140,6 +140,26 @@ exports = module.exports = {
         });
     },
 
+    'POST /api/navigations/:id/delete': function(req, res, next) {
+        /**
+         * Delete a navigation.
+         */
+        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        getNavigation(req.params.id, function(err, nav) {
+            if (err) {
+                return next(err);
+            }
+            nav.destroy(function(err, r) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send({ id: nav.id });
+            });
+        });
+    },
+
     'POST /api/navigations/:id': function(req, res, next) {
         /**
          * Update a navigation.

@@ -192,7 +192,7 @@ exports = module.exports = {
                 return next(err);
             }
             if (page.wiki_id!==req.params.wid) {
-                return next(api.resourceNotFound('Wiki'));
+                return res.send(404);
             }
             wikiApi.getWikiTree(page.wiki_id, true, function(err, wiki) {
                 if (err) {
