@@ -81,7 +81,7 @@ exports = module.exports = {
         var page = utils.getPage(req);
         async.parallel({
             articles: function(callback) {
-                articleApi.getArticles(page, true, callback);
+                articleApi.getAllArticles(page, callback);
             },
             categories: function(callback) {
                 categoryApi.getCategories(callback);

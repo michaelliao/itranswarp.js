@@ -22,13 +22,7 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function getArticles(page, allArticles, callback) {
-    var now = Date.now();
-    var countOptions = allArticles ? 'count(*)' : {
-        select: 'count(*)',
-        where: 'publish_at<?',
-        params: [now]
-    };
+function doGetArticles(page, countOptions, findOptions, callback) {
     Article.findNumber(countOptions, function(err, num) {
         if (err) {
             return callback(err);
@@ -37,15 +31,8 @@ function getArticles(page, allArticles, callback) {
         if (page.isEmpty) {
             return callback(null, { page: page, articles: [] });
         }
-        var findOptions = {
-            offset: page.offset,
-            limit: page.limit,
-            order: 'publish_at desc'
-        };
-        if (! allArticles) {
-            findOptions.where = 'publish_at<?';
-            findOptions.params = [now];
-        }
+        findOptions.offset = page.offset;
+        findOptions.limit = page.limit;
         Article.findAll(findOptions, function(err, entities) {
             if (err) {
                 return callback(err);
@@ -56,6 +43,28 @@ function getArticles(page, allArticles, callback) {
             });
         });
     });
+}
+
+function getAllArticles(page, callback) {
+    var countOptions = 'count(*)';
+    var findOptions = {
+        order: 'publish_at desc'
+    };
+    doGetArticles(page, countOptions, findOptions, callback);
+}
+
+function getArticles(page, callback) {
+    var now = Date.now();
+    var countOptions = {
+        select: 'count(*)',
+        where: 'publish_at<?',
+        params: [now]
+    };
+    var findOptions = {
+        where: 'publish_at<?',
+        params: [now]
+    };
+    doGetArticles(page, countOptions, findOptions, callback);
 }
 
 function getArticle(id, tx, callback) {
@@ -87,6 +96,8 @@ var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 exports = module.exports = {
 
+    getAllArticles: getAllArticles,
+
     getArticles: getArticles,
 
     getArticle: getArticle,
@@ -102,7 +113,7 @@ exports = module.exports = {
 
     'GET /api/articles': function(req, res, next) {
         var page = utils.getPage(req);
-        getArticles(page, false, function(err, articles) {
+        getArticles(page, function(err, articles) {
             if (err) {
                 return next(err);
             }

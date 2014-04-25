@@ -59,6 +59,26 @@ function Page(pageIndex, itemsPerPage) {
             totalPages: this.totalPages
         };
     }
+
+    this.range = function(n) {
+        if (n===undefined || n < 0) {
+            n = 5;
+        }
+        var
+            arr = [],
+            min = this.pageIndex - n,
+            max = this.pageIndex + n;
+        if (min < 1) {
+            min = 1;
+        }
+        if (max > this.totalPages) {
+            max = this.totalPages;
+        }
+        for (var i = min; i <= max; i++) {
+            arr.push(i);
+        }
+        return arr;
+    }
 }
 
 var SESSION_COOKIE_NAME = 'itranswarpsession';
