@@ -207,6 +207,7 @@ exports = module.exports = {
         var name = utils.getParam('name', req),
             alias = utils.getParam('alias', req),
             tags = utils.getParam('tags', req),
+            draft = utils.getParam('draft', req),
             content = utils.getParam('content', req);
         if (name!==null && name==='') {
             return next(api.invalidParam('name'));
@@ -275,6 +276,9 @@ exports = module.exports = {
                     }
                     if (tags!==null) {
                         page.tags = tags;
+                    }
+                    if (draft!==null) {
+                        page.draft = draft==='true';
                     }
                     page.update(tx, callback);
                 }

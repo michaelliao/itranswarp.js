@@ -3,6 +3,7 @@
 var
     _ = require('lodash'),
     async = require('async'),
+    api = require('../api'),
     db = require('../db'),
     config = require('../config'),
     utils = require('./_utils'),
@@ -154,6 +155,9 @@ exports = module.exports = {
         pageApi.getPageByAlias(req.params.alias, function(err, page) {
             if (err) {
                 return next(err);
+            }
+            if (page.draft) {
+                return res.send(404);
             }
             page.html_content = utils.md2html(page.content);
             var model = {
