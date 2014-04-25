@@ -12,10 +12,27 @@
 {% block title %}{{ wiki.name }}{% endblock %}
 
 {% block beforehead %}
-    <script>
+<script>
+function find_prev(li) {
+    var n = li.prev();
+    if (n.length===0) {
+        return $('.x-wiki-title h4').find('a:first');
+    }
+    return n.find('a:first');
+}
+
+function find_next(li) {
+    var n = li.next();
+    if (n.length===0) {
+        return null;
+    }
+    return n.find('a:first');
+}
+
 $(function() {
-    var prev = null;
-    var next = null;
+    var
+        prev = null,
+        next = null;
     //{% if page %}
     var sel = $('#{{ page.id }}').addClass('x-active');
     sel.prepend('<i class="icon-chevron-right" style="margin:0 0 0 -18px;"></i>');
@@ -38,23 +55,8 @@ $(function() {
     }
     $('.x-wiki-prev-next').html(ss);
 });
-    </script>
+</script>
 {% endblock %}
-
-<!--
-{% macro wiki_tree(nodes) %}
-    <ul>
-    {% for n in nodes %}
-        <li id="{{ n.id }}">
-            <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
-            {% if n.children %}
-                {{ wiki_tree(n.children) }}
-            {% endif %}
-        </li>
-    {% endfor %}
-    </ul>
-{% endmacro %}
--->
 
 {% block container %}
         <div class="row">
@@ -64,7 +66,15 @@ $(function() {
                     <div class="x-wiki-title">
                         <h4><a id="{{ wiki.id }}" href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></h4>
                     </div>
-                    <div class="x-wiki-tree">{{ wiki_tree(tree) }}</div>
+                    <div class="x-wiki-tree">
+                        <ul>
+                        {% for n in tree %}
+                            <li id="{{ n.id }}" style="margin-left:{{ n.depth }}em;">
+                                <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
                     <div class="x-sidebar-section">
                         <h4>关于作者</h4>
                         <iframe width="215" height="400" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=215&height=400&fansRow=3&ptype=1&speed=0&skin=5&isTitle=0&noborder=0&isWeibo=0&isFans=1&uid=1658384301&verifier=078cedea&dpc=1"></iframe>

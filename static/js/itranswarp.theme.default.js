@@ -157,46 +157,6 @@ function toSmartDate(timestamp) {
     return s;
 }
 
-function find_prev(li) {
-    function find_last_child(li) {
-        var ul = li.children('ul');
-        if (ul.length === 0) {
-            return li.find('a');
-        }
-        return find_last_child(ul.children('li:last'));
-    }
-
-    var n = li.prev();
-    if (n.length > 0) {
-        return find_last_child(n);
-    }
-    var p = li.parents('li:first');
-    if (p.length === 0) {
-        return $('.x-wiki-title h4').find('a:first');
-    }
-    return p.find('a:first');
-}
-
-function find_next(li) {
-    var ul = li.children('ul');
-    if (ul.length > 0) {
-        return ul.children('li:first').find('a:first');
-    }
-    var n = li.next();
-    if (n.length > 0) {
-        return n.find('a:first');
-    }
-    var p = li.parents('li:first');
-    if (p.length === 0) {
-        return null;
-    }
-    var n = p.next();
-    if (n.length === 0) {
-        return null;
-    }
-    return n.find('a:first'); 
-}
-
 function search(keyword) {
     location.assign('http://www.baidu.com/s?ie=utf-8&wd=' + encodeURIComponent(keyword) + '+site%3A' + location.hostname);
     return false;

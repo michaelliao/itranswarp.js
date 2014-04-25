@@ -172,7 +172,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
-            wikiApi.getWikiTree(wiki.id, function(err, tree) {
+            wikiApi.getWikiTree(wiki.id, true, function(err, tree) {
                 if (err) {
                     return next(err);
                 }
@@ -194,7 +194,7 @@ exports = module.exports = {
             if (page.wiki_id!==req.params.wid) {
                 return next(api.resourceNotFound('Wiki'));
             }
-            wikiApi.getWikiTree(page.wiki_id, function(err, wiki) {
+            wikiApi.getWikiTree(page.wiki_id, true, function(err, wiki) {
                 if (err) {
                     return next(err);
                 }

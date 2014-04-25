@@ -90,7 +90,19 @@ function treeIterate(nodes, root) {
     }
 }
 
-function getWikiTree(id, callback) {
+function flatten(arr, depth, children) {
+    _.each(children, function(wp) {
+        wp.depth = depth;
+        arr.push(wp);
+        flatten(arr, depth + 1, wp.children);
+    });
+}
+
+function getWikiTree(id, isFlatten, callback) {
+    if (arguments.length===2) {
+        callback = isFlatten;
+        isFlatten = false;
+    }
     getWiki(id, function(err, wiki) {
         if (err) {
             return callback(err);
@@ -99,7 +111,14 @@ function getWikiTree(id, callback) {
             if (err) {
                 return callback(err);
             }
-            wiki.children = children;
+            if (isFlatten) {
+                var arr = [];
+                flatten(arr, 0, children);
+                wiki.children = arr;
+            }
+            else {
+                wiki.children = children;
+            }
             return callback(null, wiki);
         });
     });
