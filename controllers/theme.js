@@ -88,7 +88,24 @@ exports = module.exports = {
     },
 
     'GET /category/:id': function(req, res, next) {
-        //
+        var page = utils.getPage(req);
+        var model = {};
+        async.waterfall([
+            function(callback) {
+                categoryApi.getCategory(req.params.id, callback);
+            },
+            function(category, callback) {
+                model.category = category;
+                articleApi.getArticlesByCategory(page, category.id, callback);
+            }
+        ], function(err, r) {
+            if (err) {
+                return next(err);
+            }
+            model.articles = r.articles;
+            model.page = r.page;
+            return processTheme('article/category.html', model, req, res, next);
+        });
     },
 
     'GET /article/:id': function(req, res, next) {
@@ -147,10 +164,44 @@ exports = module.exports = {
     },
 
     'GET /wiki/:id': function(req, res, next) {
-        //
+        wikiApi.getWikiWithContent(req.params.id, function(err, wiki) {
+            if (err) {
+                return next(err);
+            }
+            wikiApi.getWikiTree(wiki.id, function(err, tree) {
+                if (err) {
+                    return next(err);
+                }
+                var model = {
+                    wiki: wiki,
+                    tree: tree.children,
+                    html_content: utils.md2html(wiki.content)
+                };
+                return processTheme('wiki/wiki.html', model, req, res, next);
+            })
+        });
     },
 
     'GET /wiki/:wid/:pid': function(req, res, next) {
-        //
+        wikiApi.getWikiPageWithContent(req.params.pid, function(err, page) {
+            if (err) {
+                return next(err);
+            }
+            if (page.wiki_id!==req.params.wid) {
+                return next(api.resourceNotFound('Wiki'));
+            }
+            wikiApi.getWikiTree(page.wiki_id, function(err, wiki) {
+                if (err) {
+                    return next(err);
+                }
+                var model = {
+                    wiki: wiki,
+                    page: page,
+                    tree: wiki.children,
+                    html_content: utils.md2html(page.content)
+                };
+                return processTheme('wiki/wiki.html', model, req, res, next);
+            });
+        });
     },
 };

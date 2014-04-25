@@ -244,6 +244,8 @@ exports = module.exports = {
 
     getNavigationMenus: getNavigationMenus,
 
+    getWikiTree: getWikiTree,
+
     getWiki: getWiki,
 
     getWikis: getWikis,

@@ -1,0 +1,120 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/wiki/{{ wiki.id }}" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="http://{{ __request__.host }}/wiki/{{ wiki.id }}{% if page %}/{{ page.id }}{% endif %}" />
+    <meta property="og:title" content="{{ wiki.name }}" />
+    <meta property="og:description" content="{{ wiki.name }}" />
+{% endblock %}
+
+{% block title %}{{ wiki.name }}{% endblock %}
+
+{% block beforehead %}
+    <script>
+$(function() {
+    var prev = null;
+    var next = null;
+    //{% if page %}
+    var sel = $('#{{ page.id }}').addClass('x-active');
+    sel.prepend('<i class="icon-chevron-right" style="margin:0 0 0 -18px;"></i>');
+    prev = find_prev(sel);
+    next = find_next(sel);
+    //{% else %}
+    $('#{{ wiki.id }}').addClass('x-active').addClass('x-active-wiki');
+    next = $('.x-wiki-tree').find('li:first a:first');
+    //{% endif %}
+    // show prev & next:
+    var ss = '';
+    if (prev) {
+        ss = ss + '<i class="icon-chevron-left"></i> 上一篇：<a href="' + prev.attr('href') + '">' + prev.text() + '</a>';
+    }
+    if (prev && next) {
+        ss = ss + '&nbsp;&nbsp;&nbsp;···&nbsp;&nbsp;&nbsp;';
+    }
+    if (next) {
+        ss = ss + '下一篇：<a href="' + next.attr('href') + '">' + next.text() + '</a> <i class="icon-chevron-right"></i>';
+    }
+    $('.x-wiki-prev-next').html(ss);
+});
+    </script>
+{% endblock %}
+
+<!--
+{% macro wiki_tree(nodes) %}
+    <ul>
+    {% for n in nodes %}
+        <li id="{{ n.id }}">
+            <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
+            {% if n.children %}
+                {{ wiki_tree(n.children) }}
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% endmacro %}
+-->
+
+{% block container %}
+        <div class="row">
+            <div class="span3">
+                <div class="x-sidebar-left">
+                    <!-- block sidebar -->
+                    <div class="x-wiki-title">
+                        <h4><a id="{{ wiki.id }}" href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></h4>
+                    </div>
+                    <div class="x-wiki-tree">{{ wiki_tree(tree) }}</div>
+                    <div class="x-sidebar-section">
+                        <h4>关于作者</h4>
+                        <iframe width="215" height="400" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=215&height=400&fansRow=3&ptype=1&speed=0&skin=5&isTitle=0&noborder=0&isWeibo=0&isFans=1&uid=1658384301&verifier=078cedea&dpc=1"></iframe>
+                    </div>
+                    <!-- // block sidebar -->
+                </div>
+            </div>
+            <div class="span9">
+                <div id="main">
+                    <!-- block main -->
+                    <h4>{{ name|e }}</h4>
+                    <div class="x-wiki-info"><span>{% if page %}{{ page.reads }}{% else %}{{ wiki.reads }}{% endif %}次阅读</span></div>
+                    <hr style="border-top-color:#ccc" />
+                    <div class="x-wiki-content">{{ html_content|safe }}</div>
+
+                    <hr style="border-top-color:#ccc" />
+                    <div class="x-wiki-prev-next">&nbsp;</div>
+                    <hr style="border-top-color:#ccc" />
+
+                    <h4>您的支持是作者写作最大的动力！</h4>
+                    <div>
+                        <p>如果您喜欢这个教程，读后觉得收获很大，预期工资涨幅能超过30%，不妨小额赞助一下，让我有动力继续写出高质量的教程。</p>
+                        <p>请狠狠地点击下面的按钮：</p>
+                        <p><a href="/page/donate" target="_blank" class="btn btn-success btn-large">我要小额赞助</a></p>
+                    </div>
+
+                    <hr style="border-top-color:#ccc" />
+
+                    <h4>喜欢这篇文章？</h4>
+                    <div style="height:76px">
+                        <wb:like appkey="2f89Ml"></wb:like>
+                    </div>
+
+                    <h4>分享给朋友</h4>
+                    <div style="height:76px">
+                        <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ wiki.name|e }}：{% if page %}{{ name|e }}{% else %}{{ wiki.description|e }}{% endif %}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/0" picture_search="false"></wb:share-button>
+                    </div>
+
+                    <h4>评论……</h4>
+
+{% if page %}
+{% set comment_url = '/wikipage/' + page.id + '/comment/' %}
+{% else %}
+{% set comment_url = '/wiki/' + wiki.id + '/comment/' %}
+{% endif %}
+
+{{ make_comments(comment_url, comments) }}
+
+                    <!-- // block main -->
+                </div>
+            </div>
+        </div>
+{% endblock %}
