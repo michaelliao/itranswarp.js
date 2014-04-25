@@ -1,5 +1,12 @@
 // itranswarp.js
 
+if (! window.console) {
+    window.console = {
+        log: function(s) {
+        }
+    };
+}
+
 if (! String.prototype.trim) {
     String.prototype.trim = function() {
         return this.replace(/^\s+|\s+$/g, '');
@@ -300,3 +307,37 @@ function showConfirm(title, text_or_html, callback) {
         $modal.remove();
     });
 }
+
+setTimeout(function() {
+    var s = "\n" +
+"This cool website is powered by:\n" +
+"  _ _____                                                     _      \n" +
+" (_)_   _| __ __ _ _ __  _____      ____ _ _ __ _ __         (_)___  \n" +
+" | | | || '__/ _` | '_ \\/ __\\ \\ /\\ / / _` | '__| '_ \\        | / __| \n" +
+" | | | || | | (_| | | | \\__ \\\\ V  V / (_| | |  | |_) |  _    | \\__ \\ \n" +
+" |_| |_||_|  \\__,_|_| |_|___/ \\_/\\_/ \\__,_|_|  | .__/  (_)  _/ |___/ \n" +
+"                                               |_|         |__/      \n" +
+"\n" +
+"Want to get source code? type source()\n" +
+"Want to get author info? type author()\n" +
+"\n";
+    console.log(s);
+    window.source = function() {
+        console.log('Searching source code...');
+        setTimeout(function() {
+            console.log('Using Google search...');
+            setTimeout(function() {
+                console.log('Using Bing search...');
+                setTimeout(function() {
+                    console.log('Ask Siri...');
+                    setTimeout(function() {
+                        console.log('Found!\n\nSource code can be folked from https://github.com/michaelliao/itranswarp.js\n\nCheers!\n');
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        }, 1000);
+    };
+    window.author = function() {
+        console.log('\nAuthor: Michael Liao\n                           .... ... ... ... ...\n                        .:+I$OOOOOOOOOOOOO8OZ7I,..\n                      ,=8OOOZZZO8ZZZZOZ8OOOOOO88OOOOZ,..\n                   .~88OZO88OZZO88OOOOOO88OOOOOO8OOOZO88.\n                .,88O88OOD88OZ8Z .ZOOOOOO888OOOOO888OOOOO88:.\n              ..+8OO8DOO888OZ8Z.....DOOOOO888OZOO8888OOOO8OO8.\n              ~8OOO88888D8ZO8. .......78OZZZO88888888888OOOO8D8,\n            .IZZOO8DOO88OO8$.............=$8OOO888888888888O8888.\n            8ZZZO8D8ODDOD?...................~I888D8DD8888DD88888:\n           :OZOODD8ODD87 . ....................... ,7$O8D888888888,\n          ,8$ZOO8O8D$............................   ......,O888888D,\n          88OO8D8= ......... . . .,+O?==D888888OOZZZ8OZOOZ$777O888ZZIIIIII$O.\n         .D88D8~..........,+77OD888OOZZZ777$$Z$7ZZ$$OOO88888Z?$888D8ZI$O8II$,\n         ,DO$DO,,=888D8O$7Z$$7$ZO8D8OZZ77$8O......... ... ... ..8OOZ? :87?O:\n ...::::,8D8D88888Z7$ZOO888$?:... ..O8$$ZZ$8  ... ...: .. ... ...~8Z?.8$IO,\n  88IZDDO88888ZI=..................,O$8DI8Z$D......:DDD8. ... ... ..887I~\n   87ZD8:.... ........DDDZ.. . . .=8$D8, .D$$D . . =8DD8.       ..7DZIIZ.\n   .O$O8..    .........8DD+..... 8O787....,87I78+~,,.ZOZOZOOO88Z7I??IZO.\n    8OZO+.    ..........,. ....?8$7O+. 88$..88Z777$ZZ$Z$IIIIIIIIII77O,\n    .D8$ZZ... .........=O88D8ZO$7ZD: .=D$O.... ~ODD8888$I?.:.... ..,,\n     .DO7$O7I+?7+=+7DD8O$77$$7$8$, ....DO8............... ... ...  7.\n       :O77777777II77$$Z88DI:.. . ... ..+ ... ... ... ... ... ... ?8\n        .8ZZ$$$ZO8D88$=:. ... ... ... ... ... ... ... ... ... ...,D:\n           .8,.  ........................................ ... ..?O.\n           .O~.............. . . . . . . 7:  . . . . . ..     .,Z\n            .O8,.......................oDZO8o............ ... OZ.\n             .+8:............ ... ... ..8O88. ... ... ... ..ZO.\n                ~8=.......... ... ... .. ,  . ... ... ....=D:\n                  ?8?, ................................~O8?\n                    .OD8I=..                     . .888O.\n                       ..ZZZ888?: ... ... ... .:88O:\n                            .,O888DDD8888DDD888:\n                                       ,$IIO,\n                                      ,OIIOO..\n                                     ~88O8OZ88O8D..\n                                  .,8888O8DD88O8DD8:.\n                                 ODD888888DD88D888DDDD,\n                                88DD888DDDDDDDDDDDDD8OD,.\n                               :DDDZ8DDDDDNDNDNDDDDDDOZ88,\n                              .8ODDDDDDDDDDDDDD88888Z8O$DD:\n                             .OO8DOO88OO8888D88888OOZZD$$OD8.\n                            .O878OZOO8888888D888O8OOOO88??OD,.\n                           .O8778ZO88O888O88OOOZOOOOOOOD$+?88..\n                          ..8ZI78ZZOOOOOOOOOOOZZOOO88888O?+OD8..\n');
+    };
+}, 2000);
