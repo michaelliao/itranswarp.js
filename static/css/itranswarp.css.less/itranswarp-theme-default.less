@@ -79,6 +79,178 @@ img.x-user-image-small {
   border-radius: 6px;
 }
 
+
+ol.x-hot-ol {
+  margin: 0 0 20px 0;
+  li.x-hot-li-video {
+    list-style: none;
+    padding: 6px 0px;
+    div.x-hot-li-video-text {
+      margin-left: 120px;
+    }
+    .clearfix();
+  }
+  li.x-hot-li-article {
+    list-style: none;
+    padding: 0px;
+    a {
+      padding-top: 4px;
+      padding-bottom: 4px;
+      display: block;
+      padding-left: 36px;
+      position: relative;
+      &:hover {
+        color: @white;
+        background-color: @linkColorHover;
+        span {
+          color: @white;
+        }
+      }
+      span {
+        position: absolute;
+        margin: 0;
+        padding: 4px 0;
+        left: 0;
+        top: 0;
+        color: @linkColorHover;
+        display: block;
+        width: 30px;
+        text-align: center;
+      }
+    }
+  }
+}
+
+ul.x-tags {
+  margin: 20px 0;
+  li {
+    display: inline-block;
+    padding: 0px;
+    margin: 0 20px 16px 0;
+    a {
+      color: @white;
+      background-color: @linkColorHover;
+      padding: 4px 8px;
+      .opacity(80);
+      &:hover {
+        .opacity(100);
+      }
+    }
+  }
+}
+
+// articles
+
+.x-article {
+  margin-bottom: 36px;
+  .clearfix();
+
+  .x-article-heading {
+    display: block;
+    width: 640px;
+    height: 300px;
+    margin-top: 6px;
+    position: relative;
+    background-size: cover;
+    &:hover {
+      .opacity(80);
+    }
+
+    .x-article-on-cover {
+      .opacity(90);
+      background-color: @grayDark;
+      color: @white;
+      width: 620px;
+      padding: 8px 10px 4px 10px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+  }
+
+  .x-article-cover-large {
+    margin: 10px 0px;
+  }
+
+  .x-article-content {
+    margin: 10px 0px;
+  }
+
+  .x-article-cover-small {
+    width: 120px;
+    float: left;
+    a {
+      img {
+        width: 200px;
+      }
+      &:hover {
+        .opacity(80);
+      }
+    }
+  }
+
+  .x-article-right {
+    margin-left: 140px;
+
+    .x-article-info {
+      color: #999;
+      margin: 0 0 10px 0;
+    }
+  }
+
+  .x-article-no-cover {
+    margin-left: 0 important!;
+  }
+}
+
+a.x-readmore {
+  color: @white;
+  background-color: @linkColor;
+  padding: 4px 8px;
+  &:hover {
+    background-color: @linkColorHover;
+  }
+}
+
+// wiki:
+
+div.x-wiki-title {
+  a.x-active {
+    color: @linkColorHover;
+    font-weight: bold;
+  }
+}
+
+div.x-wiki-tree {
+  margin-bottom: 24px;
+  ul {
+    list-style-type: none;
+    margin: 0 0 0 20px;
+    li {
+      list-style-type: none;
+      margin: 6px 0 6px 0;
+    }
+    li.x-active {
+      >a {
+        color: @linkColorHover;
+      }
+    }
+  }
+}
+
+div.x-wiki-prev-next {
+  text-align: center;
+}
+
+div.x-wiki-info {
+  color: #999;
+  margin: 0 0 10px 0;
+}
+
+div.x-wiki-content {
+  margin: 10px 0;
+}
+
 // comments:
 
 .x-comment-box {
