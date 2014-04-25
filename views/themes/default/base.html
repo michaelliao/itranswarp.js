@@ -1,7 +1,33 @@
 <!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
+
+<!--
+{% macro pagination(page_obj, url) %}
+    {% set pageIndex = page_obj.pageIndex %}
+    {% set range = page_obj.range() %}
+    <div class="x-pagination pagination">
+        <ul>
+        {% if page_obj.pageIndex > 1 %}
+            <li><a href="{{ url }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
+        {% endif %}
+        {% for index in range %}
+            {% if index == pageIndex %}
+                <li class="active"><span>{{ index }}</span></li>
+            {% elif index %}
+                <li><a href="{{ url }}{{ index }}">{{ index }}</a></li>
+            {% else %}
+                <li class="disabled"><span>...</span></li>
+            {% endif %}
+        {% endfor %}
+            {% if page_obj.pageIndex < page_obj.totalPages %}
+                <li><a href="{{ url }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endmacro %}
+
 {% macro makeComments(url, comments) %}
 
-<!-- show sign in -->
 <form class="x-comment-box x-auth-not-signed">
     <div class="x-comment-signin">
         <p>Please sign in to comment:</p>
@@ -10,9 +36,7 @@
     {% endfor %}
     </div>
 </form>
-<!-- // show sign in -->
 
-<!-- make a comment -->
 <form url="{{ url }}" onsubmit="return create_comment(this);" class="x-comment-box x-auth-signed x-comment-form">
     <div class="x-comment-user-img">
         <img src="about:blank" class="x-user-image x-user-image-small" />
@@ -26,13 +50,11 @@
         </div>
         <div class="x-comment-submit">
             <span>请发表有价值的信息，恶意评论将被删除并永久屏蔽账号。</span>
-            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Comment</button>
+            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> 评论</button>
         </div>
     </div>
 </form>
-<!-- // make a comment -->
 
-<!-- comment list -->
 <div class="x-comments-list"></div>
 
 <script>
@@ -54,11 +76,10 @@ $(function() {
 });
 
 </script>
-<!-- // comment list -->
 
 {% endmacro %}
+-->
 
-<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
 <head>
     <meta charset="utf-8" />
     {% block meta %}<!-- block meta  -->{% endblock %}
@@ -199,7 +220,7 @@ $(function() {
         <div class="container">
             <div class="row">
                 <div class="span4">
-                    <h4>关于廖雪峰的官方网站</h4>
+                    <h4>关于{{ __website__.name }}</h4>
                     <p>廖雪峰的官方网站专注于互联网产品和技术，所有文章全部原创，欢迎访问！</p>
                 </div>
                 <div class="span3 offset1">
