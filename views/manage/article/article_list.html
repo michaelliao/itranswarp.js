@@ -96,7 +96,7 @@ $(function() {
             <tr>
                 <th width="20%"></th>
                 <th width="35%">Name</th>
-                <th width="15%">Author / Category</th>
+                <th width="15%">Category / Author</th>
                 <th width="15%">Publish / Created</th>
                 <th width="15%"></th>
             </tr>
@@ -107,12 +107,12 @@ $(function() {
                     <img v-attr="src: '/files/attachments/' + a.cover_id + '/s'" />
                 </td>
                 <td>
-                    <p><a v-text="a.name" v-attr="href: '/article/' + a.id " target="_blank"></a></p>
+                    <p><a v-text="a.name" v-attr="href: '/article/' + a.id" target="_blank"></a></p>
                     <p v-text="a.description"></p>
                     <p><span v-repeat="t: a.tags" style="padding-right:1em;"><i class="icon-tag"></i><span v-text="t"></span></span></p>
                 </td>
                 <td>
-                    <p><i class="icon-list"></i> <span v-text="a.category_name"></span></p>
+                    <p><i class="icon-list"></i> <a v-attr="href: '/category/' + a.category_id" v-text="a.category_name" target="_blank"></a></p>
                     <p><i class="icon-user"></i> <span v-text="a.user_name"></span></p>
                 </td>
                 <td>
