@@ -53,6 +53,21 @@ function getAllArticles(page, callback) {
     doGetArticles(page, countOptions, findOptions, callback);
 }
 
+function getArticlesByCategory(page, categoryId, callback) {
+    var now = Date.now();
+    var countOptions = {
+        select: 'count(*)',
+        where: 'publish_at<? and category_id=?',
+        params: [now, categoryId]
+    };
+    var findOptions = {
+        order: 'publish_at desc',
+        where: 'publish_at<? and category_id=?',
+        params: [now, categoryId]
+    };
+    doGetArticles(page, countOptions, findOptions, callback);
+}
+
 function getArticles(page, callback) {
     var now = Date.now();
     var countOptions = {
@@ -95,6 +110,8 @@ function getArticle(id, tx, callback) {
 var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 exports = module.exports = {
+
+    getArticlesByCategory: getArticlesByCategory,
 
     getAllArticles: getAllArticles,
 
