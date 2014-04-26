@@ -85,7 +85,31 @@ function createCommentByType(ref_type, checkFunction, req, res, next) {
 exports = module.exports = {
 
     'GET /': function(req, res, next) {
-        //
+        var model = {};
+        async.waterfall([
+            function(callback) {
+                categoryApi.getCategories(callback);
+            },
+            function(categories, callback) {
+                model.getCategoryName = function(cid) {
+                    var c;
+                    for (var i=0; i<categories.length; i++) {
+                        c = categories[i];
+                        if (c.id===cid) {
+                            return c.name;
+                        }
+                    }
+                    return '';
+                };
+                articleApi.getRecentArticles(20, callback);
+            }
+        ], function(err, articles) {
+            if (err) {
+                return next(err);
+            }
+            model.articles = articles;
+            return processTheme('index.html', model, req, res, next);
+        });
     },
 
     'GET /category/:id': function(req, res, next) {
@@ -131,24 +155,6 @@ exports = module.exports = {
             model.comments = r.comments;
             return processTheme('article/article.html', model, req, res, next);
         });
-    },
-
-    'POST /article/:id/comment': function(req, res, next) {
-        createCommentByType('article', function(id, callback) {
-            articleApi.getArticle(id, callback);
-        }, req, res, next);
-    },
-
-    'POST /wiki/:id/comment': function(req, res, next) {
-        createCommentByType('wiki', function(id, callback) {
-            wikiApi.getWiki(id, callback);
-        }, req, res, next);
-    },
-
-    'POST /wikipage/:id/comment': function(req, res, next) {
-        createCommentByType('wikipage', function(id, callback) {
-            wikiApi.getWikiPage(id, callback);
-        }, req, res, next);
     },
 
     'GET /page/:alias': function(req, res, next) {
@@ -208,4 +214,22 @@ exports = module.exports = {
             });
         });
     },
+
+    'POST /article/:id/comment': function(req, res, next) {
+        createCommentByType('article', function(id, callback) {
+            articleApi.getArticle(id, callback);
+        }, req, res, next);
+    },
+
+    'POST /wiki/:id/comment': function(req, res, next) {
+        createCommentByType('wiki', function(id, callback) {
+            wikiApi.getWiki(id, callback);
+        }, req, res, next);
+    },
+
+    'POST /wikipage/:id/comment': function(req, res, next) {
+        createCommentByType('wikipage', function(id, callback) {
+            wikiApi.getWikiPage(id, callback);
+        }, req, res, next);
+    }
 };
