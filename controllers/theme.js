@@ -70,8 +70,10 @@ function createCommentByType(ref_type, checkFunction, req, res, next) {
         return next(api.notAllowed('Permission denied.'));
     }
     try {
-        var content = formatComment(utils.getRequiredParam('content', req));
-        console.log('>>>> ' + content);
+        var content = formatComment(utils.getRequiredParam('content', req)).trim();
+        if ( ! content) {
+            return next(api.invalidParam('content', 'Content cannot be empty.'));
+        }
     }
     catch (e) {
         return next(e);

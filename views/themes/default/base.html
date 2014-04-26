@@ -63,7 +63,7 @@ $(function() {
     var $list = $('div.x-comments-list');
     {% for c in comments %}
     $list.append(addComment({
-        'id': '{{ c._id }}',
+        'id': '{{ c.id }}',
         'user_name': '{{ c.user_name }}',
         'user_image_url': '{{ c.user_image_url }}',
         'created_at': {{ c.created_at }},
