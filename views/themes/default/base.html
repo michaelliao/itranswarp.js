@@ -70,7 +70,7 @@ $(function() {
         'content': {{ c.content|json|safe }}
     }));
     {% endfor %}
-    {% if __user__.role===0 %}
+    {% if __user__ and __user__.role===0 %}
     $('a.x-delete-comment').css('display', '');
     {% endif %}
 });

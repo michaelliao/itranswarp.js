@@ -117,10 +117,10 @@ function processAuthentication(provider, authentication, callback) {
             var user_id = next_id();
             var user = {
                 id: user_id,
-                email: user_id + '@itranswarp.org',
+                email: user_id + '@' + provider,
                 name: authentication.name,
                 passwd: '',
-                image_url: '',
+                image_url: authentication.image_url || '/static/img/user.png'
             };
             var authUser = {
                 user_id: user_id,

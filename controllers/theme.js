@@ -62,7 +62,7 @@ function processTheme(view, model, req, res, next) {
 }
 
 function createCommentByType(ref_type, checkFunction, req, res, next) {
-    if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+    if (utils.isForbidden(req, constants.ROLE_GUEST)) {
         return next(api.notAllowed('Permission denied.'));
     }
     try {
