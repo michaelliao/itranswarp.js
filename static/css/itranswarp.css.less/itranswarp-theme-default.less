@@ -170,6 +170,11 @@ ul.x-tags {
 
   .x-article-cover-large {
     margin: 10px 0px;
+    width: 640px;
+    height: 360px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
   }
 
   .x-article-content {
@@ -180,9 +185,12 @@ ul.x-tags {
     width: 120px;
     float: left;
     a {
-      img {
-        width: 200px;
-      }
+      display: block;
+      width: 160px;
+      height: 90px;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
       &:hover {
         .opacity(80);
       }
@@ -190,7 +198,7 @@ ul.x-tags {
   }
 
   .x-article-right {
-    margin-left: 140px;
+    margin-left: 180px;
 
     .x-article-info {
       color: #999;
