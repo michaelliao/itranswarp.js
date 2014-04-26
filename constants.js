@@ -6,7 +6,7 @@ exports = module.exports = {
     ROLE_EDITOR:      10,
     ROLE_CONTRIBUTOR: 100,
     ROLE_SUBSCRIBER:  10000,
-    ROLE_GUEST:       90000000,
+    ROLE_GUEST:       100000000,
 
     // END:
     END: 'ended.'
