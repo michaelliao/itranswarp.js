@@ -204,14 +204,11 @@ function replyComment(a) {
     $textarea.get(0).setSelectionRange(u.length + 1, u.length + 1);
 }
 
-function md2html(s) {
+function comment2html(s) {
     var ss = s.split('\n');
     var L = [];
     $.each(ss, function(index, value) {
-        var l = $.trim(value);
-        if (l.length>0) {
-            L.push('<p>' + $('<p/>').text(l).html() + '</p>');
-        }
+        L.push('<p>' + value + '</p>');
     });
     return L.join('');
 }
@@ -221,7 +218,7 @@ function addComment(c) {
     $dom.find('span.x-comment-username').text(c.user_name);
     $dom.find('span.x-comment-date').text(toSmartDate(c.created_at));
     $dom.find('div.x-comment-img img').attr('src', c.user_image_url);
-    $dom.find('div.x-comment-content').html(md2html(c.content));
+    $dom.find('div.x-comment-content').html(comment2html(c.content));
     $dom.attr('id', 'comment-' + c.id);
     return $dom;
 }

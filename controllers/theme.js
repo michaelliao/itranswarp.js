@@ -61,12 +61,17 @@ function processTheme(view, model, req, res, next) {
     });
 }
 
+function formatComment(s) {
+    return s.replace(/\n+/g, '\n').replace(/\<\/?script\>/ig, '');
+}
+
 function createCommentByType(ref_type, checkFunction, req, res, next) {
     if (utils.isForbidden(req, constants.ROLE_GUEST)) {
         return next(api.notAllowed('Permission denied.'));
     }
     try {
-        var content = utils.getRequiredParam('content', req);
+        var content = formatComment(utils.getRequiredParam('content', req));
+        console.log('>>>> ' + content);
     }
     catch (e) {
         return next(e);
