@@ -72,16 +72,16 @@ Vue.component('vc-pagination', {
         <div class="navbar navbar-fixed-top navbar-blue">
             <div class="navbar-inner">
                 <div class="container">
-                    <a class="brand" href="/" target="_blank">Home</a>
+                    <a class="brand" href="/" target="_blank">{{ _('Home') }}</a>
                     <ul id="top-nav" class="nav">
-                        <li><a href="/manage/comment/">Comments</a></li>
-                        <li><a href="/manage/article/">Articles</a></li>
-                        <li><a href="/manage/page/">Pages</a></li>
-                        <li><a href="/manage/wiki/">Wikis</a></li>
-                        <li><a href="/manage/attachment/">Attachments</a></li>
-                        <li><a href="/manage/user/">Users</a></li>
-                        <li><a href="/manage/navigation/">Navigations</a></li>
-                        <li><a href="/manage/setting/">Settings</a></li>
+                        <li><a href="/manage/comment/">{{ _('Comments') }}</a></li>
+                        <li><a href="/manage/article/">{{ _('Articles') }}</a></li>
+                        <li><a href="/manage/page/">{{ _('Pages') }}</a></li>
+                        <li><a href="/manage/wiki/">{{ _('Wikis') }}</a></li>
+                        <li><a href="/manage/attachment/">{{ _('Attachments') }}</a></li>
+                        <li><a href="/manage/user/">{{ _('Users') }}</a></li>
+                        <li><a href="/manage/navigation/">{{ _('Navigations') }}</a></li>
+                        <li><a href="/manage/setting/">{{ _('Settings') }}</a></li>
                     </ul>
                     <ul class="nav pull-right">
                         <li class="dropdown">
@@ -89,7 +89,7 @@ Vue.component('vc-pagination', {
                             <ul class="dropdown-menu">
                                 <li><a href="/manage/users/profile">My Profile</a></li>
                                 <li class="divider"></li>
-                                <li><a href="/auth/signout?redirect=/">Sign Out</a></li>
+                                <li><a href="/auth/signout?redirect=/">{{ _('Sign out') }}</a></li>
                             </ul>
                         </li>
                     </ul>
