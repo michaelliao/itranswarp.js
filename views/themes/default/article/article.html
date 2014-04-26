@@ -19,7 +19,7 @@ var model = {
         id: '{{ article.id }}',
         category_id: '{{ article.category_id }}',
         cover_id: '{{ article.cover_id }}',
-        cover_url: 'http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0',
+        cover_url: 'http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/l',
         name: {{ article.name|json|safe }},
         description: {{ article.description|json|safe }},
         user_id: '{{ article.user_id }}',
@@ -36,11 +36,9 @@ var model = {
         <h4>{{ article.name|e }}</h4>
     </div>
     <div class="x-article-info">
-        <a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> • <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> • <span class="x-smartdate" date="{{ article.publish_time }}">...</span> • {{ article.reads }}次阅读
+        <a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> • <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> • <span class="x-smartdate" date="{{ article.publish_at }}">...</span> • {{ article.reads }}次阅读
     </div>
-    <div class="x-article-cover-large">
-        <img src="/files/attachments/{{ article.cover_id }}/0" />
-    </div>
+    <div class="x-article-cover-large" style="background-image: url(/files/attachments/{{ article.cover_id }}/l)"></div>
     <div class="x-article-content">
         {{ article.html_content|safe }}
     </div>

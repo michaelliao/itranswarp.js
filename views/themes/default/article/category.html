@@ -14,7 +14,7 @@
             <h4><a href="/article/{{ a.id }}">{{ a.name }}</a></h4>
         </div>
         <div class="x-article-cover-small">
-            <a href="/article/{{ a.id }}"><img src="/files/attachments/{{ a.cover_id }}/s" /></a>
+            <a href="/article/{{ a.id }}" style="background-image:url(/files/attachments/{{ a.cover_id }}/s)"></a>
         </div>
         <div class="x-article-right">
             <div class="x-article-info">
@@ -22,7 +22,7 @@
             </div>
             <div class="x-article-description">
                 <p>{{ a.description }}</p>
-                <p><a href="/article/{{ a.id }}" class="x-readmore">继续阅读 »</a></p>
+                <p><a href="/article/{{ a.id }}" class="x-readmore">{{ _('Read more') }} »</a></p>
             </div>
         </div>
     </div>
