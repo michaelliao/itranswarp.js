@@ -41,16 +41,54 @@ function getI18NTranslators(path) {
             // load successfully:
             var locale = jsonFile.match(RE_I18N_FILENAME)[1];
             console.log('Locale ' + locale + ' loaded.');
-            locales[locale] = d;
+            locales[locale.toLowerCase()] = d;
         }
     });
+    console.log(JSON.stringify(locales));
     return locales;
+}
+
+function getTranslator(header, translators) {
+    // header like: zh-CN,zh;q=0.8,en;q=0.6,en-US;q=0.4,ru;q=0.2,zh-TW;q=0.2
+    header = header.toLowerCase().replace(/\-/g, '_');
+    var
+        i, j, s, n,
+        ss = header.split(',');
+    for (i = 0; i < ss.length; i ++) {
+        s = ss[i].trim();
+        n = s.indexOf(';');
+        if (n!==(-1)) {
+            s = s.substring(0, n).trim();
+        }
+        if (s in translators)
+        {
+            return translators[s];
+        }
+    }
+    return null;
+}
+
+function noTranslate(s)
+{
+    return s;
+}
+
+function createI18N(header, translators)
+{
+    var translator = getTranslator(header, translators);
+    if (translator===null) {
+        return noTranslate;
+    }
+    return function(s) {
+        console.log(s + ' ==> ' + translator[s]);
+        return translator[s] || s;
+    };
 }
 
 exports = module.exports = {
 
+    createI18N: createI18N,
+
     getI18NTranslators: getI18NTranslators,
 
 };
-
-getI18NTranslators('./views/manage/i18n');

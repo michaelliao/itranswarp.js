@@ -11,6 +11,7 @@ var
     config = require('./config'),
     api = require('./api'),
     db = require('./db'),
+    i18n = require('./i18n'),
     constants = require('./constants'),
     utils = require('./controllers/_utils'),
     api_console = require('./api_console');
@@ -67,6 +68,9 @@ app.use('/api/', function(req, res, next) {
 // auto set current user with each request:
 app.use(utils.userIdentityParser);
 
+// load i18n for management:
+var i18nForManagement = i18n.getI18NTranslators('./views/manage/i18n');
+
 // check user for manage and theme:
 app.use(function(req, res, next) {
     var prefix = req.path.substring(0, 8);
@@ -75,6 +79,7 @@ app.use(function(req, res, next) {
             res.manage = function(view, model) {
                 var m = model || {};
                 m.__user__ = req.user;
+                m._ = i18n.createI18N(req.get('Accept-Language'), i18nForManagement);
                 return res.render(view, m);
             };
             return next();
