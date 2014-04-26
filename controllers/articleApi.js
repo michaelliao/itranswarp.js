@@ -22,6 +22,22 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
+function getRecentArticles(max, callback) {
+    var now = Date.now();
+    Article.findAll({
+        where: 'publish_at<?',
+        order: 'publish_at desc',
+        params: [now],
+        offset: 0,
+        limit: max
+    }, function(err, entities) {
+        if (err) {
+            return callback(err);
+        }
+        return callback(null, entities);
+    });
+}
+
 function doGetArticles(page, countOptions, findOptions, callback) {
     Article.findNumber(countOptions, function(err, num) {
         if (err) {
@@ -110,6 +126,8 @@ function getArticle(id, tx, callback) {
 var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 exports = module.exports = {
+
+    getRecentArticles: getRecentArticles,
 
     getArticlesByCategory: getArticlesByCategory,
 
