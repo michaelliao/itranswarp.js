@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/" />
+{% endblock %}
+
+{% block title %}Home{% endblock %}
+
+{% block main %}
+    <div><h4>Recent Articles</h4></div>
+{% for a in articles %}
+    <div class="x-article">
+        <div class="x-article-title">
+            <h4><a href="/article/{{ a.id }}">{{ a.name }}</a></h4>
+        </div>
+        <div class="x-article-cover-small">
+            <a href="/article/{{ a.id }}" style="background-image:url(/files/attachments/{{ a.cover_id }}/s)"></a>
+        </div>
+        <div class="x-article-right">
+            <div class="x-article-info">
+                <a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> • <a href="/category/{{ a.category_id }}">{{ getCategoryName(a.category_id) }}</a> • <span class="x-smartdate" date="{{ a.publish_at }}">...</span> • {{ a.reads }}次阅读
+            </div>
+            <div class="x-article-summary">
+                <p>{{ a.description }}</p>
+                <p><a href="/article/{{ a.id }}" class="x-readmore">{{ _('Read more') }} »</a></p>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+    </div>
+{% endblock %}
