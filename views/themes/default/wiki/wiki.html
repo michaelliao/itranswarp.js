@@ -88,7 +88,7 @@ $(function() {
                     <h4>{% if page %}{{ page.name }}{% else %}{{ wiki.name }}{% endif %}</h4>
                     <div class="x-wiki-info"><span>{% if page %}{{ page.reads }}{% else %}{{ wiki.reads }}{% endif %}次阅读</span></div>
                     <hr style="border-top-color:#ccc" />
-                    <div class="x-wiki-content">{{ html_content|safe }}</div>
+                    <div class="x-wiki-content x-content">{{ html_content|safe }}</div>
 
                     <hr style="border-top-color:#ccc" />
                     <div class="x-wiki-prev-next">&nbsp;</div>
