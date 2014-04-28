@@ -152,7 +152,7 @@ exports = module.exports = {
             },
             function(category, callback) {
                 model.category = category;
-                commentApi.getComments(model.article.id, callback);
+                commentApi.getCommentsByRef(model.article.id, callback);
             }
         ], function(err, r) {
             if (err) {
@@ -160,6 +160,7 @@ exports = module.exports = {
             }
             model.article.html_content = utils.md2html(model.article.content);
             model.comments = r.comments;
+            model.nextCommentId = r.nextCommentId;
             return processTheme('article/article.html', model, req, res, next);
         });
     },

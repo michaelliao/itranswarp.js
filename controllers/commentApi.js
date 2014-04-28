@@ -42,13 +42,47 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
     });
 }
 
+function getCommentsByRef(ref_id, from_id, callback) {
+    var query, limit = 20;
+    if (arguments.length===2) {
+        callback = from_id;
+        from_id = null;
+    }
+    if (from_id) {
+        query = {
+            where: 'ref_id=? and id<=?',
+            params: [ref_id, from_id]
+        };
+    }
+    else {
+        query = {
+            where: 'ref_id=?',
+            params: [ref_id]
+        };
+    }
+    query.limit = limit + 1;
+    query.order = 'id desc';
+    Comment.findAll(query, function(err, comments) {
+        if (err) {
+            return callback(err);
+        }
+        var lastId = null;
+        if (comments.length > limit) {
+            lastId = comments.pop().id;
+        }
+        callback(null, {
+            comments: comments,
+            nextCommentId: lastId
+        });
+    });
+}
+
 function getComments(ref_id, page, callback) {
     if (arguments.length===2) {
         callback = page;
         page = ref_id;
         ref_id = undefined;
     }
-    console.log('PAGE -----> ' + JSON.stringify(page));
     var query = {
         select: 'count(id)'
     };
@@ -130,6 +164,8 @@ exports = module.exports = {
     deleteComment: deleteComment,
 
     getComments: getComments,
+
+    getCommentsByRef: getCommentsByRef,
 
     'POST /api/comments/:id/delete': function(req, res, next) {
         /**
