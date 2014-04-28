@@ -21,7 +21,8 @@ config_override.*
 output
 
 # generated bootstrap.css:
-bootstrap.css
+itranswarp-manage.css
+itranswarp-theme-default.css
 
 ######################
 # OS generated files #
