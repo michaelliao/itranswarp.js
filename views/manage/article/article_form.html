@@ -40,7 +40,6 @@ function checkVm(vm) {
     }
     return true;
 }
-
 $(function() {
     var vmArticle = null;
     var helper = null;
@@ -49,7 +48,7 @@ $(function() {
         el: '#formArticle',
         data: {
             categories: categories,
-            category_id: '{{ article.category_id }}',
+            category_id: '',
             id: '{{ article.id }}',
             cover_id: '{{ article.cover_id }}',
             name: {{ article.name|json|safe }},
@@ -77,7 +76,7 @@ $(function() {
         vmArticle.publish_at_str = parseInt(vmArticle.publish_at).toDateTime();
     }
     if (! vmArticle.category_id && vmArticle.categories.length > 0) {
-        vmArticle.category_id = vmArticle.categories[0].id;
+        vmArticle.category_id = '{{ article.category_id }}' || vmArticle.categories[0].id;
     }
 
     helper = createAjaxUploadUtils(vmArticle);
