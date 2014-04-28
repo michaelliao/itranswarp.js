@@ -199,66 +199,25 @@ $(function() {
             </div>
         </div>
 {% endblock %}
-        <div class="row">
-            <div class="span12">
-                <!-- google ad -->
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- lxf-auto-width -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:960px;height:90px"
-     data-ad-client="ca-pub-6727358730461554"
-     data-ad-slot="7140997512"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-                <!-- // google ad -->
-            </div>
-        </div>
     </div>
 
     <div id="footer">
-        <div class="container">
-            <div class="row">
-                <div class="span4">
-                    <h4>关于{{ __website__.name }}</h4>
-                    <p>廖雪峰的官方网站专注于互联网产品和技术，所有文章全部原创，欢迎访问！</p>
-                </div>
-                <div class="span3 offset1">
-                    <h4>保持联系</h4>
-                    <div class="x-contact">
-                        <a href="http://weibo.com/liaoxuefeng"><i class="x-icon-weibo"></i> 欢迎关注官方微博<i class="x-r-icon"></i></a>
-                    </div>
-                    <div class="x-contact">
-                        <a href="/contact/weibo"><i class="x-icon-weixin"></i> 欢迎关注微信公众号<i class="x-r-icon"></i></a>
-                    </div>
-                    <div class="x-contact">
-                        <a href="/contact/weibo"><i class="x-icon-rss"></i> 欢迎订阅RSS<i class="x-r-icon"></i></a>
-                    </div>
-                    <div class="x-contact">
-                        <a href="/contact/weibo"><i class="x-icon-mail"></i> 欢迎给我来信<i class="x-r-icon"></i></a>
-                    </div>
-                </div>
-                <div class="span3 offset1">
-                    <h4>合作伙伴</h4>
-                    <p>小伙伴A</p>
-                    <p>小伙伴B</p>
-                    <p>小伙伴C</p>
-                    <p>小伙伴D</p>
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="span12">
-                    <div class="x-footer-copy text-align-center">
-                        <a href="/">廖雪峰的官方网站</a>&copy;2013 - <a href="#">联系方式</a> - <a href="#">版权声明</a> - <a href="javascript:void(0)" onclick="location.assign(decodeURIComponent('%6Dail'+'to%3Aask%78ue%'+'66eng%40%67mai%6C.com%3Fsubject%3D%25E6%2584%258F%25E8%25A7%2581%25E5%258F%258D%25E9%25A6%2588%25EF%25BC%259Axxxxxx%26body%3D%25E8%25AF%25B7%25E5%2586%2599%25E4%25B8%258B%25E6%2582%25A8%25E7%259A%2584%25E5%25AE%259D%25E8%25B4%25B5%25E6%2584%258F%25E8%25A7%2581%25E6%2588%2596%25E5%25BB%25BA%25E8%25AE%25AE...'))">意见反馈</a> - 京ICP备13005808号
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+{% if __website__.custom_footer %}
 <!-- BEGIN custom_footer -->
 {{ __website__.custom_footer|safe }}
 <!-- END custom_footer -->
+{% else %}
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                    <hr/>
+                    <div style="text-align:center;">
+                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Contact</a> - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endif %}
+    </div>
 </body>
 </html>
