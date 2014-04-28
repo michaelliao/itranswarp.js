@@ -18,7 +18,7 @@ var website = {
     name: 'My Website',
     description: 'Powered by iTranswarp.js',
     custom_header: '<!-- custom header -->',
-    custom_footer: '<!-- custom footer -->',
+    custom_footer: '',
     xmlns: '',
 };
 
