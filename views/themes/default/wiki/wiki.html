@@ -116,12 +116,12 @@ $(function() {
                     <h4>评论……</h4>
 
 {% if page %}
-{% set comment_url = '/wikipage/' + page.id + '/comment/' %}
+{% set comment_url = '/wikipage/' + page.id + '/comment' %}
 {% else %}
-{% set comment_url = '/wiki/' + wiki.id + '/comment/' %}
+{% set comment_url = '/wiki/' + wiki.id + '/comment' %}
 {% endif %}
 
-{{ make_comments(comment_url, comments) }}
+{{ makeComments(comment_url, comments) }}
 
                     <!-- // block main -->
                 </div>
