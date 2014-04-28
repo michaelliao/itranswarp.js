@@ -30,7 +30,7 @@
 
 <form class="x-comment-box x-auth-not-signed">
     <div class="x-comment-signin">
-        <p>Please sign in to comment:</p>
+        <p>请登录后发表评论：</p>
     {% for s in __signins__ %}
         <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
     {% endfor %}
@@ -131,7 +131,7 @@ $(function() {
                 <div class="span6">
                     <div class="x-head-right pull-right" style="margin-top:20px;">
                         <!-- if sign in -->
-                        <p class="x-auth-signed"><img src="about:blank" class="x-user-image x-user-image-small" style="margin-right:12px;" />Welcome, <span class="x-user-name"><script> document.write(g_user_name); </script></span> | <a href="/auth/signout">Sign out</a></p>
+                        <p class="x-auth-signed"><img src="about:blank" class="x-user-image x-user-image-small" style="margin-right:12px;" />欢迎您，<span class="x-user-name"><script> document.write(g_user_name); </script></span> | <a href="/auth/signout">登出</a></p>
                         <!-- else -->
                     {% for s in __signins__ %}
                         <p class="x-auth-not-signed"><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>

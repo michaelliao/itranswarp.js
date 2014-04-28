@@ -208,7 +208,7 @@ function comment2html(s) {
     var ss = s.split('\n');
     var L = [];
     $.each(ss, function(index, value) {
-        L.push('<p>' + value + '</p>');
+        L.push('<p>' + value.replace(/  /g, '&nbsp; ') + '</p>');
     });
     return L.join('');
 }
