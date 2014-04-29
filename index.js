@@ -167,6 +167,11 @@ app.get('/error', function(req, res, next) {
     next(new Error('test error.'));
 });
 
+app.get('/_status', function(req, res, next) {
+    var mode = productionMode ? 'Production' : 'Development';
+    return res.send('Mode: ' + mode);
+});
+
 app.listen(3000);
 console.log('Start app on port 3000...');
 
