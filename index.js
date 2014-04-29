@@ -154,12 +154,20 @@ _.each(controllers, function(ctrl, fname) {
         if (route.indexOf('/api/')==0) {
             var docs = fn.toString().match(/.*\/\*\*?([\d\D]*)\*?\*\/.*/);
             if (docs) {
-                api_console.process_api_doc(fname, verb, route, docs[1]);
+                api_console.processApiDoc(fname, verb, route, docs[1]);
             }
             else {
                 console.log('WARNING: no api docs found for api: ' + route);
             }
         }
+    });
+});
+
+var apiGroups = api_console.buildApiConsole();
+app.get('/manage/api/', function(req, res, next) {
+    return res.manage('manage/api/api_console.html', {
+        apis: apiGroups,
+        data: '\'' + encodeURIComponent(JSON.stringify(apiGroups)).replace(/\'/g, '\\\'') + '\''
     });
 });
 

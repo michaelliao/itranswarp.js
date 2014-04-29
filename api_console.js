@@ -4,17 +4,27 @@ var _ = require('lodash');
 
 var apidocs = [];
 
-function build_api_console() {
-    //
+function buildApiConsole() {
+    console.log(JSON.stringify(apidocs, null, '  '));
+    var groups = {};
+    var n = 0;
+    _.each(apidocs, function(doc) {
+        doc.id = 'api-' + n; // unique API ID
+        var gs = groups[doc.group] || [];
+        gs.push(doc);
+        groups[doc.group] = gs;
+    });
+    return groups;
 }
 
-function process_api_doc(group, method, url, doclines) {
+function processApiDoc(group, method, url, doclines) {
     var ss = _.map(doclines.split('\n'), function(value) {
         return value.match(/^\s*\*?(.*)$/)[1].trim();
     });
     var doc = {
         group: group,
-        description: '',
+        name: '(no name)',
+        description: '(no description)',
         method: method,
         url: url,
         params: [],
@@ -26,10 +36,13 @@ function process_api_doc(group, method, url, doclines) {
     };
     var continue_description = true;
     _.each(ss, function(value) {
-        if (value.indexOf('@')==0) {
+        if (value.indexOf('@')===0) {
             continue_description = false;
         }
-        if (value.indexOf('@param')==0) {
+        if (value.indexOf('@name')===0) {
+            doc.name = value.substring(5).trim();
+        }
+        else if (value.indexOf('@param')===0) {
             var m = value.match(/^\@param\s+\{([\w\,\s]+)\}\s*(\:?\w+)\s*\-\s*(.*)$/);
             if (m) {
                 var ms = m[1].replace(/\s/g,'').split(',');
@@ -45,7 +58,7 @@ function process_api_doc(group, method, url, doclines) {
                 console.log('WARNING: invalid doc line: ' + value);
             }
         }
-        else if (value.indexOf('@return')==0) {
+        else if (value.indexOf('@return')===0) {
             // @return {object} User object.
             var m = value.match(/^\@return\s+\{(\w+)\}\s*(.*)$/);
             if (m) {
@@ -56,7 +69,7 @@ function process_api_doc(group, method, url, doclines) {
                 console.log('WARNING: invalid doc line: ' + value);
             }
         }
-        else if (value.indexOf('@error')==0) {
+        else if (value.indexOf('@error')===0) {
             // TODO:
         }
         else {
@@ -70,6 +83,9 @@ function process_api_doc(group, method, url, doclines) {
 }
 
 exports = module.exports = {
-    process_api_doc: process_api_doc,
-    build_api_console: build_api_console
+
+    buildApiConsole: buildApiConsole,
+
+    processApiDoc: processApiDoc
+
 }

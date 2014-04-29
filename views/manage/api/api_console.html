@@ -1,0 +1,58 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+API
+{% endblock %}
+
+{% block head %}
+<script>
+var apidocs = JSON.parse(decodeURIComponent({{ data|safe }}));
+var vm = null;
+$(function() {
+    vm = new Vue({
+        el: '#elApis',
+        data: {
+            apis: apidocs
+        },
+        methods: {
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="elApis">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">All APIs</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="row">
+        <div class="span3">
+            <div class="well" style="padding: 8px 0; margin: 0 20px 20px 0;">
+                <ul class="nav nav-list">
+                {% for g, docs in apis %}
+                    <li class="nav-header">{{ g }}</li>
+                    {% for doc in docs %}
+                    <li><a href="#">{{ doc.name }}</a></li>
+                    {% endfor %}
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="span9">
+            <div class="alert alert-error hide"></div>
+            <div>
+                ABC
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% endblock%}

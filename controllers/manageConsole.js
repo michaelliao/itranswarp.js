@@ -463,5 +463,5 @@ exports = module.exports = {
             }
             return res.send({ result: true });
         });
-    },
-}
+    }
+};

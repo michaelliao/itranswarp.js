@@ -819,6 +819,7 @@ exports = module.exports = {
         /**
          * Delete a wiki by its id.
          * 
+         * @name delete wiki
          * @param {string} :id - The id of the wiki.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
