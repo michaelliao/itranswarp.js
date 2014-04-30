@@ -9,11 +9,13 @@ function buildApiConsole() {
     var groups = {};
     var n = 0;
     _.each(apidocs, function(doc) {
+        n ++;
         doc.id = 'api-' + n; // unique API ID
         var gs = groups[doc.group] || [];
         gs.push(doc);
         groups[doc.group] = gs;
     });
+    console.log(JSON.stringify(groups, null, '  '));
     return groups;
 }
 
@@ -24,7 +26,7 @@ function processApiDoc(group, method, url, doclines) {
     var doc = {
         group: group,
         name: '(no name)',
-        description: '(no description)',
+        description: '',
         method: method,
         url: url,
         params: [],
@@ -43,14 +45,14 @@ function processApiDoc(group, method, url, doclines) {
             doc.name = value.substring(5).trim();
         }
         else if (value.indexOf('@param')===0) {
-            var m = value.match(/^\@param\s+\{([\w\,\s]+)\}\s*(\:?\w+)\s*\-\s*(.*)$/);
+            var m = value.match(/^\@param\s+\{(\w+)\}\s*(\[?)(\w+)\=?(\w*)(\]?)\s*\:?\s*(.*)$/);
             if (m) {
-                var ms = m[1].replace(/\s/g,'').split(',');
                 var param = {
-                    name: m[2],
-                    type: ms[1],
-                    optional: _.contains(ms, 'optional'),
-                    description: m[3].trim()
+                    type: m[1].toLowerCase(),
+                    name: m[3],
+                    defaultValue: m[4],
+                    optional: m[2]==='[' && m[5]===']',
+                    description: m[6]
                 };
                 doc.params.push(param);
             }
@@ -70,7 +72,17 @@ function processApiDoc(group, method, url, doclines) {
             }
         }
         else if (value.indexOf('@error')===0) {
-            // TODO:
+            var m = value.match(/^\@error\s+\{(\w+\:?\w*)\}\s*(.*)$/);
+            if (m) {
+                var err = {
+                    error: m[1],
+                    description: m[2]
+                };
+                doc.errors.push(err);
+            }
+            else {
+                console.log('WARNING: invalid doc line: ' + value);
+            }
         }
         else {
             // append description:

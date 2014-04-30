@@ -5,28 +5,168 @@ API
 {% endblock %}
 
 {% block head %}
+<style>
+input.x-api-param-error:focus {
+    border-color: #953b39;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+}
+input.x-api-param-error {
+    border-color: #b94a48;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+</style>
 <script>
 var apidocs = JSON.parse(decodeURIComponent({{ data|safe }}));
-var vm = null;
-$(function() {
-    vm = new Vue({
-        el: '#elApis',
-        data: {
-            apis: apidocs
-        },
-        methods: {
+
+function objectKeys(obj, sortByLength) {
+    var arr = [];
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            arr.push(key);
+        }
+    }
+    if (sortByLength) {
+        arr.sort(function(r1, r2) {
+            if (r1.length===r2.length) {
+                return r1 < r2 ? -1 : 1;
+            }
+            return r1.length < r2.length ? -1 : 1;
+        });
+    }
+    else {
+        arr.sort();
+    }
+    return arr;
+}
+
+function toggleParameter(checkbox) {
+    var $input = $(checkbox).closest('tr').find('input[type=text]');
+    if (checkbox.checked) {
+        $input.removeAttr('disabled');
+    }
+    else {
+        $input.attr('disabled', 'disabled');
+    }
+}
+
+function getApiParams(apiId) {
+    var $trs = $('#' + apiId + ' table.x-api-params tr.x-api-param');
+    var params = {};
+    var hasError = false;
+    $trs.each(function() {
+        var $tr = $(this);
+        var name = $tr.find('.x-api-param-name').text();
+        var $input = $tr.find('.x-api-param-value');
+        $input.removeClass('x-api-param-error');
+        if ($input.attr('disabled')!=='disabled') {
+            if ($input.attr('optional')==='false' && $input.val()==='') {
+                $input.addClass('x-api-param-error');
+                hasError = true;
+            }
+            params[name] = $input.val();
         }
     });
-});
+    return hasError ? null : params;
+}
+
+function buildRequests(method, url, data) {
+    var arr = [method + ' ' + url + ' HTTP/1.1'];
+    arr.push('Host: ' + location.host);
+    arr.push('User-Agent: ' + navigator.userAgent);
+    arr.push('Referer: ' + document.referrer);
+    arr.push('Cookie: ' + document.cookie);
+    if (method==='POST') {
+        arr.push('');
+        var params = [];
+        $.each(data, function(key, value) {
+            params.push(key + '=' + encodeURIComponent(value));
+        });
+        arr.push(params.join('&'));
+    }
+    return {
+        http: arr.join('\r\n')
+    };
+}
+
+function sendApiRequest(apiId, method, url) {
+    try {
+        doSendApiRequest(apiId, method, url);
+    }
+    catch (e) {
+        console.log(e);
+    }
+    return false;
+}
+
+function doSendApiRequest(apiId, method, url) {
+    var setResult = function(err, r) {
+        $('#' + apiId + ' pre.x-api-response').text(err ? err : JSON.stringify(r, null, '  '));
+    };
+    var data = getApiParams(apiId);
+    if (data===null) {
+        // has error:
+        return;
+    }
+    // replace :param in url:
+    var removeKeys = [];
+    var keys = objectKeys(data, true);
+    for (var i=0; i<keys.length; i++) {
+        var key = keys[i];
+        if (url.indexOf('/:' + key)>=0) {
+            url = url.replace('/:' + key, '/' + data[key]);
+            removeKeys.push(key);
+        }
+    }
+    for (var i=0; i<removeKeys.length; i++) {
+        delete data[removeKeys[i]];
+    }
+    // append url param if GET:
+    if (method==='GET') {
+        if (objectKeys(data).length > 0) {
+            url = url + '?';
+            var params = [];
+            $.each(data, function(key, value) {
+                params.push(key + '=' + encodeURIComponent(value));
+            });
+            url = url + params.join('&');
+        }
+        data = {};
+    }
+    // display request:
+    var requests = buildRequests(method, url, data);
+    $('#' + apiId + ' pre.x-api-request').text(requests.http);
+    var $btn = $('#' + apiId + ' button[type=submit]');
+    $btn.text('Sending...').attr('disabled', 'disabled');
+    $.ajax({
+        type: method,
+        url: url,
+        data: data,
+        dataType: 'json'
+    }).done(function(r) {
+        setResult(null, r);
+    }).fail(function(jqXHR, textStatus) {
+        setResult('ERROR: HTTP ' + jqXHR.status);
+    }).complete(function() {
+        $btn.removeAttr('disabled').text('Submit');
+    });
+}
+
+function showApi(apiId) {
+    $('div.x-api').hide();
+    $('#' + apiId).show();
+}
+
 </script>
 {% endblock %}
 
 {% block main %}
-<div id="elApis">
-
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All APIs</li>
+        <li class="active">API Console</li>
     </ul>
 </div>
 
@@ -38,7 +178,7 @@ $(function() {
                 {% for g, docs in apis %}
                     <li class="nav-header">{{ g }}</li>
                     {% for doc in docs %}
-                    <li><a href="#">{{ doc.name }}</a></li>
+                    <li><a href="javascript:showApi('{{ doc.id }}')">{{ doc.name }}</a></li>
                     {% endfor %}
                 {% endfor %}
                 </ul>
@@ -46,33 +186,93 @@ $(function() {
         </div>
         <div class="span9">
             <div class="alert alert-error hide"></div>
-            <div>
-                <form class="form-horizontal">
-                    <div class="control-group">
-                        <label class="control-label" for="inputEmail">Email</label>
-                        <div class="controls">
-                            <input type="text" id="inputEmail" placeholder="Email">
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label" for="inputPassword">Password</label>
-                        <div class="controls">
-                            <input type="password" id="inputPassword" placeholder="Password">
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox"> Remember me
-                            </label>
-                        </div>
-                    </div>
+        {% for g, docs in apis %}
+        {% for doc in docs %}
+            <div id="{{ doc.id }}" class="x-api" style="display:none">
+                <form class="form-horizontal" onsubmit="return sendApiRequest('{{ doc.id }}', '{{ doc.method }}', '{{ doc.url }}');">
+                    <legend>{{ g }} / {{ doc.name }}</legend>
+                    <p>{{ doc.description }}</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:25%">HTTP Header</th>
+                                <th style="width:75%">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Method:</td>
+                                <td>{{ doc.method }}</td>
+                            </tr>
+                            <tr>
+                                <td>URL:</td>
+                                <td>{{ doc.url }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table x-api-params">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">&nbsp;</th>
+                                <th style="width:12%">Type</th>
+                                <th style="width:15%">Param</th>
+                                <th style="width:30%">Value</th>
+                                <th style="width:auto">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for param in doc.params %}
+                            <tr class="x-api-param">
+                                <td>{% if param.optional %}<input type="checkbox" onclick="toggleParameter(this)" />{% endif %}</td>
+                                <td>{{ param.type }}</td>
+                                <td class="x-api-param-name">{{ param.name }}</td>
+                                <td><input type="text" optional="{{ param.optional }}" placeholder="{{ param.defaultValue }}" {% if param.optional %} disabled="disabled" {% endif %} value="" class="x-api-param-value" style="width:90%"></td>
+                                <td>{{ param.description }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Result:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ doc.result.type }}: {{ doc.result.description }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:25%">Error</th>
+                                <th style="width:75%">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for err in doc.errors %}
+                            <tr>
+                                <td>{{ err.error }}</td>
+                                <td>{{ err.description }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <fieldset>
+                        <p><button type="submit" class="btn btn-primary">Submit</button></p>
+                        <p>Send:</p>
+                        <p><pre class="x-api-request">&nbsp;</pre></p>
+                        <p>Result:</p>
+                        <p><pre class="x-api-response">&nbsp;</pre></p>
+                    </fieldset>
                 </form>
             </div>
+        {% endfor %}
+        {% endfor %}
         </div>
     </div>
-</div>
-
 </div>
 
 {% endblock%}
