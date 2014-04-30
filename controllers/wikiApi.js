@@ -276,6 +276,14 @@ exports = module.exports = {
     getWikiPageWithContent: getWikiPageWithContent,
 
     'GET /api/wikis/:id': function(req, res, next) {
+        /**
+         * Get wiki by id.
+         * 
+         * @name Get Wiki
+         * @param {string} id: Id of the wiki.
+         * @return {object} Wiki object.
+         * @error {resource:notfound} Wiki was not found by id.
+         */
         getWikiWithContent(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
@@ -285,11 +293,17 @@ exports = module.exports = {
     },
 
     'GET /api/wikis': function(req, res, next) {
+        /**
+         * Get all wikis.
+         * 
+         * @name Get Wikis
+         * @return {object} Wikis object.
+         */
         getWikis(function(err, entities) {
             if (err) {
                 return next(err);
             }
-            return res.send(entities);
+            return res.send({ wikis: entities});
         });
     },
 
@@ -787,7 +801,8 @@ exports = module.exports = {
         /**
          * Delete a wikipage if it has no child wikipage.
          *
-         * @param id {string} - The id of the wikipage.
+         * @param {string} id - The id of the wikipage.
+         * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
         var id = req.params.id;
         getWikiPage(id, function(err, wp) {
@@ -820,8 +835,10 @@ exports = module.exports = {
          * Delete a wiki by its id.
          * 
          * @name delete wiki
-         * @param {string} :id - The id of the wiki.
+         * @param {string} id: The id of the wikipage.
+         * @param {boolean} [force=false]: Force deletion.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         * @error {resource:notfound} If resource not found by id.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
