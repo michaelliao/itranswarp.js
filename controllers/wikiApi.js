@@ -311,7 +311,15 @@ exports = module.exports = {
         /**
          * Create a new wiki.
          * 
+         * @name Create Wiki
+         * @param {string} name: Name of the wiki.
+         * @param {string} description: Description of the wiki.
+         * @param {string} content: Content of the wiki.
+         * @param {string} [tags]: Tags of the wiki, seperated by ','.
+         * @param {file} [file]: File to upload as cover image.
          * @return {object} The created wiki object.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
@@ -394,7 +402,13 @@ exports = module.exports = {
         /**
          * Create a comment on a wiki.
          * 
-         * @return {object} The created comment object.
+         * @name Comment Wiki
+         * @param {string} id: Id of the wiki.
+         * @param {string} [content]: Content of the comment.
+         * @return {object} The comment object.
+         * @error {resource:notfound} Wiki was not found by id.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
@@ -420,9 +434,16 @@ exports = module.exports = {
 
     'POST /api/wikis/:id/wikipages': function(req, res, next) {
         /**
-         * Create a wiki page.
+         * Create a new wiki page.
          * 
+         * @name Create WikiPage
+         * @param {string} id: Id of the wiki.
+         * @param {string} name: Name of the wiki page.
+         * @param {string} parent_id: Parent id of the wiki page, specify 'ROOT' for top level wiki page.
+         * @param {string} content: Content of the wiki.
          * @return {object} The created wiki page object.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         try {
             var
@@ -773,7 +794,13 @@ exports = module.exports = {
         /**
          * Create a comment on a wiki page.
          * 
-         * @return {object} The created comment object.
+         * @name Comment WikiPage
+         * @param {string} id: Id of the wiki page.
+         * @param {string} [content]: Content of the comment.
+         * @return {object} The comment object.
+         * @error {resource:notfound} WikiPage was not found by id.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
