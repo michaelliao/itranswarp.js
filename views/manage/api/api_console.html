@@ -44,7 +44,7 @@ function objectKeys(obj, sortByLength) {
 }
 
 function toggleParameter(checkbox) {
-    var $input = $(checkbox).closest('tr').find('input[type=text]');
+    var $input = $(checkbox).closest('tr').find('input.x-api-param-value');
     if (checkbox.checked) {
         $input.removeAttr('disabled');
     }
@@ -228,7 +228,7 @@ function showApi(apiId) {
                                 <td>{% if param.optional %}<input type="checkbox" onclick="toggleParameter(this)" />{% endif %}</td>
                                 <td>{{ param.type }}</td>
                                 <td class="x-api-param-name">{{ param.name }}</td>
-                                <td><input type="text" optional="{{ param.optional }}" placeholder="{{ param.defaultValue }}" {% if param.optional %} disabled="disabled" {% endif %} value="" class="x-api-param-value" style="width:90%"></td>
+                                <td><input type="{% if param.name==='file' %}file{% else %}text{% endif %}" optional="{{ param.optional }}" placeholder="{{ param.defaultValue }}" {% if param.optional %} disabled="disabled" {% endif %} value="" class="x-api-param-value" style="width:90%"></td>
                                 <td>{{ param.description }}</td>
                             </tr>
                         {% endfor %}
