@@ -144,7 +144,7 @@ exports = module.exports = {
          * @name Get Article
          * @param {string} id: Id of the article.
          * @return {object} Article object.
-         * @error {resource:notfound} Article not found by id.
+         * @error {resource:notfound} Article was not found by id.
          */
         getArticle(req.params.id, function(err, article) {
             if (err) {
@@ -300,7 +300,7 @@ exports = module.exports = {
          * @param {string} [tags]: Tags of the article, seperated by ','.
          * @param {string} [publish_at]: Publish time of the article with format 'yyyy-MM-dd HH:mm:ss'.
          * @return {object} The updated article object.
-         * @error {resource:notfound} Article not found by id.
+         * @error {resource:notfound} Article was not found by id.
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
@@ -457,7 +457,7 @@ exports = module.exports = {
          * @param {string} id: Id of the article.
          * @param {string} [content]: Content of the comment.
          * @return {object} The comment object.
-         * @error {resource:notfound} Article not found by id.
+         * @error {resource:notfound} Article was not found by id.
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
