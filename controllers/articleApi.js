@@ -138,6 +138,14 @@ exports = module.exports = {
     getArticle: getArticle,
 
     'GET /api/articles/:id': function(req, res, next) {
+        /**
+         * Get article.
+         * 
+         * @name Get Article
+         * @param {string} id: Id of the article.
+         * @return {object} Article object.
+         * @error {resource:notfound} Article not found by id.
+         */
         getArticle(req.params.id, function(err, article) {
             if (err) {
                 return next(err);
@@ -147,6 +155,13 @@ exports = module.exports = {
     },
 
     'GET /api/articles': function(req, res, next) {
+        /**
+         * Get articles by page.
+         * 
+         * @name Get Articles
+         * @param {number} [page=1]: The page number, starts from 1.
+         * @return {object} Article objects and page information.
+         */
         var page = utils.getPage(req);
         getArticles(page, function(err, articles) {
             if (err) {
@@ -160,20 +175,31 @@ exports = module.exports = {
         /**
          * Create a new article.
          * 
+         * @name Create Article
+         * @param {string} category_id: Id of the category that article belongs to.
+         * @param {string} name: Name of the article.
+         * @param {string} description: Description of the article.
+         * @param {string} content: Content of the article.
+         * @param {string} [tags]: Tags of the article, seperated by ','.
+         * @param {string} [publish_at]: Publish time of the article with format 'yyyy-MM-dd HH:mm:ss', default to current time.
          * @return {object} The created article object.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
         try {
-            var name = utils.getRequiredParam('name', req),
+            var
+                name = utils.getRequiredParam('name', req),
+                description = utils.getRequiredParam('description', req),
                 category_id = utils.getRequiredParam('category_id', req),
                 content = utils.getRequiredParam('content', req);
         }
         catch (e) {
             return next(e);
         }
-        var description = utils.getParam('description', '', req),
+        var
             tags = utils.formatTags(utils.getParam('tags', '', req)),
             publish_at = utils.getParam('publish_at', null, req);
 
@@ -263,9 +289,20 @@ exports = module.exports = {
 
     'POST /api/articles/:id': function(req, res, next) {
         /**
-         * Update an article.
+         * Update an exist article.
          * 
+         * @name Update Article
+         * @param {string} id: Id of the article.
+         * @param {string} [category_id]: Id of the category that article belongs to.
+         * @param {string} [name]: Name of the article.
+         * @param {string} [description]: Description of the article.
+         * @param {string} [content]: Content of the article.
+         * @param {string} [tags]: Tags of the article, seperated by ','.
+         * @param {string} [publish_at]: Publish time of the article with format 'yyyy-MM-dd HH:mm:ss'.
          * @return {object} The updated article object.
+         * @error {resource:notfound} Article not found by id.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
@@ -416,7 +453,13 @@ exports = module.exports = {
         /**
          * Create a comment on an article.
          * 
-         * @return {object} The created comment object.
+         * @name Comment Article
+         * @param {string} id: Id of the article.
+         * @param {string} [content]: Content of the comment.
+         * @return {object} The comment object.
+         * @error {resource:notfound} Article not found by id.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
@@ -442,10 +485,13 @@ exports = module.exports = {
 
     'POST /api/articles/:id/delete': function(req, res, next) {
         /**
-         * Delete an article by its id.
+         * Delete an article.
          * 
-         * @param {string} :id - The id of the article.
-         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         * @name Delete Article
+         * @param {string} id: Id of the article.
+         * @return {object} Object contains deleted id.
+         * @error {resource:notfound} Article not found by id.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
