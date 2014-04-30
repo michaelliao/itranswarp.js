@@ -163,11 +163,11 @@ exports = module.exports = {
          * @return {object} Article objects and page information.
          */
         var page = utils.getPage(req);
-        getArticles(page, function(err, articles) {
+        getArticles(page, function(err, r) {
             if (err) {
                 return next(err);
             }
-            return res.send(articles);
+            return res.send(r);
         });
     },
 
