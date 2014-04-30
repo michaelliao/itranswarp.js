@@ -215,6 +215,14 @@ exports = module.exports = {
     'GET /files/attachments/:id/:size': downloadAttachment,
 
     'GET /api/attachments/:id': function(req, res, next) {
+        /**
+         * Get attachment.
+         * 
+         * @name Get Attachment
+         * @param {string} id: Id of the attachment.
+         * @return {object} Attachment object.
+         * @error {resource:notfound} Attachment was not found by id.
+         */
         getAttachment(req.params.id, function(err, entity) {
             if (err) {
                 return next(err);
@@ -224,6 +232,13 @@ exports = module.exports = {
     },
 
     'GET /api/attachments': function(req, res, next) {
+        /**
+         * Get attachments by page.
+         * 
+         * @name Get Attachments
+         * @param {number} [page=1]: The page number, starts from 1.
+         * @return {object} Attachment objects and page information.
+         */
         var page = utils.getPage(req);
         getAttachments(page, function(err, results) {
             if (err) {
@@ -235,10 +250,13 @@ exports = module.exports = {
 
     'POST /api/attachments/:id/delete': function(req, res, next) {
         /**
-         * Delete a attachment by its id.
+         * Delete an attachment by its id.
          * 
-         * @param {string} :id - The id of the attachment.
-         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         * @name Delete Attachment
+         * @param {string} id: The id of the attachment.
+         * @return {object} Object contains deleted id.
+         * @error {resource:notfound} Attachment was not found by id.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
             return next(api.notAllowed('Permission denied.'));
@@ -279,7 +297,12 @@ exports = module.exports = {
         /**
          * Create a new attachment.
          * 
+         * @name Create Attachment
+         * @param {string} [name]: Name of the attachment, default to filename.
+         * @param {string} [description]: Description of the attachment, default to filename.
+         * @param {file} file: File to upload.
          * @return {object} The created attachment object.
+         * @error {permission:denied} If current user has no permission.
          */
         if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
             return next(api.notAllowed('Permission denied.'));
