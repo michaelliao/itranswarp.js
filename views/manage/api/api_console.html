@@ -156,6 +156,8 @@ function doSendApiRequest(apiId, method, url) {
 }
 
 function showApi(apiId) {
+    $('ul.x-api-list li.x-api-li').removeClass('active');
+    $('#li-' + apiId).addClass('active');
     $('div.x-api').hide();
     $('#' + apiId).show();
 }
@@ -174,11 +176,11 @@ function showApi(apiId) {
     <div class="row">
         <div class="span3">
             <div class="well" style="padding: 8px 0; margin: 0 20px 20px 0;">
-                <ul class="nav nav-list">
+                <ul class="nav nav-list x-api-list">
                 {% for g, docs in apis %}
                     <li class="nav-header">{{ g }}</li>
                     {% for doc in docs %}
-                    <li><a href="javascript:showApi('{{ doc.id }}')">{{ doc.name }}</a></li>
+                    <li id="li-{{ doc.id }}" class="x-api-li"><a href="javascript:showApi('{{ doc.id }}')">{{ doc.name }}</a></li>
                     {% endfor %}
                 {% endfor %}
                 </ul>
