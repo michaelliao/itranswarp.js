@@ -182,6 +182,7 @@ exports = module.exports = {
          * @param {string} content: Content of the article.
          * @param {string} [tags]: Tags of the article, seperated by ','.
          * @param {string} [publish_at]: Publish time of the article with format 'yyyy-MM-dd HH:mm:ss', default to current time.
+         * @param {file} [file]: File to upload as cover image.
          * @return {object} The created article object.
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
