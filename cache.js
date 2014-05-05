@@ -127,12 +127,14 @@ function set(key, value, lifetime, callback) {
         callback = lifetime;
         lifetime = DEFAULT_LIFETIME;
     }
+    console.log('cache.set: ' + key);
     memcached.set(key, value, lifetime, function(err) {
         callback && callback(err ? err : null);
     });
 }
 
 function remove(key, callback) {
+    console.log('cache.remove: ' + key);
     memcached.del(key, function(err) {
         if (err) {
             callback && callback(err);
