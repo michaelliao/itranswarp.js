@@ -58,13 +58,19 @@ describe('#cache', function() {
 
     it('#getByFunctionValue', function(done) {
         var key1 = keyPrefix + 'f1';
-        cache.get(key1, function() { return 'F1' }, function(err, data) {
+        cache.get(key1, function() { return ['F1', null, {}] }, function(err, data) {
             should(err===null).be.true;
-            should(data==='F1').be.true;
+            data.should.be.instanceof(Array).and.have.lengthOf(3);
+            data[0].should.equal('F1');
+            should(data[1]===null).be.true;
+            data[2].should.be.instanceof(Object);
             // should in cache:
             cache.get(key1, function(err, data2) {
                 should(err===null).be.true;
-                should(data2==='F1').be.true;
+                data2.should.be.instanceof(Array).and.have.lengthOf(3);
+                data2[0].should.equal('F1');
+                should(data2[1]===null).be.true;
+                data2[2].should.be.instanceof(Object);
                 done();
             });
         });
@@ -111,12 +117,13 @@ describe('#cache', function() {
 
     it('#setAndGetThenExpires', function(done) {
         var key1 = keyPrefix + 'exp1';
-        cache.set(key1, 'Expires soon', 2, function(err) {
+        cache.set(key1, { expires: 1234 }, 2, function(err) {
             should(err===null).be.true;
             // get:
             cache.get(key1, function(err, data) {
                 should(err===null).be.true;
-                should(data==='Expires soon').be.ok;
+                data.should.be.ok;
+                data.expires.should.equal(1234);
                 setTimeout(function() {
                     cache.get(key1, function(err, data2) {
                         should(err===null).be.true;
