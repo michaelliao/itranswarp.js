@@ -8,6 +8,10 @@ exports = module.exports = {
     ROLE_SUBSCRIBER:  10000,
     ROLE_GUEST:       100000000,
 
+    // cache keys:
+    CACHE_KEY_WEBSITE_SETTINGS: '__website__',
+    CACHE_KEY_NAVIGATIONS:      '__navigations__',
+
     // END:
     END: 'ended.'
 };

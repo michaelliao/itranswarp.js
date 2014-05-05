@@ -9,6 +9,7 @@ var
     auth = require('./_auth'),
     utils = require('./_utils'),
     config = require('../config'),
+    cache = require('../cache'),
     constants = require('../constants');
 
 var
@@ -123,6 +124,7 @@ exports = module.exports = {
                 if (err) {
                     return next(err);
                 }
+                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
                 return res.send(nav);
             });
         });
@@ -136,6 +138,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
+            cache.remove(constants.CACHE_KEY_NAVIGATIONS);
             return res.send({ sort: true });
         });
     },
@@ -155,6 +158,7 @@ exports = module.exports = {
                 if (err) {
                     return next(err);
                 }
+                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
                 return res.send({ id: nav.id });
             });
         });
@@ -190,6 +194,7 @@ exports = module.exports = {
                 if (err) {
                     return next(err);
                 }
+                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
                 return res.send(entity);
             });
         });

@@ -6,8 +6,9 @@ var
     api = require('../api'),
     db = require('../db'),
     config = require('../config'),
-    utils = require('./_utils'),
-    constants = require('../constants');
+    cache = require('../cache'),
+    constants = require('../constants'),
+    utils = require('./_utils');
 
 var signins = _.map(config.oauth2, function(value, key) {
     return key;
@@ -30,17 +31,25 @@ var
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
 
+var fnGetSettings = function(callback) {
+    settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
+};
+
+var fnGetNavigations = function(callback) {
+    navigationApi.getNavigations(callback);
+};
+
 function appendSettings(model, callback) {
-    settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function(err, r) {
+    cache.get(constants.CACHE_KEY_WEBSITE_SETTINGS, fnGetSettings, function(err, r) {
         if (err) {
             return callback(err);
         }
         model.__website__ = r;
-        navigationApi.getNavigations(function(err, navigations) {
+        cache.get(constants.CACHE_KEY_NAVIGATIONS, fnGetNavigations, function(err, r) {
             if (err) {
                 return callback(err);
             }
-            model.__navigations__ = navigations;
+            model.__navigations__ = r;
             callback(null);
         });
     });

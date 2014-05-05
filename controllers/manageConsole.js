@@ -8,6 +8,8 @@ var
 var
     api = require('../api'),
     db = require('../db'),
+    cache = require('../cache'),
+    constants = require('../constants'),
     utils = require('./_utils');
 
 var
@@ -461,6 +463,7 @@ exports = module.exports = {
             if (err) {
                 return next(err);
             }
+            cache.remove(constants.CACHE_KEY_WEBSITE_SETTINGS);
             return res.send({ result: true });
         });
     }
