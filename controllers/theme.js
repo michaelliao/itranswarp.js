@@ -39,27 +39,39 @@ var fnGetNavigations = function(callback) {
     navigationApi.getNavigations(callback);
 };
 
-function appendSettings(model, callback) {
+function appendRead(article, callback) {
+    //
+}
+
+function appendReads(articles, callback) {
+    //
+}
+
+function appendSettings(callback) {
     cache.get(constants.CACHE_KEY_WEBSITE_SETTINGS, fnGetSettings, function(err, r) {
         if (err) {
             return callback(err);
         }
-        model.__website__ = r;
-        cache.get(constants.CACHE_KEY_NAVIGATIONS, fnGetNavigations, function(err, r) {
-            if (err) {
-                return callback(err);
-            }
-            model.__navigations__ = r;
-            callback(null);
-        });
+        callback(null, r);
+    });
+}
+
+function appendNavigations(callback) {
+    cache.get(constants.CACHE_KEY_WEBSITE_NAVIGATIONS, fnGetNavigations, function(err, r) {
+        if (err) {
+            return callback(err);
+        }
+        callback(null, r);
     });
 }
 
 function processTheme(view, model, req, res, next) {
-    appendSettings(model, function(err) {
-        if (err) {
-            return next(err);
-        }
+    async.parallel({
+        website: appendSettings,
+        navigations: appendNavigations,
+    }, function(err, results) {
+        model.__website__ = results.website;
+        model.__navigations__ = results.navigations;
         model.__signins__ = signins;
         model.__user__ = req.user;
         model.__time__ = Date.now();
@@ -118,6 +130,19 @@ exports = module.exports = {
                     return '';
                 };
                 articleApi.getRecentArticles(20, callback);
+            },
+            function(articles, callback) {
+                cache.counts(_.map(articles, function(a) {
+                    return a.id;
+                }), function(err, nums) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    for (var i=0; i<articles.length; i++) {
+                        articles[i].reads = nums[i];
+                    }
+                    callback(null, articles);
+                });
             }
         ], function(err, articles) {
             if (err) {
@@ -138,6 +163,19 @@ exports = module.exports = {
             function(category, callback) {
                 model.category = category;
                 articleApi.getArticlesByCategory(page, category.id, callback);
+            },
+            function(r, callback) {
+                cache.counts(_.map(r.articles, function(a) {
+                    return a.id;
+                }), function(err, nums) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    for (var i=0; i<nums.length; i++) {
+                        r.articles[i].reads = nums[i];
+                    }
+                    callback(null, r);
+                });
             }
         ], function(err, r) {
             if (err) {
@@ -154,6 +192,15 @@ exports = module.exports = {
         async.waterfall([
             function(callback) {
                 articleApi.getArticle(req.params.id, callback);
+            },
+            function(article, callback) {
+                cache.incr(article.id, function(err, num) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    article.reads = num;
+                    callback(null, article);
+                });
             },
             function(article, callback) {
                 model.article = article;
@@ -197,6 +244,15 @@ exports = module.exports = {
                 wikiApi.getWikiWithContent(req.params.id, callback);
             },
             function(wiki, callback) {
+                cache.incr(wiki.id, function(err, num) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    wiki.reads = num;
+                    callback(null, wiki);
+                });
+            },
+            function(wiki, callback) {
                 model.wiki = wiki;
                 wikiApi.getWikiTree(wiki.id, true, callback);
             },
@@ -219,6 +275,15 @@ exports = module.exports = {
         async.waterfall([
             function(callback) {
                 wikiApi.getWikiPageWithContent(req.params.pid, callback);
+            },
+            function(page, callback) {
+                cache.incr(page.id, function(err, num) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    page.reads = num;
+                    callback(null, page);
+                });
             },
             function(page, callback) {
                 if (page.wiki_id!==req.params.wid) {
