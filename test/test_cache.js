@@ -76,6 +76,26 @@ describe('#cache', function() {
         });
     });
 
+    it('#getByCallbackFunction', function(done) {
+        var key1 = keyPrefix + 'callback1';
+        cache.get(key1, function(callback) {
+            setTimeout(function() {
+                callback(null, 'Callback Value');
+            }, 500);
+        }, function(err, data) {
+            should(err===null).be.true;
+            should(data!==null).be.true;
+            data.should.be.equal('Callback Value');
+            // should in cache:
+            cache.get(key1, function(err, data2) {
+                should(err===null).be.true;
+                should(data2!==null).be.true;
+                data2.should.be.equal('Callback Value');
+                done();
+            });
+        });
+    });
+
     it('#setAndGet', function(done) {
         var key1 = keyPrefix + 'set1';
         cache.set(key1, 'Value1', function(err) {

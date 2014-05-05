@@ -89,16 +89,34 @@ function get(key, defaultValueOrFn, callback) {
         }
         if (defaultValueOrFn) {
             var isFn = typeof(defaultValueOrFn)==='function';
-            var value = isFn ? defaultValueOrFn() : defaultValueOrFn;
             if (isFn) {
-                set(key, value, defaultValueOrFn.lifetime || DEFAULT_LIFETIME, function(err) {
-                    callback(null, value);
+                var lifetime = defaultValueOrFn.lifetime || DEFAULT_LIFETIME;
+                if (defaultValueOrFn.length===0) {
+                    var value = defaultValueOrFn();
+                    set(key, value, lifetime, function(err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        return callback(null, value);
+                    });
+                    return;
+                }
+                // fn is a callback function:
+                defaultValueOrFn(function(err, value) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    set(key, value, lifetime, function(err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        return callback(null, value);
+                    });
                 });
+                return;
             }
-            else {
-                callback(null, value);
-            }
-            return;
+            // just value:
+            return callback(null, defaultValueOrFn);
         }
         return callback(null, null);
     });
