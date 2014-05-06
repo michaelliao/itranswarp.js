@@ -75,7 +75,7 @@ var i18nForManagement = i18n.getI18NTranslators('./views/manage/i18n');
 app.use(function(req, res, next) {
     var prefix = req.path.substring(0, 8);
     if (prefix==='/manage/' && req.path!=='/manage/signin') {
-        if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
+        if (req.user && req.user.local && req.user.role<=constants.ROLE_CONTRIBUTOR) {
             res.manage = function(view, model) {
                 var m = model || {};
                 m.__user__ = req.user;

@@ -82,7 +82,7 @@ function Page(pageIndex, itemsPerPage) {
 }
 
 var SESSION_COOKIE_NAME = 'itranswarpsession';
-var salt = config.session.salt;
+var SALT = config.session.salt;
 
 // for safe base64 replacements:
 var
@@ -122,7 +122,7 @@ function makeSessionCookie(provider, uid, passwd, expires) {
     else if (expires > max) {
         expires = max;
     }
-    var secure = [provider, uid, passwd, salt].join(':');
+    var secure = [provider, uid, passwd, SALT].join(':');
     var md5 = crypto.createHash('md5').update(secure).digest('hex');
     var str = [provider, uid, expires, md5].join(':');
     console.log('make session cookie: ' + str);
@@ -199,8 +199,9 @@ function parseSessionCookie(s, fn) {
                 return fn(null, null);
             }
             // check:
-            var secure = [provider, theId, user.passwd, salt].join(':');
+            var secure = [provider, theId, user.passwd, SALT].join(':');
             var expected = crypto.createHash('md5').update(secure).digest('hex');
+            user.local = true;
             fn(null, md5===expected ? user : null);
         });
         return;
@@ -216,7 +217,7 @@ function parseSessionCookie(s, fn) {
             return fn(null, null);
         }
         // check:
-        var secure = [provider, theId, authuser.auth_token, salt].join(':');
+        var secure = [provider, theId, authuser.auth_token, SALT].join(':');
         var expected = crypto.createHash('md5').update(secure).digest('hex');
         if (md5!==expected) {
             return fn(null, null);
@@ -229,6 +230,7 @@ function parseSessionCookie(s, fn) {
             if (user &&  (user.locked_util > Date.now())) {
                 return fn(null, null);
             }
+            user.local = false;
             return fn(null, user);
         });
     });
@@ -259,6 +261,7 @@ function parseAuthorization(auth, fn) {
         }
         if (user && user.passwd===p) {
             console.log('binded user: ' + user.name);
+            user.local = true;
             return fn(null, user);
         }
         console.log('invalid authorization header.');
