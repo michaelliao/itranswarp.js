@@ -6,10 +6,11 @@ var apidocs = [];
 
 function buildApiConsole() {
     console.log(JSON.stringify(apidocs, null, '  '));
-    var groups = {};
-    var n = 0;
-    _.each(apidocs, function(doc) {
-        n ++;
+    var
+        groups = {},
+        n = 0;
+    _.each(apidocs, function (doc) {
+        n++;
         doc.id = 'api-' + n; // unique API ID
         var gs = groups[doc.group] || [];
         gs.push(doc);
@@ -20,71 +21,66 @@ function buildApiConsole() {
 }
 
 function processApiDoc(group, method, url, doclines) {
-    var ss = _.map(doclines.split('\n'), function(value) {
-        return value.match(/^\s*\*?(.*)$/)[1].trim();
-    });
-    var doc = {
-        group: group,
-        name: '(no name)',
-        description: '',
-        method: method,
-        url: url,
-        params: [],
-        result: {
-            type: '',
-            description: ''
+    var
+        ss = _.map(doclines.split('\n'), function (value) {
+            return value.match(/^\s*\*?([\w\W]*)$/)[1].trim();
+        }),
+        doc = {
+            group: group,
+            name: '(no name)',
+            description: '',
+            method: method,
+            url: url,
+            params: [],
+            result: {
+                type: '',
+                description: ''
+            },
+            errors: []
         },
-        errors: []
-    };
-    var continue_description = true;
-    _.each(ss, function(value) {
-        if (value.indexOf('@')===0) {
+        continue_description = true;
+    _.each(ss, function (value) {
+        var m, param, err;
+        if (value.indexOf('@') === 0) {
             continue_description = false;
         }
-        if (value.indexOf('@name')===0) {
+        if (value.indexOf('@name') === 0) {
             doc.name = value.substring(5).trim();
-        }
-        else if (value.indexOf('@param')===0) {
-            var m = value.match(/^\@param\s+\{(\w+)\}\s*(\[?)(\w+)\=?(\w*)(\]?)\s*\:?\s*(.*)$/);
+        } else if (value.indexOf('@param') === 0) {
+            m = value.match(/^\@param\s+\{(\w+)\}\s*(\[?)(\w+)\=?(\w*)(\]?)\s*\:?\s*([\w\W]*)$/);
             if (m) {
-                var param = {
+                param = {
                     type: m[1].toLowerCase(),
                     name: m[3],
                     defaultValue: m[4],
-                    optional: m[2]==='[' && m[5]===']',
+                    optional: m[2] === '[' && m[5] === ']',
                     description: m[6]
                 };
                 doc.params.push(param);
-            }
-            else {
+            } else {
                 console.log('WARNING: invalid doc line: ' + value);
             }
-        }
-        else if (value.indexOf('@return')===0) {
+        } else if (value.indexOf('@return') === 0) {
             // @return {object} User object.
-            var m = value.match(/^\@return\s+\{(\w+)\}\s*(.*)$/);
+            m = value.match(/^\@return\s+\{(\w+)\}\s*([\w\W]*)$/);
             if (m) {
                 doc.result.type = m[1];
                 doc.result.description = m[2].trim();
-            }
-            else {
+            } else {
                 console.log('WARNING: invalid doc line: ' + value);
             }
-        }
-        else if (value.indexOf('@error')===0) {
-            var m = value.match(/^\@error\s+\{(\w+\:?\w*)\}\s*(.*)$/);
+        } else if (value.indexOf('@error') === 0) {
+            m = value.match(/^\@error\s+\{(\w+\:?\w*)\}\s*([\w\W]*)$/);
             if (m) {
-                var err = {
+                err = {
                     error: m[1],
                     description: m[2]
                 };
                 doc.errors.push(err);
-            }
-            else {
+            } else {
                 console.log('WARNING: invalid doc line: ' + value);
             }
-        }
-        else {
+        } else {
             // append description:
             if (continue_description) {
                 doc.description = doc.description + value;
@@ -94,10 +90,10 @@ function processApiDoc(group, method, url, doclines) {
     apidocs.push(doc);
 }
 
-exports = module.exports = {
+module.exports = {
 
     buildApiConsole: buildApiConsole,
 
     processApiDoc: processApiDoc
 
-}
+};
