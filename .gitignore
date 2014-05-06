@@ -15,7 +15,7 @@ npm-debug.log
 node_modules
 
 # backups:
-backup-*.sql
+backup/*.sql
 *.tar.gz
 
 # private config files:
