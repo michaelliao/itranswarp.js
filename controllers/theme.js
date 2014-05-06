@@ -10,7 +10,7 @@ var
     constants = require('../constants'),
     utils = require('./_utils');
 
-var signins = _.map(config.oauth2, function(value, key) {
+var signins = _.map(config.oauth2, function (value, key) {
     return key;
 });
 
@@ -31,24 +31,16 @@ var
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
 
-var fnGetSettings = function(callback) {
+var fnGetSettings = function (callback) {
     settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
 };
 
-var fnGetNavigations = function(callback) {
+var fnGetNavigations = function (callback) {
     navigationApi.getNavigations(callback);
 };
 
-function appendRead(article, callback) {
-    //
-}
-
-function appendReads(articles, callback) {
-    //
-}
-
 function appendSettings(callback) {
-    cache.get(constants.CACHE_KEY_WEBSITE_SETTINGS, fnGetSettings, function(err, r) {
+    cache.get(constants.CACHE_KEY_WEBSITE_SETTINGS, fnGetSettings, function (err, r) {
         if (err) {
             return callback(err);
         }
@@ -57,7 +49,7 @@ function appendSettings(callback) {
 }
 
 function appendNavigations(callback) {
-    cache.get(constants.CACHE_KEY_WEBSITE_NAVIGATIONS, fnGetNavigations, function(err, r) {
+    cache.get(constants.CACHE_KEY_WEBSITE_NAVIGATIONS, fnGetNavigations, function (err, r) {
         if (err) {
             return callback(err);
         }
@@ -68,8 +60,8 @@ function appendNavigations(callback) {
 function processTheme(view, model, req, res, next) {
     async.parallel({
         website: appendSettings,
-        navigations: appendNavigations,
-    }, function(err, results) {
+        navigations: appendNavigations
+    }, function (err, results) {
         model.__website__ = results.website;
         model.__navigations__ = results.navigations;
         model.__signins__ = signins;
@@ -83,47 +75,47 @@ function processTheme(view, model, req, res, next) {
 }
 
 function formatComment(s) {
-    return s.replace(/\n+/g, '\n').replace(/\<\/?script\>/ig, '');
+    return s.replace(/\n+/g, '\n').replace(/<\/?script\>/ig, '');
 }
 
 function createCommentByType(ref_type, checkFunction, req, res, next) {
     if (utils.isForbidden(req, constants.ROLE_GUEST)) {
         return next(api.notAllowed('Permission denied.'));
     }
+    var content, ref_id;
     try {
-        var content = formatComment(utils.getRequiredParam('content', req)).trim();
-        if ( ! content) {
+        content = formatComment(utils.getRequiredParam('content', req)).trim();
+        if (!content) {
             return next(api.invalidParam('content', 'Content cannot be empty.'));
         }
-    }
-    catch (e) {
+    } catch (e) {
         return next(e);
     }
-    var ref_id = req.params.id;
-    checkFunction(ref_id, function(err, entity) {
+    ref_id = req.params.id;
+    checkFunction(ref_id, function (err, entity) {
         if (err) {
             return next(err);
         }
-        commentApi.createComment(ref_type, ref_id, req.user, content, function(err, comment) {
+        commentApi.createComment(ref_type, ref_id, req.user, content, function (err, comment) {
             return res.send(comment);
         });
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
-    'GET /': function(req, res, next) {
+    'GET /': function (req, res, next) {
         var model = {};
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 categoryApi.getCategories(callback);
             },
-            function(categories, callback) {
-                model.getCategoryName = function(cid) {
-                    var c;
-                    for (var i=0; i<categories.length; i++) {
+            function (categories, callback) {
+                model.getCategoryName = function (cid) {
+                    var c, i;
+                    for (i = 0; i < categories.length; i++) {
                         c = categories[i];
-                        if (c.id===cid) {
+                        if (c.id === cid) {
                             return c.name;
                         }
                     }
@@ -131,20 +123,21 @@ exports = module.exports = {
                 };
                 articleApi.getRecentArticles(20, callback);
             },
-            function(articles, callback) {
-                cache.counts(_.map(articles, function(a) {
+            function (articles, callback) {
+                cache.counts(_.map(articles, function (a) {
                     return a.id;
-                }), function(err, nums) {
+                }), function (err, nums) {
                     if (err) {
                         return callback(err);
                     }
-                    for (var i=0; i<articles.length; i++) {
+                    var i;
+                    for (i = 0; i < articles.length; i++) {
                         articles[i].reads = nums[i];
                     }
                     callback(null, articles);
                 });
             }
-        ], function(err, articles) {
+        ], function (err, articles) {
             if (err) {
                 return next(err);
             }
@@ -153,31 +146,33 @@ exports = module.exports = {
         });
     },
 
-    'GET /category/:id': function(req, res, next) {
-        var page = utils.getPage(req);
-        var model = {};
+    'GET /category/:id': function (req, res, next) {
+        var
+            page = utils.getPage(req),
+            model = {};
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 categoryApi.getCategory(req.params.id, callback);
             },
-            function(category, callback) {
+            function (category, callback) {
                 model.category = category;
                 articleApi.getArticlesByCategory(page, category.id, callback);
             },
-            function(r, callback) {
-                cache.counts(_.map(r.articles, function(a) {
+            function (r, callback) {
+                cache.counts(_.map(r.articles, function (a) {
                     return a.id;
-                }), function(err, nums) {
+                }), function (err, nums) {
                     if (err) {
                         return callback(err);
                     }
-                    for (var i=0; i<nums.length; i++) {
+                    var i;
+                    for (i = 0; i < nums.length; i++) {
                         r.articles[i].reads = nums[i];
                     }
                     callback(null, r);
                 });
             }
-        ], function(err, r) {
+        ], function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -187,14 +182,14 @@ exports = module.exports = {
         });
     },
 
-    'GET /article/:id': function(req, res, next) {
+    'GET /article/:id': function (req, res, next) {
         var model = {};
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 articleApi.getArticle(req.params.id, callback);
             },
-            function(article, callback) {
-                cache.incr(article.id, function(err, num) {
+            function (article, callback) {
+                cache.incr(article.id, function (err, num) {
                     if (err) {
                         return callback(err);
                     }
@@ -202,15 +197,15 @@ exports = module.exports = {
                     callback(null, article);
                 });
             },
-            function(article, callback) {
+            function (article, callback) {
                 model.article = article;
                 categoryApi.getCategory(article.category_id, callback);
             },
-            function(category, callback) {
+            function (category, callback) {
                 model.category = category;
                 commentApi.getCommentsByRef(model.article.id, callback);
             }
-        ], function(err, r) {
+        ], function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -221,8 +216,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /page/:alias': function(req, res, next) {
-        pageApi.getPageByAlias(req.params.alias, function(err, page) {
+    'GET /page/:alias': function (req, res, next) {
+        pageApi.getPageByAlias(req.params.alias, function (err, page) {
             if (err) {
                 return next(err);
             }
@@ -237,14 +232,14 @@ exports = module.exports = {
         });
     },
 
-    'GET /wiki/:id': function(req, res, next) {
+    'GET /wiki/:id': function (req, res, next) {
         var model = {};
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 wikiApi.getWikiWithContent(req.params.id, callback);
             },
-            function(wiki, callback) {
-                cache.incr(wiki.id, function(err, num) {
+            function (wiki, callback) {
+                cache.incr(wiki.id, function (err, num) {
                     if (err) {
                         return callback(err);
                     }
@@ -252,15 +247,15 @@ exports = module.exports = {
                     callback(null, wiki);
                 });
             },
-            function(wiki, callback) {
+            function (wiki, callback) {
                 model.wiki = wiki;
                 wikiApi.getWikiTree(wiki.id, true, callback);
             },
-            function(tree, callback) {
+            function (tree, callback) {
                 model.tree = tree.children;
                 commentApi.getCommentsByRef(model.wiki.id, callback);
             }
-        ], function(err, r) {
+        ], function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -270,14 +265,14 @@ exports = module.exports = {
         });
     },
 
-    'GET /wiki/:wid/:pid': function(req, res, next) {
+    'GET /wiki/:wid/:pid': function (req, res, next) {
         var model = {};
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 wikiApi.getWikiPageWithContent(req.params.pid, callback);
             },
-            function(page, callback) {
-                cache.incr(page.id, function(err, num) {
+            function (page, callback) {
+                cache.incr(page.id, function (err, num) {
                     if (err) {
                         return callback(err);
                     }
@@ -285,19 +280,19 @@ exports = module.exports = {
                     callback(null, page);
                 });
             },
-            function(page, callback) {
-                if (page.wiki_id!==req.params.wid) {
+            function (page, callback) {
+                if (page.wiki_id !== req.params.wid) {
                     return callback(api.notFound('Wiki'));
                 }
                 model.page = page;
                 wikiApi.getWikiTree(page.wiki_id, true, callback);
             },
-            function(wiki, callback) {
+            function (wiki, callback) {
                 model.wiki = wiki;
                 model.tree = wiki.children;
                 commentApi.getCommentsByRef(model.page.id, callback);
             }
-        ], function(err, r) {
+        ], function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -307,20 +302,20 @@ exports = module.exports = {
         });
     },
 
-    'POST /article/:id/comment': function(req, res, next) {
-        createCommentByType('article', function(id, callback) {
+    'POST /article/:id/comment': function (req, res, next) {
+        createCommentByType('article', function (id, callback) {
             articleApi.getArticle(id, callback);
         }, req, res, next);
     },
 
-    'POST /wiki/:id/comment': function(req, res, next) {
-        createCommentByType('wiki', function(id, callback) {
+    'POST /wiki/:id/comment': function (req, res, next) {
+        createCommentByType('wiki', function (id, callback) {
             wikiApi.getWiki(id, callback);
         }, req, res, next);
     },
 
-    'POST /wikipage/:id/comment': function(req, res, next) {
-        createCommentByType('wikipage', function(id, callback) {
+    'POST /wikipage/:id/comment': function (req, res, next) {
+        createCommentByType('wikipage', function (id, callback) {
             wikiApi.getWikiPage(id, callback);
         }, req, res, next);
     }
