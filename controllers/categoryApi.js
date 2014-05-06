@@ -24,15 +24,15 @@ function getCategories(callback) {
 }
 
 function getCategory(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    Category.find(id, tx, function(err, category) {
+    Category.find(id, tx, function (err, category) {
         if (err) {
             return callback(err);
         }
-        if (category===null) {
+        if (category === null) {
             return callback(api.notFound('Category'));
         }
         callback(null, category);
@@ -40,11 +40,11 @@ function getCategory(id, tx, callback) {
 }
 
 function getNavigationMenus(callback) {
-    getCategories(function(err, cats) {
+    getCategories(function (err, cats) {
         if (err) {
             return callback(err);
         }
-        callback(null, _.map(cats, function(cat) {
+        callback(null, _.map(cats, function (cat) {
             return {
                 name: cat.name,
                 url: '/category/' + cat.id
@@ -53,7 +53,7 @@ function getNavigationMenus(callback) {
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     getCategories: getCategories,
 
@@ -61,13 +61,13 @@ exports = module.exports = {
 
     getNavigationMenus: getNavigationMenus,
 
-    'GET /api/categories': function(req, res, next) {
+    'GET /api/categories': function (req, res, next) {
         /**
          * Get all categories.
          * 
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
-        getCategories(function(err, array) {
+        getCategories(function (err, array) {
             if (err) {
                 return next(err);
             }
@@ -75,14 +75,14 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/categories/:id': function(req, res, next) {
+    'GET /api/categories/:id': function (req, res, next) {
         /**
          * Get categories by id.
          * 
          * @param {string} :id - The id of the category.
          * @return {object} Category object.
          */
-        getCategory(req.params.id, function(err, obj) {
+        getCategory(req.params.id, function (err, obj) {
             if (err) {
                 return next(err);
             }
@@ -90,7 +90,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/categories': function(req, res, next) {
+    'POST /api/categories': function (req, res, next) {
         /**
          * Create a new category.
          * 
@@ -101,23 +101,23 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var name, description;
         try {
-            var name = utils.getRequiredParam('name', req);
-        }
-        catch (e) {
+            name = utils.getRequiredParam('name', req);
+        } catch (e) {
             return next(e);
         }
-        var description = utils.getParam('description', '', req);
+        description = utils.getParam('description', '', req);
 
-        Category.findNumber('max(display_order)', function(err, num) {
+        Category.findNumber('max(display_order)', function (err, num) {
             if (err) {
                 return next(err);
             }
             Category.create({
                 name: name,
                 description: description,
-                display_order: (num===null) ? 0 : num + 1
-            }, function(err, entity) {
+                display_order: (num === null) ? 0 : num + 1
+            }, function (err, entity) {
                 if (err) {
                     return next(err);
                 }
@@ -126,40 +126,41 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/categories/sort': function(req, res, next) {
+    'POST /api/categories/sort': function (req, res, next) {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        Category.findAll(function(err, entities) {
+        var i, entity, pos;
+        Category.findAll(function (err, entities) {
             if (err) {
                 return next(err);
             }
             var ids = req.body.id;
-            if (! Array.isArray(ids)) {
+            if (!Array.isArray(ids)) {
                 ids = [ids];
             }
-            if (entities.length!==ids.length) {
+            if (entities.length !== ids.length) {
                 return next(api.invalidParam('id', 'Invalid id list.'));
             }
-            for (var i=0; i<entities.length; i++) {
-                var entity = entities[i];
-                var pos = ids.indexOf(entity.id);
-                if (pos===(-1)) {
+            for (i = 0; i < entities.length; i++) {
+                entity = entities[i];
+                pos = ids.indexOf(entity.id);
+                if (pos === (-1)) {
                     return next(api.invalidParam('id', 'Invalid id parameters.'));
                 }
                 entity.display_order = pos;
             }
-            warp.transaction(function(err, tx) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
-                async.series(_.map(entities, function(entity) {
-                    return function(callback) {
+                async.series(_.map(entities, function (entity) {
+                    return function (callback) {
                         entity.update(['display_order', 'updated_at', 'version'], tx, callback);
                     };
-                }), function(err, result) {
-                    tx.done(err, function(err) {
-                        console.log(err===null ? 'tx committed' : 'tx rollbacked');
+                }), function (err, result) {
+                    tx.done(err, function (err) {
+                        console.log(err === null ? 'tx committed' : 'tx rollbacked');
                         if (err) {
                             return next(err);
                         }
@@ -170,7 +171,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/categories/:id': function(req, res, next) {
+    'POST /api/categories/:id': function (req, res, next) {
         /**
          * Update a category.
          * 
@@ -184,25 +185,25 @@ exports = module.exports = {
         }
         var name = utils.getParam('name', req),
             description = utils.getParam('description', req);
-        if (name!==null) {
-            if (name==='') {
+        if (name !== null) {
+            if (name === '') {
                 return next(api.invalidParam('name'));
             }
         }
-        Category.find(req.params.id, function(err, entity) {
+        Category.find(req.params.id, function (err, entity) {
             if (err) {
                 return next(err);
             }
-            if (entity===null) {
+            if (entity === null) {
                 return next(api.notFound('Category'));
             }
-            if (name!==null) {
+            if (name !== null) {
                 entity.name = name;
             }
-            if (description!==null) {
+            if (description !== null) {
                 entity.description = description;
             }
-            entity.update(function(err, entity) {
+            entity.update(function (err, entity) {
                 if (err) {
                     return next(err);
                 }
@@ -211,7 +212,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/categories/:id/delete': function(req, res, next) {
+    'POST /api/categories/:id/delete': function (req, res, next) {
         /**
          * Delete a category by its id.
          * 
@@ -222,15 +223,15 @@ exports = module.exports = {
             return next(api.notAllowed('Permission denied.'));
         }
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 getCategory(req.params.id, callback);
             },
-            function(category, callback) {
+            function (category, callback) {
                 Article.findNumber({
                     select: 'count(*)',
                     where: 'category_id=?',
                     params: [category.id]
-                }, function(err, num) {
+                }, function (err, num) {
                     if (err) {
                         return callback(err);
                     }
@@ -240,14 +241,14 @@ exports = module.exports = {
                     callback(null, category);
                 });
             },
-            function(category, callback) {
+            function (category, callback) {
                 category.destroy(callback);
             }
-        ], function(err, result) {
+        ], function (err, result) {
             if (err) {
                 return next(err);
             }
             return res.send({ id: req.params.id });
         });
     }
-}
+};
