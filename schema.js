@@ -31,6 +31,7 @@ function generateDDL(email, password) {
         passwd = crypto.createHash('md5').update(email + ':' + password).digest('hex'),
         sql_init_admin_user = 'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', \'' + passwd + '\', 1, \'http://about:blank\', 0, 1394002009000, 1394002009000, 0);';
     log(sql_init_admin_user);
+    log('grant select, insert, update, delete on itranswarp.* to \'www\'@\'localhost\' identified by \'www\';');
     log('-- done.');
 }
 
