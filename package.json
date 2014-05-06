@@ -22,7 +22,8 @@
   "devDependencies": {
     "mocha": "1.x",
     "should": "3.x",
-    "gulp": "^3.6.2",
-    "gulp-jslint": "*"
+    "gulp-jslint": "*",
+    "gulp-less": "*",
+    "gulp": "^3.6.2"
   }
 }
