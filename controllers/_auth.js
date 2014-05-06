@@ -10,7 +10,7 @@ var names = ['weibo'];
 
 var providers = {};
 
-_.each(config.oauth2, function(cfg, name) {
+_.each(config.oauth2, function (cfg, name) {
     providers[name] = oauth2.createProvider(
         name,
         cfg.app_key,
@@ -20,4 +20,4 @@ _.each(config.oauth2, function(cfg, name) {
     console.log('Init OAuth2: ' + name);
 });
 
-exports = module.exports = providers;
+module.exports = providers;
