@@ -207,7 +207,7 @@ exports = module.exports = {
         res.redirect(referer);
     },
 
-    'GET /auth/': function(req, res, next) {
+    'GET /auth/signin': function(req, res, next) {
         /**
          * Display authentication page.
          */

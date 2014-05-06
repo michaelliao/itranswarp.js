@@ -84,7 +84,7 @@ app.use(function(req, res, next) {
             };
             return next();
         }
-        return res.redirect('/auth/');
+        return res.redirect('/auth/signin');
     }
     // add theme path to response object:
     res.themePath = themePath;
