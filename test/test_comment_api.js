@@ -25,7 +25,7 @@ describe('#comments', function() {
             remote.post(remote.editor, '/api/articles', {
                 category_id: c.id,
                 name: 'Article for Comment',
-                description: '',
+                description: 'for comment',
                 content: 'Please add comments...'
             }, function(a) {
                 should(a.error).not.be.ok;
