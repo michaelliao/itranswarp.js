@@ -49,7 +49,7 @@ function appendSettings(callback) {
 }
 
 function appendNavigations(callback) {
-    cache.get(constants.CACHE_KEY_WEBSITE_NAVIGATIONS, fnGetNavigations, function (err, r) {
+    cache.get(constants.CACHE_KEY_NAVIGATIONS, fnGetNavigations, function (err, r) {
         if (err) {
             return callback(err);
         }
