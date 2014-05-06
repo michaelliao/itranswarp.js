@@ -4,7 +4,7 @@ var constants = require('../constants');
 
 var base = require('./_base');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'User', [
         base.column_bigint('role', { defaultValue: constants.ROLE_GUEST }),
         base.column_varchar_100('name'),

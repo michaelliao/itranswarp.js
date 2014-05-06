@@ -3,9 +3,9 @@
 var util = require('util');
 var uuid = require('node-uuid');
 
-var paddings = [];
+var i, paddings = [];
 
-for (var i = 1; i < 30; i++) {
+for (i = 1; i < 30; i++) {
     paddings.push(new Array(i).join('0'));
 }
 
@@ -15,8 +15,8 @@ for (var i = 1; i < 30; i++) {
  *   random uuid;
  *   server shard number (0 ~ 0xff, default to 0).
  */
-exports = module.exports = function() {
+module.exports = function () {
     // generate uuid with timestamp:
     var id = util.format('%d%s000', Date.now(), uuid.v4().replace(/\-/g, ''));
     return paddings[50 - id.length] + id;
-}
+};

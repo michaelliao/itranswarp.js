@@ -2,7 +2,7 @@
 
 var base = require('./_base.js');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'AuthUser', [
         base.column_id('user_id'),
         base.column_varchar_50('auth_provider'),

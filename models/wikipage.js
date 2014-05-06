@@ -2,7 +2,7 @@
 
 var base = require('./_base.js');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'WikiPage', [
         base.column_id('wiki_id'),
         base.column_id('parent_id'),

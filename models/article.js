@@ -2,7 +2,7 @@
 
 var base = require('./_base.js');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'Article', [
         base.column_id('user_id', { index: true }),
         base.column_id('category_id', { index: true }),

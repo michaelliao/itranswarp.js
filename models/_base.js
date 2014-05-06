@@ -12,8 +12,11 @@ var
  *   version: bigint, not null, the increased version number starts from 0.
  */
 function defineModel(warp, name, cols, opts) {
-    var columns = cols.slice(0, cols.length);
-    var options = _.clone(opts || []);
+    var
+        columns = cols.slice(0, cols.length),
+        options = _.clone(opts || []),
+        fnBeforeCreate,
+        fnBeforeUpdate;
 
     // add id as primary key:
     columns.unshift({
@@ -37,33 +40,37 @@ function defineModel(warp, name, cols, opts) {
         type: 'bigint',
         defaultValue: 0
     });
-    var fnBeforeCreate = options.beforeCreate;
-    options.beforeCreate = function(obj) {
-        fnBeforeCreate && fnBeforeCreate(obj);
-        if (! obj.id) {
+    fnBeforeCreate = options.beforeCreate;
+    options.beforeCreate = function (obj) {
+        if (fnBeforeCreate) {
+            fnBeforeCreate(obj);
+        }
+        if (!obj.id) {
             obj.id = next_id();
         }
         obj.created_at = obj.updated_at = Date.now();
-    }
-    var fnBeforeUpdate = options.beforeUpdate;
-    options.beforeUpdate = function(obj) {
-        fnBeforeUpdate && fnBeforeUpdate(obj);
+    };
+    fnBeforeUpdate = options.beforeUpdate;
+    options.beforeUpdate = function (obj) {
+        if (fnBeforeUpdate) {
+            fnBeforeUpdate(obj);
+        }
         obj.updated_at = Date.now();
-        obj.version ++;
-    }
+        obj.version++;
+    };
     return warp.define(name, columns, options);
 }
 
-exports = module.exports = {
+module.exports = {
 
-    column_id: function(name, options) {
+    column_id: function (name, options) {
         return _.merge({
             name: name,
             type: 'varchar(50)'
         }, options || {});
     },
 
-    column_bigint: function(name, options) {
+    column_bigint: function (name, options) {
         return _.merge({
             name: name,
             type: 'bigint',
@@ -71,28 +78,28 @@ exports = module.exports = {
         }, options || {});
     },
 
-    column_varchar_50: function(name, options) {
+    column_varchar_50: function (name, options) {
         return _.merge({
             name: name,
-            type: 'varchar(50)',
+            type: 'varchar(50)'
         }, options || {});
     },
 
-    column_varchar_100: function(name, options) {
+    column_varchar_100: function (name, options) {
         return _.merge({
             name: name,
-            type: 'varchar(100)',
+            type: 'varchar(100)'
         }, options || {});
     },
 
-    column_varchar_500: function(name, options) {
+    column_varchar_500: function (name, options) {
         return _.merge({
             name: name,
-            type: 'varchar(500)',
+            type: 'varchar(500)'
         }, options || {});
     },
 
-    column_varchar_1000: function(name, options) {
+    column_varchar_1000: function (name, options) {
         return _.merge({
             name: name,
             type: 'varchar(1000)',
@@ -100,7 +107,7 @@ exports = module.exports = {
         }, options || {});
     },
 
-    column_boolean: function(name, options) {
+    column_boolean: function (name, options) {
         return _.merge({
             name: name,
             type: 'boolean',
@@ -108,14 +115,14 @@ exports = module.exports = {
         }, options || {});
     },
 
-    column_text: function(name, options) {
+    column_text: function (name, options) {
         return _.merge({
             name: name,
             type: 'mediumtext'
         }, options || {});
     },
 
-    column_blob: function(name, options) {
+    column_blob: function (name, options) {
         return _.merge({
             name: name,
             type: 'mediumblob'

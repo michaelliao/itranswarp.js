@@ -2,7 +2,7 @@
 
 var base = require('./_base.js');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'Resource', [
         base.column_id('ref_id'),
         base.column_blob('value')

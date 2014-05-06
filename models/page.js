@@ -2,7 +2,7 @@
 
 var base = require('./_base.js');
 
-exports = module.exports = function(warp) {
+module.exports = function (warp) {
     return base.defineModel(warp, 'Page', [
         base.column_varchar_100('alias', { unique: true, validate: { isLowercase: true }}),
         base.column_id('content_id'),
