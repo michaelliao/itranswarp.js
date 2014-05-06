@@ -32,19 +32,19 @@ var
 var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, attachmentApi, navigationApi, userApi, settingApi];
 
 function getAllNavigationMenus(callback) {
-    var fns = _.map(apisList, function(theApi) {
+    var fns = _.map(apisList, function (theApi) {
         // return [menu1, menu2, ... ]
-        if (typeof(theApi.getNavigationMenus)==='function') {
+        if (typeof (theApi.getNavigationMenus) === 'function') {
             return theApi.getNavigationMenus;
         }
-        return function(callback) {
+        return function (callback) {
             callback(null, []);
         };
     });
-    async.series(fns, function(err, results) {
+    async.series(fns, function (err, results) {
         var menus = _.flatten(results);
-        _.each(menus, function(m, index) {
-            m.index = '' + index;
+        _.each(menus, function (m, index) {
+            m.index = index.toString();
         });
         return callback(null, menus);
     });
@@ -56,17 +56,17 @@ function safeEncodeJSON(obj) {
 
 // do management console
 
-exports = module.exports = {
+module.exports = {
 
-    'GET /manage/': function(req, res, next) {
+    'GET /manage/': function (req, res, next) {
         return res.redirect('/manage/comment/');
     },
 
     // comment ////////////////////////////////////////////////////////////////
 
-    'GET /manage/comment/(index)?': function(req, res, next) {
+    'GET /manage/comment/(index)?': function (req, res, next) {
         var page = utils.getPage(req);
-        commentApi.getComments(page, function(err, r) {
+        commentApi.getComments(page, function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -79,16 +79,16 @@ exports = module.exports = {
 
     // article ////////////////////////////////////////////////////////////////
 
-    'GET /manage/article/(index)?': function(req, res, next) {
+    'GET /manage/article/(index)?': function (req, res, next) {
         var page = utils.getPage(req);
         async.parallel({
-            articles: function(callback) {
+            articles: function (callback) {
                 articleApi.getAllArticles(page, callback);
             },
-            categories: function(callback) {
+            categories: function (callback) {
                 categoryApi.getCategories(callback);
             }
-        }, function(err, results) {
+        }, function (err, results) {
             if (err) {
                 return next(err);
             }
@@ -100,8 +100,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/article/create_article': function(req, res, next) {
-        categoryApi.getCategories(function(err, categories) {
+    'GET /manage/article/create_article': function (req, res, next) {
+        categoryApi.getCategories(function (err, categories) {
             if (err) {
                 return next(err);
             }
@@ -119,20 +119,20 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/article/edit_article': function(req, res, next) {
+    'GET /manage/article/edit_article': function (req, res, next) {
         async.parallel({
-            article: function(callback) {
-                articleApi.getArticle(req.query.id, function(err, article) {
+            article: function (callback) {
+                articleApi.getArticle(req.query.id, function (err, article) {
                     if (err) {
                         return callback(err);
                     }
                     callback(null, article);
                 });
             },
-            categories: function(callback) {
+            categories: function (callback) {
                 categoryApi.getCategories(callback);
             }
-        }, function(err, results) {
+        }, function (err, results) {
             if (err) {
                 return next(err);
             }
@@ -150,8 +150,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/article/category_list': function(req, res, next) {
-        categoryApi.getCategories(function(err, categories) {
+    'GET /manage/article/category_list': function (req, res, next) {
+        categoryApi.getCategories(function (err, categories) {
             if (err) {
                 return next(err);
             }
@@ -161,7 +161,7 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/article/create_category': function(req, res, next) {
+    'GET /manage/article/create_category': function (req, res, next) {
         return res.manage('manage/article/category_form.html', {
             form: {
                 name: 'Create Category',
@@ -172,12 +172,12 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/article/edit_category': function(req, res, next) {
-        categoryApi.getCategory(req.query.id, function(err, obj) {
+    'GET /manage/article/edit_category': function (req, res, next) {
+        categoryApi.getCategory(req.query.id, function (err, obj) {
             if (err) {
                 return next(err);
             }
-            if (obj===null) {
+            if (obj === null) {
                 return next(api.notFound('Category'));
             }
             return res.manage('manage/article/category_form.html', {
@@ -193,8 +193,8 @@ exports = module.exports = {
 
     // page ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/page/(index)?': function(req, res, next) {
-        pageApi.getPages(function(err, pages) {
+    'GET /manage/page/(index)?': function (req, res, next) {
+        pageApi.getPages(function (err, pages) {
             if (err) {
                 return next(err);
             }
@@ -204,7 +204,7 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/page/create_page': function(req, res, next) {
+    'GET /manage/page/create_page': function (req, res, next) {
         return res.manage('manage/page/page_form.html', {
             form: {
                 name: 'Create Page',
@@ -222,9 +222,9 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/page/edit_page': function(req, res, next) {
+    'GET /manage/page/edit_page': function (req, res, next) {
         var id = req.query.id;
-        pageApi.getPage(id, function(err, page) {
+        pageApi.getPage(id, function (err, page) {
             if (err) {
                 return next(err);
             }
@@ -242,8 +242,8 @@ exports = module.exports = {
 
     // wiki ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/wiki/(index)?': function(req, res, next) {
-        wikiApi.getWikis(function(err, wikis) {
+    'GET /manage/wiki/(index)?': function (req, res, next) {
+        wikiApi.getWikis(function (err, wikis) {
             if (err) {
                 return next(err);
             }
@@ -253,7 +253,7 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/wiki/create_wiki': function(req, res, next) {
+    'GET /manage/wiki/create_wiki': function (req, res, next) {
         return res.manage('manage/wiki/wiki_form.html', {
             form: {
                 name: 'Create Wiki',
@@ -266,18 +266,18 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/wiki/list_wiki': function(req, res, next) {
+    'GET /manage/wiki/list_wiki': function (req, res, next) {
         var id = req.query.id;
-        wikiApi.getWiki(id, function(err, wiki) {
+        wikiApi.getWiki(id, function (err, wiki) {
             return res.manage('manage/wiki/wiki_tree.html', {
                 wiki: wiki
             });
         });
     },
 
-    'GET /manage/wiki/edit_wiki': function(req, res, next) {
+    'GET /manage/wiki/edit_wiki': function (req, res, next) {
         var id = req.query.id;
-        wikiApi.getWikiWithContent(id, function(err, wiki) {
+        wikiApi.getWikiWithContent(id, function (err, wiki) {
             if (err) {
                 return next(err);
             }
@@ -293,18 +293,19 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/wiki/edit_wikipage': function(req, res, next) {
-        var id = req.query.id;
-        var wikipage = null;
+    'GET /manage/wiki/edit_wikipage': function (req, res, next) {
+        var
+            id = req.query.id,
+            wikipage = null;
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 wikiApi.getWikiPageWithContent(id, callback);
             },
-            function(wp, callback) {
+            function (wp, callback) {
                 wikipage = wp;
                 wikiApi.getWiki(wp.wiki_id, callback);
             }
-        ], function(err, wiki) {
+        ], function (err, wiki) {
             if (err) {
                 return next(err);
             }
@@ -323,9 +324,9 @@ exports = module.exports = {
 
     // attachment /////////////////////////////////////////////////////////////
 
-    'GET /manage/attachment/(index)?': function(req, res, next) {
+    'GET /manage/attachment/(index)?': function (req, res, next) {
         var page = utils.getPage(req);
-        attachmentApi.getAttachments(page, function(err, results) {
+        attachmentApi.getAttachments(page, function (err, results) {
             if (err) {
                 return next(err);
             }
@@ -338,9 +339,9 @@ exports = module.exports = {
 
     // user ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/user/(index)?': function(req, res, next) {
+    'GET /manage/user/(index)?': function (req, res, next) {
         var page = utils.getPage(req);
-        userApi.getUsers(page, function(err, results) {
+        userApi.getUsers(page, function (err, results) {
             if (err) {
                 return next(err);
             }
@@ -354,8 +355,8 @@ exports = module.exports = {
 
     // navigation /////////////////////////////////////////////////////////////
 
-    'GET /manage/navigation/(index)?': function(req, res, next) {
-        navigationApi.getNavigations(function(err, navigations) {
+    'GET /manage/navigation/(index)?': function (req, res, next) {
+        navigationApi.getNavigations(function (err, navigations) {
             if (err) {
                 return next(err);
             }
@@ -365,8 +366,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/navigation/create_navigation': function(req, res, next) {
-        getAllNavigationMenus(function(err, menus) {
+    'GET /manage/navigation/create_navigation': function (req, res, next) {
+        getAllNavigationMenus(function (err, menus) {
             if (err) {
                 return next(err);
             }
@@ -381,8 +382,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /manage/navigation/edit_navigation': function(req, res, next) {
-        navigationApi.getNavigation(req.query.id, function(err, obj) {
+    'GET /manage/navigation/edit_navigation': function (req, res, next) {
+        navigationApi.getNavigation(req.query.id, function (err, obj) {
             if (err) {
                 return next(err);
             }
@@ -399,8 +400,8 @@ exports = module.exports = {
 
     // setting ////////////////////////////////////////////////////////////////
 
-    'GET /manage/setting/(index)?': function(req, res, next) {
-        var makeField = function(name, value, label, type) {
+    'GET /manage/setting/(index)?': function (req, res, next) {
+        var makeField = function (name, value, label, type) {
             return {
                 name: name,
                 value: value,
@@ -408,7 +409,7 @@ exports = module.exports = {
                 type: type || 'text'
             };
         };
-        settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function(err, website) {
+        settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function (err, website) {
             if (err) {
                 return next(err);
             }
@@ -451,15 +452,16 @@ exports = module.exports = {
         });
     },
 
-    'POST /manage/setting/save': function(req, res, next) {
-        var settings = ['website', 'datetime'];
-        var tasks = [];
-        _.each(settings, function(group) {
-            tasks.push(function(callback) {
+    'POST /manage/setting/save': function (req, res, next) {
+        var
+            settings = ['website', 'datetime'],
+            tasks = [];
+        _.each(settings, function (group) {
+            tasks.push(function (callback) {
                 settingApi.setSettings(group, req.body[group], callback);
-            })
+            });
         });
-        async.series(tasks, function(err, results) {
+        async.series(tasks, function (err, results) {
             if (err) {
                 return next(err);
             }
