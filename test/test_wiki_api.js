@@ -18,8 +18,10 @@ describe('#wikis', function() {
     describe('#getwikis', function() {
 
         it('should get empty wikis', function(done) {
-            remote.get(remote.guest, '/api/wikis', null, function(wikis) {
-                wikis.length.should.equal(0);
+            remote.get(remote.guest, '/api/wikis', null, function(r) {
+                should(r).be.ok;
+                should(r.wikis).be.ok;
+                r.wikis.should.be.instanceof(Array).and.have.lengthOf(0);
                 done();
             });
         });
@@ -52,7 +54,15 @@ describe('#wikis', function() {
                         // not updated:
                         r3.tags.should.equal(r1.tags);
                         r3.description.should.equal(r1.description);
-                        done();
+                        // query all wikis:
+                        remote.get(remote.guest, '/api/wikis/', null, function(r4) {
+                            should(r4).be.ok;
+                            should(r4.wikis).be.ok;
+                            r4.wikis.should.be.instanceof(Array).and.have.lengthOf(1);
+                            var w = r4.wikis[0];
+                            w.name.should.equal(r3.name);
+                            done();
+                        });
                     });
                 });
             });
