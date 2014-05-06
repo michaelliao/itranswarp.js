@@ -32,87 +32,85 @@ function build_url(path, params) {
 }
 
 function build_headers(role) {
-    var email = null;
-    var passwd = null;
-    if (role==constants.ROLE_ADMIN) {
+    var
+        email = null,
+        passwd = null,
+        headers = {
+            'X-Custom-Header': 'Test'
+        };
+    if (role === constants.ROLE_ADMIN) {
         email = options.email;
         passwd = options.passwd;
-    }
-    else if (role==constants.ROLE_EDITOR) {
+    } else if (role === constants.ROLE_EDITOR) {
         email = 'editor@itranswarp.com';
         passwd = 'ee001122334455667788990000000eee';
-    }
-    else if (role==constants.ROLE_CONTRIBUTOR) {
+    } else if (role === constants.ROLE_CONTRIBUTOR) {
         email = 'contrib@itranswarp.com';
         passwd = 'dd001122334455667788990000000ddd';
-    }
-    else if (role==constants.ROLE_SUBSCRIBER) {
+    } else if (role === constants.ROLE_SUBSCRIBER) {
         email = 'subs@itranswarp.com';
         passwd = 'ff001122334455667788990000000fff';
     }
-    var headers = {
-        'X-Custom-Header': 'Test'
-    };
     if (email && passwd) {
-        headers['Authorization'] = 'Basic ' + new Buffer(email + ':' + passwd).toString('base64');
-        console.log('    Authorization: ' + headers['Authorization']);
+        headers.Authorization = 'Basic ' + new Buffer(email + ':' + passwd).toString('base64');
+        console.log('    Authorization: ' + headers.Authorization);
     }
     return headers;
 }
 
 function build_form(params) {
-    return params ? params : {};
+    return params || {};
 }
 
 function http(role, method, path, params, fn) {
-    var opt = {
-        method: method,
-        headers: build_headers(role),
-        url: method==='GET' ? build_url(path, params) : build_url(path)
-    };
-    var r = request(opt, function(err, res, body) {
-        should(err).not.be.ok;
-        res.should.have.status(200);
-        console.log('>>> response got: ' + res.statusCode);
-        console.log(body);
-        var json = JSON.parse(body);
-        should(json).be.ok;
-        console.log('>>> http done.');
-        return fn(json);
-    });
+    var
+        curl,
+        opt = {
+            method: method,
+            headers: build_headers(role),
+            url: method === 'GET' ? build_url(path, params) : build_url(path)
+        },
+        r = request(opt, function (err, res, body) {
+            should(err).not.be.ok;
+            res.should.have.status(200);
+            console.log('>>> response got: ' + res.statusCode);
+            console.log(body);
+            var json = JSON.parse(body);
+            should(json).be.ok;
+            console.log('>>> http done.');
+            return fn(json);
+        });
     params = params || {};
-    if (method!=='GET') {
+    if (method !== 'GET') {
         opt.form = r.form();
-        _.each(params, function(value, key) {
+        _.each(params, function (value, key) {
             opt.form.append(key, value);
         });
     }
     console.log('>>> request: ' + method + ' ' + opt.url);
     if (opt.form) {
-        if ('file' in params) {
+        if (params.file) {
             console.log('>>> form: multipart/form-data');
-        }
-        else {
+        } else {
             console.log('>>> form: ' + querystring.stringify(params));
         }
     }
     console.log('>>> request sent.');
     // build curl:
-    var curl = 'curl -v';
-    _.each(opt.headers, function(v, k) {
+    curl = 'curl -v';
+    _.each(opt.headers, function (v, k) {
         curl = curl + ' -H \"' + k + ': ' + v + '\"';
     });
     if (opt.form) {
-        if ('file' in params) {
+        if (params.file) {
             curl = curl + ' ';
-            _.each(params, function(v, k) {
-                if (k!=='file') {
+            _.each(params, function (v, k) {
+                if (k !== 'file') {
                     curl = curl + ' --form ' + k + '=' + encodeURIComponent(v);
                 }
             });
             curl = curl + ' --form file=@/Users/michael/Desktop/test.jpg';
-        }
-        else {
+        } else {
             curl = curl + ' -d \"';
             _.each(params, function(v, k) {
                 curl = curl + k + '=' + encodeURIComponent(v) + '&';
@@ -153,62 +151,62 @@ var init_sqls = [
 
 function init_db(done) {
     console.log('setup: init database first...');
-    async.series(_.map(init_sqls, function(s) {
-        return function(callback) {
+    async.series(_.map(init_sqls, function (s) {
+        return function (callback) {
             warp.query(s, callback);
         };
-    }), function(err, results) {
+    }), function (err, results) {
         return err ? done(err) : done();
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
-    init: function(url, email, passwd) {
+    init: function (url, email, passwd) {
         options.url = url;
         options.email = email;
         options.passwd = passwd;
     },
 
-    setup: function(done) {
+    setup: function (done) {
         async.series([
-            function(callback) {
-                init_db(function(err) {
+            function (callback) {
+                init_db(function (err) {
                     callback(err, true);
                 });
             },
-            function(callback) {
+            function (callback) {
                 //
                 callback(null, true);
             }
-        ], function(err, results) {
+        ], function (err, results) {
             done(err);
         });
     },
 
-    get: function(role, path, params, fn) {
+    get: function (role, path, params, fn) {
         http(role, 'GET', path, params, fn);
     },
 
-    post: function(role, path, params, fn) {
+    post: function (role, path, params, fn) {
         http(role, 'POST', path, params, fn);
     },
 
-    download: function(path, fn) {
+    download: function (path, fn) {
         var url = build_url(path);
         console.log('>>> request: GET ' + url);
-        request(url, function(err, res, body) {
+        request(url, function (err, res, body) {
             should(err).not.be.ok;
             res.should.have.status(200);
             console.log('>>> response: ' + res.statusCode);
-            _.each(res.headers, function(value, key) {
+            _.each(res.headers, function (value, key) {
                 console.log('    ' + key + ': ' + value);
             });
-            return fn(res.headers['content-type'], parseInt(res.headers['content-length']), body);
+            return fn(res.headers['content-type'], parseInt(res.headers['content-length'], 10), body);
         });
     },
 
-    createReadStream: function(path) {
+    createReadStream: function (path) {
         return fs.createReadStream(path);
     },
 

@@ -6,9 +6,9 @@ var utils = require('../controllers/_utils');
 
 var formatTags = utils.formatTags;
 
-describe('#utils', function() {
+describe('#utils', function () {
 
-    it('#formatTags', function() {
+    it('#formatTags', function () {
         var tags = {
             '   '             : '',
             '   ,  '          : '',
@@ -21,7 +21,7 @@ describe('#utils', function() {
         formatTags('  ABC, def, ha ha ').should.equal('ABC,def,ha ha');
     });
 
-    it('#page', function() {
+    it('#page', function () {
         var pages = [
             // index, perPage, total, pages, offset:
             [ 1,  undefined, 81,   5,  0],

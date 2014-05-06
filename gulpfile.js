@@ -18,5 +18,3 @@ gulp.task('jslint', function () {
 });
 
 gulp.task('default', ['jslint']);
-
-
