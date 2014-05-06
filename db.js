@@ -1,5 +1,3 @@
-/*jslint stupid: true */
-
 // init mysql-warp and expose all models under dir 'models':
 
 console.log('init mysql with mysql-warp...');
