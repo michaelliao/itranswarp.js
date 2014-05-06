@@ -7,7 +7,9 @@
 exports = module.exports = {
     session: {
         // used to generate secure session cookie, can be set to any random string:
-        salt: 'iTranswarp.js'
+        salt: 'iTranswarp.js',
+        // use https for management:
+        httpsForManagement: false
     },
     db: {
         // host or ip address of mysql, e.g. '192.168.1.123':
