@@ -30,7 +30,7 @@ function getRecentArticles(max, callback) {
         params: [now],
         offset: 0,
         limit: max
-    }, function(err, entities) {
+    }, function (err, entities) {
         if (err) {
             return callback(err);
         }
@@ -39,7 +39,7 @@ function getRecentArticles(max, callback) {
 }
 
 function doGetArticles(page, countOptions, findOptions, callback) {
-    Article.findNumber(countOptions, function(err, num) {
+    Article.findNumber(countOptions, function (err, num) {
         if (err) {
             return callback(err);
         }
@@ -49,7 +49,7 @@ function doGetArticles(page, countOptions, findOptions, callback) {
         }
         findOptions.offset = page.offset;
         findOptions.limit = page.limit;
-        Article.findAll(findOptions, function(err, entities) {
+        Article.findAll(findOptions, function (err, entities) {
             if (err) {
                 return callback(err);
             }
@@ -62,59 +62,62 @@ function doGetArticles(page, countOptions, findOptions, callback) {
 }
 
 function getAllArticles(page, callback) {
-    var countOptions = 'count(*)';
-    var findOptions = {
-        order: 'publish_at desc'
-    };
+    var
+        countOptions = 'count(*)',
+        findOptions = {
+            order: 'publish_at desc'
+        };
     doGetArticles(page, countOptions, findOptions, callback);
 }
 
 function getArticlesByCategory(page, categoryId, callback) {
-    var now = Date.now();
-    var countOptions = {
-        select: 'count(*)',
-        where: 'publish_at<? and category_id=?',
-        params: [now, categoryId]
-    };
-    var findOptions = {
-        order: 'publish_at desc',
-        where: 'publish_at<? and category_id=?',
-        params: [now, categoryId]
-    };
+    var
+        now = Date.now(),
+        countOptions = {
+            select: 'count(*)',
+            where: 'publish_at<? and category_id=?',
+            params: [now, categoryId]
+        },
+        findOptions = {
+            order: 'publish_at desc',
+            where: 'publish_at<? and category_id=?',
+            params: [now, categoryId]
+        };
     doGetArticles(page, countOptions, findOptions, callback);
 }
 
 function getArticles(page, callback) {
-    var now = Date.now();
-    var countOptions = {
-        select: 'count(*)',
-        where: 'publish_at<?',
-        params: [now]
-    };
-    var findOptions = {
-        where: 'publish_at<?',
-        params: [now]
-    };
+    var
+        now = Date.now(),
+        countOptions = {
+            select: 'count(*)',
+            where: 'publish_at<?',
+            params: [now]
+        },
+        findOptions = {
+            where: 'publish_at<?',
+            params: [now]
+        };
     doGetArticles(page, countOptions, findOptions, callback);
 }
 
 function getArticle(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    Article.find(id, function(err, article) {
+    Article.find(id, function (err, article) {
         if (err) {
             return callback(err);
         }
-        if (article===null) {
+        if (article === null) {
             return callback(api.notFound('Article'));
         }
-        Text.find(article.content_id, function(err, text) {
+        Text.find(article.content_id, function (err, text) {
             if (err) {
                 return callback(err);
             }
-            if (text===null) {
+            if (text === null) {
                 return callback(api.notFound('Text'));
             }
             article.content = text.value;
@@ -125,7 +128,7 @@ function getArticle(id, tx, callback) {
 
 var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
-exports = module.exports = {
+module.exports = {
 
     getRecentArticles: getRecentArticles,
 
@@ -137,7 +140,7 @@ exports = module.exports = {
 
     getArticle: getArticle,
 
-    'GET /api/articles/:id': function(req, res, next) {
+    'GET /api/articles/:id': function (req, res, next) {
         /**
          * Get article.
          * 
@@ -146,7 +149,7 @@ exports = module.exports = {
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
-        getArticle(req.params.id, function(err, article) {
+        getArticle(req.params.id, function (err, article) {
             if (err) {
                 return next(err);
             }
@@ -154,7 +157,7 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/articles': function(req, res, next) {
+    'GET /api/articles': function (req, res, next) {
         /**
          * Get articles by page.
          * 
@@ -163,7 +166,7 @@ exports = module.exports = {
          * @return {object} Article objects and page information.
          */
         var page = utils.getPage(req);
-        getArticles(page, function(err, r) {
+        getArticles(page, function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -171,7 +174,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/articles': function(req, res, next) {
+    'POST /api/articles': function (req, res, next) {
         /**
          * Create a new article.
          * 
@@ -190,48 +193,44 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var name, description, category_id, content, tags, publish_at, file, content_id, article_id, fnCreate;
         try {
-            var
-                name = utils.getRequiredParam('name', req),
-                description = utils.getRequiredParam('description', req),
-                category_id = utils.getRequiredParam('category_id', req),
-                content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            name = utils.getRequiredParam('name', req);
+            description = utils.getRequiredParam('description', req);
+            category_id = utils.getRequiredParam('category_id', req);
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        var
-            tags = utils.formatTags(utils.getParam('tags', '', req)),
-            publish_at = utils.getParam('publish_at', null, req);
+        tags = utils.formatTags(utils.getParam('tags', '', req));
+        publish_at = utils.getParam('publish_at', null, req);
+        file = req.files && req.files.file;
 
-        var file = req.files && req.files.file;
-
-        if (publish_at!==null) {
-            if ( ! RE_TIMESTAMP.test(publish_at)) {
+        if (publish_at !== null) {
+            if (!RE_TIMESTAMP.test(publish_at)) {
                 return next(api.invalidParam('publish_at'));
             }
-            publish_at = parseInt(publish_at);
-        }
-        else {
+            publish_at = parseInt(publish_at, 10);
+        } else {
             publish_at = Date.now();
         }
 
-        var content_id = next_id();
-        var article_id = next_id();
+        content_id = next_id();
+        article_id = next_id();
 
-        var fnCreate = function(fileObject) {
-            warp.transaction(function(err, tx) {
+        fnCreate = function (fileObject) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
                 async.waterfall([
                     // check category:
-                    function(callback) {
+                    function (callback) {
                         Category.find(category_id, tx, callback);
                     },
                     // create text:
-                    function(category, callback) {
-                        if (category===null) {
+                    function (category, callback) {
+                        if (category === null) {
                             return callback(api.invalidParam('category_id'));
                         }
                         Text.create({
@@ -241,7 +240,7 @@ exports = module.exports = {
                         }, tx, callback);
                     },
                     // create attachment:
-                    function(text, callback) {
+                    function (text, callback) {
                         if (fileObject) {
                             var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
                             return fn(callback);
@@ -249,13 +248,13 @@ exports = module.exports = {
                         callback(null, null);
                     },
                     // create article:
-                    function(atta, callback) {
+                    function (atta, callback) {
                         Article.create({
                             id: article_id,
                             user_id: req.user.id,
                             user_name: req.user.name,
                             category_id: category_id,
-                            cover_id: atta===null ? '' : atta.id,
+                            cover_id: atta === null ? '' : atta.id,
                             content_id: content_id,
                             name: name,
                             tags: tags,
@@ -263,8 +262,8 @@ exports = module.exports = {
                             publish_at: publish_at
                         }, tx, callback);
                     }
-                ], function(err, result) {
-                    tx.done(err, function(err) {
+                ], function (err, result) {
+                    tx.done(err, function (err) {
                         if (err) {
                             return next(err);
                         }
@@ -276,7 +275,7 @@ exports = module.exports = {
         };
 
         if (file) {
-            return checkAttachment(file, true, function(err, attachFileObject) {
+            return checkAttachment(file, true, function (err, attachFileObject) {
                 if (err) {
                     return next(err);
                 }
@@ -288,7 +287,7 @@ exports = module.exports = {
         return fnCreate(null);
     },
 
-    'POST /api/articles/:id': function(req, res, next) {
+    'POST /api/articles/:id': function (req, res, next) {
         /**
          * Update an exist article.
          * 
@@ -313,55 +312,57 @@ exports = module.exports = {
             description = utils.getParam('description', req),
             tags = utils.getParam('tags', req),
             publish_at = utils.getParam('publish_at', req),
-            content = utils.getParam('content', req);
+            content = utils.getParam('content', req),
+            file,
+            fnUpdate;
 
-        if (name!==null && name==='') {
+        if (name !== null && name === '') {
             return next(api.invalidParam('name'));
         }
-        if (category_id!==null && category_id==='') {
+        if (category_id !== null && category_id === '') {
             return next(api.invalidParam('category_id'));
         }
-        if (content!==null && content==='') {
+        if (content !== null && content === '') {
             return next(api.invalidParam('content'));
         }
-        if (publish_at!==null) {
-            if (! RE_TIMESTAMP.test(publish_at)) {
+        if (publish_at !== null) {
+            if (!RE_TIMESTAMP.test(publish_at)) {
                 return next(api.invalidParam('publish_at'));
             }
-            publish_at = parseInt(publish_at);
+            publish_at = parseInt(publish_at, 10);
         }
-        if (tags!==null) {
+        if (tags !== null) {
             tags = utils.formatTags(tags);
         }
 
-        var file = req.files && req.files.file;
+        file = req.files && req.files.file;
 
-        var fnUpdate = function(fileObject) {
-            warp.transaction(function(err, tx) {
+        fnUpdate = function (fileObject) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
                 async.waterfall([
                     // query article:
-                    function(callback) {
+                    function (callback) {
                         Article.find(req.params.id, tx, callback);
                     },
                     // update category?
-                    function(article, callback) {
-                        if (article===null) {
+                    function (article, callback) {
+                        if (article === null) {
                             return callback(api.notFound('Article'));
                         }
-                        if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
+                        if (req.user.role !== constants.ROLE_ADMIN && req.user.id !== article.user_id) {
                             return next(api.notAllowed('Permission denied.'));
                         }
-                        if (category_id===null || category_id===article.category_id) {
+                        if (category_id === null || category_id === article.category_id) {
                             return callback(null, article);
                         }
-                        Category.find(category_id, tx, function(err, category) {
+                        Category.find(category_id, tx, function (err, category) {
                             if (err) {
                                 return callback(err);
                             }
-                            if (category===null) {
+                            if (category === null) {
                                 return callback(api.invalidParam('category_id'));
                             }
                             article.category_id = category_id;
@@ -369,8 +370,8 @@ exports = module.exports = {
                         });
                     },
                     // update text?
-                    function(article, callback) {
-                        if (content===null) {
+                    function (article, callback) {
+                        if (content === null) {
                             return callback(null, article);
                         }
                         var content_id = next_id();
@@ -378,7 +379,7 @@ exports = module.exports = {
                             id: content_id,
                             ref_id: article.id,
                             value: content
-                        }, tx, function(err, text) {
+                        }, tx, function (err, text) {
                             if (err) {
                                 return callback(err);
                             }
@@ -387,10 +388,10 @@ exports = module.exports = {
                         });
                     },
                     // update cover?
-                    function(article, callback) {
+                    function (article, callback) {
                         if (fileObject) {
                             var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
-                            return fn(function(err, atta) {
+                            return fn(function (err, atta) {
                                 if (err) {
                                     return callback(err);
                                 }
@@ -401,31 +402,31 @@ exports = module.exports = {
                         callback(null, article);
                     },
                     // update article:
-                    function(article, callback) {
-                        if (name!==null) {
+                    function (article, callback) {
+                        if (name !== null) {
                             article.name = name;
                         }
-                        if (description!==null) {
+                        if (description !== null) {
                             article.description = description;
                         }
-                        if (tags!==null) {
+                        if (tags !== null) {
                             article.tags = tags;
                         }
-                        if (publish_at!==null) {
+                        if (publish_at !== null) {
                             article.publish_at = publish_at;
                         }
                         article.update(tx, callback);
                     }
-                ], function(err, result) {
-                    tx.done(err, function(err) {
+                ], function (err, result) {
+                    tx.done(err, function (err) {
                         if (err) {
                             return next(err);
                         }
-                        if (content!==null) {
+                        if (content !== null) {
                             result.content = content;
                             return res.send(result);
                         }
-                        Text.find(result.content_id, function(err, text) {
+                        Text.find(result.content_id, function (err, text) {
                             if (err) {
                                 return next(err);
                             }
@@ -438,7 +439,7 @@ exports = module.exports = {
         };
 
         if (file) {
-            return checkAttachment(file, true, function(err, attachFileObject) {
+            return checkAttachment(file, true, function (err, attachFileObject) {
                 if (err) {
                     return next(err);
                 }
@@ -450,7 +451,7 @@ exports = module.exports = {
         return fnUpdate(null);
     },
 
-    'POST /api/articles/:id/comments': function(req, res, next) {
+    'POST /api/articles/:id/comments': function (req, res, next) {
         /**
          * Create a comment on an article.
          * 
@@ -465,17 +466,17 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var content;
         try {
-            var content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        Article.find(req.params.id, function(err, article) {
+        Article.find(req.params.id, function (err, article) {
             if (err) {
                 return next(err);
             }
-            commentApi.createComment('article', article.id, req.user, content, function(err, c) {
+            commentApi.createComment('article', article.id, req.user, content, function (err, c) {
                 if (err) {
                     return next(err);
                 }
@@ -484,7 +485,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/articles/:id/delete': function(req, res, next) {
+    'POST /api/articles/:id/delete': function (req, res, next) {
         /**
          * Delete an article.
          * 
@@ -497,29 +498,29 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        warp.transaction(function(err, tx) {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
-                function(callback) {
+                function (callback) {
                     Article.find(req.params.id, tx, callback);
                 },
-                function(article, callback) {
-                    if (article===null) {
+                function (article, callback) {
+                    if (article === null) {
                         return callback(api.notFound('Article'));
                     }
-                    if (req.user.role!==constants.ROLE_ADMIN && req.user.id!==article.user_id) {
+                    if (req.user.role !== constants.ROLE_ADMIN && req.user.id !== article.user_id) {
                         return next(api.notAllowed('Permission denied.'));
                     }
                     article.destroy(tx, callback);
                 },
-                function(r, callback) {
+                function (r, callback) {
                     // delete all texts:
                     warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
@@ -528,4 +529,4 @@ exports = module.exports = {
             });
         });
     }
-}
+};

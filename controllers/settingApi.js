@@ -19,7 +19,7 @@ var website = {
     description: 'Powered by iTranswarp.js',
     custom_header: '<!-- custom header -->',
     custom_footer: '',
-    xmlns: '',
+    xmlns: ''
 };
 
 var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
@@ -38,13 +38,14 @@ function getSettings(group, callback) {
     Setting.findAll({
         where: '`group`=?',
         params: [group]
-    }, function(err, entities) {
+    }, function (err, entities) {
         if (err) {
             return callback(err);
         }
-        var obj = {};
-        var n = group.length + 1;
-        _.each(entities, function(s) {
+        var
+            obj = {},
+            n = group.length + 1;
+        _.each(entities, function (s) {
             obj[s.key.substring(n)] = s.value;
         });
         return callback(null, obj);
@@ -52,18 +53,18 @@ function getSettings(group, callback) {
 }
 
 function getSetting(key, defaultValue, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = defaultValue;
         defaultValue = undefined;
     }
     Setting.find({
         where: '`key`=?',
         params: [key]
-    }, function(err, s) {
+    }, function (err, s) {
         if (err) {
             return callback(err);
         }
-        if (s===null) {
+        if (s === null) {
             return callback(null, defaultValue);
         }
         return callback(null, s.value);
@@ -71,33 +72,35 @@ function getSetting(key, defaultValue, callback) {
 }
 
 function setSetting(key, value, callback) {
-    var m = key.match(RE_KEY);
-    if (m===null) {
+    var
+        m = key.match(RE_KEY),
+        group;
+    if (m === null) {
         return callback(api.invalidParam('key'));
     }
-    var group = m[1];
+    group = m[1];
     async.series([
-        function(callback) {
+        function (callback) {
             warp.update('delete from settings where `key`=?', [key], callback);
         },
-        function(callback) {
+        function (callback) {
             Setting.create({
                 group: group,
                 key: key,
                 value: value
             }, callback);
         }
-    ], function(err, results) {
+    ], function (err, results) {
         callback(err);
     });
 }
 
 function setSettings(group, settings, callback) {
-    var tasks = [function(callback) {
+    var tasks = [function (callback) {
         warp.update('delete from settings where `group`=?', [group], callback);
     }];
-    _.each(settings, function(value, key) {
-        tasks.push(function(callback) {
+    _.each(settings, function (value, key) {
+        tasks.push(function (callback) {
             Setting.create({
                 group: group,
                 key: group + ':' + key,
@@ -105,25 +108,27 @@ function setSettings(group, settings, callback) {
             }, callback);
         });
     });
-    async.series(tasks, function(err, results) {
+    async.series(tasks, function (err, results) {
         return callback(err);
     });
 }
 
 function getSettingsByDefaults(name, defaults, callback) {
-    getSettings(name, function(err, settings) {
+    getSettings(name, function (err, settings) {
         if (err) {
             return callback(err);
         }
-        var s = {};
+        var key, s = {};
         for (key in defaults) {
-            s[key] = settings[key] || defaults[key];
+            if (defaults.hasOwnProperty(key)) {
+                s[key] = settings[key] || defaults[key];
+            }
         }
         return callback(null, s);
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     defaultSettings: {
         website: website
@@ -140,4 +145,5 @@ exports = module.exports = {
     setSettings: setSettings,
 
     getSettingsByDefaults: getSettingsByDefaults
-}
+
+};

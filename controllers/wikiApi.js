@@ -30,15 +30,15 @@ function getWikis(callback) {
 }
 
 function getWiki(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    Wiki.find(id, function(err, entity) {
+    Wiki.find(id, function (err, entity) {
         if (err) {
             return callback(err);
         }
-        if (entity===null) {
+        if (entity === null) {
             return callback(api.notFound('Wiki'));
         }
         callback(null, entity);
@@ -46,19 +46,19 @@ function getWiki(id, tx, callback) {
 }
 
 function getWikiWithContent(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    getWiki(id, tx, function(err, entity) {
+    getWiki(id, tx, function (err, entity) {
         if (err) {
             return callback(err);
         }
-        Text.find(entity.content_id, function(err, text) {
+        Text.find(entity.content_id, function (err, text) {
             if (err) {
                 return callback(err);
             }
-            if (text===null) {
+            if (text === null) {
                 return callback(api.notFound('Text'));
             }
             entity.content = text.value;
@@ -68,46 +68,73 @@ function getWikiWithContent(id, tx, callback) {
 }
 
 function treeIterate(nodes, root) {
-    var rid = root.id;
+    var rid, removes;
+
+    rid = root.id;
     root.children = [];
-    var removes = [];
-    _.each(nodes, function(node, nid) {
-        if (node.parent_id===rid) {
+    removes = [];
+    _.each(nodes, function (node, nid) {
+        if (node.parent_id === rid) {
             root.children.push(node);
             removes.push(nid);
         }
     });
-    _.each(removes, function(nid) {
+    _.each(removes, function (nid) {
         delete nodes[nid];
     });
     if (root.children.length > 0) {
-        root.children.sort(function(n1, n2) {
+        root.children.sort(function (n1, n2) {
             return n1.display_order < n2.display_order ? (-1) : 1;
         });
-        _.each(root.children, function(child) {
+        _.each(root.children, function (child) {
             treeIterate(nodes, child);
         });
     }
 }
 
 function flatten(arr, depth, children) {
-    _.each(children, function(wp) {
+    _.each(children, function (wp) {
         wp.depth = depth;
         arr.push(wp);
         flatten(arr, depth + 1, wp.children);
     });
 }
 
-function getWikiTree(id, isFlatten, callback) {
-    if (arguments.length===2) {
-        callback = isFlatten;
-        isFlatten = false;
+function getWikiPages(wiki_id, returnAsDict, callback) {
+    if (arguments.length === 2) {
+        callback = returnAsDict;
+        returnAsDict = false;
     }
-    getWiki(id, function(err, wiki) {
+    WikiPage.findAll({
+        where: 'wiki_id=?',
+        params: [wiki_id]
+    }, function (err, pages) {
         if (err) {
             return callback(err);
         }
-        getWikiPages(id, function(err, children) {
+        var proot, pdict = {};
+        pages.forEach(function (p) {
+            pdict[p.id] = p;
+        });
+        if (returnAsDict) {
+            return callback(null, pdict);
+        }
+        proot = { id: '' };
+        treeIterate(pdict, proot);
+        return callback(null, proot.children);
+    });
+}
+
+function getWikiTree(id, isFlatten, callback) {
+    if (arguments.length === 2) {
+        callback = isFlatten;
+        isFlatten = false;
+    }
+    getWiki(id, function (err, wiki) {
+        if (err) {
+            return callback(err);
+        }
+        getWikiPages(id, function (err, children) {
             if (err) {
                 return callback(err);
             }
@@ -115,8 +142,7 @@ function getWikiTree(id, isFlatten, callback) {
                 var arr = [];
                 flatten(arr, 0, children);
                 wiki.children = arr;
-            }
-            else {
+            } else {
                 wiki.children = children;
             }
             return callback(null, wiki);
@@ -124,35 +150,52 @@ function getWikiTree(id, isFlatten, callback) {
     });
 }
 
-function getWikiPages(wiki_id, returnAsDict, callback) {
-    if (arguments.length===2) {
-        callback = returnAsDict;
-        returnAsDict = false;
+// get wiki page by id:
+function getWikiPage(id, tx, callback) {
+    if (arguments.length === 2) {
+        callback = tx;
+        tx = undefined;
     }
-    WikiPage.findAll({
-        where: 'wiki_id=?',
-        params: [wiki_id]
-    }, function(err, pages) {
+    WikiPage.find(id, function (err, entity) {
         if (err) {
             return callback(err);
         }
-        var pdict = {};
-        pages.forEach(function(p) {
-            pdict[p.id] = p;
-        });
-        if (returnAsDict) {
-            return callback(null, pdict);
+        if (entity === null) {
+            return callback(api.notFound('WikiPage'));
         }
-        var proot = { id: '' };
-        treeIterate(pdict, proot);
-        return callback(null, proot.children);
+        callback(null, entity);
+    });
+}
+
+// get wiki page by id, with content attached:
+function getWikiPageWithContent(id, tx, callback) {
+    if (arguments.length === 2) {
+        callback = tx;
+        tx = undefined;
+    }
+    getWikiPage(id, tx, function (err, entity) {
+        if (err) {
+            return callback(err);
+        }
+        Text.find(entity.content_id, function (err, text) {
+            if (err) {
+                return callback(err);
+            }
+            if (text === null) {
+                return callback(api.notFound('WikiPage'));
+            }
+            entity.content = text.value;
+            callback(null, entity);
+        });
     });
 }
 
 function createWikiPage(wp, callback) {
-    var content = wp.content;
-    var doCreateWikiPage = function() {
-        warp.transaction(function(err, tx) {
+    var content, doCreateWikiPage;
+
+    content = wp.content;
+    doCreateWikiPage = function () {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return callback(err);
             }
@@ -161,7 +204,7 @@ function createWikiPage(wp, callback) {
                 content_id = next_id();
             async.waterfall([
                 // create text:
-                function(callback) {
+                function (callback) {
                     Text.create({
                         id: content_id,
                         ref_id: wp_id,
@@ -169,18 +212,18 @@ function createWikiPage(wp, callback) {
                     }, tx, callback);
                 },
                 // count:
-                function(text, callback) {
+                function (text, callback) {
                     warp.queryNumber('select count(id) from wikipages where wiki_id=? and parent_id=?', [wp.wiki_id, wp.parent_id], tx, callback);
                 },
                 // create wiki:
-                function(num, callback) {
+                function (num, callback) {
                     wp.id = wp_id;
                     wp.content_id = content_id;
                     wp.display_order = num;
                     WikiPage.create(wp, tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return callback(err);
                     }
@@ -191,11 +234,11 @@ function createWikiPage(wp, callback) {
         });
     };
     if (wp.parent_id) {
-        getWikiPage(wp.parent_id, function(err, entity) {
+        getWikiPage(wp.parent_id, function (err, entity) {
             if (err) {
                 return callback(err);
             }
-            if (wp.wiki_id!==entity.wiki_id) {
+            if (wp.wiki_id !== entity.wiki_id) {
                 return callback(api.invalidParam('parent_id'));
             }
             return doCreateWikiPage();
@@ -205,52 +248,12 @@ function createWikiPage(wp, callback) {
     return doCreateWikiPage();
 }
 
-// get wiki page by id:
-function getWikiPage(id, tx, callback) {
-    if (arguments.length===2) {
-        callback = tx;
-        tx = undefined;
-    }
-    WikiPage.find(id, function(err, entity) {
-        if (err) {
-            return callback(err);
-        }
-        if (entity===null) {
-            return callback(api.notFound('WikiPage'));
-        }
-        callback(null, entity);
-    });
-}
-
-// get wiki page by id, with content attached:
-function getWikiPageWithContent(id, tx, callback) {
-    if (arguments.length===2) {
-        callback = tx;
-        tx = undefined;
-    }
-    getWikiPage(id, tx, function(err, entity) {
-        if (err) {
-            return callback(err);
-        }
-        Text.find(entity.content_id, function(err, text) {
-            if (err) {
-                return callback(err);
-            }
-            if (text===null) {
-                return callback(api.notFound('WikiPage'));
-            }
-            entity.content = text.value;
-            callback(null, entity);
-        });
-    });
-}
-
 function getNavigationMenus(callback) {
-    getWikis(function(err, ws) {
+    getWikis(function (err, ws) {
         if (err) {
             return callback(err);
         }
-        callback(null, _.map(ws, function(w) {
+        callback(null, _.map(ws, function (w) {
             return {
                 name: w.name,
                 url: '/wiki/' + w.id
@@ -259,7 +262,7 @@ function getNavigationMenus(callback) {
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     getNavigationMenus: getNavigationMenus,
 
@@ -275,7 +278,7 @@ exports = module.exports = {
 
     getWikiPageWithContent: getWikiPageWithContent,
 
-    'GET /api/wikis/:id': function(req, res, next) {
+    'GET /api/wikis/:id': function (req, res, next) {
         /**
          * Get wiki by id.
          * 
@@ -284,7 +287,7 @@ exports = module.exports = {
          * @return {object} Wiki object.
          * @error {resource:notfound} Wiki was not found by id.
          */
-        getWikiWithContent(req.params.id, function(err, entity) {
+        getWikiWithContent(req.params.id, function (err, entity) {
             if (err) {
                 return next(err);
             }
@@ -292,14 +295,14 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/wikis': function(req, res, next) {
+    'GET /api/wikis': function (req, res, next) {
         /**
          * Get all wikis.
          * 
          * @name Get Wikis
          * @return {object} Wikis object.
          */
-        getWikis(function(err, entities) {
+        getWikis(function (err, entities) {
             if (err) {
                 return next(err);
             }
@@ -307,7 +310,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis': function(req, res, next) {
+    'POST /api/wikis': function (req, res, next) {
         /**
          * Create a new wiki.
          * 
@@ -324,30 +327,28 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var name, description, content, tags, file, content_id, wiki_id, fnCreate;
         try {
-            var
-                name = utils.getRequiredParam('name', req),
-                description = utils.getRequiredParam('description', req),
-                content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            name = utils.getRequiredParam('name', req);
+            description = utils.getRequiredParam('description', req);
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        var tags = utils.formatTags(utils.getParam('tags', '', req));
+        tags = utils.formatTags(utils.getParam('tags', '', req));
+        file = req.files && req.files.file;
 
-        var file = req.files && req.files.file;
+        content_id = next_id();
+        wiki_id = next_id();
 
-        var content_id = next_id();
-        var wiki_id = next_id();
-
-        var fnCreate = function(fileObject) {
-            warp.transaction(function(err, tx) {
+        fnCreate = function (fileObject) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
                 async.waterfall([
                     // create text:
-                    function(callback) {
+                    function (callback) {
                         Text.create({
                             id: content_id,
                             ref_id: wiki_id,
@@ -355,7 +356,7 @@ exports = module.exports = {
                         }, tx, callback);
                     },
                     // create attachment:
-                    function(text, callback) {
+                    function (text, callback) {
                         if (fileObject) {
                             var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
                             return fn(callback);
@@ -363,18 +364,18 @@ exports = module.exports = {
                         callback(null, null);
                     },
                     // create wiki:
-                    function(atta, callback) {
+                    function (atta, callback) {
                         Wiki.create({
                             id: wiki_id,
-                            cover_id: atta===null ? '' : atta.id,
+                            cover_id: atta === null ? '' : atta.id,
                             content_id: content_id,
                             name: name,
                             tags: tags,
                             description: description
                         }, tx, callback);
                     }
-                ], function(err, result) {
-                    tx.done(err, function(err) {
+                ], function (err, result) {
+                    tx.done(err, function (err) {
                         if (err) {
                             return next(err);
                         }
@@ -386,7 +387,7 @@ exports = module.exports = {
         };
 
         if (file) {
-            return checkAttachment(file, true, function(err, attachFileObject) {
+            return checkAttachment(file, true, function (err, attachFileObject) {
                 if (err) {
                     return next(err);
                 }
@@ -398,7 +399,7 @@ exports = module.exports = {
         return fnCreate(null);
     },
 
-    'POST /api/wikis/:id/comments': function(req, res, next) {
+    'POST /api/wikis/:id/comments': function (req, res, next) {
         /**
          * Create a comment on a wiki.
          * 
@@ -413,17 +414,17 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var content;
         try {
-            var content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        Wiki.find(req.params.id, function(err, wiki) {
+        Wiki.find(req.params.id, function (err, wiki) {
             if (err) {
                 return next(err);
             }
-            commentApi.createComment('wiki', wiki.id, req.user, content, function(err, c) {
+            commentApi.createComment('wiki', wiki.id, req.user, content, function (err, c) {
                 if (err) {
                     return next(err);
                 }
@@ -432,7 +433,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/:id/wikipages': function(req, res, next) {
+    'POST /api/wikis/:id/wikipages': function (req, res, next) {
         /**
          * Create a new wiki page.
          * 
@@ -445,25 +446,24 @@ exports = module.exports = {
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
+        var name, content, parent_id;
         try {
-            var
-                name = utils.getRequiredParam('name', req),
-                content = utils.getRequiredParam('content', req),
-                parent_id = utils.getRequiredParam('parent_id', req);
-        }
-        catch (e) {
+            name = utils.getRequiredParam('name', req);
+            content = utils.getRequiredParam('content', req);
+            parent_id = utils.getRequiredParam('parent_id', req);
+        } catch (e) {
             return next(e);
         }
-        getWiki(req.params.id, function(err, wiki) {
+        getWiki(req.params.id, function (err, wiki) {
             if (err) {
                 return next(err);
             }
             createWikiPage({
                 wiki_id: wiki.id,
-                parent_id: parent_id==='ROOT' ? '' : parent_id,
+                parent_id: parent_id === 'ROOT' ? '' : parent_id,
                 name: name,
                 content: content
-            }, function(err, wikipage) {
+            }, function (err, wikipage) {
                 if (err) {
                     return next(err);
                 }
@@ -472,8 +472,8 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/wikis/wikipages/:id': function(req, res, next) {
-        getWikiPageWithContent(req.params.id, function(err, wp) {
+    'GET /api/wikis/wikipages/:id': function (req, res, next) {
+        getWikiPageWithContent(req.params.id, function (err, wp) {
             if (err) {
                 return next(err);
             }
@@ -481,13 +481,13 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/wikis/:id/wikipages': function(req, res, next) {
+    'GET /api/wikis/:id/wikipages': function (req, res, next) {
         /**
          * Get wiki pages as a tree list.
          * 
          * @return {object} The full tree object.
          */
-        getWikiTree(req.params.id, function(err, wiki) {
+        getWikiTree(req.params.id, function (err, wiki) {
             if (err) {
                 return next(err);
             }
@@ -495,7 +495,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/:id': function(req, res, next) {
+    'POST /api/wikis/:id': function (req, res, next) {
         /**
          * Update a wiki.
          * 
@@ -504,42 +504,45 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        var name = utils.getParam('name', req),
+        var
+            name = utils.getParam('name', req),
             description = utils.getParam('description', req),
             tags = utils.getParam('tags', req),
-            content = utils.getParam('content', req);
+            content = utils.getParam('content', req),
+            file,
+            fnUpdate;
 
-        if (name!==null && name==='') {
+        if (name !== null && name === '') {
             return next(api.invalidParam('name'));
         }
-        if (description!==null && description==='') {
+        if (description !== null && description === '') {
             return next(api.invalidParam('description'));
         }
-        if (content!==null && content==='') {
+        if (content !== null && content === '') {
             return next(api.invalidParam('content'));
         }
-        if (tags!==null) {
+        if (tags !== null) {
             tags = utils.formatTags(tags);
         }
 
-        var file = req.files && req.files.file;
+        file = req.files && req.files.file;
 
-        var fnUpdate = function(fileObject) {
-            warp.transaction(function(err, tx) {
+        fnUpdate = function (fileObject) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
                 async.waterfall([
                     // query wiki:
-                    function(callback) {
+                    function (callback) {
                         Wiki.find(req.params.id, tx, callback);
                     },
                     // update text?
-                    function(wiki, callback) {
-                        if (wiki===null) {
+                    function (wiki, callback) {
+                        if (wiki === null) {
                             return callback(api.notFound('Wiki'));
                         }
-                        if (content===null) {
+                        if (content === null) {
                             return callback(null, wiki);
                         }
                         var content_id = next_id();
@@ -547,7 +550,7 @@ exports = module.exports = {
                             id: content_id,
                             ref_id: wiki.id,
                             value: content
-                        }, tx, function(err, text) {
+                        }, tx, function (err, text) {
                             if (err) {
                                 return callback(err);
                             }
@@ -556,10 +559,10 @@ exports = module.exports = {
                         });
                     },
                     // update cover?
-                    function(wiki, callback) {
+                    function (wiki, callback) {
                         if (fileObject) {
                             var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
-                            return fn(function(err, atta) {
+                            return fn(function (err, atta) {
                                 if (err) {
                                     return callback(err);
                                 }
@@ -570,28 +573,28 @@ exports = module.exports = {
                         callback(null, wiki);
                     },
                     // update wiki:
-                    function(wiki, callback) {
-                        if (name!==null) {
+                    function (wiki, callback) {
+                        if (name !== null) {
                             wiki.name = name;
                         }
-                        if (description!==null) {
+                        if (description !== null) {
                             wiki.description = description;
                         }
-                        if (tags!==null) {
+                        if (tags !== null) {
                             wiki.tags = tags;
                         }
                         wiki.update(tx, callback);
                     }
-                ], function(err, result) {
-                    tx.done(err, function(err) {
+                ], function (err, result) {
+                    tx.done(err, function (err) {
                         if (err) {
                             return next(err);
                         }
-                        if (content!==null) {
+                        if (content !== null) {
                             result.content = content;
                             return res.send(result);
                         }
-                        Text.find(result.content_id, function(err, text) {
+                        Text.find(result.content_id, function (err, text) {
                             if (err) {
                                 return next(err);
                             }
@@ -604,7 +607,7 @@ exports = module.exports = {
         };
 
         if (file) {
-            return checkAttachment(file, true, function(err, attachFileObject) {
+            return checkAttachment(file, true, function (err, attachFileObject) {
                 if (err) {
                     return next(err);
                 }
@@ -616,7 +619,7 @@ exports = module.exports = {
         return fnUpdate(null);
     },
 
-    'POST /api/wikis/wikipages/:id/move/:target_id': function(req, res, next) {
+    'POST /api/wikis/wikipages/:id/move/:target_id': function (req, res, next) {
         /**
          * Move a wikipage to another node.
          * 
@@ -627,50 +630,53 @@ exports = module.exports = {
         }
         var
             wpid = req.params.id,
-            target_id = req.params.target_id;
+            target_id = req.params.target_id,
+            index,
+            wiki,
+            movingPage,
+            parentPage,
+            allPages;
         try {
-            var index = parseInt(utils.getRequiredParam('index', req));
-        }
-        catch (e) {
+            index = parseInt(utils.getRequiredParam('index', req), 10);
+        } catch (e) {
             return next(e);
         }
         if (isNaN(index) || index < 0) {
             return next(api.invalidParam('index'));
         }
         // get the 2 pages:
-        var wiki, movingPage, parentPage, allPages;
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 getWikiPage(wpid, callback);
             },
-            function(wp, callback) {
+            function (wp, callback) {
                 movingPage = wp;
                 getWiki(movingPage.wiki_id, callback);
             },
-            function(w, callback) {
+            function (w, callback) {
                 wiki = w;
-                if (target_id==='ROOT') {
+                if (target_id === 'ROOT') {
                     return callback(null, null);
                 }
                 getWikiPage(target_id, callback);
             },
-            function(wp, callback) {
+            function (wp, callback) {
                 parentPage = wp;
-                if (parentPage!==null && parentPage.wiki_id!==wiki.id) {
+                if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
                     return callback(api.invalidParam('target_id'));
                 }
                 callback(null, null);
             },
-            function(prev, callback) {
+            function (prev, callback) {
                 getWikiPages(wiki.id, true, callback);
             },
-            function(all, callback) {
+            function (all, callback) {
                 allPages = all;
                 // check to prevent recursive:
-                if (parentPage!==null) {
+                if (parentPage !== null) {
                     var p = parentPage;
                     while (p.parent_id !== '') {
-                        if (p.parent_id===movingPage.id) {
+                        if (p.parent_id === movingPage.id) {
                             return callback(api.resourceConflictError('Will cause recursive.'));
                         }
                         p = allPages[p.parent_id];
@@ -679,42 +685,43 @@ exports = module.exports = {
                 // check ok:
                 callback(null, null);
             }
-        ], function(err, r) {
+        ], function (err, r) {
             if (err) {
                 return next(err);
             }
             // get current children:
-            var parentId = parentPage===null ? '' : parentPage.id;
-            var L = [];
-            _.each(allPages, function(p, pid) {
-                if (p.parent_id===parentId && p.id!==movingPage.id) {
+            var
+                parentId = parentPage === null ? '' : parentPage.id,
+                L = [];
+            _.each(allPages, function (p, pid) {
+                if (p.parent_id === parentId && p.id !== movingPage.id) {
                     L.push(p);
                 }
             });
             if (index > L.length) {
                 return next(api.invalidParam('index'));
             }
-            L.sort(function(p1, p2) {
+            L.sort(function (p1, p2) {
                 return p1.display_order < p2.display_order ? (-1) : 1;
             });
             L.splice(index, 0, movingPage);
             // update display order and movingPage:
-            warp.transaction(function(err, tx) {
+            warp.transaction(function (err, tx) {
                 if (err) {
                     return next(err);
                 }
-                var tasks = _.map(L, function(p, index) {
-                    return function(callback) {
+                var tasks = _.map(L, function (p, index) {
+                    return function (callback) {
                         warp.update('update wikipages set display_order=? where id=?', [index, p.id], tx, callback);
                     };
                 });
-                tasks.push(function(callback) {
+                tasks.push(function (callback) {
                     movingPage.display_order = index; // <-- already updated, but need to pass to result
                     movingPage.parent_id = parentId;
                     movingPage.update(['parent_id', 'updated_at', 'version'], tx, callback);
                 });
-                async.series(tasks, function(err, results) {
-                    tx.done(err, function(err) {
+                async.series(tasks, function (err, results) {
+                    tx.done(err, function (err) {
                         if (err) {
                             return next(err);
                         }
@@ -725,34 +732,35 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/wikipages/:id': function(req, res, next) {
+    'POST /api/wikis/wikipages/:id': function (req, res, next) {
         var
             id = req.params.id,
             name = utils.getParam('name', req),
-            content = utils.getParam('content', req);
-        if (name!==null && name==='') {
+            content = utils.getParam('content', req),
+            content_id;
+        if (name !== null && name === '') {
             return next(api.invalidParam('name'));
         }
-        if (content!==null && content==='') {
+        if (content !== null && content === '') {
             return next(api.invalidParam('content'));
         }
-        var content_id = next_id();
-        warp.transaction(function(err, tx) {
+        content_id = next_id();
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
                 // query wiki page:
-                function(callback) {
+                function (callback) {
                     getWikiPage(id, tx, callback);
                 },
-                function(wp, callback) {
-                    if (content!==null) {
+                function (wp, callback) {
+                    if (content !== null) {
                         Text.create({
                             id: content_id,
                             ref_id: id,
                             value: content
-                        }, tx, function(err, text) {
+                        }, tx, function (err, text) {
                             if (err) {
                                 return callback(err);
                             }
@@ -763,22 +771,22 @@ exports = module.exports = {
                     }
                     callback(null, wp);
                 },
-                function(wp, callback) {
-                    if (name!==null) {
+                function (wp, callback) {
+                    if (name !== null) {
                         wp.name = name;
                     }
                     wp.update(tx, callback);
                 }
-            ], function(err, wp) {
-                tx.done(err, function(err) {
+            ], function (err, wp) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
-                    if (content!==null) {
+                    if (content !== null) {
                         wp.content = content;
                         return res.send(wp);
                     }
-                    Text.find(wp.content_id, function(err, text) {
+                    Text.find(wp.content_id, function (err, text) {
                         if (err) {
                             return next(err);
                         }
@@ -790,7 +798,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/wikipages/:id/comments': function(req, res, next) {
+    'POST /api/wikis/wikipages/:id/comments': function (req, res, next) {
         /**
          * Create a comment on a wiki page.
          * 
@@ -805,17 +813,17 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var content;
         try {
-            var content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        WikiPage.find(req.params.id, function(err, wikipage) {
+        WikiPage.find(req.params.id, function (err, wikipage) {
             if (err) {
                 return next(err);
             }
-            commentApi.createComment('wikipage', wikipage.id, req.user, content, function(err, c) {
+            commentApi.createComment('wikipage', wikipage.id, req.user, content, function (err, c) {
                 if (err) {
                     return next(err);
                 }
@@ -824,7 +832,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/wikipages/:id/delete': function(req, res, next) {
+    'POST /api/wikis/wikipages/:id/delete': function (req, res, next) {
         /**
          * Delete a wikipage if it has no child wikipage.
          *
@@ -832,7 +840,7 @@ exports = module.exports = {
          * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
         var id = req.params.id;
-        getWikiPage(id, function(err, wp) {
+        getWikiPage(id, function (err, wp) {
             if (err) {
                 return next(err);
             }
@@ -840,14 +848,14 @@ exports = module.exports = {
                 select: 'count(id)',
                 where: 'parent_id=?',
                 params: [id]
-            }, function(err, num) {
+            }, function (err, num) {
                 if (err) {
                     return next(err);
                 }
                 if (num > 0) {
                     return next(api.resourceConflictError('WikiPage', 'Cannot delete a non-empty wiki pages.'));
                 }
-                wp.destroy(function(err) {
+                wp.destroy(function (err) {
                     if (err) {
                         return next(err);
                     }
@@ -857,7 +865,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/wikis/:id/delete': function(req, res, next) {
+    'POST /api/wikis/:id/delete': function (req, res, next) {
         /**
          * Delete a wiki by its id.
          * 
@@ -870,16 +878,16 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        warp.transaction(function(err, tx) {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
-                function(callback) {
+                function (callback) {
                     Wiki.find(req.params.id, tx, callback);
                 },
-                function(wiki, callback) {
-                    if (wiki===null) {
+                function (wiki, callback) {
+                    if (wiki === null) {
                         return callback(api.notFound('Wiki'));
                     }
                     // check wiki pages:
@@ -887,7 +895,7 @@ exports = module.exports = {
                         select: 'count(id)',
                         where: 'wiki_id=?',
                         params: [wiki.id]
-                    }, tx, function(err, num) {
+                    }, tx, function (err, num) {
                         if (err) {
                             return callback(err);
                         }
@@ -897,15 +905,15 @@ exports = module.exports = {
                         callback(null, wiki);
                     });
                 },
-                function(wiki, callback) {
+                function (wiki, callback) {
                     wiki.destroy(tx, callback);
                 },
-                function(r, callback) {
+                function (r, callback) {
                     // delete all texts:
                     warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
@@ -914,4 +922,4 @@ exports = module.exports = {
             });
         });
     }
-}
+};

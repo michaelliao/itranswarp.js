@@ -25,21 +25,8 @@ var LOCK_TIMES = {
 
 var isSecure = config.session.httpsForManagement;
 
-function lockUser(id, time, callback) {
-    getUser(id, function(err, user) {
-        if (err) {
-            return callback(err);
-        }
-        if (user.role===constants.ROLE_ADMIN) {
-            return callback(api.invalidParam('time'));
-        }
-        user.locked_util = time;
-        user.update(['locked_util', 'updated_at', 'version'], callback);
-    });
-}
-
 function getUsers(page, callback) {
-    User.findNumber('count(*)', function(err, num) {
+    User.findNumber('count(*)', function (err, num) {
         if (err) {
             return callback(err);
         }
@@ -54,7 +41,7 @@ function getUsers(page, callback) {
             offset: page.offset,
             limit: page.limit,
             order: 'created_at desc'
-        }, function(err, users) {
+        }, function (err, users) {
             if (err) {
                 return callback(err);
             }
@@ -67,35 +54,48 @@ function getUsers(page, callback) {
 }
 
 function getUser(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    User.find(id, tx, function(err, user) {
+    User.find(id, tx, function (err, user) {
         if (err) {
             return callback(err);
         }
-        if (user===null) {
+        if (user === null) {
             return callback(api.notFound('User'));
         }
         callback(null, user);
     });
 }
 
+function lockUser(id, time, callback) {
+    getUser(id, function (err, user) {
+        if (err) {
+            return callback(err);
+        }
+        if (user.role === constants.ROLE_ADMIN) {
+            return callback(api.invalidParam('time'));
+        }
+        user.locked_util = time;
+        user.update(['locked_util', 'updated_at', 'version'], callback);
+    });
+}
+
 function createAuthUser(user, authUser, callback) {
-    warp.transaction(function(err, tx) {
+    warp.transaction(function (err, tx) {
         if (err) {
             return callback(err);
         }
         async.series({
-            authuser: function(callback) {
+            authuser: function (callback) {
                 AuthUser.create(authUser, tx, callback);
             },
-            user: function(callback) {
+            user: function (callback) {
                 User.create(user, tx, callback);
             }
-        }, function(err, result) {
-            tx.done(err, function(err) {
+        }, function (err, result) {
+            tx.done(err, function (err) {
                 if (err) {
                     return callback(err);
                 }
@@ -111,27 +111,28 @@ function processAuthentication(provider, authentication, callback) {
     AuthUser.find({
         where: 'auth_id=?',
         params: [auth_id]
-    }, function(err, au) {
+    }, function (err, au) {
         if (err) {
             return callback(err);
         }
-        if (au===null) {
-            var user_id = next_id();
-            var user = {
-                id: user_id,
-                email: user_id + '@' + provider,
-                name: authentication.name,
-                passwd: '',
-                image_url: authentication.image_url || '/static/img/user.png'
-            };
-            var authUser = {
-                user_id: user_id,
-                auth_provider: provider,
-                auth_id: auth_id,
-                auth_token: authentication.access_token,
-                expires_at: Date.now() + authentication.expires_in
-            };
-            createAuthUser(user, authUser, function(err, au, u) {
+        if (au === null) {
+            var
+                user_id = next_id(),
+                user = {
+                    id: user_id,
+                    email: user_id + '@' + provider,
+                    name: authentication.name,
+                    passwd: '',
+                    image_url: authentication.image_url || '/static/img/user.png'
+                },
+                authUser = {
+                    user_id: user_id,
+                    auth_provider: provider,
+                    auth_id: auth_id,
+                    auth_token: authentication.access_token,
+                    expires_at: Date.now() + authentication.expires_in
+                };
+            createAuthUser(user, authUser, function (err, au, u) {
                 if (err) {
                     return callback(err);
                 }
@@ -142,18 +143,18 @@ function processAuthentication(provider, authentication, callback) {
         // update auth user:
         au.auth_token = authentication.access_token;
         au.expires_at = Date.now() + authentication.expires_in;
-        au.update(['auth_token', 'expires_at', 'updated_at', 'version'], function(err, result) {
-            getUser(au.user_id, function(err, u) {
+        au.update(['auth_token', 'expires_at', 'updated_at', 'version'], function (err, result) {
+            getUser(au.user_id, function (err, u) {
                 if (err) {
                     return callback(err);
                 }
-                if (u.name===authentication.name && u.image_url===authentication.image_url) {
+                if (u.name === authentication.name && u.image_url === authentication.image_url) {
                     return callback(null, au, u);
                 }
                 // update user:
                 u.name = authentication.name;
                 u.image_url = authentication.image_url;
-                u.update(function(err, u) {
+                u.update(function (err, u) {
                     if (err) {
                         return callback(err);
                     }
@@ -164,35 +165,34 @@ function processAuthentication(provider, authentication, callback) {
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     getUser: getUser,
 
     getUsers: getUsers,
 
-    'POST /api/users/:id/lock': function(req, res, next) {
+    'POST /api/users/:id/lock': function (req, res, next) {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var t, userId, now, m;
         try {
-            var t = utils.getRequiredParam('time', req);
-        }
-        catch (e) {
+            t = utils.getRequiredParam('time', req);
+        } catch (e) {
             return next(e);
         }
-        var userId = req.params.id;
-        var now = Date.now();
-        if (typeof(t)==='string') {
-            var m = t.match(/^(\d{1,4})(d|w|m|y)$/);
-            if (m===null) {
+        userId = req.params.id;
+        now = Date.now();
+        if (typeof t === 'string') {
+            m = t.match(/^(\d{1,4})(d|w|m|y)$/);
+            if (m === null) {
                 return next(api.invalidParam('time', 'Invalid time.'));
             }
-            t = now + parseInt(m[1]) * LOCK_TIMES[m[2]];
-        }
-        else if (typeof(t)!=='number') {
+            t = now + parseInt(m[1], 10) * LOCK_TIMES[m[2]];
+        } else if (typeof t !== 'number') {
             return next(api.invalidParam('time', 'Invalid time.'));
         }
-        lockUser(userId, t, function(err, r) {
+        lockUser(userId, t, function (err, r) {
             if (err) {
                 return next(err);
             }
@@ -200,16 +200,16 @@ exports = module.exports = {
         });
     },
 
-    'GET /auth/signout': function(req, res, next) {
+    'GET /auth/signout': function (req, res, next) {
         res.clearCookie(utils.SESSION_COOKIE_NAME);
         var referer = req.get('referer') || '/';
-        if (referer.indexOf('/manage/')>=0 || referer.indexOf('/auth/')>=0) {
+        if (referer.indexOf('/manage/') >= 0 || referer.indexOf('/auth/') >= 0) {
             referer = '/';
         }
         res.redirect(referer);
     },
 
-    'GET /manage/signout': function(req, res, next) {
+    'GET /manage/signout': function (req, res, next) {
         res.clearCookie(utils.SESSION_COOKIE_NAME, {
             path: '/',
             secure: isSecure
@@ -217,22 +217,23 @@ exports = module.exports = {
         res.redirect('/');
     },
 
-    'GET /manage/signin': function(req, res, next) {
+    'GET /manage/signin': function (req, res, next) {
         /**
          * Display authentication page.
          */
         res.render('manage/signin.html', {});
     },
 
-    'GET /auth/from/:name': function(req, res, next) {
-        var provider = auth[req.params.name];
+    'GET /auth/from/:name': function (req, res, next) {
+        var provider, redirect, redirect_uri, jscallback;
+        provider = auth[req.params.name];
         if (provider) {
-            var redirect = req.get('referer');
-            if (redirect.indexOf('/auth/')>=0 || redirect.indexOf('/manage')>=0) {
+            redirect = req.get('referer');
+            if (redirect.indexOf('/auth/') >= 0 || redirect.indexOf('/manage') >= 0) {
                 redirect = '/';
             }
-            var redirect_uri = 'http://' + req.host + '/auth/callback/' + req.params.name + '?redirect=' + encodeURIComponent(redirect);
-            var jscallback = req.query.jscallback;
+            redirect_uri = 'http://' + req.host + '/auth/callback/' + req.params.name + '?redirect=' + encodeURIComponent(redirect);
+            jscallback = req.query.jscallback;
             if (jscallback) {
                 redirect_uri = redirect_uri + '&jscallback=' + jscallback;
             }
@@ -243,17 +244,20 @@ exports = module.exports = {
         return res.send(404, 'Not Found');
     },
 
-    'GET /auth/callback/:name': function(req, res, next) {
-        var providerName = req.params.name;
-        var provider = auth[req.params.name];
-        if (! provider) {
+    'GET /auth/callback/:name': function (req, res, next) {
+        var providerName, provider, code, jscallback;
+
+        providerName = req.params.name;
+        provider = auth[req.params.name];
+        jscallback = req.query.jscallback;
+
+        if (!provider) {
             return res.send(404, 'Not Found');
         }
-        var code = req.query.code;
-        if (! code) {
+        code = req.query.code;
+        if (!code) {
             // something error:
             console.log('oauth signin failed...');
-            var jscallback = req.query.jscallback;
             if (jscallback) {
                 return res.send('<html><body><script> self.close(); </script></body></html>');
             }
@@ -261,18 +265,17 @@ exports = module.exports = {
         }
         provider.getAuthentication({
             code: code
-        }, function(err, authentication) {
+        }, function (err, authentication) {
             if (err) {
                 res.send(err);
             }
             // check AuthUser:
-            processAuthentication(providerName, authentication, function(err, authUser, user) {
+            processAuthentication(providerName, authentication, function (err, authUser, user) {
                 var cookieStr = utils.makeSessionCookie(providerName, authUser.id, authUser.auth_token, authUser.expires_at);
                 res.cookie(utils.SESSION_COOKIE_NAME, cookieStr, {
                     path: '/',
                     expires: new Date(authUser.expires_at)
                 });
-                var jscallback = req.query.jscallback;
                 if (jscallback) {
                     return res.send('<html><body><script> window.opener.' + jscallback + '(' + JSON.stringify({
                         id: user.id,
@@ -285,29 +288,30 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/authenticate': function(req, res, next) {
+    'POST /api/authenticate': function (req, res, next) {
+        var email, passwd;
         try {
-            var email = utils.getRequiredParam('email', req),
-                passwd = utils.getRequiredParam('passwd', req);
-        }
-        catch (e) {
+            email = utils.getRequiredParam('email', req);
+            passwd = utils.getRequiredParam('passwd', req);
+        } catch (e) {
             return next(e);
         }
         User.find({
             where: 'email=?',
             params: [email]
-        }, function(err, user) {
+        }, function (err, user) {
             if (err) {
                 return next(err);
             }
-            if ( !user || !user.passwd || user.passwd!==passwd) {
+            if (!user || !user.passwd || user.passwd !== passwd) {
                 return next(api.error('auth:failed', '', 'Bad email or password.'));
             }
             if (user.locked_util > Date.now()) {
                 return next(api.error('auth:locked', '', 'User is locked.'));
             }
-            var expires = Date.now() + 604800000; // 7 days
-            var cookieStr = utils.makeSessionCookie('local', user.id, user.passwd, expires);
+            var
+                expires = Date.now() + 604800000, // 7 days
+                cookieStr = utils.makeSessionCookie('local', user.id, user.passwd, expires);
             res.cookie(utils.SESSION_COOKIE_NAME, cookieStr, {
                 path: '/',
                 secure: isSecure,
@@ -318,4 +322,4 @@ exports = module.exports = {
             res.send(user);
         });
     }
-}
+};

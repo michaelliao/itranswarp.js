@@ -19,11 +19,11 @@ function checkAliasAvailable(alias, tx, callback) {
     Page.find({
         where: 'alias=?',
         params: [alias]
-    }, tx, function(err, entity) {
+    }, tx, function (err, entity) {
         if (err) {
             return callback(err);
-        };
-        if (entity!==null) {
+        }
+        if (entity !== null) {
             return callback(api.invalidParam('alias', 'duplicate alias'));
         }
         callback(null, true);
@@ -35,18 +35,18 @@ function getPages(callback) {
 }
 
 function doFindPage(cond, tx, callback) {
-    Page.find(cond, tx, function(err, page) {
+    Page.find(cond, tx, function (err, page) {
         if (err) {
             return callback(err);
         }
-        if (page===null) {
+        if (page === null) {
             return callback(api.notFound('Page'));
         }
-        Text.find(page.content_id, tx, function(err, text) {
+        Text.find(page.content_id, tx, function (err, text) {
             if (err) {
                 return callback(err);
             }
-            if (text===null) {
+            if (text === null) {
                 return callback(api.notFound('Text'));
             }
             page.content = text.value;
@@ -56,7 +56,7 @@ function doFindPage(cond, tx, callback) {
 }
 
 function getPage(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
@@ -64,7 +64,7 @@ function getPage(id, tx, callback) {
 }
 
 function getPageByAlias(alias, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
@@ -75,11 +75,11 @@ function getPageByAlias(alias, tx, callback) {
 }
 
 function getNavigationMenus(callback) {
-    getPages(function(err, ps) {
+    getPages(function (err, ps) {
         if (err) {
             return callback(err);
         }
-        callback(null, _.map(ps, function(p) {
+        callback(null, _.map(ps, function (p) {
             return {
                 name: p.name,
                 url: '/page/' + p.alias
@@ -88,7 +88,7 @@ function getNavigationMenus(callback) {
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     getNavigationMenus: getNavigationMenus,
 
@@ -98,14 +98,14 @@ exports = module.exports = {
 
     getPageByAlias: getPageByAlias,
 
-    'GET /api/pages/:id': function(req, res, next) {
+    'GET /api/pages/:id': function (req, res, next) {
         /**
          * Get page by id.
          * 
          * @param {string} :id - The id of the page.
          * @return {object} Page object.
          */
-        getPage(req.params.id, function(err, page) {
+        getPage(req.params.id, function (err, page) {
             if (err) {
                 return next(err);
             }
@@ -113,13 +113,13 @@ exports = module.exports = {
         });
     },
 
-    'GET /api/pages': function(req, res, next) {
+    'GET /api/pages': function (req, res, next) {
         /**
          * Get all pages object (but no content value).
          * 
          * @return {object} Result as {"pages": [{page}, {page}...]}
          */
-        getPages(function(err, pages) {
+        getPages(function (err, pages) {
             if (err) {
                 return next(err);
             }
@@ -127,7 +127,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/pages': function(req, res, next) {
+    'POST /api/pages': function (req, res, next) {
         /**
          * Create a new page.
          * 
@@ -136,34 +136,34 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
+        var name, alias, content, draft, tags, content_id, page_id;
         try {
-            var name = utils.getRequiredParam('name', req),
-                alias = utils.getRequiredParam('alias', req).toLowerCase(),
-                content = utils.getRequiredParam('content', req);
-        }
-        catch (e) {
+            name = utils.getRequiredParam('name', req);
+            alias = utils.getRequiredParam('alias', req).toLowerCase();
+            content = utils.getRequiredParam('content', req);
+        } catch (e) {
             return next(e);
         }
-        if (! /^[a-z0-9\-\_]{1,100}$/.test(alias)) {
+        if (!/^[a-z0-9\-\_]{1,100}$/.test(alias)) {
             return next(api.invalidParam('alias'));
         }
 
-        var draft = 'true' === utils.getParam('draft', '', req),
-            tags = utils.formatTags(utils.getParam('tags', '', req));
+        draft = 'true' === utils.getParam('draft', '', req);
+        tags = utils.formatTags(utils.getParam('tags', '', req));
 
-        var content_id = next_id();
-        var page_id = next_id();
+        content_id = next_id();
+        page_id = next_id();
 
-        warp.transaction(function(err, tx) {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
-                function(callback) {
+                function (callback) {
                     // check alias exist:
                     checkAliasAvailable(alias, tx, callback);
                 },
-                function(aliasIsAvailable, callback) {
+                function (aliasIsAvailable, callback) {
                     // create text:
                     Text.create({
                         id: content_id,
@@ -171,7 +171,7 @@ exports = module.exports = {
                         value: content
                     }, tx, callback);
                 },
-                function(text, callback) {
+                function (text, callback) {
                     // create page:
                     Page.create({
                         id: page_id,
@@ -182,8 +182,8 @@ exports = module.exports = {
                         draft: draft
                     }, tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
@@ -194,7 +194,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/pages/:id': function(req, res, next) {
+    'POST /api/pages/:id': function (req, res, next) {
         /**
          * Update page by id.
          * 
@@ -209,38 +209,38 @@ exports = module.exports = {
             tags = utils.getParam('tags', req),
             draft = utils.getParam('draft', req),
             content = utils.getParam('content', req);
-        if (name!==null && name==='') {
+        if (name !== null && name === '') {
             return next(api.invalidParam('name'));
         }
-        if (alias!==null) {
+        if (alias !== null) {
             alias = alias.toLowerCase();
-            if (alias==='' || ! /^[a-z0-9\-\_]{1,100}$/.test(alias)) {
+            if (alias === '' || !/^[a-z0-9\-\_]{1,100}$/.test(alias)) {
                 return next(api.invalidParam('alias'));
             }
         }
-        if (tags!==null) {
+        if (tags !== null) {
             tags = utils.formatTags(tags);
         }
-        if (content!==null && content==='') {
+        if (content !== null && content === '') {
             return next(api.invalidParam('content'));
         }
-        warp.transaction(function(err, tx) {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
-                function(callback) {
+                function (callback) {
                     // get page by id:
                     Page.find(req.params.id, tx, callback);
                 },
-                function(page, callback) {
-                    if (page===null) {
+                function (page, callback) {
+                    if (page === null) {
                         return callback(api.notFound('Page'));
                     }
                     // check alias:
-                    if (alias!==null && page.alias!==alias) {
+                    if (alias !== null && page.alias !== alias) {
                         // check alias exist:
-                        return checkAliasAvailable(alias, tx, function(err, result) {
+                        return checkAliasAvailable(alias, tx, function (err, result) {
                             if (err) {
                                 return callback(err);
                             }
@@ -250,15 +250,15 @@ exports = module.exports = {
                     // no need to update alias!
                     callback(null, page);
                 },
-                function(page, callback) {
+                function (page, callback) {
                     // create Text if needed:
-                    if (content!==null) {
+                    if (content !== null) {
                         console.log('Need update text...');
                         Text.create({
                             id: next_id(),
                             ref_id: page.id,
                             value: content
-                        }, tx, function(err, text) {
+                        }, tx, function (err, text) {
                             page.content_id = text.id;
                             callback(err, page);
                         });
@@ -266,36 +266,36 @@ exports = module.exports = {
                     }
                     callback(null, page);
                 },
-                function(page, callback) {
+                function (page, callback) {
                     // update page:
-                    if (name!==null) {
+                    if (name !== null) {
                         page.name = name;
                     }
-                    if (alias!==null) {
+                    if (alias !== null) {
                         page.alias = alias;
                     }
-                    if (tags!==null) {
+                    if (tags !== null) {
                         page.tags = tags;
                     }
-                    if (draft!==null) {
-                        page.draft = draft==='true';
+                    if (draft !== null) {
+                        page.draft = draft === 'true';
                     }
                     page.update(tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
-                    if (content!==null) {
+                    if (content !== null) {
                         result.content = content;
                         return res.send(result);
                     }
-                    Text.find(result.content_id, function(err, text) {
+                    Text.find(result.content_id, function (err, text) {
                         if (err) {
                             return next(err);
                         }
-                        if (text===null) {
+                        if (text === null) {
                             return next(api.notFound('Text'));
                         }
                         result.content = text.value;
@@ -306,7 +306,7 @@ exports = module.exports = {
         });
     },
 
-    'POST /api/pages/:id/delete': function(req, res, next) {
+    'POST /api/pages/:id/delete': function (req, res, next) {
         /**
          * Delete a page by its id.
          * 
@@ -316,26 +316,26 @@ exports = module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        warp.transaction(function(err, tx) {
+        warp.transaction(function (err, tx) {
             if (err) {
                 return next(err);
             }
             async.waterfall([
-                function(callback) {
+                function (callback) {
                     Page.find(req.params.id, tx, callback);
                 },
-                function(page, callback) {
-                    if (page===null) {
+                function (page, callback) {
+                    if (page === null) {
                         return callback(api.notFound('Page'));
                     }
                     page.destroy(tx, callback);
                 },
-                function(r, callback) {
+                function (r, callback) {
                     // delete all texts:
                     warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
                 }
-            ], function(err, result) {
-                tx.done(err, function(err) {
+            ], function (err, result) {
+                tx.done(err, function (err) {
                     if (err) {
                         return next(err);
                     }
@@ -344,4 +344,4 @@ exports = module.exports = {
             });
         });
     }
-}
+};

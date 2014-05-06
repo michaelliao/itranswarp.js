@@ -15,11 +15,11 @@ var
     next_id = db.next_id;
 
 function formatComment(s) {
-    return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/\</g, '&lt;').replace(/\>/g, '&gt;');
+    return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/</g, '&lt;').replace(/\>/g, '&gt;');
 }
 
 function createComment(ref_type, ref_id, user, content, tx, callback) {
-    if (arguments.length===5) {
+    if (arguments.length === 5) {
         callback = tx;
         tx = undefined;
     }
@@ -34,7 +34,7 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
         user_name: user.name,
         user_image_url: user.image_url,
         content: fc
-    }, tx, function(err, entity) {
+    }, tx, function (err, entity) {
         if (err) {
             return callback(err);
         }
@@ -44,7 +44,7 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
 
 function getCommentsByRef(ref_id, from_id, callback) {
     var query, limit = 20;
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = from_id;
         from_id = null;
     }
@@ -53,8 +53,7 @@ function getCommentsByRef(ref_id, from_id, callback) {
             where: 'ref_id=? and id<=?',
             params: [ref_id, from_id]
         };
-    }
-    else {
+    } else {
         query = {
             where: 'ref_id=?',
             params: [ref_id]
@@ -62,7 +61,7 @@ function getCommentsByRef(ref_id, from_id, callback) {
     }
     query.limit = limit + 1;
     query.order = 'id desc';
-    Comment.findAll(query, function(err, comments) {
+    Comment.findAll(query, function (err, comments) {
         if (err) {
             return callback(err);
         }
@@ -78,7 +77,7 @@ function getCommentsByRef(ref_id, from_id, callback) {
 }
 
 function getComments(ref_id, page, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = page;
         page = ref_id;
         ref_id = undefined;
@@ -90,7 +89,7 @@ function getComments(ref_id, page, callback) {
         query.where = 'ref_id=?';
         query.params = [ref_id];
     }
-    Comment.findNumber(query, function(err, num) {
+    Comment.findNumber(query, function (err, num) {
         if (err) {
             return callback(err);
         }
@@ -101,7 +100,6 @@ function getComments(ref_id, page, callback) {
                 comments: []
             });
         }
-        console.log('PAGE -----> ' + JSON.stringify(page));
         var query2 = {
             select: '*',
             offset: page.offset,
@@ -112,7 +110,7 @@ function getComments(ref_id, page, callback) {
             query2.where = 'ref_id=?';
             query2.params = [ref_id];
         }
-        Comment.findAll(query2, function(err, comments) {
+        Comment.findAll(query2, function (err, comments) {
             if (err) {
                 return callback(err);
             }
@@ -125,15 +123,15 @@ function getComments(ref_id, page, callback) {
 }
 
 function deleteComment(id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    Comment.find(id, tx, function(err, c) {
+    Comment.find(id, tx, function (err, c) {
         if (err) {
             return callback(err);
         }
-        c.destroy(tx, function(err, r) {
+        c.destroy(tx, function (err, r) {
             if (err) {
                 return callback(err);
             }
@@ -143,11 +141,11 @@ function deleteComment(id, tx, callback) {
 }
 
 function deleteComments(ref_id, tx, callback) {
-    if (arguments.length===2) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
-    warp.update('', [ref_id], tx, function(err, r) {
+    warp.update('', [ref_id], tx, function (err, r) {
         if (err) {
             return callback(err);
         }
@@ -155,7 +153,7 @@ function deleteComments(ref_id, tx, callback) {
     });
 }
 
-exports = module.exports = {
+module.exports = {
 
     createComment: createComment,
 
@@ -167,7 +165,7 @@ exports = module.exports = {
 
     getCommentsByRef: getCommentsByRef,
 
-    'POST /api/comments/:id/delete': function(req, res, next) {
+    'POST /api/comments/:id/delete': function (req, res, next) {
         /**
          * Delete a comment by its id.
          * 
@@ -178,20 +176,20 @@ exports = module.exports = {
             return next(api.notAllowed('Permission denied.'));
         }
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 Comment.find(req.params.id, callback);
             },
-            function(comment, callback) {
-                if (comment===null) {
+            function (comment, callback) {
+                if (comment === null) {
                     return callback(api.notFound('Comment'));
                 }
                 comment.destroy(callback);
             }
-        ], function(err, result) {
+        ], function (err, result) {
             if (err) {
                 return next(err);
             }
             return res.send({ id: req.params.id });
         });
     }
-}
+};
