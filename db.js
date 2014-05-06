@@ -1,3 +1,5 @@
+/*jslint stupid: true */
+
 // init mysql-warp and expose all models under dir 'models':
 
 console.log('init mysql with mysql-warp...');
@@ -20,14 +22,16 @@ var dict = {
 // load all models:
 var files = require('fs').readdirSync(__dirname + '/models');
 var re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
-var models = _.map(_.filter(files, function(f) {
+
+var models = _.map(_.filter(files, function (f) {
     return re.test(f);
-}), function(fname) {
+}), function (fname) {
     return fname.substring(0, fname.length - 3);
 });
-_.each(models, function(model) {
+
+_.each(models, function (model) {
     console.log('found model: ' + model);
     dict[model] = require('./models/' + model)(warp);
 });
 
-exports = module.exports = dict;
+module.exports = dict;
