@@ -23,6 +23,8 @@ var LOCK_TIMES = {
     y: 31536000000
 };
 
+var isSecure = config.session.httpsForManagement;
+
 function lockUser(id, time, callback) {
     getUser(id, function(err, user) {
         if (err) {
@@ -207,11 +209,19 @@ exports = module.exports = {
         res.redirect(referer);
     },
 
-    'GET /auth/signin': function(req, res, next) {
+    'GET /manage/signout': function(req, res, next) {
+        res.clearCookie(utils.SESSION_COOKIE_NAME, {
+            path: '/',
+            secure: isSecure
+        });
+        res.redirect('/');
+    },
+
+    'GET /manage/signin': function(req, res, next) {
         /**
          * Display authentication page.
          */
-        res.render('auth/signin.html', {});
+        res.render('manage/signin.html', {});
     },
 
     'GET /auth/from/:name': function(req, res, next) {
@@ -300,6 +310,7 @@ exports = module.exports = {
             var cookieStr = utils.makeSessionCookie('local', user.id, user.passwd, expires);
             res.cookie(utils.SESSION_COOKIE_NAME, cookieStr, {
                 path: '/',
+                secure: isSecure,
                 expires: new Date(expires)
             });
             console.log('set session cookie for user: ' + user.email);

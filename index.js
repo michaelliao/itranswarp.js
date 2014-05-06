@@ -74,7 +74,7 @@ var i18nForManagement = i18n.getI18NTranslators('./views/manage/i18n');
 // check user for manage and theme:
 app.use(function(req, res, next) {
     var prefix = req.path.substring(0, 8);
-    if (prefix==='/manage/') {
+    if (prefix==='/manage/' && req.path!=='/manage/signin') {
         if (req.user && req.user.role<=constants.ROLE_CONTRIBUTOR) {
             res.manage = function(view, model) {
                 var m = model || {};
@@ -84,7 +84,7 @@ app.use(function(req, res, next) {
             };
             return next();
         }
-        return res.redirect('/auth/signin');
+        return res.redirect('/manage/signin');
     }
     // add theme path to response object:
     res.themePath = themePath;
