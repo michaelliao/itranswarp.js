@@ -43,18 +43,18 @@ def backup():
         run('rm -f %s' % f)
         run('rm -f %s.tar.gz' % f)
 
-def _build():
+def build():
     includes = ['controllers', 'models', 'node_modules', 'static', 'views', '*.js', 'favicon.ico']
-    excludes = ['.*', '*.py', '*.pyc', '*.pyo', '*.psd', 'static/css/*.less']
+    excludes = ['gulpfile.js', 'schema.js', '.*', '*.py', '*.pyc', '*.pyo', '*.psd', 'static/css/*.less']
     local('rm -f %s' % _TAR_FILE)
-    cmd = ['tar', '--dereference', '-czvf', '../%s' % _TAR_FILE]
+    cmd = ['tar', '--dereference', '-czvf', 'dist/%s' % _TAR_FILE]
     cmd.extend(['--exclude=\'%s\'' % ex for ex in excludes])
     cmd.extend(includes)
     local(' '.join(cmd))
 
-def _scp():
+def scp():
     run('rm -f %s' % _REMOTE_TMP_TAR)
-    put(_TAR_FILE, _REMOTE_TMP_TAR)
+    put('dist/%s' % _TAR_FILE, _REMOTE_TMP_TAR)
     with cd(_REMOTE_BASE_DIR):
         run('mkdir -p log')
         run('mkdir %s' % _DIST_DIR)
@@ -70,5 +70,5 @@ def _scp():
         run('supervisorctl start itranswarp')
 
 def make():
-    _build()
-    _scp()
+    build()
+    scp()
