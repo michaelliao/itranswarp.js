@@ -4,7 +4,7 @@
  * DO NOT change it. Instead, make a copy and name to "config_override.js",
  * then edit the settings.
  */
-exports = module.exports = {
+module.exports = {
     session: {
         // used to generate secure session cookie, can be set to any random string:
         salt: 'iTranswarp.js',
@@ -35,7 +35,7 @@ exports = module.exports = {
         // connection timeout:
         timeout: 1000,
         // retries when failed:
-        retries: 3,
+        retries: 3
     },
     // server domain name:
     domain: 'www.example.com',
@@ -50,4 +50,4 @@ exports = module.exports = {
         //     'redirect_uri': 'http://your-redirect-uri/config/in/facebook'
         // }
     }
-}
+};

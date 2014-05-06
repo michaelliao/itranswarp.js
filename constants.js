@@ -1,6 +1,6 @@
 // define constants:
 
-exports = module.exports = {
+module.exports = {
     // user role:
     ROLE_ADMIN:       0,
     ROLE_EDITOR:      10,
