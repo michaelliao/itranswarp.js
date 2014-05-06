@@ -18,6 +18,9 @@ node_modules
 backup/*.sql
 *.tar.gz
 
+# ssl:
+cert/server.*
+
 # private config files:
 config_override.*
 
