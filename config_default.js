@@ -6,6 +6,8 @@
  */
 module.exports = {
     session: {
+        // sync comments to SNS?
+        syncComments: true,
         // used to generate secure session cookie, can be set to any random string:
         salt: 'iTranswarp.js',
         // use https for management:
@@ -29,13 +31,19 @@ module.exports = {
     },
     cache: {
         // host or ip address of memcached:
-        host: 'localhost',
+        host: '127.0.0.1',
         // port of memcached, default to 11211:
         port: 11211,
         // connection timeout:
         timeout: 1000,
         // retries when failed:
         retries: 3
+    },
+    queue: {
+        // host or ip address of redis:
+        host: '127.0.0.1',
+        // port of redis, default to 6379:
+        port: 6379
     },
     // server domain name:
     domain: 'www.example.com',
