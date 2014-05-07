@@ -55,19 +55,16 @@ def build():
 def scp():
     run('rm -f %s' % _REMOTE_TMP_TAR)
     put('dist/%s' % _TAR_FILE, _REMOTE_TMP_TAR)
-    with cd(_REMOTE_BASE_DIR):
-        run('mkdir -p log')
-        run('mkdir %s' % _DIST_DIR)
-    with cd('%s/%s' % (_REMOTE_BASE_DIR, _DIST_DIR)):
-        run('tar -xzvf %s' % _REMOTE_TMP_TAR)
-    with cd(_REMOTE_BASE_DIR):
-        run('chown -R www-data:www-data %s' % _DIST_DIR)
-        run('rm -f www')
-        run('ln -s %s www' % _DIST_DIR)
-        run('chown www-data:www-data www')
-    with settings(warn_only=True):
-        run('supervisorctl stop itranswarp')
-        run('supervisorctl start itranswarp')
+    #with cd('%s/%s' % (_REMOTE_BASE_DIR, _DIST_DIR)):
+    #     run('tar -xzvf %s' % _REMOTE_TMP_TAR)
+    # with cd(_REMOTE_BASE_DIR):
+    #     run('chown -R www-data:www-data %s' % _DIST_DIR)
+    #     run('rm -f www')
+    #     run('ln -s %s www' % _DIST_DIR)
+    #     run('chown www-data:www-data www')
+    # with settings(warn_only=True):
+    #     run('supervisorctl stop itranswarp')
+    #     run('supervisorctl start itranswarp')
 
 def make():
     build()
