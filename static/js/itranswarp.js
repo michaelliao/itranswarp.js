@@ -318,8 +318,8 @@ setTimeout(function() {
 " |_| |_||_|  \\__,_|_| |_|___/ \\_/\\_/ \\__,_|_|  | .__/  (_)  _/ |___/ \n" +
 "                                               |_|         |__/      \n" +
 "\n" +
-"Want to get source code? type source()\n" +
-"Want to get author info? type author()\n" +
+"Want to get author info? type:\nauthor();\n\n" +
+"Want to get source code? type:\nsource();\n" +
 "\n";
     console.log(s);
     window.source = function() {
@@ -327,9 +327,9 @@ setTimeout(function() {
         setTimeout(function() {
             console.log('Using Google search...');
             setTimeout(function() {
-                console.log('Using Bing search...');
+                console.log('Ask Siri...');
                 setTimeout(function() {
-                    console.log('Ask Siri...');
+                    console.log('Search on GitHub...');
                     setTimeout(function() {
                         console.log('Found!\n\nSource code can be folked from https://github.com/michaelliao/itranswarp.js\n\nCheers!\n');
                     }, 1000);
