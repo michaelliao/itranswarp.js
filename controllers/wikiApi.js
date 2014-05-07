@@ -284,14 +284,19 @@ module.exports = {
          * 
          * @name Get Wiki
          * @param {string} id: Id of the wiki.
+         * @param {string} format: Return html if format is 'html', default to raw.
          * @return {object} Wiki object.
          * @error {resource:notfound} Wiki was not found by id.
          */
-        getWikiWithContent(req.params.id, function (err, entity) {
+        getWikiWithContent(req.params.id, function (err, wiki) {
             if (err) {
                 return next(err);
             }
-            return res.send(entity);
+
+            if (req.query.format === 'html') {
+                wiki.content = utils.md2html(wiki.content);
+            }
+            return res.send(wiki);
         });
     },
 
@@ -473,9 +478,21 @@ module.exports = {
     },
 
     'GET /api/wikis/wikipages/:id': function (req, res, next) {
+        /**
+         * Get wiki page by id.
+         * 
+         * @name Get Wiki Page
+         * @param {string} id: Id of the wiki page.
+         * @param {string} format: Return html if format is 'html', default to raw.
+         * @return {object} WikiPage object.
+         * @error {resource:notfound} WikiPage was not found by id.
+         */
         getWikiPageWithContent(req.params.id, function (err, wp) {
             if (err) {
                 return next(err);
+            }
+            if (req.query.format === 'html') {
+                wp.content = utils.md2html(wp.content);
             }
             return res.send(wp);
         });
