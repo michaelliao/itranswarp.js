@@ -232,6 +232,15 @@ module.exports = {
         });
     },
 
+    'GET /wikipage/:id': function(req, res, next) {
+        wikiApi.getWikiPage(req.params.id, function(err, wp) {
+            if (err) {
+                return next(err);
+            }
+            res.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
+        });
+    },
+
     'GET /wiki/:id': function (req, res, next) {
         var model = {};
         async.waterfall([
