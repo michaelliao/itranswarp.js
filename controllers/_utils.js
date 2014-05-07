@@ -7,7 +7,11 @@ var
     marked = require('marked'),
     config = require('../config'),
     api = require('../api'),
-    db = require('../db');
+    db = require('../db'),
+    queue = require('../queue'),
+    constants = require('../constants');
+
+var snsQueue = queue(constants.QUEUE_SNS);
 
 var
     AuthUser = db.authuser,
@@ -352,6 +356,30 @@ module.exports = {
 
     page: function (pageIndex, itemsPerPage) {
         return new Page(pageIndex, itemsPerPage);
+    },
+
+    sendToSNS: function (user, text, link) {
+        AuthUser.find({
+            where: 'user_id=?',
+            params: [user.id]
+        }, function(err, authUser) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            if (authUser === null) {
+                console.log('Not signin with SNS.');
+                return;
+            }
+            snsQueue.push({
+                provider: authUser.auth_provider,
+                access_token: authUser.auth_token,
+                expires_at: authUser.expires_at,
+                text: text,
+                link: link,
+                created_at: Date.now()
+            });
+        });
     },
 
     SESSION_COOKIE_NAME: SESSION_COOKIE_NAME
