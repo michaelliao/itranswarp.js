@@ -5,6 +5,10 @@
 // post(path, params, fn)
 // upload(path, params, fn)
 
+var config = require('config');
+
+config.session.syncComments = false;
+
 var fs = require('fs');
 
 var
