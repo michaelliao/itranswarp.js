@@ -31,6 +31,8 @@ var
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
 
+var isSyncComments = config.session.syncComments;
+
 var fnGetSettings = function (callback) {
     settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
 };
@@ -92,11 +94,14 @@ function createCommentByType(ref_type, checkFunction, req, res, next) {
         return next(e);
     }
     ref_id = req.params.id;
-    checkFunction(ref_id, function (err, entity) {
+    checkFunction(ref_id, function (err, entity, path) {
         if (err) {
             return next(err);
         }
         commentApi.createComment(ref_type, ref_id, req.user, content, function (err, comment) {
+            if (isSyncComments) {
+                utils.sendToSNS(req.user, content, 'http://' + req.host + path);
+            }
             return res.send(comment);
         });
     });
@@ -313,19 +318,25 @@ module.exports = {
 
     'POST /article/:id/comment': function (req, res, next) {
         createCommentByType('article', function (id, callback) {
-            articleApi.getArticle(id, callback);
+            articleApi.getArticle(id, function (err, article) {
+                return callback(err, article, '/article/' + article.id);
+            });
         }, req, res, next);
     },
 
     'POST /wiki/:id/comment': function (req, res, next) {
         createCommentByType('wiki', function (id, callback) {
-            wikiApi.getWiki(id, callback);
+            wikiApi.getWiki(id, function (err, wiki) {
+                return callback(err, wiki, '/wiki/' + wiki.id);
+            });
         }, req, res, next);
     },
 
     'POST /wikipage/:id/comment': function (req, res, next) {
         createCommentByType('wikipage', function (id, callback) {
-            wikiApi.getWikiPage(id, callback);
+            wikiApi.getWikiPage(id, function (err, wp) {
+                return callback(err, wp, '/wiki/' + wp.wiki_id + '/' + wp.id);
+            });
         }, req, res, next);
     }
 };
