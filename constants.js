@@ -12,6 +12,9 @@ module.exports = {
     CACHE_KEY_WEBSITE_SETTINGS: '__website__',
     CACHE_KEY_NAVIGATIONS:      '__navigations__',
 
+    // queue name:
+    QUEUE_SNS: 'queueSNS',
+
     // END:
     END: 'ended.'
 };
