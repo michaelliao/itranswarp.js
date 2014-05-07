@@ -146,12 +146,16 @@ module.exports = {
          * 
          * @name Get Article
          * @param {string} id: Id of the article.
+         * @param {string} format: Return html if format is 'html', default to raw.
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
         getArticle(req.params.id, function (err, article) {
             if (err) {
                 return next(err);
+            }
+            if (req.query.format === 'html') {
+                article.content = utils.md2html(article.content);
             }
             return res.send(article);
         });
