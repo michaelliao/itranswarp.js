@@ -31,7 +31,6 @@ swig.setFilter('i18n', function (input) {
 if (productionMode) {
     // set for production:
     app.enable('trust proxy');
-    swig.setDefaults({ cache: true });
 } else {
     // set for development:
     swig.setDefaults({ cache: false });
