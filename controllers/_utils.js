@@ -325,7 +325,7 @@ function getRequiredParam(name, req) {
     throw api.invalidParam(name);
 }
 
-function md2html(md, id, callback) {
+function md2html(md, cacheKey, callback) {
     if (callback) {
         // async:
         return callback(null, marked(md));
