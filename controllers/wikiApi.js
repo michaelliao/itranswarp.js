@@ -284,7 +284,7 @@ module.exports = {
          * 
          * @name Get Wiki
          * @param {string} id: Id of the wiki.
-         * @param {string} format: Return html if format is 'html', default to raw.
+         * @param {string} [format='']: Return html if format is 'html', default to raw.
          * @return {object} Wiki object.
          * @error {resource:notfound} Wiki was not found by id.
          */
@@ -483,7 +483,7 @@ module.exports = {
          * 
          * @name Get Wiki Page
          * @param {string} id: Id of the wiki page.
-         * @param {string} format: Return html if format is 'html', default to raw.
+         * @param {string} [format='']: Return html if format is 'html', default to raw.
          * @return {object} WikiPage object.
          * @error {resource:notfound} WikiPage was not found by id.
          */

@@ -146,7 +146,7 @@ module.exports = {
          * 
          * @name Get Article
          * @param {string} id: Id of the article.
-         * @param {string} format: Return html if format is 'html', default to raw.
+         * @param {string} [format='']: Return html if format is 'html', default to raw.
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
