@@ -237,8 +237,8 @@ module.exports = {
         });
     },
 
-    'GET /wikipage/:id': function(req, res, next) {
-        wikiApi.getWikiPage(req.params.id, function(err, wp) {
+    'GET /wikipage/:id': function (req, res, next) {
+        wikiApi.getWikiPage(req.params.id, function (err, wp) {
             if (err) {
                 return next(err);
             }

@@ -357,11 +357,11 @@ module.exports = {
     },
 
     sendToSNS: function (user, text, link) {
-        process.nextTick(function() {
+        process.nextTick(function () {
             AuthUser.find({
                 where: 'user_id=?',
                 params: [user.id]
-            }, function(err, authUser) {
+            }, function (err, authUser) {
                 if (err) {
                     console.log(err);
                     return;
@@ -370,7 +370,7 @@ module.exports = {
                     console.log('Not signin with SNS.');
                     return;
                 }
-                provider = auth[authUser.auth_provider];
+                var provider = auth[authUser.auth_provider];
                 if (!provider) {
                     console.log('Invalid provider.');
                     return;

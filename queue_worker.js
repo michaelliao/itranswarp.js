@@ -15,22 +15,10 @@ function error(s) {
 }
 
 function sendToSNS(msg) {
-    var
-        provider,
-        providerName = msg.provider,
-        access_token = msg.access_token,
-        expires_at = msg.expires_at,
-        text = msg.text,
-        max_retry = msg.max_retry || 3;
-    info('Process SNS message: ' + JSON.stringify(msg));
-    if (!providers.hasOwnProperty(providerName)) {
-        return error('No such provider: ' + providerName);
-    };
-    provider = providers[providerName];
-    //provider.requestAPI('');
+    console.log('Send to sns: ' + msg);
 }
 
-queueSNS.pop(function(err, value) {
+queueSNS.pop(function (err, value) {
     if (err) {
         return error(err);
     }

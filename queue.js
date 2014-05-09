@@ -5,16 +5,16 @@ var config = require('./config');
 var
     redis = require('redis'),
     client = redis.createClient(config.queue.port, config.queue.host, {
-        parser: 'javascript',
+        parser: 'javascript'
     });
 
-module.exports = function(queueName) {
+module.exports = function (queueName) {
     return {
         // push object into queue:
         push: function (value, callback) {
             var s = JSON.stringify(value);
             console.log('QUEUE: push: ' + s);
-            client.rpush(queueName, s, function(err) {
+            client.rpush(queueName, s, function (err) {
                 if (callback) {
                     callback(err);
                 }
@@ -22,7 +22,7 @@ module.exports = function(queueName) {
         },
         // pop object into queue, return null if queue is empty:
         pop: function (callback) {
-            client.lpop(queueName, function(err, value) {
+            client.lpop(queueName, function (err, value) {
                 if (err) {
                     return callback(err);
                 }
@@ -30,7 +30,7 @@ module.exports = function(queueName) {
             });
         },
         // get size of the queue:
-        size: function(callback) {
+        size: function (callback) {
             client.llen(queueName, callback);
         }
     };
