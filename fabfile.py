@@ -7,7 +7,7 @@ __author__ = 'Michael Liao'
 Build release package.
 '''
 
-import os
+import os, re
 
 from datetime import datetime
 from fabric.api import *
@@ -71,6 +71,53 @@ def scp():
          run('supervisorctl start itranswarp')
          run('/etc/init.d/nginx reload')
 
-def make():
+RE_FILES = re.compile('\r?\n')
+
+def rollback():
+    ' rollback to previous version '
+    with cd(_REMOTE_BASE_DIR):
+        r = run('ls -p -1')
+        files = [s[:-1] for s in RE_FILES.split(r) if s.startswith('www-') and s.endswith('/')]
+        files.sort(cmp=lambda s1, s2: 1 if s1 < s2 else -1)
+        r = run('ls -l www')
+        ss = r.split(' -> ')
+        if len(ss) != 2:
+            print ('ERROR: \'www\' is not a symbol link.')
+            return
+        current = ss[1]
+        print ('Found current symbol link points to: %s\n' % current)
+        try:
+            index = files.index(current)
+        except ValueError, e:
+            print ('ERROR: symbol link is invalid.')
+            return
+        if len(files) == index + 1:
+            print ('ERROR: already the oldest version.')
+        old = files[index + 1]
+        print ('==================================================')
+        for f in files:
+            if f == current:
+                print ('      Current ---> %s' % current)
+            elif f == old:
+                print ('  Rollback to ---> %s' % old)
+            else:
+                print ('                   %s' % f)
+        print ('==================================================')
+        print ('')
+        yn = raw_input ('continue? y/N ')
+        if yn != 'y' and yn != 'Y':
+            print ('Rollback cancelled.')
+            return
+        print ('Start rollback...')
+        run('rm -f www')
+        run('ln -s %s www' % old)
+        run('chown www-data:www-data www')
+        with settings(warn_only=True):
+            run('supervisorctl stop itranswarp')
+            run('supervisorctl start itranswarp')
+            run('/etc/init.d/nginx reload')
+        print ('ROLLBACKED OK.')
+
+def deploy():
     build()
     scp()
