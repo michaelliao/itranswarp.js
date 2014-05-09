@@ -43,7 +43,7 @@ function createComment(ref_type, ref_id, user, content, tx, callback) {
 }
 
 function getCommentsByRef(ref_id, from_id, callback) {
-    var query, limit = 20;
+    var query, limit = 100;
     if (arguments.length === 2) {
         callback = from_id;
         from_id = null;
