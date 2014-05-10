@@ -154,7 +154,7 @@ module.exports = {
                 return next(err);
             }
             model.articles = articles;
-            model.hotArticles = getHotArticles(articles)
+            model.hotArticles = getHotArticles(articles);
             return processTheme('index.html', model, req, res, next);
         });
     },
