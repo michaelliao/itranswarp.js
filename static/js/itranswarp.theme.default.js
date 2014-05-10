@@ -73,6 +73,9 @@ $(function() {
         $('html, body').animate({scrollTop: 0}, 1000);
     });
 
+    // start carousel:
+    $('.carousel').carousel();
+
     // smart date:
     makeSmartDate();
 
