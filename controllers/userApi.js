@@ -228,7 +228,7 @@ module.exports = {
         var provider, redirect, redirect_uri, jscallback;
         provider = auth[req.params.name];
         if (provider) {
-            redirect = req.get('referer');
+            redirect = req.get('referer') || '/';
             if (redirect.indexOf('/auth/') >= 0 || redirect.indexOf('/manage') >= 0) {
                 redirect = '/';
             }
