@@ -107,6 +107,13 @@ function createCommentByType(ref_type, checkFunction, req, res, next) {
     });
 }
 
+function getHotArticles(articles) {
+    var arr = articles.slice(0).sort(function (a1, a2) {
+        return a1.reads > a2.reads ? -1 : 1;
+    });
+    return arr.length > 3 ? arr.slice(0, 3) : arr;
+}
+
 module.exports = {
 
     'GET /': function (req, res, next) {
@@ -147,6 +154,7 @@ module.exports = {
                 return next(err);
             }
             model.articles = articles;
+            model.hotArticles = getHotArticles(articles)
             return processTheme('index.html', model, req, res, next);
         });
     },
