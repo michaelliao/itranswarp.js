@@ -35,4 +35,4 @@ Run `node schema` to generate initial schema as well as administrator's email an
 
 You should able to see the home page in the browser with address `http://localhost:3000`.
 
-If you want to sign in to management console, go to `http://localhost:3000/manage/signin`.
+If you want to sign in to management console, go to `http://localhost:3000/manage/signin`, and sign in using the email and password you entered when running `node schema`.
