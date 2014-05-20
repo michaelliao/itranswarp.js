@@ -60,7 +60,7 @@ var model = {
     <div class="x-sidebar-section">
         <h4>分享给朋友</h4>
         <div style="height:66px">
-            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="《{{ article.name|e }}》{{ article.summary|e }}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" picture_search="false"></wb:share-button>
+            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ article.name }}：{{ article.description }}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" picture_search="false"></wb:share-button>
         </div>
     </div>
     <div class="x-sidebar-section">
