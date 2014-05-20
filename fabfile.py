@@ -118,6 +118,48 @@ def rollback():
             run('/etc/init.d/nginx reload')
         print ('ROLLBACKED OK.')
 
+def restore2local():
+    ' restore db to local '
+    backup_dir = os.path.join(_current_path(), 'backup')
+    fs = os.listdir(backup_dir)
+    files = [f for f in fs if f.startswith('backup-') and f.endswith('.sql.tar.gz')]
+    files.sort(cmp=lambda s1, s2: 1 if s1 < s2 else -1)
+    if len(files)==0:
+        print 'No backup files found.'
+        return
+    print ('Found %s backup files:' % len(files))
+    print ('==================================================')
+    n = 0
+    for f in files:
+        print ('%s: %s' % (n, f))
+        n = n + 1
+    print ('==================================================')
+    print ('')
+    try:
+        num = int(raw_input ('Restore file: '))
+    except ValueError:
+        print ('Invalid file number.')
+        return
+    restore_file = files[num]
+    yn = raw_input('Restore file %s: %s? y/N ' % (num, restore_file))
+    if yn != 'y' and yn != 'Y':
+        print ('Restore cancelled.')
+        return
+    print ('Start restore to local database...')
+    p = raw_input('Input mysql root password: ')
+    sqls = [
+        'drop database if exists itranswarp;',
+        'create database itranswarp;',
+        'grant select, insert, update, delete on itranswarp.* to \'%s\'@\'localhost\' identified by \'%s\';' % (db_user, db_password)
+    ]
+    for sql in sqls:
+        local(r'mysql -uroot -p%s -e "%s"' % (p, sql))
+    with lcd(backup_dir):
+        local('tar zxvf %s' % restore_file)
+    local(r'mysql -uroot -p%s itranswarp < backup/%s' % (p, restore_file[:-7]))
+    with lcd(backup_dir):
+        local('rm -f %s' % restore_file[:-7])
+
 def deploy():
     build()
     scp()
