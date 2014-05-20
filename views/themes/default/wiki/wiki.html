@@ -5,8 +5,8 @@
 
     <meta property="og:type" content="article" />
     <meta property="og:url" content="http://{{ __request__.host }}/wiki/{{ wiki.id }}{% if page %}/{{ page.id }}{% endif %}" />
-    <meta property="og:title" content="{{ wiki.name }}" />
-    <meta property="og:description" content="{{ wiki.name }}" />
+    <meta property="og:title" content="{% if page %}{{ page.name }}{% else %}{{ wiki.name }}{% endif %}" />
+    <meta property="og:description" content="{{ wiki.description }}" />
 {% endblock %}
 
 {% block title %}{{ wiki.name }}{% endblock %}
@@ -110,7 +110,7 @@ $(function() {
 
                     <h4>分享给朋友</h4>
                     <div style="height:76px">
-                        <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ wiki.name|e }}：{% if page %}{{ name|e }}{% else %}{{ wiki.description|e }}{% endif %}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/0" picture_search="false"></wb:share-button>
+                        <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ wiki.name }}：{% if page %}{{ page.name }}{% else %}{{ wiki.description }}{% endif %}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/0" picture_search="false"></wb:share-button>
                     </div>
 
                     <h4>评论……</h4>
