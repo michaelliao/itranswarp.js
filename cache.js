@@ -58,6 +58,9 @@ function count(key, callback) {
 }
 
 function counts(keys, callback) {
+    if (keys.length === 0) {
+        return callback(null, []);
+    }
     var multiKeys = _.map(keys, function (key) {
         return COUNTER_PREFIX + key;
     });
@@ -72,6 +75,9 @@ function counts(keys, callback) {
 }
 
 function gets(keys, callback) {
+    if (keys.length === 0) {
+        return callback(null, []);
+    }
     memcached.getMulti(keys, function (err, data) {
         if (err) {
             return callback(err);
