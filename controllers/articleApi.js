@@ -1,9 +1,11 @@
 // article api
 
 var
+    _ = require('lodash'),
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
+    cache = require('../cache'),
     utils = require('./_utils'),
     images = require('./_images'),
     constants = require('../constants');
@@ -11,6 +13,7 @@ var
 var
     commentApi = require('./commentApi'),
     attachmentApi = require('./attachmentApi'),
+    settingApi = require('./settingApi'),
     checkAttachment = attachmentApi.checkAttachment,
     createAttachmentTaskInTx = attachmentApi.createAttachmentTaskInTx;
 
@@ -126,6 +129,77 @@ function getArticle(id, tx, callback) {
     });
 }
 
+function toRssDate(dt) {
+    return new Date(dt).toGMTString();
+}
+
+function getFeed(domain, callback) {
+    async.parallel({
+        articles: function(callback) {
+            getRecentArticles(20, callback);
+        },
+        website: function(callback) {
+            settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
+        }
+    }, function (err, results) {
+        if (err) {
+            return callback(err);
+        }
+        var
+            articles = results.articles,
+            website = results.website,
+            last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
+            rss_header,
+            rss_footer = '</channel></rss>';
+
+        rss_header = '<?xml version="1.0"?>\n' +
+                '<rss version="2.0"><channel><title><![CDATA[' +
+                website.name +
+                ']]></title><link>http://' +
+                domain +
+                '/</link><description><![CDATA[' +
+                website.description +
+                ']]></description><lastBuildDate>' +
+                toRssDate(last_publish_at) +
+                '</lastBuildDate><generator>iTranswarp.js</generator><ttl>3600</ttl>';
+
+        if (articles.length === 0) {
+            return callback(null, rss_header + rss_footer);
+        }
+        // find texts:
+        async.parallelLimit(_.map(articles, function (a) {
+            return function (callback) {
+                Text.find(a.content_id, callback);
+            };
+        }), 5, function (err, texts) {
+            if (err) {
+                return callback(err);
+            }
+            var n = 0, L = [rss_header];
+            _.each(articles, function (a) {
+                var url = 'http://%s/article/%s' % (domain, a.id);
+                var content = utils.md2html(texts[n] && texts[n].value || '');
+                n++;
+                L.push('<item><title><![CDATA[');
+                L.push(a.name);
+                L.push(']]></title><link>');
+                L.push(url);
+                L.push('</link><guid>');
+                L.push(url);
+                L.push('</guid><author><![CDATA[');
+                L.push(a.user_name);
+                L.push(']]></author><pubDate>');
+                L.push(toRssDate(a.publish_at));
+                L.push('</pubDate><description><![CDATA[');
+                L.push(content);
+                L.push(']]></description></item>');
+            });
+            L.push(rss_footer);
+            callback(null, L.join(''));
+        });
+    });
+}
+
 var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 module.exports = {
@@ -139,6 +213,21 @@ module.exports = {
     getArticles: getArticles,
 
     getArticle: getArticle,
+
+    'GET /feed': function(req, res, next) {
+        var fn = function (callback) {
+            getFeed(req.host, callback);
+        };
+        fn.lifetime = 3600;
+        cache.get('cached_rss', fn, function (err, rss) {
+            if (err) {
+                return next(err);
+            }
+            res.type('application/rss+xml');
+            res.set('Cache-Control', 'max-age: 3600');
+            res.send(rss);
+        });
+    },
 
     'GET /api/articles/:id': function (req, res, next) {
         /**
