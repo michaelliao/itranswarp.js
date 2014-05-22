@@ -58,6 +58,16 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.multipart({ keepExtensions: true, uploadDir: tmp_upload_dir }));
 
+app.use(function (req, res, next) {
+    var exec_start_at = Date.now();
+    var _send = res.send;
+    res.send = function () {
+        res.set('X-Execution-Time', String(Date.now() - exec_start_at));
+        return _send.apply(res, arguments);
+    };
+    next();
+});
+
 // set content type: json for api:
 app.use('/api/', function (req, res, next) {
     res.type('application/json');
