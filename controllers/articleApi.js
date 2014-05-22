@@ -565,7 +565,7 @@ module.exports = {
         } catch (e) {
             return next(e);
         }
-        Article.find(req.params.id, function (err, article) {
+        getArticle(req.params.id, function (err, article) {
             if (err) {
                 return next(err);
             }
