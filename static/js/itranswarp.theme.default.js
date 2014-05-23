@@ -175,7 +175,7 @@ function setCommentError($form, s) {
 var _comment_template = '<!-- comment template -->' +
     '<div class="x-comment-li">' +
     '    <div class="x-comment-img">' +
-    '        <img class="x-user-image-small" />' +
+    '        <a class="x-comment-user"><img class="x-user-image-small" /></a>' +
     '    </div>' +
     '    <div class="x-comment-main">' +
     '        <div class="x-comment-prompt">' +
@@ -218,6 +218,7 @@ function comment2html(s) {
 
 function addComment(c) {
     var $dom = $(_comment_template.replace('$ID', c.id));
+    $dom.find('a.x-comment-user').attr('href', '/user/' + c.user_id);
     $dom.find('span.x-comment-username').text(c.user_name);
     $dom.find('span.x-comment-date').text(toSmartDate(c.created_at));
     $dom.find('div.x-comment-img img').attr('src', c.user_image_url);

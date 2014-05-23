@@ -64,6 +64,7 @@ $(function() {
     {% for c in comments %}
     $list.append(addComment({
         'id': '{{ c.id }}',
+        'user_id': '{{ c.user_id }}',
         'user_name': '{{ c.user_name }}',
         'user_image_url': '{{ c.user_image_url }}',
         'created_at': {{ c.created_at }},
@@ -146,7 +147,7 @@ $(function() {
                 <div class="container">
                     <a href="/" class="brand x-auto-display" style="display:none;">{{ __website__.name }}</a>
                     <ul id="main-nav-bar" class="nav">
-                        <li><a href="/">Home</a></li>
+                        <li><a href="/">首页</a></li>
 {% for nav in __navigations__ %}
                         <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
 {% endfor %}

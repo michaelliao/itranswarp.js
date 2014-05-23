@@ -346,5 +346,17 @@ module.exports = {
                 return callback(err, wp, '/wiki/' + wp.wiki_id + '/' + wp.id);
             });
         }, req, res, next);
+    },
+
+    'GET /user/:id': function (req, res, next) {
+        userApi.getUser(req.params.id, function (err, user) {
+            if (err) {
+                return next(err);
+            }
+            var model = {
+                user: user
+            };
+            return processTheme('user/profile.html', model, req, res, next);
+        });
     }
 };
