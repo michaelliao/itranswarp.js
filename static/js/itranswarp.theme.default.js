@@ -114,6 +114,9 @@ $(function() {
             d.click(function() {
                 d.css('display', 'none');
                 d.after(s);
+                try {
+                    d.next().get(0).play();
+                } catch (e) {}
             });
         }
     });
