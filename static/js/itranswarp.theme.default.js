@@ -110,13 +110,10 @@ $(function() {
             var h = d.attr('data-height');
             d.addClass('x-video-active');
             d.html('<div class="x-video-button"><div class="x-video-play"></div></div>');
-            var s = '<video width="' + w + '" height="' + h + '" controls="controls" preload="none" autoplay="autoplay" style="border:solid 1px #ccc"><source src="' + src + '" /></video>'
+            var s = '<video width="' + w + '" height="' + h + '" controls="controls" preload="auto" autoplay style="border:solid 1px #ccc"><source src="' + src + '" /></video>'
             d.click(function() {
                 d.css('display', 'none');
                 d.after(s);
-                try {
-                    d.next().get(0).play();
-                } catch (e) {}
             });
         }
     });
