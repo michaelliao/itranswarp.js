@@ -135,10 +135,10 @@ function toRssDate(dt) {
 
 function getFeed(domain, callback) {
     async.parallel({
-        articles: function(callback) {
+        articles: function (callback) {
             getRecentArticles(20, callback);
         },
-        website: function(callback) {
+        website: function (callback) {
             settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
         }
     }, function (err, results) {
@@ -177,8 +177,9 @@ function getFeed(domain, callback) {
             }
             var n = 0, L = [rss_header];
             _.each(articles, function (a) {
-                var url = 'http://%s/article/%s' % (domain, a.id);
-                var content = utils.md2html(texts[n] && texts[n].value || '');
+                var
+                    url = 'http://' + domain + '/article/' + a.id,
+                    content = utils.md2html((texts[n] && texts[n].value) || '');
                 n++;
                 L.push('<item><title><![CDATA[');
                 L.push(a.name);
@@ -214,7 +215,7 @@ module.exports = {
 
     getArticle: getArticle,
 
-    'GET /feed': function(req, res, next) {
+    'GET /feed': function (req, res, next) {
         var fn = function (callback) {
             getFeed(req.host, callback);
         };
