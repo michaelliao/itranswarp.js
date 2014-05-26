@@ -59,8 +59,9 @@ app.use(express.json());
 app.use(express.multipart({ keepExtensions: true, uploadDir: tmp_upload_dir }));
 
 app.use(function (req, res, next) {
-    var exec_start_at = Date.now();
-    var _send = res.send;
+    var
+        exec_start_at = Date.now(),
+        _send = res.send;
     res.send = function () {
         res.set('X-Execution-Time', String(Date.now() - exec_start_at));
         return _send.apply(res, arguments);
