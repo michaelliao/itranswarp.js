@@ -134,7 +134,7 @@ module.exports = {
          * Sort categories.
          *
          * @name Sort Categories
-         * @param {array} ids: The ids of categories.
+         * @param {array} id: The ids of categories.
          * @return {object} The sort result like { "sort": true }.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
