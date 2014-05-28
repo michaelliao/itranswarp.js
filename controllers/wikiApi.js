@@ -502,6 +502,8 @@ module.exports = {
         /**
          * Get wiki pages as a tree list.
          * 
+         * @name Get WikiPages
+         * @param {string} id - The id of the wiki.
          * @return {object} The full tree object.
          */
         getWikiTree(req.params.id, function (err, wiki) {
@@ -516,6 +518,13 @@ module.exports = {
         /**
          * Update a wiki.
          * 
+         * @name Update Wiki
+         * @param {string} id: The id of the wiki.
+         * @param {string} [name]: The name of the wiki.
+         * @param {string} [description]: The description of the wiki.
+         * @param {string} [tags]: The tags of the wiki.
+         * @param {string} [content]: The content of the wiki.
+         * @param {file} [file]: The cover image of the wiki.
          * @return {object} The updated wiki object.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
@@ -640,6 +649,10 @@ module.exports = {
         /**
          * Move a wikipage to another node.
          * 
+         * @name Move WikiPage
+         * @param {string} id: The source id of the WikiPage.
+         * @param {string} target_id: The target id of the WikiPage. Specify 'ROOT' if move to top of the tree.
+         * @param {int} index: The index of the moved page.
          * @return {object} The moved wiki object.
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
@@ -750,6 +763,15 @@ module.exports = {
     },
 
     'POST /api/wikis/wikipages/:id': function (req, res, next) {
+        /**
+         * Update a wiki page.
+         * 
+         * @name Update WikiPage
+         * @param {string} id: The id of the wiki page.
+         * @param {string} [name]: The name of the wiki page.
+         * @param {string} [content]: The content of the wiki page.
+         * @return {object} The updated wiki object.
+         */
         var
             id = req.params.id,
             name = utils.getParam('name', req),
@@ -853,6 +875,7 @@ module.exports = {
         /**
          * Delete a wikipage if it has no child wikipage.
          *
+         * @name Delete WikiPage
          * @param {string} id - The id of the wikipage.
          * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
@@ -886,9 +909,8 @@ module.exports = {
         /**
          * Delete a wiki by its id.
          * 
-         * @name delete wiki
+         * @name Delete Wiki
          * @param {string} id: The id of the wikipage.
-         * @param {boolean} [force=false]: Force deletion.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          * @error {resource:notfound} If resource not found by id.
          */
