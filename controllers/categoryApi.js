@@ -65,6 +65,7 @@ module.exports = {
         /**
          * Get all categories.
          * 
+         * @name Get Categories
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
         getCategories(function (err, array) {
@@ -79,7 +80,8 @@ module.exports = {
         /**
          * Get categories by id.
          * 
-         * @param {string} :id - The id of the category.
+         * @name Get Category
+         * @param {string} id: The id of the category.
          * @return {object} Category object.
          */
         getCategory(req.params.id, function (err, obj) {
@@ -94,6 +96,7 @@ module.exports = {
         /**
          * Create a new category.
          * 
+         * @name Create Category
          * @param {string} name - The name of the category.
          * @param {string,optional} description - The description of the category.
          * @return {object} Category object that was created.
@@ -127,6 +130,13 @@ module.exports = {
     },
 
     'POST /api/categories/sort': function (req, res, next) {
+        /**
+         * Sort categories.
+         *
+         * @name Sort Categories
+         * @param {array} ids: The ids of categories.
+         * @return {object} The sort result like { "sort": true }.
+         */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
@@ -175,9 +185,10 @@ module.exports = {
         /**
          * Update a category.
          * 
-         * @param {string} :id - The id of the category.
-         * @param {string,optional} name - The new name of the category.
-         * @param {string,optional} description - The new description of the category.
+         * @name Update Category
+         * @param {string} id - The id of the category.
+         * @param {string} [name] - The new name of the category.
+         * @param {string} [description] - The new description of the category.
          * @return {object} Category object that was updated.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
@@ -216,7 +227,8 @@ module.exports = {
         /**
          * Delete a category by its id.
          * 
-         * @param {string} :id - The id of the category.
+         * @name Delete Category
+         * @param {string} id - The id of the category.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
