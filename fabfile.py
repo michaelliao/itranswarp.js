@@ -60,16 +60,16 @@ def scp():
     with cd(_REMOTE_BASE_DIR):
         run('mkdir %s' % newdir)
     with cd('%s/%s' % (_REMOTE_BASE_DIR, newdir)):
-         run('tar -xzvf %s' % _REMOTE_TMP_TAR)
+        run('tar -xzvf %s' % _REMOTE_TMP_TAR)
     with cd(_REMOTE_BASE_DIR):
-         run('rm -f www')
-         run('ln -s %s www' % newdir)
-         run('chown www-data:www-data www')
-         run('chown -R www-data:www-data %s' % newdir)
+        run('rm -f www')
+        run('ln -s %s www' % newdir)
+        run('chown www-data:www-data www')
+        run('chown -R www-data:www-data %s' % newdir)
     with settings(warn_only=True):
-         run('supervisorctl stop itranswarp')
-         run('supervisorctl start itranswarp')
-         run('/etc/init.d/nginx reload')
+        run('supervisorctl stop itranswarp')
+        run('supervisorctl start itranswarp')
+        run('/etc/init.d/nginx reload')
 
 RE_FILES = re.compile('\r?\n')
 
