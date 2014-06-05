@@ -102,7 +102,8 @@ module.exports = {
         /**
          * Get page by id.
          * 
-         * @param {string} :id - The id of the page.
+         * @name Get Page
+         * @param {string} id - The id of the page.
          * @return {object} Page object.
          */
         getPage(req.params.id, function (err, page) {
@@ -117,6 +118,7 @@ module.exports = {
         /**
          * Get all pages object (but no content value).
          * 
+         * @name Get Pages
          * @return {object} Result as {"pages": [{page}, {page}...]}
          */
         getPages(function (err, pages) {
@@ -131,6 +133,12 @@ module.exports = {
         /**
          * Create a new page.
          * 
+         * @name Create Page
+         * @param {string} name: The name of the page.
+         * @param {string} alias: The alias of the page.
+         * @param {string} content: The content of the page.
+         * @param {boolean} [draft=false]: The draft status of the page, default to false.
+         * @param {string} [tags]: The tags of the page, seperated by ','.
          * @return {object} The created page object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
@@ -198,7 +206,13 @@ module.exports = {
         /**
          * Update page by id.
          * 
-         * @param {string} :id - The id of the page.
+         * @name Update Page
+         * @param {string} id: The id of the page.
+         * @param {string} [name]: The name of the page.
+         * @param {string} [alias]: The alias of the page.
+         * @param {string} [content]: The content of the page.
+         * @param {boolean} [draft]: The draft status of the page.
+         * @param {string} [tags]: The tags of the page, seperated by ','.
          * @return {object} Updated page object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
@@ -310,7 +324,8 @@ module.exports = {
         /**
          * Delete a page by its id.
          * 
-         * @param {string} :id - The id of the page.
+         * @name Delete Page
+         * @param {string} id - The id of the page.
          * @return {object} Results contains id of the page, e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {

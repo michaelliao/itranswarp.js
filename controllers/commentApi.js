@@ -169,7 +169,8 @@ module.exports = {
         /**
          * Delete a comment by its id.
          * 
-         * @param {string} :id - The id of the comment.
+         * @name Delete Comment
+         * @param {string} id - The id of the comment.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {

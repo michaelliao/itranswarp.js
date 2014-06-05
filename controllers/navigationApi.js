@@ -85,6 +85,9 @@ module.exports = {
     'GET /api/navigations': function (req, res, next) {
         /**
          * Get all navigations.
+         *
+         * @name Get Navigations
+         * @return {object} Result like {"navigations": [navigation array]}
          */
         getNavigations(function (err, navigations) {
             if (err) {
@@ -97,6 +100,11 @@ module.exports = {
     'POST /api/navigations': function (req, res, next) {
         /**
          * Create a navigation.
+         *
+         * @name Create Navigation
+         * @param {string} name: The name of the navigation.
+         * @param {string} url: The URL of the navigation.
+         * @return {object} The navigation object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
@@ -132,6 +140,13 @@ module.exports = {
     },
 
     'POST /api/navigations/sort': function (req, res, next) {
+        /**
+         * Sort navigations.
+         *
+         * @name Sort Navigations
+         * @param {array} id: The ids of the navigation.
+         * @return {object} The sort result like {"sort":true}.
+         */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
@@ -147,6 +162,10 @@ module.exports = {
     'POST /api/navigations/:id/delete': function (req, res, next) {
         /**
          * Delete a navigation.
+         *
+         * @name Delete Navigation
+         * @param {string} id: The id of the navigation.
+         * @return {object} The deleted navigation id like {"id":"123"}.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
@@ -168,6 +187,12 @@ module.exports = {
     'POST /api/navigations/:id': function (req, res, next) {
         /**
          * Update a navigation.
+         *
+         * @name Update Navigation
+         * @param {string} id: The id of the navigation.
+         * @param {string} [name]: The name of the navigation.
+         * @param {string} [url]: The URL of the navigation.
+         * @return {object} The navigation object.
          */
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
