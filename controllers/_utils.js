@@ -175,7 +175,7 @@ function parseSessionCookie(s, fn) {
             return fn(null, null);
         }
         // check:
-        secure = [provider, theId, authuser.auth_token, SALT].join(':');
+        secure = [provider, theId, authuser.auth_token, ss[2], SALT].join(':');
         expected = crypto.createHash('md5').update(secure).digest('hex');
         if (md5 !== expected) {
             return fn(null, null);
