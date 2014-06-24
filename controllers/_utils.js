@@ -123,7 +123,7 @@ function makeSessionCookie(provider, uid, passwd, expires) {
     } else if (expires > max) {
         expires = max;
     }
-    secure = [provider, uid, passwd, SALT].join(':');
+    secure = [provider, uid, passwd, String(expires), SALT].join(':');
     md5 = crypto.createHash('md5').update(secure).digest('hex');
     str = [provider, uid, expires, md5].join(':');
     console.log('make session cookie: ' + str);
@@ -157,7 +157,7 @@ function parseSessionCookie(s, fn) {
                 return fn(null, null);
             }
             // check:
-            secure = [provider, theId, user.passwd, SALT].join(':');
+            secure = [provider, theId, user.passwd, ss[2], SALT].join(':');
             expected = crypto.createHash('md5').update(secure).digest('hex');
             user.local = true;
             fn(null, md5 === expected ? user : null);
