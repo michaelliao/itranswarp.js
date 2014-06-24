@@ -9,7 +9,7 @@
     <meta property="og:description" content="{{ wiki.description }}" />
 {% endblock %}
 
-{% block title %}{{ wiki.name }}{% endblock %}
+{% block title %}{% if page %}{{ page.name }}{% else %}{{ wiki.name }}{% endif %}{% endblock %}
 
 {% block beforehead %}
 <script>
