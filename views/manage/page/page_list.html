@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-All Pages
+{{ ('All Pages') }}
 {% endblock %}
 
 {% block head %}
@@ -57,13 +57,13 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All Pages (<span v-text="pages.length"></span>)</li>
+        <li class="active">{{ _('All Pages') }} (<span v-text="pages.length"></span>)</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_page" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Page</a>
+        <a href="create_page" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Page') }}</a>
     </div>
 </div>
 
@@ -72,10 +72,10 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="45%">Name</th>
-                <th width="20%">Alias</th>
-                <th width="10%">Draft</th>
-                <th width="15%">Created At</th>
+                <th width="45%">{{ _('Name') }}</th>
+                <th width="20%">{{ _('Alias') }}</th>
+                <th width="10%">{{ _('Draft') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
                 <th width="10%">&nbsp;</th>
             </tr>
         </thead>

@@ -4,13 +4,13 @@
     <meta property="x-nav" content="/" />
 {% endblock %}
 
-{% block title %}Home{% endblock %}
+{% block title %}{{ _('Home') }}{% endblock %}
 
 {% block container %}
     <div class="row">
         <div class="span8">
             <div id="main">
-                <h4>热门推荐</h4>
+                <h4>{{ _('Popular Articles') }}</h4>
                 <!-- carousel -->
                 <div id="slides" class="carousel slide">
                     <ol class="carousel-indicators">
@@ -60,7 +60,7 @@
             <div class="x-sidebar-right">
                 <!-- block sidebar -->
                 <div class="x-sidebar-section">
-                    <h4>最新发表</h4>
+                    <h4>{{ _('Recent Articles') }}</h4>
                     <ul class="x-list">
                     {% for a in articles %}
                         <li><a href="/article/{{ a.id }}" target="_blank">{{ a.name }}</a></li>

@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-All Wikis
+{{ _('All Wikis') }}
 {% endblock %}
 
 {% block head %}
@@ -58,13 +58,13 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All Wikis (<span v-text="wikis.length"></span>)</li>
+        <li class="active">{{ _('All Wikis') }} (<span v-text="wikis.length"></span>)</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_wiki" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Wiki</a>
+        <a href="create_wiki" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Wiki') }}</a>
     </div>
 </div>
 
@@ -73,9 +73,9 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="20%">Cover</th>
-                <th width="55%">Name &amp; Description</th>
-                <th width="15%">Created At</th>
+                <th width="20%">{{ _('Cover') }}</th>
+                <th width="55%">{{ _('Name') }} / {{ _('Description') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
                 <th width="10%">&nbsp;</th>
             </tr>
         </thead>

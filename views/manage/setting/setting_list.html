@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-Settings
+{{ _('Settings') }}
 {% endblock %}
 
 {% block head %}
@@ -35,7 +35,7 @@ $(function() {
 {% block main %}
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">Settings</li>
+        <li class="active">{{ _('Settings') }}</li>
     </ul>
 </div>
 
@@ -50,7 +50,7 @@ $(function() {
         <fieldset>
         {% for field in group.fields %}
             <div class="field-{{ field.name }} control-group">
-                <label class="control-label">{{ field.label }}:</label>
+                <label class="control-label">{{ _(field.label) }}:</label>
                 <div class="controls">
                 {% if field.type==='textarea' %}
                     <textarea v-model="{{ group.name }}.{{ field.name }}" rows="5" style="width:600px; resize:none;"></textarea>
@@ -64,8 +64,8 @@ $(function() {
     {% endfor %}
         </fieldset>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
-                <a href="javascript:refresh()" class="btn"><i class="icon-remove"></i> Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> {{ _('Save') }}</button>
+                <a href="javascript:refresh()" class="btn"><i class="icon-remove"></i> {{ _('Cancel') }}</a>
             </div>
         </fieldset>
     </form>

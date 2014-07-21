@@ -77,15 +77,15 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All Articles (<span v-text="page.totalItems"></span>)</li>
+        <li class="active">{{ _('All Articles') }} (<span v-text="page.totalItems"></span>)</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar" style="text-align:right;">
-        <a href="category_list" class="btn" style="float:left"><i class="icon-list"></i> Categories</a>
-        <a href="javascript:refresh()" class="btn btn-info"><i class="icon-refresh icon-white"></i> Refresh</a>
-        <a href="create_article" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Article</a>
+        <a href="category_list" class="btn" style="float:left"><i class="icon-list"></i> {{ _('Categories') }}</a>
+        <a href="javascript:refresh()" class="btn btn-info"><i class="icon-refresh icon-white"></i> {{ _('Refresh') }}</a>
+        <a href="create_article" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Article') }}</a>
     </div>
 </div>
 
@@ -94,9 +94,9 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="20%"></th>
-                <th width="35%">Name</th>
-                <th width="15%">Category / Author</th>
+                <th width="20%">{{ _('Cover') }}</th>
+                <th width="35%">{{ _('Name') }}</th>
+                <th width="15%">{{ _('Category') }} / {{ _('Author') }}</th>
                 <th width="15%">Publish / Created</th>
                 <th width="15%"></th>
             </tr>

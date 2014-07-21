@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Please Sign In</title>
+    <title>{{ _('Please Sign In') }}</title>
     <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
     <script type="text/javascript" src="/static/js/jquery.min.js"></script>
     <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
@@ -47,25 +47,25 @@ $(function() {
                 <div class="row">
                     <div class="span6 offset1">
                         <form id="formAuth" v-on="submit: onSubmit">
-                            <legend>Please sign in:</legend>
+                            <legend>{{ _('Please Sign In') }}:</legend>
                             <div class="alert alert-error hide"></div>
                             <div style="margin: 16px 0;">
-                                <label class="control-label">Email:</label>
+                                <label class="control-label">{{ _('Email') }}:</label>
                                 <input v-model="email" type="text" name="email" maxlength="50" class="input-xlarge" />
                             </div>
                             <div style="margin: 16px 0;">
-                                <label class="control-label">Password:</label>
+                                <label class="control-label">{{ _('Password') }}:</label>
                                 <input v-model="passwd" type="password" maxlength="50" class="input-xlarge" />
                             </div>
                             <div style="margin: 16px 0;">
-                                <button type="submit" class="btn btn-primary"><i class="icon-lock icon-white"></i> Sign In</button>
+                                <button type="submit" class="btn btn-primary"><i class="icon-lock icon-white"></i> {{ _('Sign In') }}</button>
                             </div>
                         </form>
                     </div>
                     <div class="span6 offset1">
-                        <i class="icon-question-sign"></i> <a href="/auth/forgot">Forgot password?</a>
+                        <i class="icon-question-sign"></i> <a href="/auth/forgot">{{ _('Forgot password') }}?</a>
                         &nbsp;&nbsp;
-                        <i class="icon-circle-arrow-left"></i> <a href="/">Back to home page</a>
+                        <i class="icon-circle-arrow-left"></i> <a href="/">{{ _('Home') }}</a>
                     </div>
                 </div>
                 <div class="row">

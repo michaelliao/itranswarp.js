@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-All Navigations
+{{ _('All Navigations') }}
 {% endblock %}
 
 {% block head %}
@@ -92,13 +92,13 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All Navigations (<span v-text="navigations.length"></span>)</li>
+        <li class="active">{{ _('All Navigations') }} (<span v-text="navigations.length"></span>)</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_navigation" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Navigation</a>
+        <a href="create_navigation" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Navigation') }}</a>
     </div>
 </div>
 
@@ -107,9 +107,9 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="15%">Name</th>
+                <th width="15%">{{ _('Name') }}</th>
                 <th width="55%">URL</th>
-                <th width="15%">Created At</th>
+                <th width="15%">{{ _('Created At') }}</th>
                 <th width="15%">&nbsp;</th>
             </tr>
         </thead>
@@ -132,7 +132,7 @@ $(function() {
     </table>
     <div>
         <div id="sort" class="btn-toolbar hide" style="text-align:right;">
-            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> Save Orders</button>
+            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> {{ _('Save Orders') }}</button>
         </div>
     </div>
 </div>

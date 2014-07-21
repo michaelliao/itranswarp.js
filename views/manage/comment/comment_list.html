@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-All Comments
+{{ _('All Comments') }}
 {% endblock %}
 
 {% block head %}
@@ -65,7 +65,7 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li class="active">All Comments (<span v-text="page.totalItems"></span>)</li>
+        <li class="active">{{ _('All Comments') }} (<span v-text="page.totalItems"></span>)</li>
     </ul>
 </div>
 
@@ -74,10 +74,10 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="10%">User</th>
-                <th width="15%">Type</th>
-                <th width="55%">Comment</th>
-                <th width="15%">Creation Date</th>
+                <th width="10%">{{ _('User') }}</th>
+                <th width="15%">{{ _('Type') }}</th>
+                <th width="55%">{{ _('Comment') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
                 <th width="5%">&nbsp;</th>
             </tr>
         </thead>

@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-All Categories
+{{ _('All Categories') }}
 {% endblock %}
 
 {% block head %}
@@ -92,14 +92,14 @@ $(function() {
 
 <div class="span12">
     <ul class="breadcrumb">
-        <li><a href="/manage/article/">All Articles</a> <span class="divider">/</span></li>
-        <li class="active">All Categories (<span v-text="categories.length"></span>)</li>
+        <li><a href="/manage/article/">{{ _('All Articles') }}</a> <span class="divider">/</span></li>
+        <li class="active">{{ _('All Categories') }} (<span v-text="categories.length"></span>)</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_category" class="btn btn-primary"><i class="icon-plus icon-white"></i> Add New Category</a>
+        <a href="create_category" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Category') }}</a>
     </div>
 </div>
 
@@ -108,9 +108,9 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="30%">Name</th>
-                <th width="40%">Description</th>
-                <th width="15%">Created At</th>
+                <th width="30%">{{ _('Name') }}</th>
+                <th width="40%">{{ _('Description') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
                 <th width="15%">&nbsp;</th>
             </tr>
         </thead>
@@ -135,7 +135,7 @@ $(function() {
     </table>
     <div>
         <div id="sort" class="btn-toolbar hide" style="text-align:right;">
-            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> Save Orders</button>
+            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> {{ _('Save Orders') }}</button>
         </div>
     </div>
 </div>

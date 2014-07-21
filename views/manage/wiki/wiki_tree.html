@@ -1,7 +1,7 @@
 {% extends '../manage.html' %}
 
 {% block title %}
-Wiki List
+Wiki Tree List
 {% endblock %}
 
 {% block head %}
@@ -198,18 +198,18 @@ $(function() {
 {% block main %}
 <div class="span12">
     <ul class="breadcrumb">
-        <li><a href="/manage/wiki/">All Wikis</a> <span class="divider">/</span></li>
-        <li class="active">Edit Wiki</li>
+        <li><a href="/manage/wiki/">{{ _('All Wikis') }}</a> <span class="divider">/</span></li>
+        <li class="active">{{ _('Edit Wiki') }}</li>
     </ul>
 </div>
 
 <div class="span12">
     <div class="btn-toolbar">
         <div class="btn-group">
-            <button id="btn-refresh" class="btn btn-info"><i class="icon-refresh icon-white"></i> Refresh</button>
-            <button id="btn-add" disabled="disabled" class="btn"><i class="icon-plus"></i> Add New Page</button>
-            <button id="btn-edit" disabled="disabled" class="btn"><i class="icon-edit"></i> Edit Page</button>
-            <button id="btn-delete" disabled="disabled" class="btn btn-danger"><i class="icon-trash icon-white"></i> Delete</button>
+            <button id="btn-refresh" class="btn btn-info"><i class="icon-refresh icon-white"></i> {{ _('Refresh') }}</button>
+            <button id="btn-add" disabled="disabled" class="btn"><i class="icon-plus"></i> {{ _('New Wiki Page') }}</button>
+            <button id="btn-edit" disabled="disabled" class="btn"><i class="icon-edit"></i> {{ _('Edit Wiki Page') }}</button>
+            <button id="btn-delete" disabled="disabled" class="btn btn-danger"><i class="icon-trash icon-white"></i> {{ _('Delete') }}</button>
         </div>
     </div>
     <div class="alert alert-error hide"></div>

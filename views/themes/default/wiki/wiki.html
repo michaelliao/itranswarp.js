@@ -113,7 +113,7 @@ $(function() {
                         <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ wiki.name }}：{% if page %}{{ page.name }}{% else %}{{ wiki.description }}{% endif %}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/0" picture_search="false"></wb:share-button>
                     </div>
 
-                    <h4>评论……</h4>
+                    <h4>{{ _('Comments') }}</h4>
 
 {% if page %}
 {% set comment_url = '/wikipage/' + page.id + '/comment' %}
