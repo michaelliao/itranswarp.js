@@ -70,7 +70,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/comment/comment_list.html', {
+            return res.render('manage/comment/comment_list.html', {
                 page: JSON.stringify(r.page),
                 comments: JSON.stringify(r.comments)
             });
@@ -92,7 +92,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/article/article_list.html', {
+            return res.render('manage/article/article_list.html', {
                 page: JSON.stringify(results.articles.page),
                 articles: JSON.stringify(results.articles.articles),
                 categories: JSON.stringify(results.categories)
@@ -105,7 +105,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/article/article_form.html', {
+            return res.render('manage/article/article_form.html', {
                 form: {
                     name: 'Create Article',
                     action: '/api/articles/',
@@ -138,7 +138,7 @@ module.exports = {
             }
             var article = results.article;
             article.safe_content = safeEncodeJSON(article.content);
-            return res.manage('manage/article/article_form.html', {
+            return res.render('manage/article/article_form.html', {
                 form: {
                     name: 'Edit Article',
                     action: '/api/articles/' + article.id,
@@ -155,14 +155,14 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/article/category_list.html', {
+            return res.render('manage/article/category_list.html', {
                 categories: JSON.stringify(categories)
             });
         });
     },
 
     'GET /manage/article/create_category': function (req, res, next) {
-        return res.manage('manage/article/category_form.html', {
+        return res.render('manage/article/category_form.html', {
             form: {
                 name: 'Create Category',
                 action: '/api/categories/',
@@ -180,7 +180,7 @@ module.exports = {
             if (obj === null) {
                 return next(api.notFound('Category'));
             }
-            return res.manage('manage/article/category_form.html', {
+            return res.render('manage/article/category_form.html', {
                 form: {
                     name: 'Edit Category',
                     action: '/api/categories/' + obj.id + '/',
@@ -198,14 +198,14 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/page/page_list.html', {
+            return res.render('manage/page/page_list.html', {
                 pages: JSON.stringify(pages)
             });
         });
     },
 
     'GET /manage/page/create_page': function (req, res, next) {
-        return res.manage('manage/page/page_form.html', {
+        return res.render('manage/page/page_form.html', {
             form: {
                 name: 'Create Page',
                 action: '/api/pages/',
@@ -229,7 +229,7 @@ module.exports = {
                 return next(err);
             }
             page.safe_content = safeEncodeJSON(page.content);
-            return res.manage('manage/page/page_form.html', {
+            return res.render('manage/page/page_form.html', {
                 form: {
                     name: 'Edit Page',
                     action: '/api/pages/' + id,
@@ -247,14 +247,14 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/wiki/wiki_list.html', {
+            return res.render('manage/wiki/wiki_list.html', {
                 wikis: JSON.stringify(wikis)
             });
         });
     },
 
     'GET /manage/wiki/create_wiki': function (req, res, next) {
-        return res.manage('manage/wiki/wiki_form.html', {
+        return res.render('manage/wiki/wiki_form.html', {
             form: {
                 name: 'Create Wiki',
                 action: '/api/wikis/',
@@ -269,7 +269,7 @@ module.exports = {
     'GET /manage/wiki/list_wiki': function (req, res, next) {
         var id = req.query.id;
         wikiApi.getWiki(id, function (err, wiki) {
-            return res.manage('manage/wiki/wiki_tree.html', {
+            return res.render('manage/wiki/wiki_tree.html', {
                 wiki: wiki
             });
         });
@@ -282,7 +282,7 @@ module.exports = {
                 return next(err);
             }
             wiki.safe_content = safeEncodeJSON(wiki.content);
-            return res.manage('manage/wiki/wiki_form.html', {
+            return res.render('manage/wiki/wiki_form.html', {
                 form: {
                     name: 'Edit Wiki',
                     action: '/api/wikis/' + id + '/',
@@ -310,7 +310,7 @@ module.exports = {
                 return next(err);
             }
             wikipage.safe_content = safeEncodeJSON(wikipage.content);
-            return res.manage('manage/wiki/wikipage_form.html', {
+            return res.render('manage/wiki/wikipage_form.html', {
                 form: {
                     name: 'Edit Wiki Page',
                     action: '/api/wikis/wikipages/' + id + '/',
@@ -330,7 +330,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/attachment/attachment_list.html', {
+            return res.render('manage/attachment/attachment_list.html', {
                 page: JSON.stringify(results.page),
                 attachments: JSON.stringify(results.attachments)
             });
@@ -345,7 +345,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/user/user_list.html', {
+            return res.render('manage/user/user_list.html', {
                 now: Date.now(),
                 page: JSON.stringify(results.page),
                 users: JSON.stringify(results.users)
@@ -360,7 +360,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/navigation/navigation_list.html', {
+            return res.render('manage/navigation/navigation_list.html', {
                 navigations: JSON.stringify(navigations)
             });
         });
@@ -371,7 +371,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/navigation/navigation_menu_form.html', {
+            return res.render('manage/navigation/navigation_menu_form.html', {
                 form: {
                     name: 'Create Navigation',
                     action: '/api/navigations/',
@@ -387,7 +387,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/navigation/navigation_form.html', {
+            return res.render('manage/navigation/navigation_form.html', {
                 form: {
                     name: 'Edit Navigation',
                     action: '/api/navigations/' + obj.id + '/',
@@ -413,7 +413,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            return res.manage('manage/setting/setting_list.html', {
+            return res.render('manage/setting/setting_list.html', {
                 form: {
                     name: 'Settings',
                     action: '/manage/setting/save'
