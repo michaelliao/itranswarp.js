@@ -1,12 +1,65 @@
 {
-    "Home": "首页",
-    "Comments": "评论",
+    "Alias": "别名",
+    "All Articles": "所有文章",
+    "All Categories": "所有分类",
+    "All Comments": "所有评论",
+    "All Navigations": "所有导航",
+    "All Pages": "所有页面",
+    "Article": "文章",
     "Articles": "文章",
-    "Pages": "页面",
-    "Wikis": "维基",
     "Attachments": "附件",
-    "Users": "用户",
+    "Author": "作者",
+
+    "Cancel": "取消",
+    "Category": "分类",
+    "Categories": "分类",
+    "Comment": "评论",
+    "Comments": "评论",
+    "Cover": "封面",
+    "Created At": "创建日期",
+
+    "Date Format": "日期格式",
+    "Delete": "删除",
+    "Description": "描述",
+    "Draft": "草稿",
+
+    "Email": "电子邮件",
+
+    "Forgot password": "忘记口令",
+
+    "Home": "首页",
+
+    "Name": "名称",
     "Navigations": "导航",
+    "New Article": "新文章",
+    "New Category": "新分类",
+    "New Navigation": "新导航",
+    "New Page": "新页面",
+    "New Wiki": "新维基",
+    "New Wiki Page": "新维基页",
+
+    "OK": "确定",
+
+    "Pages": "页面",
+    "Password": "口令",
+    "Please Sign In": "请登录",
+    "Preview": "预览",
+
+    "Refresh": "刷新",
+
+    "Save": "保存",
     "Settings": "设置",
-    "Sign out": "登出"
+    "Sign In": "登录",
+    "Sign Out": "登出",
+
+    "Time Format": "时间格式",
+    "Timezone": "时区",
+    "Type": "类型",
+
+    "User": "用户",
+    "Users": "用户",
+
+    "Wikis": "维基",
+
+    "END": "END"
 }

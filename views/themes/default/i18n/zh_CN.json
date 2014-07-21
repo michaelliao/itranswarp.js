@@ -1,4 +1,21 @@
 {
-    "Sign out": "登出",
+    "Comment": "评论",
+    "Comments": "评论",
+
     "Home": "首页",
+
+    "Please sign in": "请登录",
+    "Popular Articles": "热门推荐",
+
+    "Read more": "继续阅读",
+    "Recent Articles": "最新发表",
+
+    "Say something": "说点什么吧",
+    "Search": "搜索",
+    "Sign In": "登录",
+    "Sign Out": "登出",
+
+    "Welcome": "欢迎",
+
+    "END": "END"
 }

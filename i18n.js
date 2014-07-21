@@ -74,8 +74,11 @@ function createI18N(header, translators) {
         return noTranslate;
     }
     return function (s) {
-        console.log(s + ' ==> ' + translator[s]);
-        return translator[s] || s;
+        var trans = translator[s];
+        if (!trans) {
+            console.log(s + ' ==> (missing)');
+        }
+        return trans || s;
     };
 }
 

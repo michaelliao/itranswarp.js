@@ -80,24 +80,29 @@ app.use(utils.userIdentityParser);
 
 // load i18n for management:
 var i18nForManagement = i18n.getI18NTranslators('./views/manage/i18n');
+// load i18n for theme:
+var i18nForTheme = i18n.getI18NTranslators('./views/' + themePath + 'i18n');
 
 // check user for manage and theme:
 app.use(function (req, res, next) {
+    console.log('Handle URL: ' + req.path);
     var prefix = req.path.substring(0, 8);
     if (prefix === '/manage/' && req.path !== '/manage/signin') {
-        if (req.user && req.user.local && req.user.role <= constants.ROLE_CONTRIBUTOR) {
-            res.manage = function (view, model) {
-                var m = model || {};
-                m.__user__ = req.user;
-                m._ = i18n.createI18N(req.get('Accept-Language'), i18nForManagement);
-                return res.render(view, m);
-            };
-            return next();
+        if (!req.user || !req.user.local || req.user.role > constants.ROLE_CONTRIBUTOR) {
+            return res.redirect('/manage/signin');
         }
-        return res.redirect('/manage/signin');
     }
     // add theme path to response object:
     res.themePath = themePath;
+    // automatically add '__user__' and '_' (for i18n) in the model:
+    var fnRender = res.render;
+    var i18nT = (prefix === '/manage/') ? i18nForManagement : i18nForTheme;
+    res.render = function (view, model) {
+        var m = model || {};
+        m.__user__ = req.user;
+        m._ = i18n.createI18N(req.get('Accept-Language'), i18nT);
+        return fnRender.apply(res, [view, m]);
+    }
     next();
 });
 
@@ -174,7 +179,7 @@ _.each(controllers, function (ctrl, fname) {
 
 var apiGroups = api_console.buildApiConsole();
 app.get('/manage/api/', function (req, res, next) {
-    return res.manage('manage/api/api_console.html', {
+    return res.render('manage/api/api_console.html', {
         apis: apiGroups,
         data: '\'' + encodeURIComponent(JSON.stringify(apiGroups)).replace(/\'/g, '\\\'') + '\''
     });
