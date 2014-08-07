@@ -167,7 +167,7 @@ function search(keyword) {
 
 function tryPython() {
     var name = 'iTranswarp_try_python_online';
-    var opt = 'width=646,height=400,left=400,top=200,toolbar=no,directories=no,menubar=no,scrollbars=no,resizable=no,location=no,status=no';
+    var opt = 'width=656,height=420,left=400,top=200,toolbar=no,directories=no,menubar=no,scrollbars=no,resizable=no,location=no,status=no';
     var py = window.open('/static/embed/pyconsole.html#0', name, opt);
     py && py.focus();
 }
