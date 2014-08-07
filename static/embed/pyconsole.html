@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/">
+<head>
+    <meta charset="utf-8" />
+    <title>Online Python Console</title>
+    <!--[if lt IE 9]>
+        <script src="/static/themes/default/static/js/html5.js"></script>
+    <![endif]-->
+    <style type="text/css">
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+a:focus {
+  outline: thin dotted #333;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+a:hover,
+a:active {
+  outline: 0;
+}
+body a,
+body a:link,
+body a:visited,
+body a:hover,
+body a:active,
+body a:focus {
+  text-decoration: underline;
+}
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #333333;
+  background-color: #ffffff;
+}
+a {
+  color: #fff;
+  text-decoration: underline;
+}
+a:hover,
+a:focus {
+  color: #fff;
+  text-decoration: underline;
+}
+p {
+  margin: 0 0 10px;
+}
+    </style>
+    <script>
+function consoleLoaded() {
+    var
+        info = document.getElementById('info'),
+        infoLoading = document.getElementById('info-loading'),
+        infoSource = document.getElementById('info-source');
+    infoSource.style.display = '';
+    infoLoading.style.display = 'none';
+    info.style.textAlign = 'right';
+}
+    </script>
+</head>
+<body style="background-color:#000;overflow:hidden;">
+    <div id="info" style="height: 20px; padding:0 1px;">
+        <span id="info-loading" style="color:#fff;">Loading python console, please wait...</span>
+        <span id="info-source" style="color:#fff;display:none;">Online python console from <a href="https://www.pythonanywhere.com/" target="_blank">PythonAnywhere</a></span>
+    </div>
+    <div>
+        <iframe id="console-embedded" onload="consoleLoaded()" name="ipython" frameBorder="0" marginHeight="0" marginWidth="0" scrolling="no" style="width:646px; height:377px; background-color:#000;" src="https://www.pythonanywhere.com/embedded/console_frame/"></iframe>
+    </div>
+</body>
+</html>
