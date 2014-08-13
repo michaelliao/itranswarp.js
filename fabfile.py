@@ -45,7 +45,7 @@ def backup():
         run('rm -f %s.tar.gz' % f)
 
 def build():
-    includes = ['controllers', 'models', 'node_modules', 'static', 'views', '*.js', 'favicon.ico']
+    includes = ['controllers', 'models', 'node_modules', 'static', 'views', '*.js', 'favicon.ico', 'robots.txt']
     excludes = ['gulpfile.js', 'schema.js', '.*', '*.py', '*.pyc', '*.pyo', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
     local('rm -f dist/%s' % _TAR_FILE)
     cmd = ['tar', '--dereference', '-czvf', 'dist/%s' % _TAR_FILE]
