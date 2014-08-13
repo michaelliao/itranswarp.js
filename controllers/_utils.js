@@ -131,101 +131,95 @@ function makeSessionCookie(provider, uid, passwd, expires) {
 }
 
 // parseSessionCookie, with callback(err, user):
-function parseSessionCookie(s, fn) {
+function parseSessionCookie(s, callback) {
     var
         ss = safe_b64decode(s).split(':'),
         provider, theId, expires, md5, secure, expected;
     if (ss.length !== 4) {
-        return fn(null, null);
+        return callback(null, null);
     }
     provider = ss[0];
     theId = ss[1];
     expires = parseInt(ss[2], 10);
     md5 = ss[3];
-    if (isNaN(expires) || expires < Date.now()) {
-        return fn(null, null);
-    }
-    if (!theId || !provider || !md5) {
-        return fn(null, null);
+    if (isNaN(expires) || (expires < Date.now()) || !theId || !provider || !md5) {
+        return callback(null, null);
     }
     if (provider === 'local') {
         User.find(theId, function (err, user) {
             if (err) {
-                return fn(err);
+                return callback(err);
             }
             if (user === null || (user.locked_util > Date.now())) {
-                return fn(null, null);
+                return callback(null, null);
             }
             // check:
             secure = [provider, theId, user.passwd, ss[2], SALT].join(':');
             expected = crypto.createHash('md5').update(secure).digest('hex');
             user.local = true;
-            fn(null, md5 === expected ? user : null);
+            callback(null, md5 === expected ? user : null);
         });
         return;
     }
     AuthUser.find(theId, function (err, authuser) {
         if (err) {
-            return fn(err);
+            return callback(err);
         }
-        if (authuser === null) {
-            return fn(null, null);
-        }
-        if (authuser.auth_provider !== provider) {
-            return fn(null, null);
+        if ((authuser === null) || (authuser.auth_provider !== provider)) {
+            return callback(null, null);
         }
         // check:
         secure = [provider, theId, authuser.auth_token, ss[2], SALT].join(':');
         expected = crypto.createHash('md5').update(secure).digest('hex');
         if (md5 !== expected) {
-            return fn(null, null);
+            return callback(null, null);
         }
         // find user:
         User.find(authuser.user_id, function (err, user) {
             if (err) {
-                return fn(err);
+                return callback(err);
             }
             if (user &&  (user.locked_util > Date.now())) {
-                return fn(null, null);
+                return callback(null, null);
             }
             user.local = false;
-            return fn(null, user);
+            return callback(null, user);
         });
     });
 }
 
 // parse header 'Authorization: Basic xxxx',
 // with callback(err, user):
-function parseAuthorization(auth, fn) {
+function parseAuthorization(auth, callback) {
     console.log('try parse header: Authorization: ' + auth);
     if ((auth.length < 6) || (auth.substring(0, 6) !== 'Basic ')) {
-        return fn(null, null);
+        return callback(null, null);
     }
     var
         u, p,
         up = new Buffer(auth.substring(6), 'base64').toString().split(':');
     if (up.length !== 2) {
-        return fn(null, null);
+        return callback(null, null);
     }
     u = up[0];
     p = up[1];
     if (!u || !p) {
-        return fn(null, null);
+        return callback(null, null);
     }
     User.find({
         where: 'email=?',
         params: [u]
     }, function (err, user) {
         if (err) {
-            return fn(err);
+            return callback(err);
         }
         if (user && user.passwd === p) {
             console.log('binded user: ' + user.name);
             user.local = true;
-            return fn(null, user);
+            return callback(null, user);
         }
         console.log('invalid authorization header.');
-        return fn(null, null);
+        return callback(null, null);
     });
 }
 
