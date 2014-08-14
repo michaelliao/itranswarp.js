@@ -69,6 +69,9 @@ function noTranslate(s) {
 }
 
 function createI18N(header, translators) {
+    if (!header) {
+        header = 'en';
+    }
     var translator = getTranslator(header, translators);
     if (translator === null) {
         return noTranslate;
