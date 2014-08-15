@@ -16,8 +16,8 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function createTopic(board_id, user_id, name, tags, content, tx, callback) {
-    if (arguments.length === 6) {
+function getBoard(board_id, tx, callback) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
@@ -28,31 +28,97 @@ function createTopic(board_id, user_id, name, tags, content, tx, callback) {
         if (board === null) {
             return callback(api.notFound('Board'));
         }
-        Topic.create({
-            board_id: board_id,
-            user_id: user_id,
-            name: name,
-            tags: tags,
-            content:content
-        }, tx, function (err, topic) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, topic);
-        });
+        return callback(null, board);
     });
 }
 
+function getBoards(tx, callback) {
+    if (arguments.length === 1) {
+        callback = tx;
+        tx = undefined;
+    }
+    Board.findAll({
+        order: 'display_order'
+    }, tx, callback);
+}
 
+function createBoard(name, description, tx, callback) {
+    if (arguments.length === 3) {
+        callback = tx;
+        tx = undefined;
+    }
+    Board.findNumber('max(display_order)', tx, function (err, num) {
+        if (err) {
+            return next(err);
+        }
+        var display_order = (num === null) ? 0 : num + 1;
+        Board.create({
+            name: name,
+            description: description,
+            display_order: display_order
+        }, tx, callback);
+    });
+}
 
+function lockBoard(board_id, tx, callback) {
+    getBoard(board_id, tx, function (err, board) {
+        if (err) {
+            return callback(err);
+        }
+        if (board.locked) {
+            return callback(null, board);
+        }
+        board.locked = false;
+        Board.update(callback);
+    });
+}
 
+function createTopic(board_id, user_id, name, tags, content, tx, callback) {
+    if (arguments.length === 6) {
+        callback = tx;
+        tx = undefined;
+    }
+    warp.transaction(function (err, tx) {
+        if (err) {
+            return next(err);
+        }
+        async.waterfall([
+            function (callback) {
+                getBoard(board_id, tx, callback);
+            },
+            function (board, callback) {
+                Topic.create({
+                    board_id: board_id,
+                    user_id: user_id,
+                    name: name,
+                    tags: tags,
+                    content:content
+                }, callback);
+            },
+            function (topic, callback) {
+                warp.update('update boards set topics = topics + 1 where id=?', [board_id], tx, function (err, r) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, topic);
+                });
+            }
+        ], function (err, result) {
+            tx.done(err, function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.send(result);
+            });
+        });
+    });
+}
 
 function formatText(s) {
     return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/</g, '&lt;').replace(/\>/g, '&gt;');
 }
 
-
-function getComments(ref_id, page, callback) {
+function getTopics(ref_id, page, callback) {
     if (arguments.length === 2) {
         callback = page;
         page = ref_id;
