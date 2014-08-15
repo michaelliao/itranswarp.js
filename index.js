@@ -100,7 +100,7 @@ app.use(function (req, res, next) {
     res.render = function (view, model) {
         var m = model || {};
         m.__user__ = req.user;
-        m._ = i18n.createI18N(req.get('Accept-Language'), i18nT);
+        m._ = i18n.createI18N(req.get('Accept-Language') || 'en', i18nT);
         return fnRender.apply(res, [view, m]);
     }
     next();
