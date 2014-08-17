@@ -73,6 +73,54 @@ function lockBoard(board_id, tx, callback) {
     });
 }
 
+function getTopic(topic_id, tx, callback) {
+    if (arguments.length === 2) {
+        callback = tx;
+        tx = undefined;
+    }
+    Topic.find(topic_id, tx, function (err, topic) {
+        if (err) {
+            return callback(err);
+        }
+        if (topic === null) {
+            return callback(api.notFound('Topic'));
+        }
+        return callback(null, topic);
+    });
+}
+
+function getTopics(board_id, page, callback) {
+    Topic.findNumber({
+        select: 'count(*)',
+        where: 'board_id=?',
+        params: [board_id]
+    }, function (err, num) {
+        if (err) {
+            return callback(err);
+        }
+        page.totalItems = num;
+        if (page.isEmpty) {
+            return callback(null, { page: page, topics: [] });
+        }
+        Topic.findAll({
+            select: ['id', 'board_id', 'topic_id', 'user_id', 'deleted', 'upvotes', 'downvotes', 'created_at', 'updated_at', 'version'],
+            where: 'board_id=?',
+            params: [board_id],
+            order: 'publish_at desc',
+            offset: page.offset,
+            limit: page.limit
+        }, function (err, entities) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, {
+                page: page,
+                topics: entities
+            });
+        });
+    });
+}
+
 function createTopic(board_id, user_id, name, tags, content, tx, callback) {
     if (arguments.length === 6) {
         callback = tx;
@@ -80,7 +128,7 @@ function createTopic(board_id, user_id, name, tags, content, tx, callback) {
     }
     warp.transaction(function (err, tx) {
         if (err) {
-            return next(err);
+            return callback(err);
         }
         async.waterfall([
             function (callback) {
@@ -106,9 +154,36 @@ function createTopic(board_id, user_id, name, tags, content, tx, callback) {
         ], function (err, result) {
             tx.done(err, function (err) {
                 if (err) {
-                    return next(err);
+                    return callback(err);
                 }
                 return res.send(result);
+            });
+        });
+    });
+}
+
+function deleteTopic(topic_id, tx, callback) {
+    if (arguments.length === 2) {
+        callback = tx;
+        tx = undefined;
+    }
+    warp.transaction(function (err, tx) {
+        if (err) {
+            return callback(err);
+        }
+        async.waterfall([
+            function (callback) {
+                getTopic(topic_id, tx, callback);
+            },
+            function (topic, callback) {
+                topic.destroy(tx, callback);
+            }
+        ], function (err, results) {
+            tx.done(err, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+                return callback(null, topic_id);
             });
         });
     });

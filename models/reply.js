@@ -8,6 +8,8 @@ module.exports = function (warp) {
         base.column_id('topic_id', { index: true }),
         base.column_id('user_id', { index: true }),
         base.column_boolean('deleted'),
+        base.column_bigint('upvotes'),
+        base.column_bigint('downvotes'),
         base.column_text('content', { type: 'text' })
     ], {
         table: 'replies'
