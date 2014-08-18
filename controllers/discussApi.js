@@ -103,7 +103,7 @@ function getTopics(board_id, page, callback) {
             return callback(null, { page: page, topics: [] });
         }
         Topic.findAll({
-            select: ['id', 'board_id', 'topic_id', 'user_id', 'deleted', 'upvotes', 'downvotes', 'created_at', 'updated_at', 'version'],
+            select: ['id', 'board_id', 'topic_id', 'user_id', 'deleted', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
             where: 'board_id=?',
             params: [board_id],
             order: 'publish_at desc',
@@ -191,83 +191,6 @@ function deleteTopic(topic_id, tx, callback) {
 
 function formatText(s) {
     return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/</g, '&lt;').replace(/\>/g, '&gt;');
-}
-
-function getTopics(ref_id, page, callback) {
-    if (arguments.length === 2) {
-        callback = page;
-        page = ref_id;
-        ref_id = undefined;
-    }
-    var query = {
-        select: 'count(id)'
-    };
-    if (ref_id) {
-        query.where = 'ref_id=?';
-        query.params = [ref_id];
-    }
-    Comment.findNumber(query, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        page.totalItems = num;
-        if (page.isEmpty) {
-            return callback(null, {
-                page: page,
-                comments: []
-            });
-        }
-        var query2 = {
-            select: '*',
-            offset: page.offset,
-            limit: page.limit,
-            order: 'created_at desc'
-        };
-        if (ref_id) {
-            query2.where = 'ref_id=?';
-            query2.params = [ref_id];
-        }
-        Comment.findAll(query2, function (err, comments) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, {
-                page: page,
-                comments: comments
-            });
-        });
-    });
-}
-
-function deleteComment(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    Comment.find(id, tx, function (err, c) {
-        if (err) {
-            return callback(err);
-        }
-        c.destroy(tx, function (err, r) {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, { id: c.id });
-        });
-    });
-}
-
-function deleteComments(ref_id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    warp.update('', [ref_id], tx, function (err, r) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, true);
-    });
 }
 
 module.exports = {
