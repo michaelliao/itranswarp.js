@@ -10,6 +10,7 @@ module.exports = function (warp) {
         base.column_boolean('deleted'),
         base.column_bigint('upvotes'),
         base.column_bigint('downvotes'),
+        base.column_bigint('score'),
         base.column_text('content', { type: 'text' })
     ], {
         table: 'replies'
