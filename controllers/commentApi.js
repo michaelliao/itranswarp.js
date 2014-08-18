@@ -140,24 +140,9 @@ function deleteComment(id, tx, callback) {
     });
 }
 
-function deleteComments(ref_id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    warp.update('', [ref_id], tx, function (err, r) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, true);
-    });
-}
-
 module.exports = {
 
     createComment: createComment,
-
-    deleteComments: deleteComments,
 
     deleteComment: deleteComment,
 
