@@ -21,7 +21,7 @@ $(function() {
                 }
                 showError();
                 showLoading(true);
-                postJSON('/api/categories/sort', ids.join('&'), function(err, result) {
+                postJSON('/api/categories/all/sort', ids.join('&'), function(err, result) {
                     if (err) {
                         showError(err);
                         showLoading(false);

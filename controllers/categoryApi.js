@@ -129,7 +129,7 @@ module.exports = {
         });
     },
 
-    'POST /api/categories/sort': function (req, res, next) {
+    'POST /api/categories/all/sort': function (req, res, next) {
         /**
          * Sort categories.
          *
