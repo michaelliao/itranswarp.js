@@ -302,7 +302,7 @@ function getParam(name, defaultValue, req) {
     if (req.body.hasOwnProperty(name)) {
         s = req.body[name].trim();
     }
-    return s || defaultValue;
+    return s === null ? defaultValue : s;
 }
 
 // return trimed parameter value as string, if not exist or empty, throw APIError('param:invalid').
