@@ -201,12 +201,9 @@ module.exports = {
                 return next(api.invalidParam('name'));
             }
         }
-        Category.find(req.params.id, function (err, entity) {
+        getCategory(req.params.id, function (err, entity) {
             if (err) {
                 return next(err);
-            }
-            if (entity === null) {
-                return next(api.notFound('Category'));
             }
             if (name !== null) {
                 entity.name = name;
