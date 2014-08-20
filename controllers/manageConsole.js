@@ -331,7 +331,7 @@ module.exports = {
                 return next(err);
             }
             return res.render('manage/discuss/board_list.html', {
-                boards: JSON.stringify(boards)
+                boards: JSON.stringify(_.flatten(boards))
             });
         });
     },

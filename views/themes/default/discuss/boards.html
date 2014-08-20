@@ -8,7 +8,15 @@
 
 {% block main %}
 
-{% for b in boards %}
+{% for group in boards %}
+
+    <table class="table table-bordered table-hover">
+    {% for b in group %}
+        <tr>
+            <td>{{ b.name}}</td>
+        </tr>
+    {% endfor %}
+    </table>
 
 {% endfor %}
 

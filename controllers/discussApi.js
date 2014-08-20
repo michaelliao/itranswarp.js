@@ -52,6 +52,8 @@ function getBoards(tx, callback) {
         }
         // sort by display_order and group by tag:
         var
+            lastTag = null,
+            groups = [],
             tagDict = {},
             tags = _.uniq(_.map(boards, function (b) {
                 return b.tag;
@@ -68,7 +70,17 @@ function getBoards(tx, callback) {
             }
             return n1 < n2 ? -1 : 1;
         });
-        return callback(null, boards);
+        // group:
+        _.each(boards, function (b) {
+            if (lastTag === b.tag) {
+                groups[groups.length - 1].push(b);
+            }
+            else {
+                lastTag = b.tag;
+                groups.push([b]);
+            }
+        });
+        return callback(null, groups);
     });
 }
 
