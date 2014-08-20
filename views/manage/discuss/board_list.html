@@ -1,0 +1,146 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+{{ _('All Boards') }}
+{% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var boards = {{ boards|safe }};
+    var vmBoards = new Vue({
+        el: '#boards',
+        data: {
+            boards: boards
+        },
+        methods: {
+            sort: function(event) {
+                var ids = [];
+                for (var i = 0; i < this.boards.length; i ++) {
+                    ids.push('id=' + this.boards[i].id);
+                }
+                showError();
+                showLoading(true);
+                postJSON('/api/boards/sort', ids.join('&'), function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    refresh();
+                });
+            },
+            find: function(id) {
+                for (var i = 0; i < this.boards.length; i ++) {
+                    var c = this.boards[i];
+                    if (c.id===id) {
+                        return i;
+                    }
+                }
+                return (-1);
+            },
+            swap: function(index1, index2) {
+                var obj = this.boards[index2];
+                this.boards.splice(index2, 1);
+                this.boards.splice(index1, 0, obj);
+                $('#sort').show();
+            },
+            moveUp: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===0) {
+                    return;
+                }
+                this.swap(index - 1, index);
+            },
+            moveDown: function(id) {
+                var index = this.find(id);
+                if (index===(-1) || index===(this.boards.length-1)) {
+                    return;
+                }
+                this.swap(index, index + 1);
+            },
+            editBoard: function(id) {
+                location.assign('edit_board?id=' + id);
+            },
+            lockBoard: function(id, locked) {
+                var index = this.find(id);
+                if (index !== (-1)) {
+                    var boards = this.boards;
+                    var c = boards[index];
+                    showConfirm(locked ? 'Confirm Lock' : 'Confirm Unlock',
+                            locked ? 'Board \"' + c.name + '\" will be locked. Continue?' : 'Board \"' + c.name + '\" will be unlock. Continue?', function(modal) {
+                        showError();
+                        modal.showLoading(true);
+                        postJSON('/api/boards/' + c.id + (locked ? '/lock' : '/unlock'), function(err, result) {
+                            modal.hide();
+                            if (err) {
+                                showError(err);
+                                return;
+                            }
+                            location.assign('/manage/discuss/')
+                        });
+                    });
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="boards">
+
+<div class="span12">
+    <ul class="breadcrumb">
+        <li class="active">{{ _('All Boards') }} (<span v-text="boards.length"></span>)</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="create_board" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Board') }}</a>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="alert alert-error hide"></div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="30%">{{ _('Name') }}</th>
+                <th width="40%">{{ _('Description') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
+                <th width="15%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-repeat="c: boards">
+                <td>
+                    <a v-text="c.name" v-attr="href: '/discuss/'+c.id" target="_blank"></a>
+                    <i v-if="c.locked" class="icon-lock"></i>
+                </td>
+                <td><span v-text="c.description"></span></td>
+                <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on="click: moveUp(c.id)" title="Move this board up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
+                    <a v-on="click: moveDown(c.id)" title="Move this board down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
+                    <a v-on="click: editBoard(c.id)" title="Edit this board" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-if="!c.locked" v-on="click: lockBoard(c.id, true)" title="Lock this board" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
+                    <a v-if="c.locked" v-on="click: lockBoard(c.id, false)" title="Unock this board" href="#0" class="x-btn"><i class="icon-ok-circle"></i></a>
+                </td>
+            </tr>
+            <tr v-if="categories.length===0">
+                <td colspan="5">No board found.</td>
+            </tr>
+        </tbody>
+    </table>
+    <div>
+        <div id="sort" class="btn-toolbar hide" style="text-align:right;">
+            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> {{ _('Save Orders') }}</button>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}

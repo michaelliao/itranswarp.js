@@ -10,6 +10,6 @@ module.exports = function (warp) {
         base.column_varchar_1000('description'),
         base.column_bigint('display_order')
     ], {
-        table: 'topics'
+        table: 'boards'
     });
 };

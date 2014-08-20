@@ -24,12 +24,13 @@ var
     articleApi = require('./articleApi'),
     pageApi = require('./pageApi'),
     wikiApi = require('./wikiApi'),
+    discussApi = require('./discussApi'),
     attachmentApi = require('./attachmentApi'),
     navigationApi = require('./navigationApi'),
     userApi = require('./userApi'),
     settingApi = require('./settingApi');
 
-var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, attachmentApi, navigationApi, userApi, settingApi];
+var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
 function getAllNavigationMenus(callback) {
     var fns = _.map(apisList, function (theApi) {
@@ -318,6 +319,49 @@ module.exports = {
                 },
                 wikipage: wikipage,
                 wiki: wiki
+            });
+        });
+    },
+
+    // board //////////////////////////////////////////////////////////////////
+
+    'GET /manage/discuss/(index)?': function (req, res, next) {
+        discussApi.getBoards(function (err, boards) {
+            if (err) {
+                return next(err);
+            }
+            return res.render('manage/discuss/board_list.html', {
+                boards: JSON.stringify(boards)
+            });
+        });
+    },
+
+    'GET /manage/discuss/create_board': function (req, res, next) {
+        return res.render('manage/discuss/board_form.html', {
+            form: {
+                name: 'Create Board',
+                action: '/api/boards',
+                redirect: '/manage/discuss/'
+            },
+            board: {}
+        });
+    },
+
+    'GET /manage/discuss/edit_board': function (req, res, next) {
+        discussApi.getBoard(req.query.id, function (err, obj) {
+            if (err) {
+                return next(err);
+            }
+            if (obj === null) {
+                return next(api.notFound('Board'));
+            }
+            return res.render('manage/discuss/board_form.html', {
+                form: {
+                    name: 'Edit Board',
+                    action: '/api/boards/' + obj.id + '/',
+                    redirect: '/manage/discuss/'
+                },
+                board: obj
             });
         });
     },

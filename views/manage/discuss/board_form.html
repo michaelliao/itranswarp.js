@@ -1,0 +1,71 @@
+{% extends '../manage.html' %}
+
+{% block title %}
+{{ form.name }}
+{% endblock %}
+
+{% block head %}
+
+<script>
+$(function() {
+    var vm = new Vue({
+        el: '#formVm',
+        data: {
+            name: {{ board.name|json|safe }},
+            description: {{ board.description|json|safe }},
+        },
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                showError();
+                showLoading(true);
+                postJSON('{{ form.action }}', this.$data, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    location.assign('{{ form.redirect }}');
+                });
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}
+
+{% block main %}
+<div class="span12">
+    <ul class="breadcrumb">
+        <li><a href="/manage/discuss/">All Boards</a> <span class="divider">/</span></li>
+        <li class="active">{{ form.name }}</li>
+    </ul>
+</div>
+
+<div class="span12">
+    <form id="formVm" v-on="submit: submit" class="form-horizontal">
+        <legend>{{ form.name }}</legend>
+        <fieldset>
+            <div class="alert alert-error hide"></div>
+            <div class="field-name control-group">
+                <label class="control-label">Name:</label>
+                <div class="controls">
+                    <input v-model="name" type="text" class="input-xlarge" />
+                </div>
+            </div>
+            <div class="field-description control-group">
+                <label class="control-label">Description:</label>
+                <div class="controls">
+                    <input v-model="description" type="text" class="input-xlarge" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
+                <button type="button" class="btn" onclick="location.assign('{{ form.redirect }}')"><i class="icon-remove"></i> Cancel</button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}
