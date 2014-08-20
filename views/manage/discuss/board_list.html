@@ -21,7 +21,7 @@ $(function() {
                 }
                 showError();
                 showLoading(true);
-                postJSON('/api/boards/sort', ids.join('&'), function(err, result) {
+                postJSON('/api/boards/all/sort', ids.join('&'), function(err, result) {
                     if (err) {
                         showError(err);
                         showLoading(false);
@@ -32,8 +32,8 @@ $(function() {
             },
             find: function(id) {
                 for (var i = 0; i < this.boards.length; i ++) {
-                    var c = this.boards[i];
-                    if (c.id===id) {
+                    var obj = this.boards[i];
+                    if (obj.id===id) {
                         return i;
                     }
                 }
@@ -59,19 +59,21 @@ $(function() {
                 }
                 this.swap(index, index + 1);
             },
+            listTopics: function (id) {
+                location.assign('topic_list?board_id=' + id);
+            },
             editBoard: function(id) {
                 location.assign('edit_board?id=' + id);
             },
             lockBoard: function(id, locked) {
                 var index = this.find(id);
                 if (index !== (-1)) {
-                    var boards = this.boards;
-                    var c = boards[index];
+                    var obj = this.boards[index];
                     showConfirm(locked ? 'Confirm Lock' : 'Confirm Unlock',
-                            locked ? 'Board \"' + c.name + '\" will be locked. Continue?' : 'Board \"' + c.name + '\" will be unlock. Continue?', function(modal) {
+                            locked ? 'Board \"' + obj.name + '\" will be locked. Continue?' : 'Board \"' + obj.name + '\" will be unlock. Continue?', function(modal) {
                         showError();
                         modal.showLoading(true);
-                        postJSON('/api/boards/' + c.id + (locked ? '/lock' : '/unlock'), function(err, result) {
+                        postJSON('/api/boards/' + obj.id + (locked ? '/lock' : '/unlock'), function(err, result) {
                             modal.hide();
                             if (err) {
                                 showError(err);
@@ -108,26 +110,29 @@ $(function() {
     <table class="table table-bordered">
         <thead>
             <tr>
+                <th width="10%">{{ _('Tag') }}</th>
                 <th width="30%">{{ _('Name') }}</th>
-                <th width="40%">{{ _('Description') }}</th>
+                <th width="30%">{{ _('Description') }}</th>
                 <th width="15%">{{ _('Created At') }}</th>
                 <th width="15%">&nbsp;</th>
             </tr>
         </thead>
         <tbody>
-            <tr v-repeat="c: boards">
+            <tr v-repeat="obj: boards">
+                <td><span v-text="obj.tag"></span></td>
                 <td>
-                    <a v-text="c.name" v-attr="href: '/discuss/'+c.id" target="_blank"></a>
-                    <i v-if="c.locked" class="icon-lock"></i>
+                    <a v-text="obj.name" v-attr="href: '/discuss/' + obj.id" target="_blank"></a>
+                    <i v-if="obj.locked" class="icon-lock"></i>
                 </td>
-                <td><span v-text="c.description"></span></td>
-                <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td><span v-text="obj.description"></span></td>
+                <td><span v-text="obj.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
                 <td>
-                    <a v-on="click: moveUp(c.id)" title="Move this board up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
-                    <a v-on="click: moveDown(c.id)" title="Move this board down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
-                    <a v-on="click: editBoard(c.id)" title="Edit this board" href="#0" class="x-btn"><i class="icon-edit"></i></a>
-                    <a v-if="!c.locked" v-on="click: lockBoard(c.id, true)" title="Lock this board" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
-                    <a v-if="c.locked" v-on="click: lockBoard(c.id, false)" title="Unock this board" href="#0" class="x-btn"><i class="icon-ok-circle"></i></a>
+                    <a v-on="click: listTopics(obj.id)" title="List topics" href="#0" class="x-btn"><i class="icon-list"></i></a>
+                    <a v-on="click: moveUp(obj.id)" title="Move this board up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
+                    <a v-on="click: moveDown(obj.id)" title="Move this board down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
+                    <a v-on="click: editBoard(obj.id)" title="Edit this board" href="#0" class="x-btn"><i class="icon-edit"></i></a>
+                    <a v-if="!obj.locked" v-on="click: lockBoard(obj.id, true)" title="Lock this board" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
+                    <a v-if="obj.locked" v-on="click: lockBoard(obj.id, false)" title="Unock this board" href="#0" class="x-btn"><i class="icon-ok-circle"></i></a>
                 </td>
             </tr>
             <tr v-if="categories.length===0">

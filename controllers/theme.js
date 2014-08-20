@@ -25,6 +25,7 @@ var
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
     wikiApi = require('./wikiApi'),
+    discussApi = require('./discussApi'),
     commentApi = require('./commentApi'),
     pageApi = require('./pageApi'),
     userApi = require('./userApi'),
@@ -346,6 +347,18 @@ module.exports = {
                 return callback(err, wp, '/wiki/' + wp.wiki_id + '/' + wp.id);
             });
         }, req, res, next);
+    },
+
+    'GET /discuss': function (req, res, next) {
+        discussApi.getBoards(function (err, boards) {
+            if (err) {
+                return next(err);
+            }
+            var model = {
+                boards: boards
+            };
+            return processTheme('discuss/boards.html', model, req, res, next);
+        });
     },
 
     'GET /user/:id': function (req, res, next) {

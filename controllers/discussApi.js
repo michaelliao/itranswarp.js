@@ -46,11 +46,34 @@ function getBoards(tx, callback) {
     }
     Board.findAll({
         order: 'display_order'
-    }, tx, callback);
+    }, tx, function (err, boards) {
+        if (err) {
+            return callback(err);
+        }
+        // sort by display_order and group by tag:
+        var
+            tagDict = {},
+            tags = _.uniq(_.map(boards, function (b) {
+                return b.tag;
+            }));
+        _.each(tags, function (tag, index) {
+            tagDict[tag] = index;
+        });
+        boards.sort(function (b1, b2) {
+            var
+                n1 = tagDict[b1.tag],
+                n2 = tagDict[b2.tag];
+            if (n1 === n2) {
+                return 0;
+            }
+            return n1 < n2 ? -1 : 1;
+        });
+        return callback(null, boards);
+    });
 }
 
-function createBoard(name, description, tx, callback) {
-    if (arguments.length === 3) {
+function createBoard(data, tx, callback) {
+    if (arguments.length === 2) {
         callback = tx;
         tx = undefined;
     }
@@ -60,8 +83,9 @@ function createBoard(name, description, tx, callback) {
         }
         var display_order = (num === null) ? 0 : num + 1;
         Board.create({
-            name: name,
-            description: description,
+            name: data.name,
+            tag: data.tag,
+            description: data.description,
             display_order: display_order
         }, tx, callback);
     });
@@ -180,6 +204,9 @@ function deleteTopic(topic_id, callback) {
             },
             function (topic, callback) {
                 topic.destroy(tx, callback);
+            },
+            function (r, callback) {
+                warp.update('delete from replies where topic_id=?', [topic_id], tx, callback);
             }
         ], function (err, results) {
             tx.done(err, function (err) {
@@ -204,6 +231,8 @@ module.exports = {
 
     getBoards: getBoards,
 
+    getTopics: getTopics,
+
     'POST /api/boards': function (req, res, next) {
         /**
          * Create new board.
@@ -216,14 +245,19 @@ module.exports = {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        var name, description;
+        var name, tag, description;
         try {
             name = utils.getRequiredParam('name', req);
         } catch (e) {
             return next(e);
         }
+        tag = utils.getParam('tag', '', req);
         description = utils.getParam('description', '', req);
-        createBoard(name, description, function (err, board) {
+        createBoard({
+            name: name,
+            tag: tag,
+            description: description
+        }, function (err, board) {
             if (err) {
                 return next(err);
             }
@@ -308,7 +342,7 @@ module.exports = {
         });
     },
 
-    'POST /api/boards/sort': function (req, res, next) {
+    'POST /api/boards/all/sort': function (req, res, next) {
         /**
          * Sort boards.
          *
@@ -397,17 +431,7 @@ module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        async.waterfall([
-            function (callback) {
-                Comment.find(req.params.id, callback);
-            },
-            function (comment, callback) {
-                if (comment === null) {
-                    return callback(api.notFound('Comment'));
-                }
-                comment.destroy(callback);
-            }
-        ], function (err, result) {
+        deleteTopic(req.params.id, function (err, result) {
             if (err) {
                 return next(err);
             }

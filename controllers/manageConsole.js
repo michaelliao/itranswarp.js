@@ -366,6 +366,27 @@ module.exports = {
         });
     },
 
+    'GET /manage/discuss/topic_list': function (req, res, next) {
+        var
+            board_id = req.query.board_id,
+            page = utils.getPage(req);
+        discussApi.getBoard(board_id, function (err, board) {
+            if (err) {
+                return next(err);
+            }
+            discussApi.getTopics(board_id, page, function (err, results) {
+                if (err) {
+                    return next(err);
+                }
+                return res.render('manage/discuss/topic_list.html', {
+                    board: JSON.stringify(board),
+                    page: JSON.stringify(results.page),
+                    topics: JSON.stringify(results.topics)
+                });
+            });
+        });
+    },
+
     // attachment /////////////////////////////////////////////////////////////
 
     'GET /manage/attachment/(index)?': function (req, res, next) {

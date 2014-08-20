@@ -13,7 +13,6 @@ module.exports = function (warp) {
         base.column_bigint('downvotes'),
         base.column_bigint('score'),
         base.column_boolean('locked'),
-        base.column_boolean('deleted'),
         base.column_text('content', { type: 'text' })
     ], {
         table: 'topics'

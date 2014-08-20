@@ -12,6 +12,7 @@ $(function() {
         el: '#formVm',
         data: {
             name: {{ board.name|json|safe }},
+            tag: {{ board.tag|json|safe }},
             description: {{ board.description|json|safe }},
         },
         methods: {
@@ -48,6 +49,12 @@ $(function() {
         <legend>{{ form.name }}</legend>
         <fieldset>
             <div class="alert alert-error hide"></div>
+            <div class="field-tag control-group">
+                <label class="control-label">Tag:</label>
+                <div class="controls">
+                    <input v-model="tag" type="text" class="input-xlarge" />
+                </div>
+            </div>
             <div class="field-name control-group">
                 <label class="control-label">Name:</label>
                 <div class="controls">
