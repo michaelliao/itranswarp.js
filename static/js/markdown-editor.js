@@ -1,7 +1,9 @@
 /*
 * markdown-editor.js
 * 
-* Markdown Editor plugin for jQuery.
+* Markdown Editor plugin based on jQuery & Bootstrap.
+* 
+* Michael Liao
 */
 
 function markdown2html(text) {
