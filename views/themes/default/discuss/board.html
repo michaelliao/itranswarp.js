@@ -1,0 +1,36 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/discuss" />
+{% endblock %}
+
+{% block title %}{{ board.name }}{% endblock %}
+
+{% block main %}
+
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="/discuss/{{ board.id }}/topics/create" class="btn btn-success"><i class="icon-plus icon-white"></i> {{ _('New Topic') }}</a>
+    </div>
+
+    <table class="table table-bordered table-hover">
+    {% for t in topics %}
+        <tr>
+            <td>
+                <p><a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a></p>
+                <p>t.read</p>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+
+    <div class="x-page">
+        {{ pagination(page, '?page=') }}
+    </div>
+
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+        <h4>Hot Topics</h4>
+    </div>
+{% endblock %}

@@ -361,6 +361,37 @@ module.exports = {
         });
     },
 
+    'GET /discuss/:id': function (req, res, next) {
+        var
+            page = utils.getPage(req),
+            model = {};
+        async.waterfall([
+            function (callback) {
+                discussApi.getBoard(req.params.id, callback);
+            },
+            function (board, callback) {
+                model.board = board;
+                discussApi.getTopics(board.id, page, callback);
+            }
+        ], function (err, r) {
+            if (err) {
+                return next(err);
+            }
+            model.topics = r.topics;
+            model.page = r.page;
+            return processTheme('discuss/board.html', model, req, res, next);
+        });
+    },
+
+    'GET /discuss/:id/topics/create': function (req, res, next) {
+        discussApi.getBoard(req.params.id, function (err, board) {
+            if (err) {
+                return next(err);
+            }
+            return processTheme('discuss/topic_form.html', { board: board }, req, res, next);
+        });
+    },
+
     'GET /user/:id': function (req, res, next) {
         userApi.getUser(req.params.id, function (err, user) {
             if (err) {

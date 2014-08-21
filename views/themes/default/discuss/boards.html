@@ -13,7 +13,10 @@
     <table class="table table-bordered table-hover">
     {% for b in group %}
         <tr>
-            <td>{{ b.name}}</td>
+            <td>
+                <p><a href="/discuss/{{ b.id }}">{{ b.name}}</a></p>
+                <p>{{ b.description }}</p>
+            </td>
         </tr>
     {% endfor %}
     </table>
