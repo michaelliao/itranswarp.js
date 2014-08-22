@@ -7,28 +7,84 @@
 {% block title %}{{ board.name }}{% endblock %}
 
 {% block beforehead %}
+    <script src="/static/themes/default/js/marked.js"></script>
     <script src="/static/themes/default/js/markdown-editor.js"></script>
+    <script>
+    $(function() {
+        var
+            editor = $('#markdown-editor'),
+            preview = $('#markdown-preview');
+        editor.markdown({
+            buttons: ['heading', '|', 'bold', 'italic', 'ul', 'quote', '|', 'link', '|', 'image', 'video']
+        });
+        preview.css('height', editor.height() + 'px');
+
+        var doPreview = function () {
+            preview.html(marked(editor.val(), {
+                sanitize: true
+            }));
+        };
+        var resetPreview = (function () {
+            // start preview:
+            var countDown = 10;
+            setInterval(function () {
+                if (countDown > 0) {
+                    countDown --;
+                    if (countDown == 0) {
+                        doPreview();
+                    }
+                }
+            }, 100);
+            return function () {
+                countDown = 10;
+            };
+        })();
+        editor.keypress(function () {
+            resetPreview();
+        });
+        editor.keyup(function() {
+            resetPreview();
+        });
+        // capture setRangeText():
+        var editorDom = editor.get(0);
+        var fn = editorDom.setRangeText;
+        editorDom.setRangeText = function() {
+            resetPreview();
+            return fn.apply(editorDom, arguments);
+        };
+    });
+    </script>
 {% endblock %}
 
-{% block main %}
-
-    <div class="btn-toolbar" style="text-align:right;">
-        <a href="/discuss/{{ board.id }}/topics/create" class="btn btn-success"><i class="icon-plus icon-white"></i> {{ _('New Topic') }}</a>
+{% block container %}
+    <div class="row">
+        <div class="span12">
+            <ul class="breadcrumb">
+                <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
+                <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
+                <li class="active">New Topic</li>
+            </ul>
+            <h3>Create new topic</h3>
+            <p>{{ _('Title') }}</p>
+            <p><input type="text" name="name" maxlength="100" style="width:460px;"></p>
+            <p>{{ _('Content') }}</p>
+        </div>
     </div>
-
-    <table class="table table-bordered table-hover">
-    {% for t in topics %}
-        <tr>
-            <td>
-                <p><a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a></p>
-                <p>t.read</p>
-            </td>
-        </tr>
-    {% endfor %}
-    </table>
-
-    <div class="x-page">
-        {{ pagination(page, '?page=') }}
+    <div class="row">
+        <div class="span6">
+            <textarea name="content" id="markdown-editor" rows="20" style="width:460px;"></textarea>
+        </div>
+        <div class="span6">
+            <p style="height:30px; line-height:30px; margin:10px 0;">Preview</p>
+            <div id="markdown-preview" class="span6" style="display:block; overflow-x:hidden; overflow-y:scroll; background-color: #ccc;">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span12">
+            <button type="submit" class="btn btn-primary">{{ _('Post') }}</button>
+            <button type="button" onclick="location.assign('/discuss/{{ board.id }}')" class="btn">{{ _('Cancel') }}</button>
+        </div>
     </div>
 
 {% endblock %}
