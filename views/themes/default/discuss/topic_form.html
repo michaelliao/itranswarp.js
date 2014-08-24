@@ -17,7 +17,7 @@
         editor.markdown({
             buttons: ['heading', '|', 'bold', 'italic', 'ul', 'quote', '|', 'link', '|', 'image', 'video']
         });
-        preview.css('height', editor.height() + 'px');
+        preview.css('height', (editor.height() + 10) + 'px');
 
         var doPreview = function () {
             preview.html(marked(editor.val(), {
@@ -53,39 +53,61 @@
             return fn.apply(editorDom, arguments);
         };
     });
+
     </script>
 {% endblock %}
 
 {% block container %}
-    <div class="row">
-        <div class="span12">
-            <ul class="breadcrumb">
-                <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
-                <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
-                <li class="active">New Topic</li>
-            </ul>
-            <h3>Create new topic</h3>
-            <p>{{ _('Title') }}</p>
-            <p><input type="text" name="name" maxlength="100" style="width:460px;"></p>
-            <p>{{ _('Content') }}</p>
-        </div>
-    </div>
-    <div class="row">
-        <div class="span6">
-            <textarea name="content" id="markdown-editor" rows="20" style="width:460px;"></textarea>
-        </div>
-        <div class="span6">
-            <p style="height:30px; line-height:30px; margin:10px 0;">Preview</p>
-            <div id="markdown-preview" class="span6" style="display:block; overflow-x:hidden; overflow-y:scroll; background-color: #ccc;">
+
+    <form name="form" url="/api/boards/{{ board.id }}/topics" onsubmit="return create_topic(this)" class="form-post-topic x-auth-signed">
+        <div class="row">
+            <div class="span12">
+                <ul class="breadcrumb">
+                    <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
+                    <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
+                    <li class="active">New Topic</li>
+                </ul>
+                <h3>Create new topic</h3>
+                <div class="alert alert-error hide"></div>
+                <div class="control-group field-name">
+                    <label class="control-label">{{ _('Title') }}</label>
+                    <div class="controls">
+                        <input type="text" name="name" maxlength="100" style="width:460px;">
+                    </div>
+                </div>
+                <div class="control-group field-tags">
+                    <label class="control-label">{{ _('Tags') }}</label>
+                    <div class="controls">
+                        <input type="text" name="tags" maxlength="100" style="width:460px;">
+                    </div>
+                    <div class="controls">
+                        <span class="help-inline">You can add tags for your topic. Tags are seperated by comma.</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="span12">
-            <button type="submit" class="btn btn-primary">{{ _('Post') }}</button>
-            <button type="button" onclick="location.assign('/discuss/{{ board.id }}')" class="btn">{{ _('Cancel') }}</button>
+        <div class="row">
+            <div class="span6">
+                <div class="control-group field-content">
+                    <label class="control-label">{{ _('Content') }}</label>
+                    <div class="controls">
+                        <textarea name="content" id="markdown-editor" rows="20" style="width:460px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="span6">
+                <p style="height:30px; line-height:30px; margin:10px 0;">Preview</p>
+                <div id="markdown-preview" class="span6" style="display:block; overflow-x:hidden; overflow-y:scroll;">
+                </div>
+            </div>
         </div>
-    </div>
+        <div class="row">
+            <div class="span12">
+                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> {{ _('Post') }}</button>
+                <button type="button" onclick="location.assign('/discuss/{{ board.id }}')" class="btn"><i class="icon-remove"></i> {{ _('Cancel') }}</button>
+            </div>
+        </div>
+    </form>
 
 {% endblock %}
 

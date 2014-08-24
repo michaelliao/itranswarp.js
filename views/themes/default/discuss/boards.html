@@ -14,8 +14,8 @@
     {% for b in group %}
         <tr>
             <td>
-                <p><a href="/discuss/{{ b.id }}">{{ b.name}}</a></p>
-                <p>{{ b.description }}</p>
+                <p><a href="/discuss/{{ b.id }}"><strong>{{ b.name}}</strong></a></p>
+                <p class="muted"><small>{{ b.description }}</small></p>
             </td>
         </tr>
     {% endfor %}
