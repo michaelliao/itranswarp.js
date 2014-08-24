@@ -254,7 +254,7 @@ function markdown2html(text) {
             var s = '<div data-backdrop="static" class="modal hide fade"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h3>Hyper Link</h3></div>'
                   + '<div class="modal-body"><form class="form-horizontal"><div class="control-group"><label class="control-label">Text:</label><div class="controls"><input name="text" type="text" value="" /></div></div>'
                   + '<div class="control-group"><label class="control-label">Link:</label><div class="controls"><input name="link" type="text" placeholder="http://" value="" /></div></div>'
-                  + '</form></div><div class="modal-footer"><a href="#" class="btn btn-primary">OK</a><a href="#" class="btn" data-dismiss="modal">Close</a></div></div>';
+                  + '</form></div><div class="modal-footer"><a href="#0" class="btn btn-primary">OK</a><a href="#0" class="btn" data-dismiss="modal">Close</a></div></div>';
             $('body').prepend(s);
             var $modal = $('body').children(':first');
             var sel = delegate.getSelection();
@@ -279,7 +279,7 @@ function markdown2html(text) {
             var s = '<div data-backdrop="static" class="modal hide fade"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h3>Email Address</h3></div>'
                   + '<div class="modal-body"><form class="form-horizontal"><div class="control-group"><label class="control-label">Name:</label><div class="controls"><input name="text" type="text" value="" /></div></div>'
                   + '<div class="control-group"><label class="control-label">Email:</label><div class="controls"><input name="email" type="text" placeholder="email@example.com" value="" /></div></div>'
-                  + '</form></div><div class="modal-footer"><a href="#" class="btn btn-primary">OK</a><a href="#" class="btn" data-dismiss="modal">Close</a></div></div>';
+                  + '</form></div><div class="modal-footer"><a href="#0" class="btn btn-primary">OK</a><a href="#0" class="btn" data-dismiss="modal">Close</a></div></div>';
             $('body').prepend(s);
             var $modal = $('body').children(':first');
             var sel = delegate.getSelection();
