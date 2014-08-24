@@ -1,6 +1,7 @@
 // user api
 
 var
+    _ = require('lodash'),
     async = require('async');
 var
     api = require('../api'),
@@ -24,6 +25,37 @@ var LOCK_TIMES = {
 };
 
 var isSecure = config.session.httpsForManagement;
+
+// get user by list of ids, return users as object:
+// { user'id: user object }
+function getUsersByIds(ids, callback) {
+    var tasks = _.map(ids, function (uid) {
+            return function (callback) {
+                getUser(uid, callback);
+            };
+        });
+    async.series(_.zipObject(ids, tasks), function (err, users) {
+        callback(err, users);
+    });
+}
+
+function bindUsers(objs, callback) {
+    console.log(JSON.stringify(objs));
+    var
+        userIds = _.map(objs, function (obj) {
+            return obj.user_id;
+        }),
+        ids = _.uniq(userIds);
+    getUsersByIds(ids, function (err, users) {
+        if (err) {
+            return callback(err);
+        }
+        _.each(objs, function (obj) {
+            obj.user = users[obj.user_id];
+        });
+        callback(null, objs);
+    });
+}
 
 function getUsers(page, callback) {
     User.findNumber('count(*)', function (err, num) {
@@ -170,6 +202,8 @@ module.exports = {
     getUser: getUser,
 
     getUsers: getUsers,
+
+    bindUsers: bindUsers,
 
     'POST /api/users/:id/lock': function (req, res, next) {
         if (utils.isForbidden(req, constants.ROLE_ADMIN)) {

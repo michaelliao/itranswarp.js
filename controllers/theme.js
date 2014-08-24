@@ -372,13 +372,16 @@ module.exports = {
             function (board, callback) {
                 model.board = board;
                 discussApi.getTopics(board.id, page, callback);
+            },
+            function (r, callback) {
+                model.page = r.page;
+                model.topics = r.topics;
+                userApi.bindUsers(model.topics, callback);
             }
         ], function (err, r) {
             if (err) {
                 return next(err);
             }
-            model.topics = r.topics;
-            model.page = r.page;
             return processTheme('discuss/board.html', model, req, res, next);
         });
     },
@@ -389,6 +392,41 @@ module.exports = {
                 return next(err);
             }
             return processTheme('discuss/topic_form.html', { board: board }, req, res, next);
+        });
+    },
+
+    'GET /discuss/:bid/:tid': function (req, res, next) {
+        var
+            board_id = req.params.bid,
+            topic_id = req.params.tid,
+            page = utils.getPage(req),
+            model = {};
+        async.waterfall([
+            function (callback) {
+                discussApi.getBoard(board_id, callback);
+            },
+            function (board, callback) {
+                model.board = board;
+                discussApi.getTopic(topic_id, callback);
+            },
+            function (topic, callback) {
+                if (topic.board_id !== board_id) {
+                    return callback(api.notFound('Topic'));
+                }
+                model.topic = topic;
+                discussApi.getReplies(topic_id, page, callback);
+            },
+            function (r, callback) {
+                model.replies = r.replies;
+                model.page = r.page;
+                var arr = model.replies.concat([model.topic]);
+                userApi.bindUsers(arr, callback);
+            }
+        ], function (err, r) {
+            if (err) {
+                return next(err);
+            }
+            return processTheme('discuss/topic.html', model, req, res, next);
         });
     },
 

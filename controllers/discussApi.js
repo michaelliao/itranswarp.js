@@ -146,10 +146,10 @@ function getTopics(board_id, page, callback) {
             return callback(null, { page: page, topics: [] });
         }
         Topic.findAll({
-            select: ['id', 'board_id', 'topic_id', 'user_id', 'deleted', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
+            select: ['id', 'board_id', 'user_id', 'name', 'tags', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
             where: 'board_id=?',
             params: [board_id],
-            order: 'publish_at desc',
+            order: 'updated_at desc',
             offset: page.offset,
             limit: page.limit
         }, function (err, entities) {
@@ -164,11 +164,7 @@ function getTopics(board_id, page, callback) {
     });
 }
 
-function createTopic(board_id, user_id, name, tags, content, tx, callback) {
-    if (arguments.length === 6) {
-        callback = tx;
-        tx = undefined;
-    }
+function createTopic(board_id, user_id, name, tags, content, callback) {
     warp.transaction(function (err, tx) {
         if (err) {
             return callback(err);
@@ -199,7 +195,7 @@ function createTopic(board_id, user_id, name, tags, content, tx, callback) {
                 if (err) {
                     return callback(err);
                 }
-                return res.send(result);
+                return callback(null, result);
             });
         });
     });
@@ -231,8 +227,74 @@ function deleteTopic(topic_id, callback) {
     });
 }
 
-function formatText(s) {
-    return s.replace(/\r/g, '').replace(/\n+/g, '\n').replace(/\&/g, '&amp;').replace(/</g, '&lt;').replace(/\>/g, '&gt;');
+function getReplies(topic_id, page, callback) {
+    Reply.findNumber({
+        select: 'count(*)',
+        where: 'topic_id=?',
+        params: [topic_id]
+    }, function (err, num) {
+        if (err) {
+            return callback(err);
+        }
+        // items = 1 topic + N replies:
+        page.totalItems = num + 1;
+        if (num === 0) {
+            return callback(null, { page: page, replies: [] });
+        }
+        Reply.findAll({
+            where: 'topic_id=?',
+            params: [topic_id],
+            order: 'created_at',
+            offset: (page.pageIndex === 1) ? 0 : (page.offset - 1),
+            limit: (page.pageIndex === 1) ? (page.limit - 1) : page.limit
+        }, function (err, entities) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, {
+                page: page,
+                replies: entities
+            });
+        });
+    });
+}
+
+function createReply(topic_id, user_id, content, callback) {
+    warp.transaction(function (err, tx) {
+        if (err) {
+            return callback(err);
+        }
+        async.waterfall([
+            function (callback) {
+                getTopic(topic_id, tx, callback);
+            },
+            function (topic, callback) {
+                if (topic.locked) {
+                    return callback(api.invalidParam('id', 'Topic is locked.'));
+                }
+                Reply.create({
+                    topic_id: topic_id,
+                    user_id: user_id,
+                    content:content
+                }, callback);
+            },
+            function (reply, callback) {
+                warp.update('update topics set replies = replies + 1, updated_at = ? where id=?', [Date.now(), topic_id], tx, function (err, r) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, reply);
+                });
+            }
+        ], function (err, result) {
+            tx.done(err, function (err) {
+                if (err) {
+                    return callback(err);
+                }
+                return callback(null, result);
+            });
+        });
+    });
 }
 
 module.exports = {
@@ -243,7 +305,11 @@ module.exports = {
 
     getBoards: getBoards,
 
+    getTopic: getTopic,
+
     getTopics: getTopics,
+
+    getReplies: getReplies,
 
     'POST /api/boards': function (req, res, next) {
         /**
@@ -412,11 +478,11 @@ module.exports = {
         var
             board_id = req.params.id,
             name = utils.getParam('name', null, req),
-            tags = utils.getParam('tags', '', req),
+            tags = utils.formatTags(utils.getParam('tags', '', req)),
             name, content;
         try {
-            name = getRequiredParam('name', req);
-            content = getRequiredParam('content', req);
+            name = utils.getRequiredParam('name', req);
+            content = utils.safeMd2html(utils.getRequiredParam('content', req));
         }
         catch (e) {
             return next(e);
@@ -425,9 +491,6 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            // attach user:
-            topic.user_name = req.user.name;
-            topic.user_image_url = req.user.image_url;
             return res.send(topic);
         });
     },
@@ -449,5 +512,27 @@ module.exports = {
             }
             return res.send({ id: req.params.id });
         });
+    },
+
+    'POST /api/topics/:id/replies': function (req, res, next) {
+        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        var
+            topic_id = req.params.id,
+            content;
+        try {
+            content = utils.safeMd2html(utils.getRequiredParam('content', req));
+        }
+        catch (e) {
+            return next(e);
+        }
+        createReply(topic_id, req.user.id, content, function (err, reply) {
+            if (err) {
+                return next(err);
+            }
+            return res.send(reply);
+        });
     }
+
 };
