@@ -172,6 +172,56 @@ function tryPython() {
     py && py.focus();
 }
 
+function setFormError($form, name, text) {
+    if (arguments.length === 2) {
+        text = name;
+        name = undefined;
+    }
+    $form.find('.control-group').removeClass('error');
+    var msg = $form.find('.alert-error');
+    if (text) {
+        msg.text(text).show();
+        name && $form.find('.field-' + name).addClass('error');
+    }
+    else {
+        msg.text('').hide();
+        name && $form.find('.field-' + name).removeClass('error');
+    }
+}
+
+function create_topic(form) {
+    try {
+        var
+            $form = $(form),
+            $btn = $form.find('button[type=submit]'),
+            $name = $form.find('input[name=name]'),
+            $tags = $form.find('input[name=tags]'),
+            $textarea = $form.find('textarea[name=content]');
+        if ($name.val().trim().length === 0) {
+            setFormError($form, 'name', '请输入话题！');
+            return false;
+        }
+        if ($textarea.val().trim().length===0) {
+            setFormError($form, 'content', '请输入话题内容！');
+            return false;
+        }
+
+        setFormError($form, '');
+        showLoading(true);
+
+        postJSON($form.attr('url'), $form.serialize(), function(err, result) {
+            if (err) {
+                showLoading(false);
+                setFormError($form, err.data, err.message || err.error);
+                return;
+            }
+            location.assign('/discuss/' + result.board_id + '/' + result.id);
+        });
+    }
+    catch (e) {}
+    return false;
+}
+
 // create comment by ajax:
 
 function setCommentError($form, s) {
