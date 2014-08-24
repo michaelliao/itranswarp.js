@@ -29,7 +29,6 @@ var api = {
         return new APIError(err_code, err_data, err_message);
     },
     error: function (err_code, err_data, err_message) {
-        console.log('create APIError: ' + err_code + ',' + err_data + ',' + err_message);
         return new APIError(err_code, err_data, err_message);
     },
     APIError: APIError

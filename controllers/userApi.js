@@ -40,7 +40,6 @@ function getUsersByIds(ids, callback) {
 }
 
 function bindUsers(objs, callback) {
-    console.log(JSON.stringify(objs));
     var
         userIds = _.map(objs, function (obj) {
             return obj.user_id;

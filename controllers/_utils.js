@@ -23,7 +23,6 @@ var
 var safeRenderer = new marked.Renderer();
 
 safeRenderer.link = function (href, title, text) {
-    console.log('>>> link: ' + href + ', ' + title + ', ' + text);
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
 }
 

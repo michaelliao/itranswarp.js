@@ -17,7 +17,6 @@ function loadI18NFile(filePath) {
     }
     _.each(dict, function (value, key) {
         if (typeof key === 'string' && typeof value === 'string') {
-            console.log('i18n: ' + key + ' -> ' + value);
             i18n[key] = value;
         } else {
             console.log('[INVALID] i18n: ' + key + ' -> ' + value);
@@ -42,7 +41,6 @@ function getI18NTranslators(path) {
             locales[locale.toLowerCase()] = d;
         }
     });
-    console.log(JSON.stringify(locales));
     return locales;
 }
 

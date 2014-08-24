@@ -5,7 +5,6 @@ var _ = require('lodash');
 var apidocs = [];
 
 function buildApiConsole() {
-    //console.log(JSON.stringify(apidocs, null, '  '));
     var
         groups = {},
         n = 0;
@@ -16,7 +15,6 @@ function buildApiConsole() {
         gs.push(doc);
         groups[doc.group] = gs;
     });
-    //console.log(JSON.stringify(groups, null, '  '));
     return groups;
 }
 

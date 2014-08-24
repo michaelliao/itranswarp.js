@@ -65,7 +65,6 @@ function sort(ids, callback) {
                 };
             }), function (err, result) {
                 tx.done(err, function (err) {
-                    console.log(err === null ? 'tx committed' : 'tx rollbacked');
                     if (err) {
                         return callback(err);
                     }
