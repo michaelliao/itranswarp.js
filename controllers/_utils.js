@@ -20,6 +20,13 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
+var safeRenderer = new marked.Renderer();
+
+safeRenderer.link = function (href, title, text) {
+    console.log('>>> link: ' + href + ', ' + title + ', ' + text);
+    return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
+}
+
 function Page(pageIndex, itemsPerPage) {
     this.pageIndex = pageIndex || 1;
     this.itemsPerPage = itemsPerPage || 20;
@@ -320,14 +327,28 @@ function getRequiredParam(name, req) {
 function md2html(md, cacheKey, callback) {
     if (callback) {
         // async:
-        return callback(null, marked(md));
+        return callback(null, marked(md, { sanitize: true }));
     }
-    return marked(md);
+    return marked(md, {sanitize: true});
+}
+
+function safeMd2html(md, cacheKey, callback) {
+    if (callback) {
+        // async:
+        return callback(null, marked(md, {
+            renderer: safeRenderer
+        }));
+    }
+    return marked(md, {
+        renderer: safeRenderer
+    });
 }
 
 module.exports = {
 
     md2html: md2html,
+
+    safeMd2html: safeMd2html,
 
     formatTags: formatTags,
 
