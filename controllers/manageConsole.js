@@ -498,6 +498,7 @@ module.exports = {
                         fields: [
                             makeField('name', website.name, 'Name'),
                             makeField('description', website.description, 'Description'),
+                            makeField('keywords', website.keywords, 'Keywords'),
                             makeField('xmlns', website.xmlns, 'XML Namespace'),
                             makeField('custom_header', website.custom_header, 'Custom Header', 'textarea'),
                             makeField('custom_footer', website.custom_footer, 'Custom Footer', 'textarea')

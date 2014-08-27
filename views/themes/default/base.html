@@ -83,8 +83,10 @@ $(function() {
 
 <head>
     <meta charset="utf-8" />
-    {% block meta %}<!-- block meta  -->{% endblock %}
     <title>{% block title %}<!-- block title  -->{% endblock %} - {{ __website__.name }}</title>
+    <meta name="keywords" content="{{ __website__.keywords }}" />
+    <meta name="description" content="{{ __website__.description }}" />
+    {% block meta %}<!-- block meta  -->{% endblock %}
     <!--[if lt IE 9]>
         <script src="/static/themes/default/static/js/html5.js"></script>
     <![endif]-->
