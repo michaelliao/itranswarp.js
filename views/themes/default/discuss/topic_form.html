@@ -65,9 +65,9 @@
                 <ul class="breadcrumb">
                     <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
                     <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
-                    <li class="active">New Topic</li>
+                    <li class="active">{{ _('New Topic') }}</li>
                 </ul>
-                <h3>Create new topic</h3>
+                <h3>{{ _('New Topic') }}</h3>
                 <div class="alert alert-error hide"></div>
                 <div class="control-group field-name">
                     <label class="control-label">{{ _('Title') }}</label>
@@ -96,7 +96,7 @@
                 </div>
             </div>
             <div class="span6">
-                <p style="height:30px; line-height:30px; margin:10px 0;">Preview</p>
+                <p style="height:30px; line-height:30px; margin:10px 0;">{{ _('Preview') }}</p>
                 <div id="markdown-preview" class="span6" style="display:block; overflow-x:hidden; overflow-y:scroll;">
                 </div>
             </div>
