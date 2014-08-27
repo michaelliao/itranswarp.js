@@ -158,9 +158,9 @@ $(function() {
                         <li class="dropdown x-auth-signed">
                             <a href="javascript:void(0)" class="dropdown-toggle x-user-dropdown" data-toggle="dropdown"><span class="x-user-name"><script> document.write(g_user_name); </script></span> <b class="caret"></b></a>
                             <ul class="dropdown-menu">
-                                <li><a href="/me/message"><i class="icon-comment"></i> Messages</a></li>
-                                <li><a href="/me/profile"><i class="icon-edit"></i> Profile</a></li>
-                                <li><a href="/auth/signout"><i class="icon-off"></i> {{ _('Sign Out') }}</a></li>
+                                <li><a rel="nofollow" href="/me/message"><i class="icon-comment"></i> Messages</a></li>
+                                <li><a rel="nofollow" href="/me/profile"><i class="icon-edit"></i> Profile</a></li>
+                                <li><a rel="nofollow" href="/auth/signout"><i class="icon-off"></i> {{ _('Sign Out') }}</a></li>
                             </ul>
                         </li>
                         <!-- else -->
@@ -171,7 +171,7 @@ $(function() {
                         <!-- end sign in -->
                     </ul>
 
-                    <form class="navbar-search pull-right" action="#" onsubmit="return search($('input.search-query').val())">
+                    <form class="navbar-search pull-right" action="#0" onsubmit="return search($('input.search-query').val())">
                         <input type="text" name="q" maxlength="50" class="search-query" placeholder="{{ _('Search') }}" style="width:80px;" />
                     </form>
                 </div>
