@@ -13,7 +13,7 @@
     $(function() {
         var editor = $('#markdown-editor');
         editor.markdown({
-            buttons: ['heading', '|', 'bold', 'italic', 'ul', 'quote', '|', 'link', '|', 'image', '|', 'preview']
+            buttons: ['heading', '|', 'bold', 'italic', '|', 'link', '|', 'preview']
         });
     });
 
@@ -52,14 +52,19 @@
 
 {% block main %}
 
-    <ul class="breadcrumb">
-        <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
-        <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
-        <li class="active">{{ topic.name }}</li>
+    <ul class="breadcrumb" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        <li style="display:inline"><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
+        <li style="display:inline"><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
+        <li style="display:inline" class="active">{{ topic.name }}</li>
     </ul>
+
+    <div class="btn-toolbar">
+        <a href="/discuss/{{ board.id }}" class="btn"><i class="icon-arrow-left"></i> {{ _('Back') }}</a>
+    </div>
 
     <table class="table table-bordered">
 
+{% set index = page.offset %}
 {% if page.pageIndex === 1 %}
 
         <tr>
@@ -77,17 +82,17 @@
                             {{ topic.content|safe }}
                         </div>
                         <div class="x-discuss-info">
-                            {{ topic.user.name }} 发表于 <span class="x-smartdate" date="{{ topic.created_at }}">...</span>
+                            #1 {{ topic.user.name }} 发表于 <span class="x-smartdate" date="{{ topic.created_at }}">...</span>
                         </div>
                     </div>
                 </div>
             </td>
         </tr>
-
+        {% set index = index + 1 %}
 {% endif %}
 
 {% for r in replies %}
-
+        {% set index = index + 1 %}
         <tr>
             <td>
                 <div class="x-discuss-topic">
@@ -101,7 +106,7 @@
                             {{ r.content|safe }}
                         </div>
                         <div class="x-discuss-info">
-                            {{ r.user.name }} 发表于 <span class="x-smartdate" date="{{ r.created_at }}">...</span>
+                            #{{ index }} {{ r.user.name }} 发表于 <span class="x-smartdate" date="{{ r.created_at }}">...</span>
                         </div>
                     </div>
                 </div>
