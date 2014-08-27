@@ -282,7 +282,7 @@ function formatTags(tags) {
     var
         lv,
         dict = {},
-        arr = _.map(tags.split(/[\,\;]/), function (value) {
+        arr = _.map(tags.split(/[\,\;\，\；]/), function (value) {
             return value.trim();
         });
     return _.filter(arr, function (value) {
