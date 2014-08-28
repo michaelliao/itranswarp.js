@@ -59,6 +59,23 @@
 
 {% block container %}
 
+    <ul class="breadcrumb">
+        <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
+        <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
+        <li class="active">{{ _('New Topic') }}</li>
+    </ul>
+
+    <h3>{{ _('New Topic') }}</h3>
+
+    <form class="x-reply-box x-auth-not-signed">
+        <div class="x-reply-signin">
+            <p>请登录后发表新话题：</p>
+        {% for s in __signins__ %}
+            <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+        {% endfor %}
+        </div>
+    </form>
+
     <form name="form" url="/api/boards/{{ board.id }}/topics" onsubmit="return create_topic(this)" class="form-post-topic x-auth-signed">
         <div class="row">
             <div class="span12">
