@@ -335,10 +335,12 @@ function safeMd2html(md, cacheKey, callback) {
     if (callback) {
         // async:
         return callback(null, marked(md, {
+            sanitize: true,
             renderer: safeRenderer
         }));
     }
     return marked(md, {
+        sanitize: true,
         renderer: safeRenderer
     });
 }
