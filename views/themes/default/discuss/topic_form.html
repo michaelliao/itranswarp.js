@@ -17,7 +17,6 @@
         editor.markdown({
             buttons: ['heading', '|', 'bold', 'italic', '|', 'link']
         });
-        preview.css('height', (editor.height() + 10) + 'px');
 
         var doPreview = function () {
             preview.html(marked(editor.val(), {
@@ -108,13 +107,13 @@
                 <div class="control-group field-content">
                     <label class="control-label">{{ _('Content') }}</label>
                     <div class="controls">
-                        <textarea name="content" id="markdown-editor" rows="20" style="width:460px;"></textarea>
+                        <textarea name="content" id="markdown-editor" style="width:460px;height:400px;"></textarea>
                     </div>
                 </div>
             </div>
             <div class="span6">
-                <p style="height:30px; line-height:30px; margin:10px 0;">{{ _('Preview') }}</p>
-                <div id="markdown-preview" class="span6" style="display:block; overflow-x:hidden; overflow-y:scroll;">
+                <p style="height:60px; line-height:30px; margin:10px 0 0 0;">{{ _('Preview') }}</p>
+                <div id="markdown-preview" class="span6" style="display:block; height:410px; overflow-x:hidden; overflow-y:scroll;">
                 </div>
             </div>
         </div>
