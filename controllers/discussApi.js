@@ -179,7 +179,7 @@ function createTopic(board_id, user_id, name, tags, content, callback) {
                     user_id: user_id,
                     name: name,
                     tags: tags,
-                    content:content
+                    content: content
                 }, callback);
             },
             function (topic, callback) {
@@ -275,7 +275,7 @@ function createReply(topic_id, user_id, content, callback) {
                 Reply.create({
                     topic_id: topic_id,
                     user_id: user_id,
-                    content:content
+                    content: content
                 }, callback);
             },
             function (reply, callback) {
