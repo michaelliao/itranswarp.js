@@ -326,9 +326,9 @@ function getRequiredParam(name, req) {
 function md2html(md, cacheKey, callback) {
     if (callback) {
         // async:
-        return callback(null, marked(md, { sanitize: true }));
+        return callback(null, marked(md));
     }
-    return marked(md, {sanitize: true});
+    return marked(md);
 }
 
 function safeMd2html(md, cacheKey, callback) {
