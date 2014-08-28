@@ -2,6 +2,10 @@
 
 {% block meta %}
     <meta property="x-nav" content="/discuss" />
+    <meta property="og:type" content="webpage" />
+    <meta property="og:url" content="http://{{ __request__.host }}/discuss/{{ board.id }}/{{ topic.id }}" />
+    <meta property="og:title" content="{{ topic.name }}" />
+    <meta property="og:description" content="{{ topic.name }}" />
 {% endblock %}
 
 {% block title %}{{ _('Discuss') }}{% endblock %}
@@ -178,6 +182,13 @@
 {% endblock %}
 
 {% block sidebar %}
+    <div class="x-sidebar-section">
+        <h4>分享给朋友</h4>
+        <div style="height:66px">
+            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ topic.name }}" picture_search="false"></wb:share-button>
+        </div>
+    </div>
+
     <div class="x-sidebar-section">
 
 {% if page.pageIndex > 1 %}
