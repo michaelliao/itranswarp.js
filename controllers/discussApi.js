@@ -357,10 +357,16 @@ module.exports = {
             return next(api.notAllowed('Permission denied.'));
         }
         var name = utils.getParam('name', req),
+            tag = utils.getParam('tag', req),
             description = utils.getParam('description', req);
         if (name !== null) {
             if (name === '') {
                 return next(api.invalidParam('name'));
+            }
+        }
+        if (tag !== null) {
+            if (tag === '') {
+                return next(api.invalidParam('tag'));
             }
         }
         getBoard(req.params.id, function (err, entity) {
@@ -369,6 +375,9 @@ module.exports = {
             }
             if (name !== null) {
                 entity.name = name;
+            }
+            if (tag !== null) {
+                entity.tag = tag;
             }
             if (description !== null) {
                 entity.description = description;
