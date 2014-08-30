@@ -15,6 +15,12 @@
     <script src="/static/themes/default/js/markdown-editor.js"></script>
     <script>
     $(function() {
+        $('.x-discuss-content a').each(function () {
+            var a = $(this);
+            a.tooltip({
+                title: a.attr('href')
+            }); 
+        });
         var editor = $('#markdown-editor');
         editor.markdown({
             buttons: ['heading', '|', 'bold', 'italic', '|', 'link', '|', 'preview']
