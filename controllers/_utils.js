@@ -23,6 +23,9 @@ var
 var safeRenderer = new marked.Renderer();
 
 safeRenderer.link = function (href, title, text) {
+    if (href.indexOf('http://') !== 0 && href.indexOf('https://') !== 0) {
+        href = 'http://' + href;
+    }
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
 }
 
