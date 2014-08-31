@@ -45,6 +45,17 @@ module.exports = {
         // port of redis, default to 6379:
         port: 6379
     },
+    search: {
+        provider: 'site_search',
+        configs: {
+            // default set to google search:
+            search_url: 'https://www.google.com/search?ie=utf-8&q=%s',
+            // other search engines:
+            // baidu: 'http://www.baidu.com/s?ie=utf-8&wd=%s'
+            // bing: 'http://www.bing.com/search?ie=utf-8&q=%s'
+            domain: 'www.example.com'
+        }
+    },
     // server domain name:
     domain: 'www.example.com',
     // the theme used, default to 'default':

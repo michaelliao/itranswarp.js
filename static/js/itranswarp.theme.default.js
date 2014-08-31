@@ -160,11 +160,6 @@ function toSmartDate(timestamp) {
     return s;
 }
 
-function search(keyword) {
-    location.assign('http://www.baidu.com/s?ie=utf-8&wd=' + encodeURIComponent(keyword) + '+site%3A' + location.hostname);
-    return false;
-}
-
 function tryPython() {
     var name = 'iTranswarp_try_python_online';
     var opt = 'width=656,height=420,left=400,top=200,toolbar=no,directories=no,menubar=no,scrollbars=no,resizable=no,location=no,status=no';

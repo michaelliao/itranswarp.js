@@ -8,6 +8,7 @@ var
     config = require('../config'),
     cache = require('../cache'),
     constants = require('../constants'),
+    searchEngine = require('../search/search').engine,
     utils = require('./_utils');
 
 var signins = _.map(config.oauth2, function (value, key) {
@@ -440,5 +441,14 @@ module.exports = {
             };
             return processTheme('user/profile.html', model, req, res, next);
         });
+    },
+
+    'GET /search': function (req, res, next) {
+        console.log(searchEngine.external);
+        if (searchEngine.external) {
+            return res.redirect(searchEngine.search(req.query.q || ''));
+        }
+        // search internal:
+        res.send(404);
     }
 };
