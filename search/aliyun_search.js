@@ -20,6 +20,13 @@ function nonce() {
     return uuid.v4();
 }
 
+function filter(f) {
+    if (typeof f === 'string') {
+        return f;
+    }
+    return f.field + '=\"' + f.value + '\"';
+}
+
 function utcNow() {
     var
         d = new Date(),
@@ -97,10 +104,12 @@ function createSearchEngine(cfg) {
             }
             request(opt, function (err, res, body) {
                 if (err) {
+                    console.log('[SEARCH ERROR] ' + err);
                     callback && callback(err);
                     return;
                 }
                 if (res.statusCode !== 200) {
+                    console.log('[SEARCH ERROR] ' + res.statusCode + ': ' + body);
                     callback && callback(new Error('Bad response code: ' + res.statusCode));
                     return;
                 }
@@ -109,6 +118,7 @@ function createSearchEngine(cfg) {
                     return;
                 }
                 catch (e) {
+                    console.log('[SEARCH ERROR] failed in parsing json: ' + body);
                     callback && callback(e);
                     return;
                 }
@@ -118,6 +128,7 @@ function createSearchEngine(cfg) {
     return {
         external: false,
         index: function (docs, callback) {
+            console.log('[SEARCH] index docs...');
             if (! Array.isArray(docs)) {
                 docs = [docs];
             }
@@ -132,6 +143,7 @@ function createSearchEngine(cfg) {
             httpRequest('POST', baseIndexUrl, qs, callback);
         },
         unindex: function (docs, callback) {
+            console.log('[SEARCH] unindex docs...');
             if (! Array.isArray(docs)) {
                 docs = [docs];
             }
@@ -160,7 +172,7 @@ function createSearchEngine(cfg) {
                     query = query + '&&sort=' + options.sort;
                 }
                 if (options.filter) {
-                    query = query + '&&filter=' + options.filter;
+                    query = query + '&&filter=' + filter(options.filter);
                 }
                 if (options.start || options.hit) {
                     query = query + '&&config=format:json'
