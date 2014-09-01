@@ -1,4 +1,7 @@
 {
+    "All": "所有",
+    "Article": "文章",
+
     "Back": "返回",
 
     "Cancel": "取消",
@@ -30,6 +33,7 @@
     "Title": "标题",
 
     "Welcome": "欢迎",
+    "Wiki": "维基",
 
     "END": "END"
 }
