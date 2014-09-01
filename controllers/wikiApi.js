@@ -7,6 +7,7 @@ var
     db = require('../db'),
     utils = require('./_utils'),
     images = require('./_images'),
+    search = require('../search/search');
     constants = require('../constants');
 
 var
@@ -22,6 +23,31 @@ var
     Text = db.text,
     warp = db.warp,
     next_id = db.next_id;
+
+function indexWiki(r) {
+    process.nextTick(function () {
+        search.engine.index({
+            type: 'wiki',
+            id: r.id,
+            tags: r.tags || '',
+            name: r.name,
+            description: r.description || '',
+            content: utils.html2text(utils.md2html(r.content)),
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+            url: '/wiki/' + ('wiki_id' in r ? r.wiki_id + '/' : '') + r.id,
+            upvotes: 0
+        });
+    });
+}
+
+function unindexWiki(r) {
+    process.nextTick(function () {
+        search.engine.unindex({
+            id: r.id
+        });
+    });
+}
 
 function getWikis(callback) {
     Wiki.findAll({
@@ -385,6 +411,7 @@ module.exports = {
                             return next(err);
                         }
                         result.content = content;
+                        indexWiki(result);
                         return res.send(result);
                     });
                 });
@@ -472,6 +499,7 @@ module.exports = {
                 if (err) {
                     return next(err);
                 }
+                indexWiki(wikipage);
                 return res.send(wikipage);
             });
         });
@@ -618,6 +646,7 @@ module.exports = {
                         }
                         if (content !== null) {
                             result.content = content;
+                            indexWiki(result);
                             return res.send(result);
                         }
                         Text.find(result.content_id, function (err, text) {
@@ -625,6 +654,7 @@ module.exports = {
                                 return next(err);
                             }
                             result.content = text.value;
+                            indexWiki(result);
                             return res.send(result);
                         });
                     });
@@ -823,6 +853,7 @@ module.exports = {
                     }
                     if (content !== null) {
                         wp.content = content;
+                        indexWiki(wp);
                         return res.send(wp);
                     }
                     Text.find(wp.content_id, function (err, text) {
@@ -830,6 +861,7 @@ module.exports = {
                             return next(err);
                         }
                         wp.content = text.value;
+                        indexWiki(wp);
                         return res.send(wp);
                     });
                 });
@@ -899,7 +931,9 @@ module.exports = {
                     if (err) {
                         return next(err);
                     }
-                    return res.send({id: id});
+                    var r = { id: req.params.id };
+                    unindexWiki(r);
+                    return res.send(r);
                 });
             });
         });
@@ -956,7 +990,9 @@ module.exports = {
                     if (err) {
                         return next(err);
                     }
-                    res.send({ id: req.params.id });
+                    var r = { id: req.params.id };
+                    unindexWiki(r);
+                    res.send(r);
                 });
             });
         });
