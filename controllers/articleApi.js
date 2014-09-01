@@ -8,7 +8,8 @@ var
     cache = require('../cache'),
     utils = require('./_utils'),
     images = require('./_images'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    search = require('../search/search');
 
 var
     commentApi = require('./commentApi'),
@@ -24,6 +25,31 @@ var
     Text = db.text,
     warp = db.warp,
     next_id = db.next_id;
+
+function indexArticle(r) {
+    process.nextTick(function () {
+        search.engine.index({
+            type: 'article',
+            id: r.id,
+            tags: r.tags,
+            name: r.name,
+            description: r.description,
+            content: utils.html2text(utils.md2html(r.content)),
+            created_at: r.publish_at,
+            updated_at: r.updated_at,
+            url: '/article/' + r.id,
+            upvotes: 0
+        });
+    });
+}
+
+function unindexArticle(r) {
+    process.nextTick(function () {
+        search.engine.unindex({
+            id: r.id
+        });
+    });
+}
 
 function getRecentArticles(max, callback) {
     var now = Date.now();
@@ -362,6 +388,7 @@ module.exports = {
                             return next(err);
                         }
                         result.content = content;
+                        indexArticle(result);
                         return res.send(result);
                     });
                 });
@@ -525,6 +552,7 @@ module.exports = {
                                 return next(err);
                             }
                             result.content = text.value;
+                            indexArticle(result);
                             return res.send(result);
                         });
                     });
@@ -618,7 +646,9 @@ module.exports = {
                     if (err) {
                         return next(err);
                     }
-                    res.send({ id: req.params.id });
+                    var result = { id: req.params.id };
+                    unindexArticle(result);
+                    res.send(result);
                 });
             });
         });
