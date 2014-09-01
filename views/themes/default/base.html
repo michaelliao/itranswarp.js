@@ -8,19 +8,19 @@
     <div class="x-pagination pagination">
         <ul>
         {% if page_obj.pageIndex > 1 %}
-            <li><a href="{{ url }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
+            <li><a href="{{ url|safe }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
         {% endif %}
         {% for index in range %}
             {% if index == pageIndex %}
                 <li class="active"><span>{{ index }}</span></li>
             {% elif index %}
-                <li><a href="{{ url }}{{ index }}">{{ index }}</a></li>
+                <li><a href="{{ url|safe }}{{ index }}">{{ index }}</a></li>
             {% else %}
                 <li class="disabled"><span>...</span></li>
             {% endif %}
         {% endfor %}
             {% if page_obj.pageIndex < page_obj.totalPages %}
-                <li><a href="{{ url }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
+                <li><a href="{{ url|safe }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
             {% endif %}
         </ul>
     </div>
@@ -174,7 +174,7 @@ $(function() {
                     </ul>
 
                     <form class="navbar-search pull-right" target="_blank" action="/search" onsubmit="return $.trim($('input.search-query').val())!==''">
-                        <input type="text" name="q" maxlength="50" class="search-query" placeholder="{{ _('Search') }}" style="width:80px;" />
+                        <input type="text" name="q" maxlength="50" class="search-query x-search-query" placeholder="{{ _('Search') }}" style="width:80px;" />
                     </form>
                 </div>
             </div>
