@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/search" />
+{% endblock %}
+
+{% block title %}{{ _('Search result') }}{% endblock %}
+
+{% block beforehead %}
+<script>
+$(function() {
+    $('.x-search-query').val('{{ q }}');
+});
+</script>
+{% endblock %}
+
+{% block container %}
+    <div class="row">
+        <div class="span8">
+            <h4>{{ _('Search result') }}</h4>
+            <div class="x-search-form">
+                <form action="/search" class="form-horizontal">
+                    <div class="control-group">
+                        <div class="input-append">
+                            <input type="text" class="span6" name="q" maxlength="50" value="{{ q }}">
+                            <button type="submit" class="btn btn-success"><i class="icon-search icon-white"></i> {{ _('Search') }}</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        类型:
+                    {% for t in searchTypes %}
+                        <label class="radio" style="display:inline-block; margin-left:10px; margin-right:10px;"><input type="radio" name="type" value="{{ t.value }}"
+                            {% if t.value == type %} checked {% endif %}
+                        > {{ _(t.label) }}</label>
+                    {% endfor %}
+                    </div>
+                </form>
+            </div>
+            <div class="x-search-results">
+            {% if results.length === 0 %}
+                <div class="x-search-result">
+                    <h4>很抱歉，未找到搜索结果。</h4>
+                    <p class="content">请试试别的关键字，选择其他类型，或者减少关键字数量来扩大搜索范围。</p>
+                </div>
+            {% endif %}
+            {% for r in results %}
+                <div class="x-search-result">
+                    <h4><a href="{{ r.url }}" target="_blank">{{ r.name }}</a></h4>
+                    <p class="content">{{ (r.content || r.description)|safe }}</p>
+                    <p class="info">Created at <span class="x-smartdate" date="{{ r.created_at }}">...</span></p>
+                </div>
+            {% endfor %}
+            </div>
+
+            <div class="x-page">
+                {{ pagination(page, '?q=' + q|url_encode + '&type=' + type + '&page=') }}
+            </div>
+        </div><!-- // search -->
+
+        <div class="span4">
+            <div class="x-sidebar-right">
+                <!-- block sidebar -->
+                <div class="x-sidebar-section">
+                    <h4>{{ _('About') }}</h4>
+                    <ul class="x-list">
+                    </ul>
+                </div>
+                <!-- // block sidebar -->
+            </div>
+        </div>
+    </div>
+{% endblock %}
