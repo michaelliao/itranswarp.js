@@ -33,6 +33,30 @@ var
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
 
+var
+    searchTypes = [
+        {
+            label: 'All',
+            value: ''
+        },
+        {
+            label: 'Article',
+            value: 'article'
+        },
+        {
+            label: 'Wiki',
+            value: 'wiki'
+        },
+        {
+            label: 'Discuss',
+            value: 'discuss'
+        }
+    ],
+    searchTypeValues = _.reduce(searchTypes, function (r, t) {
+        r[t.value] = t.label;
+        return r;
+    }, {});
+
 var isSyncComments = config.session.syncComments;
 
 var fnGetSettings = function (callback) {
@@ -444,11 +468,44 @@ module.exports = {
     },
 
     'GET /search': function (req, res, next) {
-        console.log(searchEngine.external);
+        var
+            page,
+            q = req.query.q || '',
+            type = req.query.type,
+            opt = {};
         if (searchEngine.external) {
-            return res.redirect(searchEngine.search(req.query.q || ''));
+            return res.redirect(searchEngine.search(q));
         }
-        // search internal:
-        res.send(404);
+        console.log(JSON.stringify(searchTypeValues))
+        if (! type in searchTypeValues) {
+            type = searchTypes[0].value;
+        }
+        if (type) {
+            opt.filter = {
+                field: 'type',
+                value: type
+            };
+        }
+        page = utils.getPage(req);
+        opt.start = page.offset;
+        opt.hit = page.itemsPerPage;
+
+        searchEngine.search(q.replace(/\'/g, '').replace(/\"/g, ''), opt, function (err, r) {
+            if (err) {
+                return next(err);
+            }
+            if (r.status !== 'OK') {
+                return res.send(500);
+            }
+            page.totalItems = r.result.total;
+            var model = {
+                searchTypes: searchTypes,
+                type: type,
+                page: page,
+                q: q,
+                results: r.result.items
+            };
+            return processTheme('search.html', model, req, res, next);
+        });
     }
 };
