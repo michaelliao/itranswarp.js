@@ -1,0 +1,35 @@
+<div title="test" class="test">
+    <h3>Test</h3>
+    <div>Download from <a href="/abc/xyz/100">http://www.example.com/abc/xyz/100</a>(100 MB).</div>
+    <ol>
+        <li>item 1</li>
+        <li>item 2</li>
+    </ol>
+    <style>
+        .text { color: #ccdd00; }
+    </style>
+    <h1>大家&#22909;&#65281;</h1>
+    <!--
+        comments:
+        <p>this is line2</p>
+    -->
+    <iframe src="/do/not/parse/iframe.html">skip me</iframe>
+    <select name="choose">
+        <option>Primary</option>
+        <option>Middle</option>
+        <option>Senior</option>
+    </select>
+    <video autoplay="1" controls="controls">
+        <source src="html5/video/source.mp4">
+    </video>
+    <img src="a/test/image...">
+    <p>this is <strong>line<i>3</i></strong></p>
+    <p>this is input<input type="text" value="ok"></p>
+    <hr>
+    <span>END</span>
+    <script>
+        $(function () {
+            alert('should skip this script...');
+        });
+    </script>
+</div>
