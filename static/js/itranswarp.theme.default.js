@@ -84,7 +84,7 @@ $(function() {
     $('.x-content a[href^="https://"]').attr('target', '_blank');
 
     // search query:
-    var input_search = $('input.search-query');
+    var input_search = $('input.x-search-query');
     var old_width = input_search.css('width');
     input_search.bind('focusin', function() {
         input_search.animate({'width': '160px'}, 500);
