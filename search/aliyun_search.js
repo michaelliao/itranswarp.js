@@ -113,15 +113,21 @@ function createSearchEngine(cfg) {
                     callback && callback(new Error('Bad response code: ' + res.statusCode));
                     return;
                 }
+                var r = null;
                 try {
-                    callback && callback(null, JSON.parse(body));
-                    return;
+                    r = JSON.parse(body);
                 }
                 catch (e) {
                     console.log('[SEARCH ERROR] failed in parsing json: ' + body);
                     callback && callback(e);
                     return;
                 }
+                if (r.status && r.status === 'OK') {
+                    callback && callback(null, r);
+                    return;
+                }
+                console.log('[SEARCH ERROR] ' + body);
+                callback && callback({ error: r.errors});
             });
         };
 
