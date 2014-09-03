@@ -5,9 +5,9 @@ var
     async = require('async'),
     api = require('../api'),
     db = require('../db'),
-
     utils = require('./_utils'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    search = require('../search/search');
 
 var
     Board = db.board,
@@ -15,6 +15,45 @@ var
     Reply = db.reply,
     warp = db.warp,
     next_id = db.next_id;
+
+function indexDiscuss(r) {
+    var doc = {
+        type: 'discuss',
+        id: r.id,
+        tags: r.tags || '',
+        name: r.name,
+        description: '',
+        content: utils.html2text(r.content),
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+        url: '/discuss/' + ('topic_id' in r ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
+        upvotes: 0
+    };
+    process.nextTick(function () {
+        search.engine.index(doc);
+    });
+}
+
+function unindexDiscuss(r) {
+    process.nextTick(function () {
+        search.engine.unindex({
+            id: r.id
+        });
+    });
+}
+
+function unindexDiscussByIds(ids) {
+    process.nextTick(function () {
+        var arr = ids;
+        var fn = function () {
+            if (arr.length > 0) {
+                search.engine.unindex(arr.pop());
+                setTimeout(fn, 200);
+            }
+        };
+        fn();
+    });
+}
 
 function getNavigationMenus(callback) {
     callback(null, [{
@@ -202,6 +241,7 @@ function createTopic(board_id, user_id, name, tags, content, callback) {
 }
 
 function deleteTopic(topic_id, callback) {
+    var reply_ids = null;
     warp.transaction(function (err, tx) {
         if (err) {
             return callback(err);
@@ -214,6 +254,10 @@ function deleteTopic(topic_id, callback) {
                 topic.destroy(tx, callback);
             },
             function (r, callback) {
+                warp.query('select id from replies where topic_id=?', [topic_id], tx, callback);
+            },
+            function (rids, callback) {
+                reply_ids = rids;
                 warp.update('delete from replies where topic_id=?', [topic_id], tx, callback);
             }
         ], function (err, results) {
@@ -221,7 +265,7 @@ function deleteTopic(topic_id, callback) {
                 if (err) {
                     return callback(err);
                 }
-                return callback(null, topic_id);
+                return callback(null, topic_id, reply_ids);
             });
         });
     });
@@ -260,6 +304,7 @@ function getReplies(topic_id, page, callback) {
 }
 
 function createReply(topic_id, user_id, content, callback) {
+    var topic = null;
     warp.transaction(function (err, tx) {
         if (err) {
             return callback(err);
@@ -268,10 +313,11 @@ function createReply(topic_id, user_id, content, callback) {
             function (callback) {
                 getTopic(topic_id, tx, callback);
             },
-            function (topic, callback) {
-                if (topic.locked) {
+            function (t, callback) {
+                if (t.locked) {
                     return callback(api.invalidParam('id', 'Topic is locked.'));
                 }
+                topic = t;
                 Reply.create({
                     topic_id: topic_id,
                     user_id: user_id,
@@ -286,12 +332,12 @@ function createReply(topic_id, user_id, content, callback) {
                     return callback(null, reply);
                 });
             }
-        ], function (err, result) {
+        ], function (err, reply) {
             tx.done(err, function (err) {
                 if (err) {
                     return callback(err);
                 }
-                return callback(null, result);
+                return callback(null, topic, reply);
             });
         });
     });
@@ -500,7 +546,38 @@ module.exports = {
             if (err) {
                 return next(err);
             }
+            indexDiscuss(topic);
             return res.send(topic);
+        });
+    },
+
+    'POST /api/replies/:id/delete': function (req, res, next) {
+        /**
+         * Delete a reply by its id.
+         * 
+         * @name Delete Reply.
+         * @param {string} id - The id of the reply.
+         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         */
+        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
+            return next(api.notAllowed('Permission denied.'));
+        }
+        Reply.find(req.params.id, function (err, reply) {
+            if (err) {
+                return next(err);
+            }
+            if (reply === null) {
+                return next(api.notFound('Reply'));
+            }
+            reply.deleted = true;
+            reply.content = '';
+            reply.update(function (err, entity) {
+                if (err) {
+                    return next(err);
+                }
+                unindexDiscuss(entity);
+                return res.send(entity);
+            });
         });
     },
 
@@ -515,11 +592,14 @@ module.exports = {
         if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
             return next(api.notAllowed('Permission denied.'));
         }
-        deleteTopic(req.params.id, function (err, result) {
+        deleteTopic(req.params.id, function (err, topic_id, reply_ids) {
             if (err) {
                 return next(err);
             }
-            return res.send({ id: req.params.id });
+            var r = { id: req.params.id };
+            unindexDiscuss(r);
+            unindexDiscussByIds(reply_ids);
+            return res.send(r);
         });
     },
 
@@ -536,10 +616,13 @@ module.exports = {
         catch (e) {
             return next(e);
         }
-        createReply(topic_id, req.user.id, content, function (err, reply) {
+        createReply(topic_id, req.user.id, content, function (err, topic, reply) {
             if (err) {
                 return next(err);
             }
+            reply.name = 'Re:' + topic.name;
+            indexDiscuss(reply);
+            delete reply.name;
             return res.send(reply);
         });
     }
