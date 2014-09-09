@@ -47,7 +47,12 @@ function unindexDiscussByIds(ids) {
         var arr = ids;
         var fn = function () {
             if (arr.length > 0) {
-                search.engine.unindex(arr.pop());
+                if (arr.length > 10) {
+                    search.engine.unindex(arr.splice(arr.length - 10, 10));
+                }
+                else {
+                    search.engine.unindex(arr);
+                }
                 setTimeout(fn, 200);
             }
         };
