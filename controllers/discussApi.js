@@ -51,9 +51,9 @@ function unindexDiscussByIds(ids) {
                     search.engine.unindex(arr.splice(arr.length - 10, 10));
                 }
                 else {
-                    search.engine.unindex(arr);
+                    search.engine.unindex(arr.splice(0, arr.length));
                 }
-                setTimeout(fn, 200);
+                setTimeout(fn, 500);
             }
         };
         fn();
@@ -276,6 +276,33 @@ function deleteTopic(topic_id, callback) {
     });
 }
 
+function getAllReplies(page, callback) {
+    Reply.findNumber({
+        select: 'count(*)'
+    }, function (err, num) {
+        if (err) {
+            return callback(err);
+        }
+        page.totalItems = num;
+        if (num === 0) {
+            return callback(null, { page: page, replies: [] });
+        }
+        Reply.findAll({
+            order: 'id desc',
+            offset: page.offset,
+            limit: page.limit
+        }, function (err, entities) {
+            if (err) {
+                return callback(err);
+            }
+            return callback(null, {
+                page: page,
+                replies: entities
+            });
+        });
+    });
+}
+
 function getReplies(topic_id, page, callback) {
     Reply.findNumber({
         select: 'count(*)',
@@ -293,7 +320,7 @@ function getReplies(topic_id, page, callback) {
         Reply.findAll({
             where: 'topic_id=?',
             params: [topic_id],
-            order: 'created_at',
+            order: 'id',
             offset: (page.pageIndex === 1) ? 0 : (page.offset - 1),
             limit: (page.pageIndex === 1) ? (page.limit - 1) : page.limit
         }, function (err, entities) {
@@ -304,6 +331,27 @@ function getReplies(topic_id, page, callback) {
                 page: page,
                 replies: entities
             });
+        });
+    });
+}
+
+function getReplyUrl(topic_id, reply_id, callback) {
+    getTopic(topic_id, function (err, topic) {
+        if (err) {
+            return callback(err);
+        }
+        Reply.findNumber({
+            select: 'count(*)',
+            where: 'topic_id=? and id < ?',
+            params: [topic_id, reply_id]
+        }, function (err, num) {
+            if (err) {
+                return callback(err);
+            }
+            var
+                p = Math.floor((num + 1) / 20) + 1,
+                url = '/discuss/' + topic.board_id + '/' + topic_id + '?page=' + p + '#' + reply_id;
+            return callback(null, url);
         });
     });
 }
@@ -360,7 +408,11 @@ module.exports = {
 
     getTopics: getTopics,
 
+    getAllReplies: getAllReplies,
+
     getReplies: getReplies,
+
+    getReplyUrl: getReplyUrl,
 
     'POST /api/boards': function (req, res, next) {
         /**
