@@ -15,6 +15,7 @@
     <script src="/static/themes/default/js/markdown-editor.js"></script>
     <script>
     $(function() {
+        // init reply editor:
         $('.x-discuss-content a').each(function () {
             var a = $(this);
             a.tooltip({
@@ -23,8 +24,24 @@
         });
         var editor = $('#markdown-editor');
         editor.markdown({
-            buttons: ['heading', '|', 'bold', 'italic', '|', 'link', '|', 'preview']
+            buttons: ['heading', '|', 'bold', 'italic', '|', 'code', '|', 'link', 'preview']
         });
+        // highlight target reply:
+        if (location.hash) {
+            var r_id = location.hash.substring(1);
+            if (r_id) {
+                var $a = $('a[name=' + r_id + ']');
+                if ($a.length > 0) {
+                    var $tr = $a.parents('tr.x-discuss-topic-tr');
+                    if ($tr.length > 0) {
+                        $tr.css('background-color', '#f2dede');
+                        setTimeout(function () {
+                            $tr.animate({backgroundColor: '#ffffff'}, 1000);
+                        }, 1000);
+                    }
+                }
+            }
+        }
     });
 
     function create_reply(form) {
@@ -129,7 +146,7 @@
 
 {% for r in replies %}
         {% set index = index + 1 %}
-        <tr>
+        <tr class="x-discuss-topic-tr">
             <td>
                 <div class="x-discuss-topic">
                     <a class="x-discuss-topic-position" name="{{ r.id }}"></a>
@@ -139,7 +156,11 @@
                     </div>
                     <div class="x-discuss-topic-right">
                         <div class="x-discuss-content">
+                            {% if r.deleted %}
+                            <div class="alert alert-error">{{ _('This reply was deleted') }}</div>
+                            {% else %}
                             {{ r.content|safe }}
+                            {% endif %}
                         </div>
                         <div class="x-discuss-info">
                             #{{ index }} {{ r.user.name }} 发表于 <span class="x-smartdate" date="{{ r.created_at }}">...</span>

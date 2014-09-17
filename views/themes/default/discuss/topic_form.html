@@ -15,7 +15,7 @@
             editor = $('#markdown-editor'),
             preview = $('#markdown-preview');
         editor.markdown({
-            buttons: ['heading', '|', 'bold', 'italic', '|', 'link']
+            buttons: ['heading', '|', 'bold', 'italic', '|', 'code', '|', 'link']
         });
 
         var doPreview = function () {
@@ -78,12 +78,6 @@
     <form name="form" url="/api/boards/{{ board.id }}/topics" onsubmit="return create_topic(this)" class="form-post-topic x-auth-signed">
         <div class="row">
             <div class="span12">
-                <ul class="breadcrumb">
-                    <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
-                    <li><a href="/discuss/{{ board.id }}">{{ board.name }}</a> <span class="divider">/</span></li>
-                    <li class="active">{{ _('New Topic') }}</li>
-                </ul>
-                <h3>{{ _('New Topic') }}</h3>
                 <div class="alert alert-error hide"></div>
                 <div class="control-group field-name">
                     <label class="control-label">{{ _('Title') }}</label>
@@ -107,7 +101,7 @@
                 <div class="control-group field-content">
                     <label class="control-label">{{ _('Content') }}</label>
                     <div class="controls">
-                        <textarea name="content" id="markdown-editor" style="width:460px;height:400px;"></textarea>
+                        <textarea name="content" id="markdown-editor" placeholder="发帖前，建议您搜索是否已有相同或类似的帖子。提问时，请注明您的操作系统环境，软件版本，尽量贴出代码和出错信息。" style="width:460px;height:400px;"></textarea>
                     </div>
                 </div>
             </div>
