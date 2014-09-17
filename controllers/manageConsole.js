@@ -366,6 +366,24 @@ module.exports = {
         });
     },
 
+    'GET /manage/discuss/reply_list': function (req, res, next) {
+        var page = utils.getPage(req);
+        discussApi.getAllReplies(page, function (err, results) {
+            if (err) {
+                return next(err);
+            }
+            userApi.bindUsers(results.replies, function (err, r) {
+                if (err) {
+                    return next(err);
+                }
+                return res.render('manage/discuss/reply_list.html', {
+                    page: JSON.stringify(results.page),
+                    replies: JSON.stringify(results.replies)
+                });
+            });
+        });
+    },
+
     'GET /manage/discuss/topic_list': function (req, res, next) {
         var
             board_id = req.query.board_id,
@@ -378,10 +396,15 @@ module.exports = {
                 if (err) {
                     return next(err);
                 }
-                return res.render('manage/discuss/topic_list.html', {
-                    board: JSON.stringify(board),
-                    page: JSON.stringify(results.page),
-                    topics: JSON.stringify(results.topics)
+                userApi.bindUsers(results.topics, function (err, r) {
+                    if (err) {
+                        return next(err);
+                    }
+                    return res.render('manage/discuss/topic_list.html', {
+                        board: JSON.stringify(board),
+                        page: JSON.stringify(results.page),
+                        topics: JSON.stringify(results.topics)
+                    });
                 });
             });
         });
