@@ -455,6 +455,15 @@ module.exports = {
         });
     },
 
+    'GET /discuss/topics/:topic_id/find/:reply_id': function (req, res, next) {
+        discussApi.getReplyUrl(req.params.topic_id, req.params.reply_id, function (err, url) {
+            if (err) {
+                return next(err);
+            }
+            res.redirect(301, url);
+        });
+    },
+
     'GET /user/:id': function (req, res, next) {
         userApi.getUser(req.params.id, function (err, user) {
             if (err) {
