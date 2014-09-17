@@ -250,6 +250,27 @@ function markdown2html(text) {
             }
         },
 
+        code: function(delegate) {
+            var s = '<div data-backdrop="static" class="modal hide fade"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h3>Insert Code</h3></div>'
+                  + '<div class="modal-body"><form><label>Code:</label><textarea name="text" rows="10" style="width:97%; resize:none; font-family:Monaco,Menlo,Consolas,\'Courier New\',monospace" value="" />'
+                  + '</form></div><div class="modal-footer"><a href="#0" class="btn btn-primary">OK</a><a href="#0" class="btn" data-dismiss="modal">Close</a></div></div>';
+            $('body').prepend(s);
+            var $modal = $('body').children(':first');
+            var sel = delegate.getSelection();
+            if (sel != '') {
+                $modal.find('textarea[name=text]').val(sel);
+            }
+            $modal.modal('show');
+            $modal.find('.btn-primary').click(function() {
+                var text = $.trim($modal.find('textarea[name=text]').val());
+                delegate.paste('\n\n```\n' + text + '\n```\n\n');
+                $modal.modal('hide');
+            });
+            $modal.on('hidden', function() {
+                $modal.remove();
+            });
+        },
+
         link: function(delegate) {
             var s = '<div data-backdrop="static" class="modal hide fade"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h3>Hyper Link</h3></div>'
                   + '<div class="modal-body"><form class="form-horizontal"><div class="control-group"><label class="control-label">Text:</label><div class="controls"><input name="text" type="text" value="" /></div></div>'
@@ -571,6 +592,7 @@ function markdown2html(text) {
             'italic': 'Italic',
             'ul': 'Unordered List',
             'quote': 'Quote',
+            'code': 'Insert code',
             'link': 'Insert URL',
             'email': 'Insert email address',
             'image': 'Insert image',
@@ -584,6 +606,7 @@ function markdown2html(text) {
             'italic': 'icon-italic',
             'ul': 'icon-list',
             'quote': 'icon-comment',
+            'code': 'icon-pencil',
             'link': 'icon-globe',
             'email': 'icon-envelope',
             'image': 'icon-picture',
