@@ -36,7 +36,7 @@ function generateDDL(email, password) {
 
     id = db.next_id();
     passwd = crypto.createHash('md5').update(email + ':' + password).digest('hex');
-    sql_init_admin_user = 'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', \'' + passwd + '\', 1, \'http://about:blank\', 0, 1394002009000, 1394002009000, 0);';
+    sql_init_admin_user = 'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', \'' + passwd + '\', 1, \'/static/img/user.png\', 0, 1394002009000, 1394002009000, 0);';
 
     output = output + log(sql_init_admin_user);
     output = output + log('grant select, insert, update, delete on ' + config.db.database + '.* to \'' + config.db.user + '\'@\'localhost\' identified by \'' + config.db.password + '\';');
