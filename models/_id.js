@@ -1,4 +1,9 @@
-// _id.js
+/**
+ * the ID generator always generates 50-chars string:
+ *
+ * var next_id = require('_id');
+ * var the_id = next_id();
+ */
 
 var util = require('util');
 var uuid = require('node-uuid');
