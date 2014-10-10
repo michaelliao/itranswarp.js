@@ -30,6 +30,9 @@ config_override.*
 # temp output dir:
 output
 
+# generated sql:
+schema.sql
+
 ######################
 # OS generated files #
 ######################
