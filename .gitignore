@@ -30,10 +30,6 @@ config_override.*
 # temp output dir:
 output
 
-# generated bootstrap.css:
-itranswarp-manage.css
-itranswarp-theme-default.css
-
 ######################
 # OS generated files #
 ######################
