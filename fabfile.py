@@ -12,9 +12,13 @@ import os, re
 from datetime import datetime
 from fabric.api import *
 
+# linux user:
 env.user = 'root'
+
+# linux hosts:
 env.hosts = ['www.liaoxuefeng.com']
 
+# linux mysql user and password:
 db_user = 'www'
 db_password = 'www'
 
@@ -35,6 +39,7 @@ def _now():
 ##########
 
 def backup():
+    ' backup mysql database to local file '
     dt = _now()
     f = 'backup-itranswarp-%s.sql' % dt
     with cd('/tmp'):
@@ -45,15 +50,18 @@ def backup():
         run('rm -f %s.tar.gz' % f)
 
 def build():
-    includes = ['controllers', 'models', 'node_modules', 'search', 'static', 'views', '*.js', 'favicon.ico', 'robots.txt']
-    excludes = ['gulpfile.js', 'schema.js', '.*', '*.py', '*.pyc', '*.pyo', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
+    ' build deploy package '
+    includes = ['*']
+    excludes = ['gulpfile.js', 'schema.js', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
     local('rm -f dist/%s' % _TAR_FILE)
-    cmd = ['tar', '--dereference', '-czvf', 'dist/%s' % _TAR_FILE]
-    cmd.extend(['--exclude=\'%s\'' % ex for ex in excludes])
-    cmd.extend(includes)
-    local(' '.join(cmd))
+    with lcd('www'):
+        cmd = ['tar', '--dereference', '-czvf', '../dist/%s' % _TAR_FILE]
+        cmd.extend(['--exclude=\'%s\'' % ex for ex in excludes])
+        cmd.extend(includes)
+        local(' '.join(cmd))
 
 def scp():
+    ' deploy tar file to server '
     newdir = 'www-%s' % _now()
     run('rm -f %s' % _REMOTE_TMP_TAR)
     put('dist/%s' % _TAR_FILE, _REMOTE_TMP_TAR)
@@ -119,7 +127,7 @@ def rollback():
         print ('ROLLBACKED OK.')
 
 def restore2local():
-    ' restore db to local '
+    ' restore database file to local mysql '
     backup_dir = os.path.join(_current_path(), 'backup')
     fs = os.listdir(backup_dir)
     files = [f for f in fs if f.startswith('backup-') and f.endswith('.sql.tar.gz')]
@@ -161,5 +169,6 @@ def restore2local():
         local('rm -f %s' % restore_file[:-7])
 
 def deploy():
+    ' build and deploy '
     build()
     scp()
