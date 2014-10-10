@@ -1,7 +1,7 @@
 itranswarp.js
 =============
 
-A nodejs powered website containing blog, wiki, discuss.
+A nodejs powered website containing blog, wiki, discuss and search engine.
 
 ### Environment
 
@@ -10,6 +10,8 @@ Nodejs: 0.10.x
 MySQL: 5.1 ~ 5.6
 
 Memcache
+
+Nginx
 
 ### Configurations
 
