@@ -15,7 +15,7 @@ Memcache
 
 You should make a copy of 'config_default.js' to 'config_override.js', and override some of the settings you needed:
 
-    $ cp config_default.js config_override.js
+    $ cp www/config_default.js www/config_override.js
 
 You can safely remove any settings you do not changed.
 
