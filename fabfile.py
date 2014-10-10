@@ -51,6 +51,8 @@ def backup():
 
 def build():
     ' build deploy package '
+    with lcd('www'):
+        local('gulp')
     includes = ['*']
     excludes = ['gulpfile.js', 'schema.js', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
     local('rm -f dist/%s' % _TAR_FILE)
