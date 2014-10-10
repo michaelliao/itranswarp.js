@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{{ _('Please Sign In') }}</title>
+    <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/vue.min.js"></script>
+    <script type="text/javascript" src="/static/js/itranswarp.js"></script>
+    <script type="text/javascript">
+$(function() {
+    var vmAuth = new Vue({
+        el: '#formAuth',
+        data: {
+            email: '',
+            passwd: ''
+        },
+        methods: {
+            onSubmit: function(event) {
+                event.preventDefault();
+                var email = this.email.trim().toLowerCase();
+                var passwd = $.md5(email + ':' + this.passwd);
+                showError();
+                showLoading(true);
+                postJSON('/api/authenticate', { email: email, passwd: passwd }, function(err, result) {
+                    if (err) {
+                        showError(err);
+                        showLoading(false);
+                        return;
+                    }
+                    location.assign('/manage/');
+                });
+            }
+        }
+    });
+});
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="row" style="height:40px"></div>
+
+        <div class="row">
+            <div class="span8 offset2">
+                <div class="row">
+                    <div class="span6 offset1">
+                        <form id="formAuth" v-on="submit: onSubmit">
+                            <legend>{{ _('Please Sign In') }}:</legend>
+                            <div class="alert alert-error hide"></div>
+                            <div style="margin: 16px 0;">
+                                <label class="control-label">{{ _('Email') }}:</label>
+                                <input v-model="email" type="text" name="email" maxlength="50" class="input-xlarge" />
+                            </div>
+                            <div style="margin: 16px 0;">
+                                <label class="control-label">{{ _('Password') }}:</label>
+                                <input v-model="passwd" type="password" maxlength="50" class="input-xlarge" />
+                            </div>
+                            <div style="margin: 16px 0;">
+                                <button type="submit" class="btn btn-primary"><i class="icon-lock icon-white"></i> {{ _('Sign In') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="span6 offset1">
+                        <i class="icon-question-sign"></i> <a href="/auth/forgot">{{ _('Forgot password') }}?</a>
+                        &nbsp;&nbsp;
+                        <i class="icon-circle-arrow-left"></i> <a href="/">{{ _('Home') }}</a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="span8">
+                        <div style="margin-top: 24px; padding: 12px 0px; text-align: center; border-top: 1px solid #ccc;">
+                            <p>Powered by <a href="http://www.itranswarp.com" target="_blank">iTranswarp.js</a> &copy; 2014.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

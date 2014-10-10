@@ -1,0 +1,20 @@
+<p>现在，你已经学会了修改文件，然后把修改提交到Git版本库，现在，再练习一次，修改readme.txt文件如下：</p>
+<pre><code>Git is a distributed version control system.
+Git is free software distributed under the GPL.
+</code></pre><p>然后尝试提交：</p>
+<pre><code>$ git add readme.txt
+$ git commit -m &quot;append GPL&quot;
+[master 3628164] append GPL
+1 file changed, 1 insertion(+), 1 deletion(-)
+</code></pre><p>像这样，你不断对文件进行修改，然后不断提交修改到版本库里，就好比玩RPG游戏时，每通过一关就会自动把游戏状态存盘，如果某一关没过去，你还可以选择读取前一关的状态。有些时候，在打Boss之前，你会手动存盘，以便万一打Boss失败了，可以从最近的地方重新开始。Git也是一样，每当你觉得文件修改到一定程度的时候，就可以“保存一个快照”，这个快照在Git中被称为commit。一旦你把文件改乱了，或者误删了文件，还可以从最近的一个commit恢复，然后继续工作，而不是把几个月的工作成果全部丢失。</p>
+<p>现在，我们回顾一下readme.txt文件一共有几个版本被提交到Git仓库里了：</p>
+<p>版本1：wrote a readme file</p>
+<pre><code>Git is a version control system.
+Git is free software.
+</code></pre><p>版本2：add distributed</p>
+<pre><code>Git is a distributed version control system.
+Git is free software.
+</code></pre><p>版本3：append GPL</p>
+<pre><code>Git is a distributed version control system.
+Git is free software distributed under the GPL.
+</code></pre><p>当然了，在实际工作中，我们脑子里怎么可能记得一个几千行的文件每次都改了什么内容，不然要版本控制系统干什么。版本控制系统肯定有某个命令可以告诉我们历史记录，在Git中，我们用git log命令查看：</p>

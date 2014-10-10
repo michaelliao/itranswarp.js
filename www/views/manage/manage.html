@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
+    <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery.md5.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/vue.min.js"></script>
+    <script src="/static/js/itranswarp.js"></script>
+    <script src="/static/js/itranswarp-manage.js"></script>
+<script>
+// {% raw %}
+// custom component: pagination
+// usage:
+// var page = definePagination(page);
+function definePagination(page) {
+    var buildArray = function() {
+        var
+            index = page.index,
+            total = page.totalPages;
+        var range = function(n) {
+            if (n < 1) {
+                return 1;
+            }
+            if (n > total) {
+                return total;
+            }
+            return n;
+        }
+        if (index <= 0) {
+            return [];
+        }
+        var
+            min = range(index - 5),
+            max = range(index + 5),
+            arr = [];
+        if (min >= 2) { arr.push({ text: '1', href: 1, css: '' }); }
+        if (min === 3) { arr.push({ text: '2', href: 2, css: '' }); }
+        if (min > 3) { arr.push({ text: '...', href: '', css: 'disabled' }); }
+        for (var i = min; i <= max; i ++) {
+            var o = { text: i + '', css: '', href: '' };
+            if (i===index) {
+                o.css = 'active';
+            }
+            else {
+                o.href = i;
+            }
+            arr.push(o);
+        }
+        if (max < (total - 2)) { arr.push({ text: '...', href: '', css: 'disabled' }); }
+        if (max === (total-2)) { arr.push({ text: (total - 1) + '', href: total - 1, css: '' }); }
+        if (max < total) { arr.push({ text: total + '', href: total, css: '' }); }
+        return arr;
+    }
+    page.pagination = buildArray();
+    return page;
+}
+
+Vue.component('vc-pagination', {
+    template: '<div class="pagination"><ul><li v-repeat="p: page.pagination" v-attr="class: p.css">' +
+    '<a href="javascript:gotoPage({{ p.href }})">{{ p.text }}</a>' +
+    '</li></div>'
+});
+// {% endraw %}
+</script>
+{% block head %}<!-- block head  -->{% endblock %}
+</head>
+<body>
+    <div id="header">
+        <div class="navbar navbar-fixed-top navbar-blue">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="brand" href="/" target="_blank">{{ _('Home') }}</a>
+                    <ul id="top-nav" class="nav">
+                        <li><a href="/manage/comment/">{{ _('Comments') }}</a></li>
+                        <li><a href="/manage/article/">{{ _('Articles') }}</a></li>
+                        <li><a href="/manage/page/">{{ _('Pages') }}</a></li>
+                        <li><a href="/manage/wiki/">{{ _('Wikis') }}</a></li>
+                        <li><a href="/manage/discuss/">{{ _('Discuss') }}</a></li>
+                        <li><a href="/manage/attachment/">{{ _('Attachments') }}</a></li>
+                        <li><a href="/manage/user/">{{ _('Users') }}</a></li>
+                        <li><a href="/manage/navigation/">{{ _('Navigations') }}</a></li>
+                        <li><a href="/manage/setting/">{{ _('Settings') }}</a></li>
+                        <li><a href="/manage/api/">API</a></li>
+                    </ul>
+                    <ul class="nav pull-right">
+                        <li class="dropdown">
+                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">{{ __user__.name|e }} <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/manage/users/profile">My Profile</a></li>
+                                <li class="divider"></li>
+                                <li><a href="/manage/signout">{{ _('Sign Out') }}</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div id="main" class="container">
+        <div class="row" style="height:61px;"></div>
+        <div class="row" style="overflow:hidden;">
+
+        {% block main %}
+
+            <div class="span2">
+                <div id="menus" class="well">
+                    <ul class="nav nav-list">
+                        {% block menu %}
+                        <li class="nav-header">Sample Menu</li>
+                        <li class="active">Menu Item</li>
+                        {% endblock %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="span10">
+                {% block content %}
+                <h3>Content</h3>
+                {% endblock %}
+            </div>
+
+        {% endblock %}
+
+        </div>
+        <div id="push"></div>
+    </div>
+
+    <div id="footer">
+        <div style="border-top: solid 1px #ccc;">
+            <div class="container">
+                <div class="row">
+                    <div class="span12" style="text-align:center;">
+                        <p>Powered by iTranswarp.js. Copyright&copy;2014, <a href="http://www.itranswarp.com/" target="_blank">www.itranswarp.com</a>, all rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// init tooltips after mvvm initialized:
+$(function() {
+    //
+});
+</script>
+</body>
+</html>
