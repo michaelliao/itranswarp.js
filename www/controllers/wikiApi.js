@@ -7,7 +7,7 @@ var
     db = require('../db'),
     utils = require('./_utils'),
     images = require('./_images'),
-    search = require('../search/search');
+    search = require('../search/search'),
     constants = require('../constants');
 
 var
@@ -35,7 +35,7 @@ function indexWiki(r) {
             content: utils.html2text(utils.md2html(r.content)),
             created_at: r.created_at,
             updated_at: r.updated_at,
-            url: '/wiki/' + ('wiki_id' in r ? r.wiki_id + '/' : '') + r.id,
+            url: '/wiki/' + (r.wiki_id ? r.wiki_id + '/' : '') + r.id,
             upvotes: 0
         });
     });

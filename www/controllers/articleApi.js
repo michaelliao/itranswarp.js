@@ -641,7 +641,7 @@ module.exports = {
                     // delete all texts:
                     warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
                 }
-            ], function (err, result) {
+            ], function (err, r) {
                 tx.done(err, function (err) {
                     if (err) {
                         return next(err);

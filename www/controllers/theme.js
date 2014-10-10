@@ -485,8 +485,8 @@ module.exports = {
         if (searchEngine.external) {
             return res.redirect(searchEngine.search(q));
         }
-        console.log(JSON.stringify(searchTypeValues))
-        if (! type in searchTypeValues) {
+        console.log(JSON.stringify(searchTypeValues));
+        if (!searchTypeValues[type]) {
             type = searchTypes[0].value;
         }
         if (type) {

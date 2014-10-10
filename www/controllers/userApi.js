@@ -26,6 +26,22 @@ var LOCK_TIMES = {
 
 var isSecure = config.session.httpsForManagement;
 
+function getUser(id, tx, callback) {
+    if (arguments.length === 2) {
+        callback = tx;
+        tx = undefined;
+    }
+    User.find(id, tx, function (err, user) {
+        if (err) {
+            return callback(err);
+        }
+        if (user === null) {
+            return callback(api.notFound('User'));
+        }
+        callback(null, user);
+    });
+}
+
 // get user by list of ids, return users as object:
 // { user'id: user object }
 function getUsersByIds(ids, callback) {
@@ -81,22 +97,6 @@ function getUsers(page, callback) {
                 users: users
             });
         });
-    });
-}
-
-function getUser(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    User.find(id, tx, function (err, user) {
-        if (err) {
-            return callback(err);
-        }
-        if (user === null) {
-            return callback(api.notFound('User'));
-        }
-        callback(null, user);
     });
 }
 

@@ -28,7 +28,7 @@ safeRenderer.link = function (href, title, text) {
         href = 'http://' + href;
     }
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
-}
+};
 
 function Page(pageIndex, itemsPerPage) {
     this.pageIndex = pageIndex || 1;
@@ -372,7 +372,7 @@ var HTML2TEXT_TAGS = {
     'var': ' ',
     'video': '\n',
     'wbr': '\n'
-}
+};
 
 function html2text(html) {
     var
@@ -380,23 +380,23 @@ function html2text(html) {
         saveTexts = [true],
         saveCurrent = true,
         parser = new htmlparser.Parser({
-            onopentag: function(tagname, attribs) {
+            onopentag: function (tagname, attribs) {
                 if (saveCurrent) {
-                    saveCurrent = !(tagname in HTML2TEXT_TAGS);
+                    saveCurrent = !HTML2TEXT_TAGS[tagname];
                 }
                 saveTexts.push(saveCurrent);
             },
-            ontext: function(text) {
+            ontext: function (text) {
                 if (saveCurrent) {
                     buffer.push(text);
                 }
             },
-            onclosetag: function(tagname) {
+            onclosetag: function (tagname) {
                 saveTexts.pop();
                 saveCurrent = saveTexts[saveTexts.length - 1];
             }
         }, {
-            decodeEntities: true,
+            decodeEntities: true
         });
     parser.write(html);
     parser.end();

@@ -86,7 +86,7 @@ var i18nForTheme = i18n.getI18NTranslators('./views/' + themePath + 'i18n');
 // check user for manage and theme:
 app.use(function (req, res, next) {
     console.log('Handle URL: ' + req.path);
-    var prefix = req.path.substring(0, 8);
+    var fnRender, i18nT, prefix = req.path.substring(0, 8);
     if (prefix === '/manage/' && req.path !== '/manage/signin') {
         if (!req.user || !req.user.local || req.user.role > constants.ROLE_CONTRIBUTOR) {
             return res.redirect('/manage/signin');
@@ -95,14 +95,14 @@ app.use(function (req, res, next) {
     // add theme path to response object:
     res.themePath = themePath;
     // automatically add '__user__' and '_' (for i18n) in the model:
-    var fnRender = res.render;
-    var i18nT = (prefix === '/manage/') ? i18nForManagement : i18nForTheme;
+    fnRender = res.render;
+    i18nT = (prefix === '/manage/') ? i18nForManagement : i18nForTheme;
     res.render = function (view, model) {
         var m = model || {};
         m.__user__ = req.user;
         m._ = i18n.createI18N(req.get('Accept-Language') || 'en', i18nT);
         return fnRender.apply(res, [view, m]);
-    }
+    };
     next();
 });
 

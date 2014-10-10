@@ -26,7 +26,7 @@ function indexDiscuss(r) {
         content: utils.html2text(r.content),
         created_at: r.created_at,
         updated_at: r.updated_at,
-        url: '/discuss/' + ('topic_id' in r ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
+        url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
         upvotes: 0
     };
     process.nextTick(function () {
@@ -44,18 +44,18 @@ function unindexDiscuss(r) {
 
 function unindexDiscussByIds(ids) {
     process.nextTick(function () {
-        var arr = ids;
-        var fn = function () {
-            if (arr.length > 0) {
-                if (arr.length > 10) {
-                    search.engine.unindex(arr.splice(arr.length - 10, 10));
+        var
+            arr = ids,
+            fn = function () {
+                if (arr.length > 0) {
+                    if (arr.length > 10) {
+                        search.engine.unindex(arr.splice(arr.length - 10, 10));
+                    } else {
+                        search.engine.unindex(arr.splice(0, arr.length));
+                    }
+                    setTimeout(fn, 500);
                 }
-                else {
-                    search.engine.unindex(arr.splice(0, arr.length));
-                }
-                setTimeout(fn, 500);
-            }
-        };
+            };
         fn();
     });
 }
@@ -118,8 +118,7 @@ function getBoards(tx, callback) {
         _.each(boards, function (b) {
             if (lastTag === b.tag) {
                 groups[groups.length - 1].push(b);
-            }
-            else {
+            } else {
                 lastTag = b.tag;
                 groups.push([b]);
             }
@@ -135,7 +134,7 @@ function createBoard(data, tx, callback) {
     }
     Board.findNumber('max(display_order)', tx, function (err, num) {
         if (err) {
-            return next(err);
+            return callback(err);
         }
         var display_order = (num === null) ? 0 : num + 1;
         Board.create({
@@ -591,12 +590,11 @@ module.exports = {
             board_id = req.params.id,
             name = utils.getParam('name', null, req),
             tags = utils.formatTags(utils.getParam('tags', '', req)),
-            name, content;
+            content;
         try {
             name = utils.getRequiredParam('name', req);
             content = utils.safeMd2html(utils.getRequiredParam('content', req));
-        }
-        catch (e) {
+        } catch (e) {
             return next(e);
         }
         createTopic(board_id, req.user.id, name, tags, content, function (err, topic) {
@@ -669,8 +667,7 @@ module.exports = {
             content;
         try {
             content = utils.safeMd2html(utils.getRequiredParam('content', req));
-        }
-        catch (e) {
+        } catch (e) {
             return next(e);
         }
         createReply(topic_id, req.user.id, content, function (err, topic, reply) {
