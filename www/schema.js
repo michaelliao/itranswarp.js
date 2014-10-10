@@ -17,26 +17,31 @@ var keys = _.filter(_.map(db, function (value, key) {
 function log(s) {
     console.log(s);
     console.log('\n');
+    return s + '\n';
 }
 
 function generateDDL(email, password) {
-    log('-- create database...');
-    log('create database ' + config.db.database + ';');
-    log('-- generating ddl...');
+    var output = '', id, passwd, sql_init_admin_user;
+    output = output + log('-- create database...');
+    output = output + log('create database ' + config.db.database + ';');
+    output = output + log('use ' + config.db.database + ';');
+    output = output + log('-- generating ddl...');
 
     _.each(keys.sort(), function (key) {
-        log('-- generate model: ' + key);
-        log(db[key].ddl());
+        output = output + log('-- generate model: ' + key);
+        output = output + log(db[key].ddl());
     });
 
-    log('-- create administrator:\n-- Email: ' + email + '\n-- Password: ' + new Array(password.length + 1).join('*'));
-    var
-        id = db.next_id(),
-        passwd = crypto.createHash('md5').update(email + ':' + password).digest('hex'),
-        sql_init_admin_user = 'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', \'' + passwd + '\', 1, \'http://about:blank\', 0, 1394002009000, 1394002009000, 0);';
-    log(sql_init_admin_user);
-    log('grant select, insert, update, delete on ' + config.db.database + '.* to \'' + config.db.user + '\'@\'localhost\' identified by \'' + config.db.password + '\';');
-    log('-- done.');
+    output = output + log('-- create administrator:\n-- Email: ' + email + '\n-- Password: ' + new Array(password.length + 1).join('*'));
+
+    id = db.next_id();
+    passwd = crypto.createHash('md5').update(email + ':' + password).digest('hex');
+    sql_init_admin_user = 'insert into users (id, role, name, email, passwd, verified, image_url, locked_util, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', \'' + passwd + '\', 1, \'http://about:blank\', 0, 1394002009000, 1394002009000, 0);';
+
+    output = output + log(sql_init_admin_user);
+    output = output + log('grant select, insert, update, delete on ' + config.db.database + '.* to \'' + config.db.user + '\'@\'localhost\' identified by \'' + config.db.password + '\';');
+    output = output + log('-- done.');
+    fs.writeFileSync('./schema.sql', output);
 }
 
 var rl = readline.createInterface({
@@ -44,7 +49,7 @@ var rl = readline.createInterface({
     output: process.stdout
 });
 
-log('-- Create administrator account:');
+console.log('-- Create administrator account:\n');
 
 rl.question('Email: ', function (email) {
     rl.question('Password (6-20 chars): ', function (password) {
