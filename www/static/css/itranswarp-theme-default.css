@@ -93,12 +93,16 @@ sub {
 }
 img {
   /* Responsive images (ensure images don't scale beyond their parents) */
+
   max-width: 100%;
   /* Part 1: Set a maxium relative to the parent */
+
   width: auto\9;
   /* IE7-8 need help adjusting responsive images */
+
   height: auto;
   /* Part 2: Scale the height according to the width, otherwise you get stretching */
+
   vertical-align: middle;
   border: 0;
   -ms-interpolation-mode: bicubic;
@@ -189,7 +193,7 @@ textarea {
   img {
     max-width: 100% !important;
   }
-  @page {
+  @page  {
     margin: 0.5cm;
   }
   p,
@@ -250,6 +254,120 @@ a:focus {
 .row {
   margin-left: 0px;
   *zoom: 1;
+}
+.row:before,
+.row:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row:after {
+  clear: both;
+}
+.row:before,
+.row:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row:after {
+  clear: both;
+}
+[class*="span"] {
+  float: left;
+  min-height: 1px;
+  margin-left: 0px;
+}
+.container,
+.navbar-static-top .container,
+.navbar-fixed-top .container,
+.navbar-fixed-bottom .container {
+  width: 984px;
+}
+.span12 {
+  width: 984px;
+}
+.span11 {
+  width: 902px;
+}
+.span10 {
+  width: 820px;
+}
+.span9 {
+  width: 738px;
+}
+.span8 {
+  width: 656px;
+}
+.span7 {
+  width: 574px;
+}
+.span6 {
+  width: 492px;
+}
+.span5 {
+  width: 410px;
+}
+.span4 {
+  width: 328px;
+}
+.span3 {
+  width: 246px;
+}
+.span2 {
+  width: 164px;
+}
+.span1 {
+  width: 82px;
+}
+.offset12 {
+  margin-left: 984px;
+}
+.offset11 {
+  margin-left: 902px;
+}
+.offset10 {
+  margin-left: 820px;
+}
+.offset9 {
+  margin-left: 738px;
+}
+.offset8 {
+  margin-left: 656px;
+}
+.offset7 {
+  margin-left: 574px;
+}
+.offset6 {
+  margin-left: 492px;
+}
+.offset5 {
+  margin-left: 410px;
+}
+.offset4 {
+  margin-left: 328px;
+}
+.offset3 {
+  margin-left: 246px;
+}
+.offset2 {
+  margin-left: 164px;
+}
+.offset1 {
+  margin-left: 82px;
+}
+.row {
+  margin-left: 0px;
+  *zoom: 1;
+}
+.row:before,
+.row:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row:after {
+  clear: both;
 }
 .row:before,
 .row:after {
@@ -356,6 +474,15 @@ a:focus {
 .row-fluid:after {
   clear: both;
 }
+.row-fluid:before,
+.row-fluid:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row-fluid:after {
+  clear: both;
+}
 .row-fluid [class*="span"] {
   display: block;
   width: 100%;
@@ -365,7 +492,7 @@ a:focus {
   box-sizing: border-box;
   float: left;
   margin-left: 0%;
-  *margin-left: -0.05081301%;
+  *margin-left: -0.05081300813008131%;
 }
 .row-fluid [class*="span"]:first-child {
   margin-left: 0;
@@ -374,148 +501,331 @@ a:focus {
   margin-left: 0%;
 }
 .row-fluid .span12 {
-  width: 100%;
-  *width: 99.94918699%;
+  width: 99.99999999999999%;
+  *width: 99.94918699186991%;
 }
 .row-fluid .span11 {
-  width: 91.66666667%;
-  *width: 91.61585366%;
+  width: 91.66666666666666%;
+  *width: 91.61585365853658%;
 }
 .row-fluid .span10 {
-  width: 83.33333333%;
-  *width: 83.28252033%;
+  width: 83.33333333333331%;
+  *width: 83.28252032520324%;
 }
 .row-fluid .span9 {
-  width: 75%;
-  *width: 74.94918699%;
+  width: 74.99999999999999%;
+  *width: 74.94918699186991%;
 }
 .row-fluid .span8 {
-  width: 66.66666667%;
-  *width: 66.61585366%;
+  width: 66.66666666666666%;
+  *width: 66.61585365853658%;
 }
 .row-fluid .span7 {
-  width: 58.33333333%;
-  *width: 58.28252033%;
+  width: 58.33333333333333%;
+  *width: 58.282520325203244%;
 }
 .row-fluid .span6 {
-  width: 50%;
-  *width: 49.94918699%;
+  width: 49.99999999999999%;
+  *width: 49.94918699186991%;
 }
 .row-fluid .span5 {
-  width: 41.66666667%;
-  *width: 41.61585366%;
+  width: 41.66666666666666%;
+  *width: 41.61585365853657%;
 }
 .row-fluid .span4 {
-  width: 33.33333333%;
-  *width: 33.28252033%;
+  width: 33.33333333333333%;
+  *width: 33.282520325203244%;
 }
 .row-fluid .span3 {
-  width: 25%;
-  *width: 24.94918699%;
+  width: 24.999999999999996%;
+  *width: 24.949186991869915%;
 }
 .row-fluid .span2 {
-  width: 16.66666667%;
-  *width: 16.61585366%;
+  width: 16.666666666666664%;
+  *width: 16.615853658536583%;
 }
 .row-fluid .span1 {
-  width: 8.33333333%;
-  *width: 8.28252033%;
+  width: 8.333333333333332%;
+  *width: 8.28252032520325%;
 }
 .row-fluid .offset12 {
-  margin-left: 100%;
-  *margin-left: 99.89837398%;
+  margin-left: 99.99999999999999%;
+  *margin-left: 99.89837398373983%;
 }
 .row-fluid .offset12:first-child {
-  margin-left: 100%;
-  *margin-left: 99.89837398%;
+  margin-left: 99.99999999999999%;
+  *margin-left: 99.89837398373983%;
 }
 .row-fluid .offset11 {
-  margin-left: 91.66666667%;
-  *margin-left: 91.56504065%;
+  margin-left: 91.66666666666666%;
+  *margin-left: 91.5650406504065%;
 }
 .row-fluid .offset11:first-child {
-  margin-left: 91.66666667%;
-  *margin-left: 91.56504065%;
+  margin-left: 91.66666666666666%;
+  *margin-left: 91.5650406504065%;
 }
 .row-fluid .offset10 {
-  margin-left: 83.33333333%;
-  *margin-left: 83.23170732%;
+  margin-left: 83.33333333333331%;
+  *margin-left: 83.23170731707316%;
 }
 .row-fluid .offset10:first-child {
-  margin-left: 83.33333333%;
-  *margin-left: 83.23170732%;
+  margin-left: 83.33333333333331%;
+  *margin-left: 83.23170731707316%;
 }
 .row-fluid .offset9 {
-  margin-left: 75%;
-  *margin-left: 74.89837398%;
+  margin-left: 74.99999999999999%;
+  *margin-left: 74.89837398373983%;
 }
 .row-fluid .offset9:first-child {
-  margin-left: 75%;
-  *margin-left: 74.89837398%;
+  margin-left: 74.99999999999999%;
+  *margin-left: 74.89837398373983%;
 }
 .row-fluid .offset8 {
-  margin-left: 66.66666667%;
-  *margin-left: 66.56504065%;
+  margin-left: 66.66666666666666%;
+  *margin-left: 66.5650406504065%;
 }
 .row-fluid .offset8:first-child {
-  margin-left: 66.66666667%;
-  *margin-left: 66.56504065%;
+  margin-left: 66.66666666666666%;
+  *margin-left: 66.5650406504065%;
 }
 .row-fluid .offset7 {
-  margin-left: 58.33333333%;
-  *margin-left: 58.23170732%;
+  margin-left: 58.33333333333333%;
+  *margin-left: 58.23170731707316%;
 }
 .row-fluid .offset7:first-child {
-  margin-left: 58.33333333%;
-  *margin-left: 58.23170732%;
+  margin-left: 58.33333333333333%;
+  *margin-left: 58.23170731707316%;
 }
 .row-fluid .offset6 {
-  margin-left: 50%;
-  *margin-left: 49.89837398%;
+  margin-left: 49.99999999999999%;
+  *margin-left: 49.89837398373982%;
 }
 .row-fluid .offset6:first-child {
-  margin-left: 50%;
-  *margin-left: 49.89837398%;
+  margin-left: 49.99999999999999%;
+  *margin-left: 49.89837398373982%;
 }
 .row-fluid .offset5 {
-  margin-left: 41.66666667%;
-  *margin-left: 41.56504065%;
+  margin-left: 41.66666666666666%;
+  *margin-left: 41.56504065040649%;
 }
 .row-fluid .offset5:first-child {
-  margin-left: 41.66666667%;
-  *margin-left: 41.56504065%;
+  margin-left: 41.66666666666666%;
+  *margin-left: 41.56504065040649%;
 }
 .row-fluid .offset4 {
-  margin-left: 33.33333333%;
-  *margin-left: 33.23170732%;
+  margin-left: 33.33333333333333%;
+  *margin-left: 33.23170731707316%;
 }
 .row-fluid .offset4:first-child {
-  margin-left: 33.33333333%;
-  *margin-left: 33.23170732%;
+  margin-left: 33.33333333333333%;
+  *margin-left: 33.23170731707316%;
 }
 .row-fluid .offset3 {
-  margin-left: 25%;
-  *margin-left: 24.89837398%;
+  margin-left: 24.999999999999996%;
+  *margin-left: 24.898373983739834%;
 }
 .row-fluid .offset3:first-child {
-  margin-left: 25%;
-  *margin-left: 24.89837398%;
+  margin-left: 24.999999999999996%;
+  *margin-left: 24.898373983739834%;
 }
 .row-fluid .offset2 {
-  margin-left: 16.66666667%;
-  *margin-left: 16.56504065%;
+  margin-left: 16.666666666666664%;
+  *margin-left: 16.5650406504065%;
 }
 .row-fluid .offset2:first-child {
-  margin-left: 16.66666667%;
-  *margin-left: 16.56504065%;
+  margin-left: 16.666666666666664%;
+  *margin-left: 16.5650406504065%;
 }
 .row-fluid .offset1 {
-  margin-left: 8.33333333%;
-  *margin-left: 8.23170732%;
+  margin-left: 8.333333333333332%;
+  *margin-left: 8.23170731707317%;
 }
 .row-fluid .offset1:first-child {
-  margin-left: 8.33333333%;
-  *margin-left: 8.23170732%;
+  margin-left: 8.333333333333332%;
+  *margin-left: 8.23170731707317%;
+}
+.row-fluid {
+  width: 100%;
+  *zoom: 1;
+}
+.row-fluid:before,
+.row-fluid:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row-fluid:after {
+  clear: both;
+}
+.row-fluid:before,
+.row-fluid:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.row-fluid:after {
+  clear: both;
+}
+.row-fluid [class*="span"] {
+  display: block;
+  width: 100%;
+  min-height: 30px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  float: left;
+  margin-left: 0%;
+  *margin-left: -0.05081300813008131%;
+}
+.row-fluid [class*="span"]:first-child {
+  margin-left: 0;
+}
+.row-fluid .controls-row [class*="span"] + [class*="span"] {
+  margin-left: 0%;
+}
+.row-fluid .span12 {
+  width: 99.99999999999999%;
+  *width: 99.94918699186991%;
+}
+.row-fluid .span11 {
+  width: 91.66666666666666%;
+  *width: 91.61585365853658%;
+}
+.row-fluid .span10 {
+  width: 83.33333333333331%;
+  *width: 83.28252032520324%;
+}
+.row-fluid .span9 {
+  width: 74.99999999999999%;
+  *width: 74.94918699186991%;
+}
+.row-fluid .span8 {
+  width: 66.66666666666666%;
+  *width: 66.61585365853658%;
+}
+.row-fluid .span7 {
+  width: 58.33333333333333%;
+  *width: 58.282520325203244%;
+}
+.row-fluid .span6 {
+  width: 49.99999999999999%;
+  *width: 49.94918699186991%;
+}
+.row-fluid .span5 {
+  width: 41.66666666666666%;
+  *width: 41.61585365853657%;
+}
+.row-fluid .span4 {
+  width: 33.33333333333333%;
+  *width: 33.282520325203244%;
+}
+.row-fluid .span3 {
+  width: 24.999999999999996%;
+  *width: 24.949186991869915%;
+}
+.row-fluid .span2 {
+  width: 16.666666666666664%;
+  *width: 16.615853658536583%;
+}
+.row-fluid .span1 {
+  width: 8.333333333333332%;
+  *width: 8.28252032520325%;
+}
+.row-fluid .offset12 {
+  margin-left: 99.99999999999999%;
+  *margin-left: 99.89837398373983%;
+}
+.row-fluid .offset12:first-child {
+  margin-left: 99.99999999999999%;
+  *margin-left: 99.89837398373983%;
+}
+.row-fluid .offset11 {
+  margin-left: 91.66666666666666%;
+  *margin-left: 91.5650406504065%;
+}
+.row-fluid .offset11:first-child {
+  margin-left: 91.66666666666666%;
+  *margin-left: 91.5650406504065%;
+}
+.row-fluid .offset10 {
+  margin-left: 83.33333333333331%;
+  *margin-left: 83.23170731707316%;
+}
+.row-fluid .offset10:first-child {
+  margin-left: 83.33333333333331%;
+  *margin-left: 83.23170731707316%;
+}
+.row-fluid .offset9 {
+  margin-left: 74.99999999999999%;
+  *margin-left: 74.89837398373983%;
+}
+.row-fluid .offset9:first-child {
+  margin-left: 74.99999999999999%;
+  *margin-left: 74.89837398373983%;
+}
+.row-fluid .offset8 {
+  margin-left: 66.66666666666666%;
+  *margin-left: 66.5650406504065%;
+}
+.row-fluid .offset8:first-child {
+  margin-left: 66.66666666666666%;
+  *margin-left: 66.5650406504065%;
+}
+.row-fluid .offset7 {
+  margin-left: 58.33333333333333%;
+  *margin-left: 58.23170731707316%;
+}
+.row-fluid .offset7:first-child {
+  margin-left: 58.33333333333333%;
+  *margin-left: 58.23170731707316%;
+}
+.row-fluid .offset6 {
+  margin-left: 49.99999999999999%;
+  *margin-left: 49.89837398373982%;
+}
+.row-fluid .offset6:first-child {
+  margin-left: 49.99999999999999%;
+  *margin-left: 49.89837398373982%;
+}
+.row-fluid .offset5 {
+  margin-left: 41.66666666666666%;
+  *margin-left: 41.56504065040649%;
+}
+.row-fluid .offset5:first-child {
+  margin-left: 41.66666666666666%;
+  *margin-left: 41.56504065040649%;
+}
+.row-fluid .offset4 {
+  margin-left: 33.33333333333333%;
+  *margin-left: 33.23170731707316%;
+}
+.row-fluid .offset4:first-child {
+  margin-left: 33.33333333333333%;
+  *margin-left: 33.23170731707316%;
+}
+.row-fluid .offset3 {
+  margin-left: 24.999999999999996%;
+  *margin-left: 24.898373983739834%;
+}
+.row-fluid .offset3:first-child {
+  margin-left: 24.999999999999996%;
+  *margin-left: 24.898373983739834%;
+}
+.row-fluid .offset2 {
+  margin-left: 16.666666666666664%;
+  *margin-left: 16.5650406504065%;
+}
+.row-fluid .offset2:first-child {
+  margin-left: 16.666666666666664%;
+  *margin-left: 16.5650406504065%;
+}
+.row-fluid .offset1 {
+  margin-left: 8.333333333333332%;
+  *margin-left: 8.23170731707317%;
+}
+.row-fluid .offset1:first-child {
+  margin-left: 8.333333333333332%;
+  *margin-left: 8.23170731707317%;
 }
 [class*="span"].hide,
 .row-fluid [class*="span"].hide {
@@ -539,10 +849,46 @@ a:focus {
 .container:after {
   clear: both;
 }
+.container:before,
+.container:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.container:after {
+  clear: both;
+}
+.container:before,
+.container:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.container:after {
+  clear: both;
+}
+.container:before,
+.container:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.container:after {
+  clear: both;
+}
 .container-fluid {
   padding-right: 0px;
   padding-left: 0px;
   *zoom: 1;
+}
+.container-fluid:before,
+.container-fluid:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.container-fluid:after {
+  clear: both;
 }
 .container-fluid:before,
 .container-fluid:after {
@@ -712,6 +1058,7 @@ ol.inline > li {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   padding-left: 5px;
   padding-right: 5px;
@@ -731,6 +1078,15 @@ dd {
 }
 .dl-horizontal {
   *zoom: 1;
+}
+.dl-horizontal:before,
+.dl-horizontal:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.dl-horizontal:after {
+  clear: both;
 }
 .dl-horizontal:before,
 .dl-horizontal:after {
@@ -991,6 +1347,7 @@ input[type="color"]:focus,
   outline: 0;
   outline: thin dotted \9;
   /* IE6-9 */
+
   -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(82,168,236,.6);
   -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(82,168,236,.6);
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(82,168,236,.6);
@@ -1000,8 +1357,10 @@ input[type="checkbox"] {
   margin: 4px 0 0;
   *margin-top: 0;
   /* IE7 */
+
   margin-top: 1px \9;
   /* IE8-9 */
+
   line-height: normal;
 }
 input[type="file"],
@@ -1017,8 +1376,10 @@ select,
 input[type="file"] {
   height: 30px;
   /* In IE7, the height of the select element cannot be changed by height, only font-size */
+
   *margin-top: 4px;
   /* For IE7, add top margin to align select with labels */
+
   line-height: 30px;
 }
 select {
@@ -1055,6 +1416,18 @@ input[type="checkbox"]:focus {
 .uneditable-textarea {
   width: auto;
   height: auto;
+}
+input:-moz-placeholder,
+textarea:-moz-placeholder {
+  color: #999999;
+}
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: #999999;
+}
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #999999;
 }
 input:-moz-placeholder,
 textarea:-moz-placeholder {
@@ -1202,8 +1575,85 @@ textarea.span1,
 .uneditable-input.span1 {
   width: 68px;
 }
+input,
+textarea,
+.uneditable-input {
+  margin-left: 0;
+}
+.controls-row [class*="span"] + [class*="span"] {
+  margin-left: 0px;
+}
+input.span12,
+textarea.span12,
+.uneditable-input.span12 {
+  width: 970px;
+}
+input.span11,
+textarea.span11,
+.uneditable-input.span11 {
+  width: 888px;
+}
+input.span10,
+textarea.span10,
+.uneditable-input.span10 {
+  width: 806px;
+}
+input.span9,
+textarea.span9,
+.uneditable-input.span9 {
+  width: 724px;
+}
+input.span8,
+textarea.span8,
+.uneditable-input.span8 {
+  width: 642px;
+}
+input.span7,
+textarea.span7,
+.uneditable-input.span7 {
+  width: 560px;
+}
+input.span6,
+textarea.span6,
+.uneditable-input.span6 {
+  width: 478px;
+}
+input.span5,
+textarea.span5,
+.uneditable-input.span5 {
+  width: 396px;
+}
+input.span4,
+textarea.span4,
+.uneditable-input.span4 {
+  width: 314px;
+}
+input.span3,
+textarea.span3,
+.uneditable-input.span3 {
+  width: 232px;
+}
+input.span2,
+textarea.span2,
+.uneditable-input.span2 {
+  width: 150px;
+}
+input.span1,
+textarea.span1,
+.uneditable-input.span1 {
+  width: 68px;
+}
 .controls-row {
   *zoom: 1;
+}
+.controls-row:before,
+.controls-row:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.controls-row:after {
+  clear: both;
 }
 .controls-row:before,
 .controls-row:after {
@@ -1236,6 +1686,40 @@ input[type="checkbox"][disabled],
 input[type="radio"][readonly],
 input[type="checkbox"][readonly] {
   background-color: transparent;
+}
+.control-group.warning .control-label,
+.control-group.warning .help-block,
+.control-group.warning .help-inline {
+  color: #c09853;
+}
+.control-group.warning .checkbox,
+.control-group.warning .radio,
+.control-group.warning input,
+.control-group.warning select,
+.control-group.warning textarea {
+  color: #c09853;
+}
+.control-group.warning input,
+.control-group.warning select,
+.control-group.warning textarea {
+  border-color: #c09853;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.control-group.warning input:focus,
+.control-group.warning select:focus,
+.control-group.warning textarea:focus {
+  border-color: #a47e3c;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;
+}
+.control-group.warning .input-prepend .add-on,
+.control-group.warning .input-append .add-on {
+  color: #c09853;
+  background-color: #fcf8e3;
+  border-color: #c09853;
 }
 .control-group.warning .control-label,
 .control-group.warning .help-block,
@@ -1305,6 +1789,74 @@ input[type="checkbox"][readonly] {
   background-color: #f2dede;
   border-color: #b94a48;
 }
+.control-group.error .control-label,
+.control-group.error .help-block,
+.control-group.error .help-inline {
+  color: #b94a48;
+}
+.control-group.error .checkbox,
+.control-group.error .radio,
+.control-group.error input,
+.control-group.error select,
+.control-group.error textarea {
+  color: #b94a48;
+}
+.control-group.error input,
+.control-group.error select,
+.control-group.error textarea {
+  border-color: #b94a48;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.control-group.error input:focus,
+.control-group.error select:focus,
+.control-group.error textarea:focus {
+  border-color: #953b39;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;
+}
+.control-group.error .input-prepend .add-on,
+.control-group.error .input-append .add-on {
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #b94a48;
+}
+.control-group.success .control-label,
+.control-group.success .help-block,
+.control-group.success .help-inline {
+  color: #468847;
+}
+.control-group.success .checkbox,
+.control-group.success .radio,
+.control-group.success input,
+.control-group.success select,
+.control-group.success textarea {
+  color: #468847;
+}
+.control-group.success input,
+.control-group.success select,
+.control-group.success textarea {
+  border-color: #468847;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.control-group.success input:focus,
+.control-group.success select:focus,
+.control-group.success textarea:focus {
+  border-color: #356635;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;
+}
+.control-group.success .input-prepend .add-on,
+.control-group.success .input-append .add-on {
+  color: #468847;
+  background-color: #dff0d8;
+  border-color: #468847;
+}
 .control-group.success .control-label,
 .control-group.success .help-block,
 .control-group.success .help-inline {
@@ -1373,6 +1925,40 @@ input[type="checkbox"][readonly] {
   background-color: #d9edf7;
   border-color: #3a87ad;
 }
+.control-group.info .control-label,
+.control-group.info .help-block,
+.control-group.info .help-inline {
+  color: #3a87ad;
+}
+.control-group.info .checkbox,
+.control-group.info .radio,
+.control-group.info input,
+.control-group.info select,
+.control-group.info textarea {
+  color: #3a87ad;
+}
+.control-group.info input,
+.control-group.info select,
+.control-group.info textarea {
+  border-color: #3a87ad;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.control-group.info input:focus,
+.control-group.info select:focus,
+.control-group.info textarea:focus {
+  border-color: #2d6987;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;
+}
+.control-group.info .input-prepend .add-on,
+.control-group.info .input-append .add-on {
+  color: #3a87ad;
+  background-color: #d9edf7;
+  border-color: #3a87ad;
+}
 input:focus:invalid,
 textarea:focus:invalid,
 select:focus:invalid {
@@ -1404,6 +1990,15 @@ select:focus:invalid:focus {
 .form-actions:after {
   clear: both;
 }
+.form-actions:before,
+.form-actions:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.form-actions:after {
+  clear: both;
+}
 .help-block,
 .help-inline {
   color: #595959;
@@ -1416,6 +2011,7 @@ select:focus:invalid:focus {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   vertical-align: middle;
   padding-left: 5px;
@@ -1566,6 +2162,7 @@ input.search-query {
   padding-left: 14px;
   padding-left: 4px \9;
   /* IE7-8 doesn't have border-radius, so don't indent the padding */
+
   margin-bottom: 0;
   -webkit-border-radius: 15px;
   -moz-border-radius: 15px;
@@ -1622,6 +2219,7 @@ input.search-query {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   margin-bottom: 0;
   vertical-align: middle;
@@ -1669,6 +2267,15 @@ legend + .control-group {
 .form-horizontal .control-group {
   margin-bottom: 20px;
   *zoom: 1;
+}
+.form-horizontal .control-group:before,
+.form-horizontal .control-group:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.form-horizontal .control-group:after {
+  clear: both;
 }
 .form-horizontal .control-group:before,
 .form-horizontal .control-group:after {
@@ -2687,6 +3294,7 @@ button.close {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   padding: 4px 12px;
   margin-bottom: 0;
@@ -2709,6 +3317,7 @@ button.close {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #e6e6e6;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   border: 1px solid #cccccc;
   *border: 0;
@@ -2734,6 +3343,23 @@ button.close {
 .btn:active,
 .btn.active {
   background-color: #cccccc \9;
+}
+.btn:hover,
+.btn:focus,
+.btn:active,
+.btn.active,
+.btn.disabled,
+.btn[disabled] {
+  color: #333333;
+  background-color: #e6e6e6;
+  *background-color: #d9d9d9;
+}
+.btn:active,
+.btn.active {
+  background-color: #cccccc \9;
+}
+.btn:first-child {
+  *margin-left: 0;
 }
 .btn:first-child {
   *margin-left: 0;
@@ -2844,7 +3470,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #0044cc;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.btn-primary.disabled,
+.btn-primary[disabled] {
+  color: #ffffff;
+  background-color: #0044cc;
+  *background-color: #003bb3;
+}
+.btn-primary:active,
+.btn-primary.active {
+  background-color: #003399 \9;
 }
 .btn-primary:hover,
 .btn-primary:focus,
@@ -2875,7 +3516,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #f89406;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active,
+.btn-warning.active,
+.btn-warning.disabled,
+.btn-warning[disabled] {
+  color: #ffffff;
+  background-color: #f89406;
+  *background-color: #df8505;
+}
+.btn-warning:active,
+.btn-warning.active {
+  background-color: #c67605 \9;
 }
 .btn-warning:hover,
 .btn-warning:focus,
@@ -2906,7 +3562,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #bd362f;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active,
+.btn-danger.active,
+.btn-danger.disabled,
+.btn-danger[disabled] {
+  color: #ffffff;
+  background-color: #bd362f;
+  *background-color: #a9302a;
+}
+.btn-danger:active,
+.btn-danger.active {
+  background-color: #942a25 \9;
 }
 .btn-danger:hover,
 .btn-danger:focus,
@@ -2937,7 +3608,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #51a351;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn-success.active,
+.btn-success.disabled,
+.btn-success[disabled] {
+  color: #ffffff;
+  background-color: #51a351;
+  *background-color: #499249;
+}
+.btn-success:active,
+.btn-success.active {
+  background-color: #408140 \9;
 }
 .btn-success:hover,
 .btn-success:focus,
@@ -2968,7 +3654,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #2f96b4;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active,
+.btn-info.active,
+.btn-info.disabled,
+.btn-info[disabled] {
+  color: #ffffff;
+  background-color: #2f96b4;
+  *background-color: #2a85a0;
+}
+.btn-info:active,
+.btn-info.active {
+  background-color: #24748c \9;
 }
 .btn-info:hover,
 .btn-info:focus,
@@ -2999,7 +3700,22 @@ input[type="button"].btn-block {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #222222;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.btn-inverse:hover,
+.btn-inverse:focus,
+.btn-inverse:active,
+.btn-inverse.active,
+.btn-inverse.disabled,
+.btn-inverse[disabled] {
+  color: #ffffff;
+  background-color: #222222;
+  *background-color: #151515;
+}
+.btn-inverse:active,
+.btn-inverse.active {
+  background-color: #080808 \9;
 }
 .btn-inverse:hover,
 .btn-inverse:focus,
@@ -3073,11 +3789,15 @@ input[type="submit"].btn.btn-mini {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   font-size: 0;
   vertical-align: middle;
   white-space: nowrap;
   *margin-left: .3em;
+}
+.btn-group:first-child {
+  *margin-left: 0;
 }
 .btn-group:first-child {
   *margin-left: 0;
@@ -3248,6 +3968,7 @@ input[type="submit"].btn.btn-mini {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
 }
 .btn-group-vertical > .btn {
@@ -3411,6 +4132,18 @@ input[type="submit"].btn.btn-mini {
 .nav-tabs,
 .nav-pills {
   *zoom: 1;
+}
+.nav-tabs:before,
+.nav-pills:before,
+.nav-tabs:after,
+.nav-pills:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.nav-tabs:after,
+.nav-pills:after {
+  clear: both;
 }
 .nav-tabs:before,
 .nav-pills:before,
@@ -3589,6 +4322,15 @@ input[type="submit"].btn.btn-mini {
 .tabbable:after {
   clear: both;
 }
+.tabbable:before,
+.tabbable:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.tabbable:after {
+  clear: both;
+}
 .tab-content {
   overflow: auto;
 }
@@ -3724,6 +4466,15 @@ input[type="submit"].btn.btn-mini {
 .navbar-inner:after {
   clear: both;
 }
+.navbar-inner:before,
+.navbar-inner:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.navbar-inner:after {
+  clear: both;
+}
 .navbar .container {
   width: auto;
 }
@@ -3777,6 +4528,15 @@ input[type="submit"].btn.btn-mini {
 .navbar-form {
   margin-bottom: 0;
   *zoom: 1;
+}
+.navbar-form:before,
+.navbar-form:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.navbar-form:after {
+  clear: both;
 }
 .navbar-form:before,
 .navbar-form:after {
@@ -3944,10 +4704,25 @@ input[type="submit"].btn.btn-mini {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #e5e5e5;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 0 rgba(255,255,255,.075);
   -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 0 rgba(255,255,255,.075);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 1px 0 rgba(255,255,255,.075);
+}
+.navbar .btn-navbar:hover,
+.navbar .btn-navbar:focus,
+.navbar .btn-navbar:active,
+.navbar .btn-navbar.active,
+.navbar .btn-navbar.disabled,
+.navbar .btn-navbar[disabled] {
+  color: #ffffff;
+  background-color: #e5e5e5;
+  *background-color: #d9d9d9;
+}
+.navbar .btn-navbar:active,
+.navbar .btn-navbar.active {
+  background-color: #cccccc \9;
 }
 .navbar .btn-navbar:hover,
 .navbar .btn-navbar:focus,
@@ -4150,6 +4925,15 @@ input[type="submit"].btn.btn-mini {
 .navbar-inverse .navbar-search .search-query::-webkit-input-placeholder {
   color: #cccccc;
 }
+.navbar-inverse .navbar-search .search-query:-moz-placeholder {
+  color: #cccccc;
+}
+.navbar-inverse .navbar-search .search-query:-ms-input-placeholder {
+  color: #cccccc;
+}
+.navbar-inverse .navbar-search .search-query::-webkit-input-placeholder {
+  color: #cccccc;
+}
 .navbar-inverse .navbar-search .search-query:focus,
 .navbar-inverse .navbar-search .search-query.focused {
   padding: 5px 15px;
@@ -4177,7 +4961,22 @@ input[type="submit"].btn.btn-mini {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #040404;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.navbar-inverse .btn-navbar:hover,
+.navbar-inverse .btn-navbar:focus,
+.navbar-inverse .btn-navbar:active,
+.navbar-inverse .btn-navbar.active,
+.navbar-inverse .btn-navbar.disabled,
+.navbar-inverse .btn-navbar[disabled] {
+  color: #ffffff;
+  background-color: #040404;
+  *background-color: #000000;
+}
+.navbar-inverse .btn-navbar:active,
+.navbar-inverse .btn-navbar.active {
+  background-color: #000000 \9;
 }
 .navbar-inverse .btn-navbar:hover,
 .navbar-inverse .btn-navbar:focus,
@@ -4206,6 +5005,7 @@ input[type="submit"].btn.btn-mini {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   text-shadow: 0 1px 0 #ffffff;
 }
@@ -4223,6 +5023,7 @@ input[type="submit"].btn.btn-mini {
   display: inline-block;
   *display: inline;
   /* IE7 inline-block hack */
+
   *zoom: 1;
   margin-left: 0;
   margin-bottom: 0;
@@ -4360,6 +5161,15 @@ input[type="submit"].btn.btn-mini {
 .pager:after {
   clear: both;
 }
+.pager:before,
+.pager:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.pager:after {
+  clear: both;
+}
 .pager li {
   display: inline;
 }
@@ -4423,6 +5233,7 @@ input[type="submit"].btn.btn-mini {
   border: 1px solid rgba(0, 0, 0, 0.3);
   *border: 1px solid #999;
   /* IE6-7 */
+
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
@@ -4477,6 +5288,15 @@ input[type="submit"].btn.btn-mini {
   -moz-box-shadow: inset 0 1px 0 #ffffff;
   box-shadow: inset 0 1px 0 #ffffff;
   *zoom: 1;
+}
+.modal-footer:before,
+.modal-footer:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.modal-footer:after {
+  clear: both;
 }
 .modal-footer:before,
 .modal-footer:after {
@@ -4702,6 +5522,15 @@ input[type="submit"].btn.btn-mini {
   margin-left: 0px;
   list-style: none;
   *zoom: 1;
+}
+.thumbnails:before,
+.thumbnails:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.thumbnails:after {
+  clear: both;
 }
 .thumbnails:before,
 .thumbnails:after {
@@ -5251,6 +6080,33 @@ a.badge:focus {
 .text-align-center {
   text-align: center;
 }
+.clearfix {
+  *zoom: 1;
+}
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.clearfix:after {
+  clear: both;
+}
+.hide-text {
+  font: 0/0 a;
+  color: transparent;
+  text-shadow: none;
+  background-color: transparent;
+  border: 0;
+}
+.input-block-level {
+  display: block;
+  width: 100%;
+  min-height: 30px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
 i.loading {
   background-image: url("../img/loading.gif") !important;
   background-position: 0 0 !important;
@@ -5401,6 +6257,15 @@ a.v-signin-qq {
 .navbar-red .ssnavbar-search .search-query::-webkit-input-placeholder {
   color: #cccccc;
 }
+.navbar-red .ssnavbar-search .search-query:-moz-placeholder {
+  color: #cccccc;
+}
+.navbar-red .ssnavbar-search .search-query:-ms-input-placeholder {
+  color: #cccccc;
+}
+.navbar-red .ssnavbar-search .search-query::-webkit-input-placeholder {
+  color: #cccccc;
+}
 .navbar-red .ssnavbar-search .search-query:focus,
 .navbar-red .ssnavbar-search .search-query.focused {
   padding: 5px 15px;
@@ -5432,7 +6297,22 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #040404;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.navbar-red .btn-navbar:hover,
+.navbar-red .btn-navbar:focus,
+.navbar-red .btn-navbar:active,
+.navbar-red .btn-navbar.active,
+.navbar-red .btn-navbar.disabled,
+.navbar-red .btn-navbar[disabled] {
+  color: #ffffff;
+  background-color: #040404;
+  *background-color: #000000;
+}
+.navbar-red .btn-navbar:active,
+.navbar-red .btn-navbar.active {
+  background-color: #000000 \9;
 }
 .navbar-red .btn-navbar:hover,
 .navbar-red .btn-navbar:focus,
@@ -5550,7 +6430,22 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #040404;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+.navbar-blue .btn-navbar:hover,
+.navbar-blue .btn-navbar:focus,
+.navbar-blue .btn-navbar:active,
+.navbar-blue .btn-navbar.active,
+.navbar-blue .btn-navbar.disabled,
+.navbar-blue .btn-navbar[disabled] {
+  color: #ffffff;
+  background-color: #040404;
+  *background-color: #000000;
+}
+.navbar-blue .btn-navbar:active,
+.navbar-blue .btn-navbar.active {
+  background-color: #000000 \9;
 }
 .navbar-blue .btn-navbar:hover,
 .navbar-blue .btn-navbar:focus,
@@ -5712,6 +6607,7 @@ a.v-signin-qq {
   /*.dow {
     border-top: 1px solid #ddd !important;
   }*/
+
 }
 .datepicker-inline {
   width: 220px;
@@ -5808,8 +6704,47 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #fdf59a;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   color: #000;
+}
+.datepicker table tr td.today:hover,
+.datepicker table tr td.today:hover:hover,
+.datepicker table tr td.today.disabled:hover,
+.datepicker table tr td.today.disabled:hover:hover,
+.datepicker table tr td.today:focus,
+.datepicker table tr td.today:hover:focus,
+.datepicker table tr td.today.disabled:focus,
+.datepicker table tr td.today.disabled:hover:focus,
+.datepicker table tr td.today:active,
+.datepicker table tr td.today:hover:active,
+.datepicker table tr td.today.disabled:active,
+.datepicker table tr td.today.disabled:hover:active,
+.datepicker table tr td.today.active,
+.datepicker table tr td.today:hover.active,
+.datepicker table tr td.today.disabled.active,
+.datepicker table tr td.today.disabled:hover.active,
+.datepicker table tr td.today.disabled,
+.datepicker table tr td.today:hover.disabled,
+.datepicker table tr td.today.disabled.disabled,
+.datepicker table tr td.today.disabled:hover.disabled,
+.datepicker table tr td.today[disabled],
+.datepicker table tr td.today:hover[disabled],
+.datepicker table tr td.today.disabled[disabled],
+.datepicker table tr td.today.disabled:hover[disabled] {
+  color: #ffffff;
+  background-color: #fdf59a;
+  *background-color: #fcf282;
+}
+.datepicker table tr td.today:active,
+.datepicker table tr td.today:hover:active,
+.datepicker table tr td.today.disabled:active,
+.datepicker table tr td.today.disabled:hover:active,
+.datepicker table tr td.today.active,
+.datepicker table tr td.today:hover.active,
+.datepicker table tr td.today.disabled.active,
+.datepicker table tr td.today.disabled:hover.active {
+  background-color: #fbf069 \9;
 }
 .datepicker table tr td.today:hover,
 .datepicker table tr td.today:hover:hover,
@@ -5882,10 +6817,49 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #f3e97a;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
+}
+.datepicker table tr td.range.today:hover,
+.datepicker table tr td.range.today:hover:hover,
+.datepicker table tr td.range.today.disabled:hover,
+.datepicker table tr td.range.today.disabled:hover:hover,
+.datepicker table tr td.range.today:focus,
+.datepicker table tr td.range.today:hover:focus,
+.datepicker table tr td.range.today.disabled:focus,
+.datepicker table tr td.range.today.disabled:hover:focus,
+.datepicker table tr td.range.today:active,
+.datepicker table tr td.range.today:hover:active,
+.datepicker table tr td.range.today.disabled:active,
+.datepicker table tr td.range.today.disabled:hover:active,
+.datepicker table tr td.range.today.active,
+.datepicker table tr td.range.today:hover.active,
+.datepicker table tr td.range.today.disabled.active,
+.datepicker table tr td.range.today.disabled:hover.active,
+.datepicker table tr td.range.today.disabled,
+.datepicker table tr td.range.today:hover.disabled,
+.datepicker table tr td.range.today.disabled.disabled,
+.datepicker table tr td.range.today.disabled:hover.disabled,
+.datepicker table tr td.range.today[disabled],
+.datepicker table tr td.range.today:hover[disabled],
+.datepicker table tr td.range.today.disabled[disabled],
+.datepicker table tr td.range.today.disabled:hover[disabled] {
+  color: #ffffff;
+  background-color: #f3e97a;
+  *background-color: #f1e663;
+}
+.datepicker table tr td.range.today:active,
+.datepicker table tr td.range.today:hover:active,
+.datepicker table tr td.range.today.disabled:active,
+.datepicker table tr td.range.today.disabled:hover:active,
+.datepicker table tr td.range.today.active,
+.datepicker table tr td.range.today:hover.active,
+.datepicker table tr td.range.today.disabled.active,
+.datepicker table tr td.range.today.disabled:hover.active {
+  background-color: #efe24b \9;
 }
 .datepicker table tr td.range.today:hover,
 .datepicker table tr td.range.today:hover:hover,
@@ -5942,9 +6916,48 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #808080;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.datepicker table tr td.selected:hover,
+.datepicker table tr td.selected:hover:hover,
+.datepicker table tr td.selected.disabled:hover,
+.datepicker table tr td.selected.disabled:hover:hover,
+.datepicker table tr td.selected:focus,
+.datepicker table tr td.selected:hover:focus,
+.datepicker table tr td.selected.disabled:focus,
+.datepicker table tr td.selected.disabled:hover:focus,
+.datepicker table tr td.selected:active,
+.datepicker table tr td.selected:hover:active,
+.datepicker table tr td.selected.disabled:active,
+.datepicker table tr td.selected.disabled:hover:active,
+.datepicker table tr td.selected.active,
+.datepicker table tr td.selected:hover.active,
+.datepicker table tr td.selected.disabled.active,
+.datepicker table tr td.selected.disabled:hover.active,
+.datepicker table tr td.selected.disabled,
+.datepicker table tr td.selected:hover.disabled,
+.datepicker table tr td.selected.disabled.disabled,
+.datepicker table tr td.selected.disabled:hover.disabled,
+.datepicker table tr td.selected[disabled],
+.datepicker table tr td.selected:hover[disabled],
+.datepicker table tr td.selected.disabled[disabled],
+.datepicker table tr td.selected.disabled:hover[disabled] {
+  color: #ffffff;
+  background-color: #808080;
+  *background-color: #737373;
+}
+.datepicker table tr td.selected:active,
+.datepicker table tr td.selected:hover:active,
+.datepicker table tr td.selected.disabled:active,
+.datepicker table tr td.selected.disabled:hover:active,
+.datepicker table tr td.selected.active,
+.datepicker table tr td.selected:hover.active,
+.datepicker table tr td.selected.disabled.active,
+.datepicker table tr td.selected.disabled:hover.active {
+  background-color: #666666 \9;
 }
 .datepicker table tr td.selected:hover,
 .datepicker table tr td.selected:hover:hover,
@@ -6001,9 +7014,48 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #0044cc;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.datepicker table tr td.active:hover,
+.datepicker table tr td.active:hover:hover,
+.datepicker table tr td.active.disabled:hover,
+.datepicker table tr td.active.disabled:hover:hover,
+.datepicker table tr td.active:focus,
+.datepicker table tr td.active:hover:focus,
+.datepicker table tr td.active.disabled:focus,
+.datepicker table tr td.active.disabled:hover:focus,
+.datepicker table tr td.active:active,
+.datepicker table tr td.active:hover:active,
+.datepicker table tr td.active.disabled:active,
+.datepicker table tr td.active.disabled:hover:active,
+.datepicker table tr td.active.active,
+.datepicker table tr td.active:hover.active,
+.datepicker table tr td.active.disabled.active,
+.datepicker table tr td.active.disabled:hover.active,
+.datepicker table tr td.active.disabled,
+.datepicker table tr td.active:hover.disabled,
+.datepicker table tr td.active.disabled.disabled,
+.datepicker table tr td.active.disabled:hover.disabled,
+.datepicker table tr td.active[disabled],
+.datepicker table tr td.active:hover[disabled],
+.datepicker table tr td.active.disabled[disabled],
+.datepicker table tr td.active.disabled:hover[disabled] {
+  color: #ffffff;
+  background-color: #0044cc;
+  *background-color: #003bb3;
+}
+.datepicker table tr td.active:active,
+.datepicker table tr td.active:hover:active,
+.datepicker table tr td.active.disabled:active,
+.datepicker table tr td.active.disabled:hover:active,
+.datepicker table tr td.active.active,
+.datepicker table tr td.active:hover.active,
+.datepicker table tr td.active.disabled.active,
+.datepicker table tr td.active.disabled:hover.active {
+  background-color: #003399 \9;
 }
 .datepicker table tr td.active:hover,
 .datepicker table tr td.active:hover:hover,
@@ -6081,9 +7133,48 @@ a.v-signin-qq {
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #0044cc;
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.datepicker table tr td span.active:hover,
+.datepicker table tr td span.active:hover:hover,
+.datepicker table tr td span.active.disabled:hover,
+.datepicker table tr td span.active.disabled:hover:hover,
+.datepicker table tr td span.active:focus,
+.datepicker table tr td span.active:hover:focus,
+.datepicker table tr td span.active.disabled:focus,
+.datepicker table tr td span.active.disabled:hover:focus,
+.datepicker table tr td span.active:active,
+.datepicker table tr td span.active:hover:active,
+.datepicker table tr td span.active.disabled:active,
+.datepicker table tr td span.active.disabled:hover:active,
+.datepicker table tr td span.active.active,
+.datepicker table tr td span.active:hover.active,
+.datepicker table tr td span.active.disabled.active,
+.datepicker table tr td span.active.disabled:hover.active,
+.datepicker table tr td span.active.disabled,
+.datepicker table tr td span.active:hover.disabled,
+.datepicker table tr td span.active.disabled.disabled,
+.datepicker table tr td span.active.disabled:hover.disabled,
+.datepicker table tr td span.active[disabled],
+.datepicker table tr td span.active:hover[disabled],
+.datepicker table tr td span.active.disabled[disabled],
+.datepicker table tr td span.active.disabled:hover[disabled] {
+  color: #ffffff;
+  background-color: #0044cc;
+  *background-color: #003bb3;
+}
+.datepicker table tr td span.active:active,
+.datepicker table tr td span.active:hover:active,
+.datepicker table tr td span.active.disabled:active,
+.datepicker table tr td span.active.disabled:hover:active,
+.datepicker table tr td span.active.active,
+.datepicker table tr td span.active:hover.active,
+.datepicker table tr td span.active.disabled.active,
+.datepicker table tr td span.active.disabled:hover.active {
+  background-color: #003399 \9;
 }
 .datepicker table tr td span.active:hover,
 .datepicker table tr td span.active:hover:hover,
@@ -6224,10 +7315,12 @@ ul.jqtree-tree .jqtree-toggler {
   top: 30%;
   *top: 0;
   /* fix for ie7 */
+
   font-size: 12px;
   line-height: 12px;
   font-family: arial;
   /* fix for ie9 */
+
   border-bottom: none;
   color: #222222;
 }
@@ -6299,8 +7392,10 @@ ul.jqtree-tree span.jqtree-border {
 ul.jqtree-tree .jqtree-element {
   width: 100%;
   /* todo: why is this in here? */
+
   *width: auto;
   /* ie7 fix; issue 41 */
+
   position: relative;
 }
 ul.jqtree-tree li.jqtree-selected > .jqtree-element,
@@ -6488,6 +7583,7 @@ img.x-user-image-small:hover {
   outline: 0;
   outline: thin dotted \9;
   /* IE6-9 */
+
   -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(82,168,236,.6);
   -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(82,168,236,.6);
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(82,168,236,.6);
@@ -6572,6 +7668,15 @@ ul.x-tags li a:hover {
 .x-article {
   margin-bottom: 36px;
   *zoom: 1;
+}
+.x-article:before,
+.x-article:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.x-article:after {
+  clear: both;
 }
 .x-article:before,
 .x-article:after {
@@ -6696,6 +7801,15 @@ div.x-wiki-content {
 .x-comment-box div.x-comment-input-area div.x-comment-prompt span.x-comment-error:after {
   clear: both;
 }
+.x-comment-box div.x-comment-input-area div.x-comment-prompt span.x-comment-error:before,
+.x-comment-box div.x-comment-input-area div.x-comment-prompt span.x-comment-error:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.x-comment-box div.x-comment-input-area div.x-comment-prompt span.x-comment-error:after {
+  clear: both;
+}
 .x-comment-box div.x-comment-input-area div.x-comment-input textarea {
   width: 95%;
   resize: none;
@@ -6707,6 +7821,15 @@ div.x-wiki-content {
 .x-comment-box div.x-comment-input-area div.x-comment-submit button {
   float: right;
   margin-right: 24px;
+}
+.x-comment-box:before,
+.x-comment-box:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.x-comment-box:after {
+  clear: both;
 }
 .x-comment-box:before,
 .x-comment-box:after {
@@ -6740,6 +7863,15 @@ div.x-comment-li div.x-comment-main div.x-comment-content {
 }
 div.x-comment-li div.x-comment-main div.x-comment-content p {
   word-break: break-all;
+}
+div.x-comment-li:before,
+div.x-comment-li:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+div.x-comment-li:after {
+  clear: both;
 }
 div.x-comment-li:before,
 div.x-comment-li:after {
@@ -6903,6 +8035,15 @@ div.x-video-active:hover div.x-video-button div.x-video-play {
 .x-reply-box div.x-reply-input-area div.x-reply-submit button {
   float: right;
   margin-right: 24px;
+}
+.x-reply-box:before,
+.x-reply-box:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.x-reply-box:after {
+  clear: both;
 }
 .x-reply-box:before,
 .x-reply-box:after {
