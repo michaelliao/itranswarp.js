@@ -187,16 +187,14 @@ $(function() {
             <div class="span8">
                 <div id="main">
                     <!-- block main -->
-{% block main %}
-{% endblock %}
+                    {% block main %}{% endblock %}
                     <!-- // block main -->
                 </div><!-- // main -->
             </div>
             <div class="span4">
                 <div class="x-sidebar-right">
                     <!-- block sidebar -->
-{% block sidebar %}
-{% endblock %}
+                    {% block sidebar %}{% endblock %}
                     <!-- // block sidebar -->
                 </div>
             </div>
@@ -215,7 +213,7 @@ $(function() {
                 <div class="span12">
                     <hr/>
                     <div style="text-align:center;">
-                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Contact</a> - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
+                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
                     </div>
                 </div>
             </div>
