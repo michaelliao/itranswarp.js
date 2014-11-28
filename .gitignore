@@ -20,9 +20,9 @@ backup/*.sql
 *.tar.gz
 
 # ssl:
-cert/*.key
-cert/*.crt
-cert/*.csr
+*.key
+*.crt
+*.csr
 
 # private config files:
 config_override.*
