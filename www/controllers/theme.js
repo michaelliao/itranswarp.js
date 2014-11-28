@@ -228,6 +228,9 @@ module.exports = {
                 articleApi.getArticle(req.params.id, callback);
             },
             function (article, callback) {
+                if (article.publish_at > Date.now()) {
+                    return callback(api.notFound('Article'));
+                }
                 cache.incr(article.id, function (err, num) {
                     if (err) {
                         return callback(err);
