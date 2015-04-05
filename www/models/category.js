@@ -1,3 +1,5 @@
+'use strict';
+
 // category.js
 
 var base = require('./_base.js');

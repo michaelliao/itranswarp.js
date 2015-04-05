@@ -1,3 +1,5 @@
+'use strict';
+
 // base.js
 
 var

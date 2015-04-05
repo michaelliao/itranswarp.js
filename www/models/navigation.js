@@ -1,3 +1,5 @@
+'use strict';
+
 // navigation.js
 
 var base = require('./_base.js');

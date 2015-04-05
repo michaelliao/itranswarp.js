@@ -1,3 +1,5 @@
+'use strict';
+
 // authuser.js
 
 var base = require('./_base.js');

@@ -1,3 +1,5 @@
+'use strict';
+
 // comment.js
 
 var base = require('./_base.js');

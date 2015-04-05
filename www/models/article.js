@@ -1,3 +1,5 @@
+'use strict';
+
 // article.js
 
 var base = require('./_base.js');

@@ -1,3 +1,5 @@
+'use strict';
+
 // user.js
 
 var constants = require('../constants');
