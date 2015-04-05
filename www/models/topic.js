@@ -5,6 +5,8 @@ var base = require('./_base.js');
 module.exports = function (warp) {
     return base.defineModel(warp, 'Topic', [
         base.column_id('board_id', { index: true }),
+        base.column_varchar_50('ref_type'),
+        base.column_id('ref_id', { index: true }),
         base.column_id('user_id', { index: true }),
         base.column_bigint('replies'),
         base.column_varchar_100('name'),
