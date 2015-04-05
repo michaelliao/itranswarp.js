@@ -1,10 +1,12 @@
+'use strict';
+
 // home.js
 
 var
     _ = require('lodash'),
-    async = require('async'),
     api = require('../api'),
     db = require('../db'),
+    auth = require('../auth'),
     config = require('../config'),
     cache = require('../cache'),
     constants = require('../constants'),
@@ -28,7 +30,7 @@ var
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
     commentApi = require('./commentApi'),
-    pageApi = require('./pageApi'),
+    webpageApi = require('./webpageApi'),
     userApi = require('./userApi'),
     navigationApi = require('./navigationApi'),
     settingApi = require('./settingApi');
@@ -142,11 +144,11 @@ function getHotArticles(articles) {
 
 module.exports = {
 
-    'GET /': function (req, res, next) {
+    'GET /': function* () {
         var model = {};
         async.waterfall([
             function (callback) {
-                categoryApi.getCategories(callback);
+                categories = categoryApi.$getCategories()
             },
             function (categories, callback) {
                 model.getCategoryName = function (cid) {
