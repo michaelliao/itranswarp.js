@@ -1,14 +1,16 @@
+'use strict';
+
 // attachment api
 
 var
     fs = require('fs'),
-    async = require('async'),
     mime = require('mime'),
     api = require('../api'),
     db = require('../db'),
+    helper = require('../helper'),
     constants = require('../constants'),
-    utils = require('./_utils'),
-    images = require('./_images');
+    images = require('./_images'),
+    json_schema = require('../json_schema');
 
 var
     User = db.user,
@@ -17,198 +19,126 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function checkAttachment(fileObj, expectImage, callback) {
-    if (arguments.length === 2) {
-        callback = expectImage;
-        expectImage = undefined;
+function* $getAttachment(id) {
+    var atta = yield Attachment.$find(id);
+    if (atta === null) {
+        throw api.notFound('Attachment');
     }
-    var result = {
-        name: fileObj.originalFilename,
-        description: fileObj.originalFilename,
-        size: fileObj.size,
-        mime: mime.lookup(fileObj.originalFilename),
-        meta: '',
-        width: 0,
-        height: 0,
-        isImage: false
-    };
-    fs.readFile(fileObj.path, function (err, fcontent) {
-        if (err) {
-            return callback(err);
-        }
-        result.content = fcontent;
-        if (expectImage || result.mime.indexOf('image/') === 0) {
-            // check if image is invalid:
-            return images.getSize(fcontent, function (err, size) {
-                if (err) {
-                    return callback(api.invalidParam('file', 'Invalid image file.'));
-                }
-                console.log('check image size: ' + size.width + ' x ' + size.height);
-                result.isImage = true;
-                result.width = size.width;
-                result.height = size.height;
-                callback(null, result);
-            });
-        }
-        callback(null, result);
+    return atta;
+}
+
+function* $getAttachments(page) {
+    page.total = yield Attachment.$findNumber('count(id)');
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Attachment.$findAll({
+        offset: page.offset,
+        limit: page.limit,
+        order: 'created_at desc'
     });
 }
 
 // create function(callback) with Attachment object returned in callback:
-function createAttachmentTaskInTx(attachmentFileObj, tx, user_id) {
+function* $createAttachment(user_id, name, description, buffer, mime) {
     var
         att_id = next_id(),
-        res_id = next_id();
-    return function (callback) {
-        Resource.create({
-            id: res_id,
-            ref_id: att_id,
-            value: attachmentFileObj.content
-        }, tx, function (err, resource) {
-            if (err) {
-                return callback(err);
-            }
-            Attachment.create({
-                id: att_id,
-                resource_id: resource.id,
-                user_id: user_id,
-                size: attachmentFileObj.size,
-                mime: attachmentFileObj.mime,
-                meta: attachmentFileObj.meta,
-                width: attachmentFileObj.width,
-                height: attachmentFileObj.height,
-                name: attachmentFileObj.name,
-                description: attachmentFileObj.description
-            }, tx, callback);
-        });
-    };
-}
-
-function downloadAttachment(req, res, next) {
-    var size = req.params.size;
-    if (size === undefined) {
-        size = '0';
+        res_id = next_id(),
+        imageInfo = null;
+    try {
+        imageInfo = yield images.$getImageInfo(buffer);
     }
-    Attachment.find(req.params.id, function (err, atta) {
-        if (err) {
-            return next(err);
-        }
-        if (atta === null) {
-            return next(api.notFound('Attachment'));
-        }
-        Resource.find(atta.resource_id, function (err, resource) {
-            if (err) {
-                return next(err);
-            }
-            if (resource === null) {
-                return next(api.notFound('Resource'));
-            }
-            //
-            var
-                mime = atta.mime,
-                data = resource.value,
-                origin_width, origin_height, target_width, resize;
-            if (size !== '0') {
-                origin_width = atta.width;
-                origin_height = atta.height;
-                target_width = origin_width;
-                resize = false;
-                if (size === 's') {
-                    // generate small image: 160 x N
-                    if (origin_width > 160) {
-                        target_width = 160;
-                        resize = true;
-                    }
-                } else if (size === 'm') {
-                    // generate medium image: 320 x N
-                    if (origin_width > 320) {
-                        target_width = 320;
-                        resize = true;
-                    }
-                } else if (size === 'l') {
-                    // generate large image: 640 x N
-                    if (origin_width > 640) {
-                        target_width = 640;
-                        resize = true;
-                    }
-                } else {
-                    return res.send(404, 'Not found.');
-                }
-                if (resize) {
-                    return images.resize(data, origin_width, origin_height, target_width, 0, function (err, stdout, stderr) {
-                        if (err) {
-                            return next(err);
-                        }
-                        res.type('image/jpeg');
-                        return stdout.pipe(res);
-                    });
-                }
-            }
-            res.type(mime);
-            res.send(data);
-        });
-    });
-}
-
-function getAttachment(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
+    catch (e) {
+        // not an image
+        console.log('attachment data is not an image.');
     }
-    Attachment.find(id, tx, function (err, entity) {
-        if (err) {
-            return callback(err);
+    if (imageInfo !== null) {
+        if (['png', 'jpeg', 'gif'].indexOf(imageInfo.format) !== (-1)) {
+            mime = 'image/' + imageInfo.format;
         }
-        if (entity === null) {
-            return callback(api.notFound('Attachment'));
-        }
-        return callback(null, entity);
+    }
+    yield Resource.$create({
+        id: res_id,
+        ref_id: att_id,
+        value: buffer
+    });
+    return yield Attachment.$create({
+        id: att_id,
+        resource_id: res_id,
+        user_id: user_id,
+        size: buffer.length,
+        mime: mime,
+        meta: '',
+        width: imageInfo === null ? 0 : imageInfo.width,
+        height: imageInfo === null ? 0 : imageInfo.height,
+        name: name,
+        description: description
     });
 }
 
-function getAttachments(page, callback) {
-    Attachment.findNumber('count(*)', function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        page.totalItems = num;
-        if (page.isEmpty) {
-            return callback(null, {
-                page: page,
-                attachments: []
-            });
-        }
-        Attachment.findAll({
-            offset: page.offset,
-            limit: page.limit,
-            order: 'created_at desc'
-        }, function (err, attachments) {
-            if (err) {
-                return callback(err);
+function* $downloadDefaultAttachment(id) {
+    yield $downloadAttachment.apply(this, [id, '0']);
+}
+
+function* $downloadAttachment(id, size) {
+    if ('0sml'.indexOf(size) === (-1)) {
+        this.status = 404;
+        return;
+    }
+    var
+        atta = yield $getAttachment(id),
+        mime = atta.mime,
+        resource = yield Resource.$find(atta.resource_id),
+        data, origin_width, origin_height, target_width, resize;
+    if (resource === null) {
+        throw api.notFound('Resource');
+    }
+    data = resource.value;
+    if (size !== '0') {
+        origin_width = atta.width;
+        origin_height = atta.height;
+        target_width = origin_width;
+        resize = false;
+        if (size === 's') {
+            // generate small image: 160 x N
+            if (origin_width > 160) {
+                target_width = 160;
+                resize = true;
             }
-            return callback(null, {
-                page: page,
-                attachments: attachments
-            });
-        });
-    });
+        } else if (size === 'm') {
+            // generate medium image: 320 x N
+            if (origin_width > 320) {
+                target_width = 320;
+                resize = true;
+            }
+        } else if (size === 'l') {
+            // generate large image: 640 x N
+            if (origin_width > 640) {
+                target_width = 640;
+                resize = true;
+            }
+        }
+        if (resize) {
+            data = yield images.$resizeKeepAspect(data, origin_width, origin_height, target_width, 0);
+        }
+    }
+    this.response.type = resize ? 'image/jpeg' : mime;
+    this.body = data;
 }
 
 module.exports = {
 
-    getAttachment: getAttachment,
+    $getAttachment: $getAttachment,
 
-    getAttachments: getAttachments,
+    $getAttachments: $getAttachments,
 
-    checkAttachment: checkAttachment,
+    $createAttachment: $createAttachment,
 
-    createAttachmentTaskInTx: createAttachmentTaskInTx,
+    'GET /files/attachments/:id': $downloadDefaultAttachment,
 
-    'GET /files/attachments/:id': downloadAttachment,
+    'GET /files/attachments/:id/:size': $downloadAttachment,
 
-    'GET /files/attachments/:id/:size': downloadAttachment,
-
-    'GET /api/attachments/:id': function (req, res, next) {
+    'GET /api/attachments/:id': function* (id) {
         /**
          * Get attachment.
          * 
@@ -217,15 +147,10 @@ module.exports = {
          * @return {object} Attachment object.
          * @error {resource:notfound} Attachment was not found by id.
          */
-        getAttachment(req.params.id, function (err, entity) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(entity);
-        });
+        this.body = yield $getAttachment(id);
     },
 
-    'GET /api/attachments': function (req, res, next) {
+    'GET /api/attachments': function* () {
         /**
          * Get attachments by page.
          * 
@@ -233,16 +158,16 @@ module.exports = {
          * @param {number} [page=1]: The page number, starts from 1.
          * @return {object} Attachment objects and page information.
          */
-        var page = utils.getPage(req);
-        getAttachments(page, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(results);
-        });
+        var
+            page = helper.getPage(this.request),
+            attachments = yield $getAttachments(page);
+        this.body = {
+            page: page,
+            attachments: attachments
+        };
     },
 
-    'POST /api/attachments/:id/delete': function (req, res, next) {
+    'POST /api/attachments/:id/delete': function* (id) {
         /**
          * Delete an attachment by its id.
          * 
@@ -252,94 +177,45 @@ module.exports = {
          * @error {resource:notfound} Attachment was not found by id.
          * @error {permission:denied} If current user has no permission.
          */
-        if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
-            return next(api.notAllowed('Permission denied.'));
+        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
+        var
+            atta = yield $getAttachment(id);
+        if (this.request.user.role !== constants.role.ADMIN && this.request.user.id !== atta.user_id) {
+            throw api.notAllowed('Permission denied.');
         }
-        warp.transaction(function (err, tx) {
-            if (err) {
-                return next(err);
-            }
-            async.waterfall([
-                // step: query attachment by id:
-                function (callback) {
-                    getAttachment(req.params.id, tx, callback);
-                },
-                function (atta, callback) {
-                    // check user permission:
-                    if (req.user.role !== constants.ROLE_ADMIN && req.user.id !== atta.user_id) {
-                        return callback(api.notAllowed('Permission denied.'));
-                    }
-                    // delete:
-                    atta.destroy(tx, callback);
-                },
-                function (r, callback) {
-                    // delete all resources:
-                    warp.update('delete from resources where ref_id=?', [req.params.id], tx, callback);
-                }
-            ], function (err, result) {
-                tx.done(err, function (err) {
-                    if (err) {
-                        return next(err);
-                    }
-                    res.send({ id: req.params.id });
-                });
-            });
-        });
+        // delete:
+        yield atta.$destroy();
+        // delete all resources:
+        yield warp.$update('delete from resources where ref_id=?', [id]);
+        this.body = {
+            id: id
+        };
     },
 
-    'POST /api/attachments': function (req, res, next) {
+    'POST /api/attachments': function* () {
         /**
          * Create a new attachment.
          * 
          * @name Create Attachment
          * @param {string} [name]: Name of the attachment, default to filename.
+         * @param {string} [mime=null]: Mime of the attachment, e.g. "application/pdf", all lowercase.
          * @param {string} [description]: Description of the attachment, default to filename.
-         * @param {file} file: File to upload.
+         * @param {data} data: File data as base64.
          * @return {object} The created attachment object.
          * @error {permission:denied} If current user has no permission.
          */
-        if (utils.isForbidden(req, constants.ROLE_CONTRIBUTOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
+        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
         var
-            expectImage = req.query.image === 'true',
-            includeUrl = req.query.url === 'true',
-            name = utils.getParam('name', '', req),
-            description = utils.getParam('description', '', req),
-            file = req.files.file;
-        if (!file) {
-            return next(api.invalidParam('file'));
-        }
-        if (!name) {
-            name = file.name;
-        }
-
-        console.log('file uploaded: ' + file.name);
-
-        checkAttachment(file, expectImage, function (err, attachFileObject) {
-            if (err) {
-                return next(err);
-            }
-            // override name:
-            attachFileObject.name = name;
-            attachFileObject.description = description;
-            warp.transaction(function (err, tx) {
-                if (err) {
-                    return next(err);
-                }
-                var fn = createAttachmentTaskInTx(attachFileObject, tx, req.user.id);
-                fn(function (err, atta) {
-                    tx.done(err, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        if (includeUrl) {
-                            atta.url = '/files/attachments/' + atta.id;
-                        }
-                        return res.send(atta);
-                    });
-                });
-            });
-        });
+            buffer,
+            data = this.request.body;
+        json_schema.validate('createAttachment', data);
+        buffer = new Buffer(data.data, 'base64');
+        this.body = yield $createAttachment(
+            this.request.user.id,
+            data.name.trim(),
+            data.description.trim(),
+            buffer,
+            data.mime || 'application/octet-stream'
+        );
     }
 };
