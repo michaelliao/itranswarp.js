@@ -2,16 +2,16 @@
 
 // api test fixture which expose the following functions:
 // 
-// sql(sql, params, fn) - execute sql with parameters, and callback.
-// get(path, params, fn)
-// post(path, params, fn)
-// upload(path, params, fn)
+// yield $sql(sql, params) - execute sql with parameters.
+// yield $get(role, path, params)
+// yield $post(role, path, params)
+// yield $download(path, params)
 
 var config = require('../config');
 
 var
     _ = require('lodash'),
-    async = require('async'),
+    co = require('co'),
     fs = require('fs'),
     util = require('util'),
     thunkify = require('thunkify'),
@@ -50,7 +50,7 @@ function _buildUrl(method, path, params) {
     return url;
 }
 
-function _generatePassword(email) {
+function generatePassword(email) {
     return crypto.createHash('sha1').update(email + ':password').digest('hex');
 }
 
@@ -63,7 +63,7 @@ function _buildHeaders(method, role) {
         };
     if (typeof(role) === 'number' && (role >= 0)) {
         email = emails['' + role];
-        passwd = _generatePassword(email);
+        passwd = generatePassword(email);
         headers['Authorization'] = 'Basic ' + new Buffer(email + ':' + passwd).toString('base64');
         console.log('    Authorization: ' + headers.Authorization);
     }
@@ -150,7 +150,7 @@ _.each(emails, function (email, roleId) {
     var
         id = next_id(),
         name = email.substring(0, email.indexOf('@')),
-        passwd = _generatePassword(email),
+        passwd = generatePassword(email),
         now = Date.now();
     // password is hash again in database:
     passwd = crypto.createHash('sha1').update(id + ':' + passwd).digest('hex');
@@ -161,24 +161,15 @@ _.each(emails, function (email, roleId) {
                                id,      roleId, name,   email,  passwd, 1,        0,            '/t.png',  now,        now,        0));
 });
 
-function initDatabase(callback) {
+function* $initDatabase() {
     console.log('setup: init database first...');
-    async.series(_.map(init_sqls, function (s) {
-        console.log('>>> SQL: ' + s);
-        return function (callback) {
-            warp.query(s, callback);
-        };
-    }), function (err, results) {
-        if (err) {
-            callback(err);
-        }
-        else {
-            callback(null, 'init database ok');
-        }
-    });
+    var i, sql;
+    for (i=0; i<init_sqls.length; i++) {
+        sql = init_sqls[i];
+        console.log('>>> SQL: ' + sql);
+        yield warp.$query(sql);
+    }
 }
-
-var $initDatabase = thunkify(initDatabase);
 
 function* $get(role, path, params) {
     return yield $http('GET', role, path, params);
@@ -228,10 +219,16 @@ module.exports = {
     },
 
     setup: function (done) {
-        initDatabase(function (err, r) {
+        co(function* () {
+            yield $initDatabase();
+        }).then(function (result) {
+            done();
+        }, function (err) {
             done(err);
         });
     },
+
+    generatePassword: generatePassword,
 
     $get: $get,
 
@@ -262,5 +259,6 @@ module.exports = {
 
     $download: thunkify(download),
 
-    $sql: thunkify(warp.query)
+    warp: warp
+
 };
