@@ -1,12 +1,14 @@
+'use strict';
+
 // setting api
 
 var
     _ = require('lodash'),
-    async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils'),
-    constants = require('../constants');
+    helper = require('../helper'),
+    constants = require('../constants'),
+    json_schema = require('../json_schema');
 
 var
     Setting = db.setting,
@@ -19,114 +21,88 @@ var website = {
     description: 'Powered by iTranswarp.js',
     keywords: '',
     custom_header: '<!-- custom header -->',
-    custom_footer: '',
+    custom_footer: '<!-- custom footer -->',
     xmlns: ''
 };
 
 var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
 
-function getNavigationMenus(callback) {
-    callback(null, [{
+function* $getNavigationMenus() {
+    return [{
         name: 'Custom',
         url: 'http://'
-    }]);
+    }];
 }
 
-function getSettings(group, callback) {
+function* $getSettings(group) {
     // get settings by group, return object with key - value,
     // prefix of key has been removed:
     // 'group1:key1' ==> 'key1'
-    Setting.findAll({
-        where: '`group`=?',
-        params: [group]
-    }, function (err, entities) {
-        if (err) {
-            return callback(err);
-        }
-        var
-            obj = {},
-            n = group.length + 1;
-        _.each(entities, function (s) {
-            obj[s.key.substring(n)] = s.value;
-        });
-        return callback(null, obj);
+    var
+        settings = yield Setting.$findAll({
+            where: '`group`=?',
+            params: [group]
+        }),
+        obj = {},
+        n = group.length + 1;
+    _.each(settings, function (s) {
+        obj[s.key.substring(n)] = s.value;
     });
+    return obj;
 }
 
-function getSetting(key, defaultValue, callback) {
-    if (arguments.length === 2) {
-        callback = defaultValue;
-        defaultValue = undefined;
-    }
-    Setting.find({
+function* $getSetting(key, defaultValue) {
+    var setting = yield Setting.$find({
         where: '`key`=?',
         params: [key]
-    }, function (err, s) {
-        if (err) {
-            return callback(err);
-        }
-        if (s === null) {
-            return callback(null, defaultValue);
-        }
-        return callback(null, s.value);
     });
+    if (setting === null) {
+        return defaultValue === undefined ? null : defaultValue;
+    }
+    return setting.value;
 }
 
-function setSetting(key, value, callback) {
+function* $setSetting(key, value) {
     var
         m = key.match(RE_KEY),
         group;
     if (m === null) {
-        return callback(api.invalidParam('key'));
+        throw api.invalidParam('key');
     }
     group = m[1];
-    async.series([
-        function (callback) {
-            warp.update('delete from settings where `key`=?', [key], callback);
-        },
-        function (callback) {
-            Setting.create({
-                group: group,
-                key: key,
-                value: value
-            }, callback);
-        }
-    ], function (err, results) {
-        callback(err);
+    yield warp.$update('delete from settings where `key`=?', [key]);
+    yield Setting.$create({
+        group: group,
+        key: key,
+        value: value
     });
 }
 
-function setSettings(group, settings, callback) {
-    var tasks = [function (callback) {
-        warp.update('delete from settings where `group`=?', [group], callback);
-    }];
-    _.each(settings, function (value, key) {
-        tasks.push(function (callback) {
-            Setting.create({
+function* $setSettings(group, settings, callback) {
+    yield warp.$update('delete from settings where `group`=?', [group]);
+    var key;
+    for (key in settings) {
+        if (settings.hasOwnProperty(key)) {
+            yield Setting.$create({
                 group: group,
                 key: group + ':' + key,
-                value: value
-            }, callback);
-        });
-    });
-    async.series(tasks, function (err, results) {
-        return callback(err);
-    });
+                value: settings[key]
+            });
+        }
+    }
 }
 
-function getSettingsByDefaults(name, defaults, callback) {
-    getSettings(name, function (err, settings) {
-        if (err) {
-            return callback(err);
+function* $getSettingsByDefaults(name, defaults) {
+    var
+        settings = yield $getSettings(name),
+        key,
+        s = {};
+    for (key in defaults) {
+        if (defaults.hasOwnProperty(key)) {
+            s[key] = settings[key] || defaults[key];
         }
-        var key, s = {};
-        for (key in defaults) {
-            if (defaults.hasOwnProperty(key)) {
-                s[key] = settings[key] || defaults[key];
-            }
-        }
-        return callback(null, s);
-    });
+    }
+    return s;
 }
 
 module.exports = {
@@ -135,16 +111,16 @@ module.exports = {
         website: website
     },
 
-    getNavigationMenus: getNavigationMenus,
+    $getNavigationMenus: $getNavigationMenus,
 
-    getSettings: getSettings,
+    $getSettings: $getSettings,
 
-    getSetting: getSetting,
+    $getSetting: $getSetting,
 
-    setSetting: setSetting,
+    $setSetting: $setSetting,
 
-    setSettings: setSettings,
+    $setSettings: $setSettings,
 
-    getSettingsByDefaults: getSettingsByDefaults
+    $getSettingsByDefaults: $getSettingsByDefaults
 
 };
