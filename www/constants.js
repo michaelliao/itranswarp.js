@@ -1,3 +1,5 @@
+'use strict';
+
 // define constants:
 
 module.exports = {
@@ -8,6 +10,10 @@ module.exports = {
         CONTRIBUTOR: 100,
         SUBSCRIBER:  10000,
         GUEST:       100000000
+    },
+
+    signin: {
+        LOCAL: 'local'
     },
 
     // cache keys:
