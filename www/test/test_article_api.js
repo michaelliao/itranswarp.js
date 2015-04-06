@@ -1,3 +1,5 @@
+'use strict';
+
 // test article api:
 
 var fs = require('fs');

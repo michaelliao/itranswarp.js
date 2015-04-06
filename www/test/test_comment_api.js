@@ -1,3 +1,5 @@
+'use strict';
+
 // test category api:
 
 var

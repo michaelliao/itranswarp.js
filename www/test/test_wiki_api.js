@@ -1,3 +1,5 @@
+'use strict';
+
 // test wiki api:
 
 var fs = require('fs');
