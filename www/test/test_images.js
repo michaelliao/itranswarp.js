@@ -1,3 +1,5 @@
+'use strict';
+
 // test tags:
 
 var fs = require('fs');
@@ -10,7 +12,7 @@ var images = require('../controllers/_images');
 
 describe('#images', function () {
 
-    it('#calcScaleSize', function () {
+    it('calcScaleSize', function () {
         var image_sizes = [
             // [ori_w, ori_h, res_w, res_h, keepAspect, expected_w, expected_h, resized]
             // square:
@@ -88,71 +90,44 @@ describe('#images', function () {
         });
     });
 
-    it('#get-image-size', function (done) {
-        images.getSize(fs.readFileSync('./test/res-image.jpg'), function (err, size) {
-            should(err).not.be.ok;
-            size.width.should.equal(1280);
-            size.height.should.equal(720);
-            done();
-        });
+    it('get image size ok', function* () {
+        var info = yield images.$getImageInfo(fs.readFileSync('./test/res-image.jpg'));
+        should(info).be.ok;
+        info.format.should.equal('jpeg');
+        info.width.should.equal(1280);
+        info.height.should.equal(720);
     });
 
-    it('#get-image-size-with-bad-format', function (done) {
-        images.getSize(fs.readFileSync('./test/res-bad-image.jpg'), function (err, size) {
-            err.should.be.ok;
-            done();
-        });
+    it('get image size with bad format', function* () {
+        try {
+            yield images.$getImageInfo(fs.readFileSync('./test/res-bad-image.jpg'));
+        }
+        catch (e) {
+            should(e.error).be.ok;
+            e.error.should.equal('parameter:invalid');
+        }
     });
 
-    it('#resize-small', function (done) {
+    it('resize small', function* () {
         var imgData = fs.readFileSync('./test/res-image.jpg');
-        images.resize(imgData, 1280, 720, 480, 270, function (err, stdout, stderr) {
-            should(err).not.be.ok;
-            ws = fs.createWriteStream('./test/output/test-resize-smaller-480x270.jpg');
-            stdout.pipe(ws);
-            stdout.on('end', function () {
-                ws.close();
-                // check resized image:
-                images.getSize('./test/output/test-resize-smaller-480x270.jpg', function (err, size) {
-                    should(err).not.be.ok;
-                    size.width.should.equal(480);
-                    size.height.should.equal(270);
-                    done();
-                });
-            });
-        });
-    }),
+        var resizedData = yield images.$resizeKeepAspect(imgData, 1280, 720, 480, 270);
+        // check resized image:
+        var resizedInfo = yield images.$getImageInfo(resizedData);
+        should(resizedInfo).be.ok;
+        resizedInfo.format.should.equal('jpeg');
+        resizedInfo.width.should.equal(480);
+        resizedInfo.height.should.equal(270);
+    });
 
-    it('#resize-large', function (done) {
+    it('resize large', function* () {
         var imgData = fs.readFileSync('./test/res-image.jpg');
-        images.resize(imgData, 1280, 720, 1920, 0, { stream: false }, function (err, data) {
-            should(err).not.be.ok;
-            data.should.be.ok;
-            fs.writeFileSync('./test/output/test-resize-keep-1280x720.jpg', data);
-            // check resized image:
-            images.getSize(data, function (err, size) {
-                should(err).not.be.ok;
-                size.width.should.equal(1280);
-                size.height.should.equal(720);
-                done();
-            });
-        });
-    }),
-
-    it('#resize-large-force', function (done) {
-        var imgData = fs.readFileSync('./test/res-image.jpg');
-        images.resize(imgData, 1280, 720, 1920, 0, { stream: false, force: true }, function (err, data) {
-            should(err).not.be.ok;
-            data.should.be.ok;
-            fs.writeFileSync('./test/output/test-resize-larger-1920x1080.jpg', data);
-            // check resized image:
-            images.getSize(data, function (err, size) {
-                should(err).not.be.ok;
-                size.width.should.equal(1920);
-                size.height.should.equal(1080);
-                done();
-            });
-        });
-    })
+        var resizedData = yield images.$resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
+        // check resized image:
+        var resizedInfo = yield images.$getImageInfo(resizedData);
+        should(resizedInfo).be.ok;
+        resizedInfo.format.should.equal('jpeg');
+        resizedInfo.width.should.equal(1920);
+        resizedInfo.height.should.equal(1080);
+    });
 
 });
