@@ -1,0 +1,42 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/category/{{ category.id }}" />
+{% endblock %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block main %}
+
+{% for a in articles %}
+    <div class="x-article">
+        <div class="x-article-title">
+            <h4><a href="/article/{{ a.id }}">{{ a.name }}</a></h4>
+        </div>
+        <div class="x-article-cover-small">
+            <a href="/article/{{ a.id }}" style="background-image:url(/files/attachments/{{ a.cover_id }}/s)"></a>
+        </div>
+        <div class="x-article-right">
+            <div class="x-article-info">
+                <a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.reads }}
+            </div>
+            <div class="x-article-description">
+                <p>{{ a.description }}</p>
+                <p><a href="/article/{{ a.id }}" class="x-readmore">{{ _('Read more') }} »</a></p>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+    <div class="x-page">
+        {{ pagination(page, '?page=') }}
+    </div>
+
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+        <h4>关于作者</h4>
+        <iframe width="278" height="330" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=zh_cn&width=278&height=330&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=1&uid=1658384301&verifier=078cedea&colors=0088cc,ffffff,333333,0082cb,d14836&dpc=1&rnd={{ __time__ }}"></iframe>
+    </div>
+{% endblock %}

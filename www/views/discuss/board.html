@@ -1,0 +1,73 @@
+{% extends '../base.html' %}
+
+{% block meta %}
+    <meta property="x-nav" content="/discuss" />
+{% endblock %}
+
+{% block title %}{{ board.name }}{% endblock %}
+
+{% block main %}
+
+    <ul class="breadcrumb">
+        <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
+        <li class="active">{{ board.name }}</li>
+    </ul>
+
+    <div class="btn-toolbar" style="text-align:right;">
+        <a href="/discuss" class="btn" style="float:left"><i class="icon-arrow-left"></i> {{ _('Back') }}</a>
+        <a href="/discuss/{{ board.id }}/topics/create" class="btn btn-success"><i class="icon-plus icon-white"></i> {{ _('New Topic') }}</a>
+    </div>
+
+    <table class="table table-bordered table-hover">
+    {% for t in topics %}
+        <tr>
+            <td>
+                <div class="x-discuss-item">
+                    <div class="x-discuss-item-right">
+                        <img class="x-user-image-small" src="{{ t.user.image_url }}">
+                    </div>
+                    <div class="x-discuss-item-left">
+                        <div class="x-discuss-header">
+                            <a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a>
+                        </div>
+                        <div class="x-discuss-info">
+                            {{ t.user.name }} 发表于 <span class="x-smartdate" date="{{ t.created_at }}">...</span> 最后更新于 <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+
+    <div class="x-page">
+        {{ pagination(page, '?page=') }}
+    </div>
+
+{% endblock %}
+
+{% block sidebar %}
+    <div class="x-sidebar-section">
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- lxf-250x250 -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:250px;height:250px"
+     data-ad-client="ca-pub-6727358730461554"
+     data-ad-slot="9529040712"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- lxf-250x250 -->
+<ins class="adsbygoogle"
+     style="display:inline-block;width:250px;height:250px"
+     data-ad-client="ca-pub-6727358730461554"
+     data-ad-slot="9529040712"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+{% endblock %}

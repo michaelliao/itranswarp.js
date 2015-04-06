@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
+
+<!--
+{% macro pagination(page_obj, url) %}
+    {% set pageIndex = page_obj.pageIndex %}
+    {% set range = page_obj.range() %}
+    <div class="x-pagination pagination">
+        <ul>
+        {% if page_obj.pageIndex > 1 %}
+            <li><a href="{{ url|safe }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
+        {% endif %}
+        {% for index in range %}
+            {% if index == pageIndex %}
+                <li class="active"><span>{{ index }}</span></li>
+            {% elif index %}
+                <li><a href="{{ url|safe }}{{ index }}">{{ index }}</a></li>
+            {% else %}
+                <li class="disabled"><span>...</span></li>
+            {% endif %}
+        {% endfor %}
+            {% if page_obj.pageIndex < page_obj.totalPages %}
+                <li><a href="{{ url|safe }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endmacro %}
+
+{% macro makeComments(url, comments) %}
+
+<form class="x-comment-box x-auth-not-signed">
+    <div class="x-comment-signin">
+        <p>请登录后发表评论：</p>
+    {% for s in __signins__ %}
+        <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+    {% endfor %}
+    </div>
+</form>
+
+<form url="{{ url }}" onsubmit="return create_comment(this);" class="x-comment-box x-auth-signed x-comment-form">
+    <div class="x-comment-user-img">
+        <img src="about:blank" class="x-user-image x-user-image-small" />
+    </div>
+    <div class="x-comment-input-area">
+        <div class="x-comment-prompt">
+            <span class="x-user-name"><script> document.write(g_user_name); </script></span> <span class="x-comment-error"></span>
+        </div>
+        <div class="x-comment-input">
+            <textarea name="content" placeholder="{{ _('Say something') }}..." rows="4"></textarea>
+        </div>
+        <div class="x-comment-submit">
+            <span>评论将自动同步至微博，请发表有价值的信息。</span>
+            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> {{ _('Comment') }}</button>
+        </div>
+    </div>
+</form>
+
+<div class="x-comments-list"></div>
+
+<script>
+
+$(function() {
+    var $list = $('div.x-comments-list');
+    {% for c in comments %}
+    $list.append(addComment({
+        'id': '{{ c.id }}',
+        'user_id': '{{ c.user_id }}',
+        'user_name': '{{ c.user_name }}',
+        'user_image_url': '{{ c.user_image_url }}',
+        'created_at': {{ c.created_at }},
+        'content': {{ c.content|json|safe }}
+    }));
+    {% endfor %}
+    {% if __user__ and __user__.role===0 %}
+    $('a.x-delete-comment').css('display', '');
+    {% endif %}
+});
+
+</script>
+
+{% endmacro %}
+-->
+
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}<!-- block title  -->{% endblock %} - {{ __website__.name }}</title>
+    <meta name="keywords" content="{{ __website__.keywords }}" />
+    <meta name="description" content="{{ __website__.description }}" />
+    {% block meta %}<!-- block meta  -->{% endblock %}
+    <!--[if lt IE 9]>
+        <script src="/static/themes/default/static/js/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="/static/themes/default/css/itranswarp-theme-default.css" />
+    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+    <style>
+{% if __user__ %}
+        .x-auth-not-signed { display: none; }
+{% else %}
+        .x-auth-signed { display: none; }
+{% endif %}
+    </style>
+    <script>
+        var g_time = parseFloat('{{ __time__ }}');
+//{% if __user__ %}
+        var g_user_name = '{{ __user__.name|addslashes }}';
+        var g_user_image = '{{ __user__.image_url }}';
+//{% else %}
+        var g_user_name = '';
+        var g_user_image = 'about:blank';
+//{% endif %}
+    </script>
+    <script src="/static/themes/default/js/jquery.min.js"></script>
+    <script src="/static/themes/default/js/bootstrap.min.js"></script>
+    <script src="/static/themes/default/js/itranswarp.js"></script>
+    <script src="/static/themes/default/js/itranswarp.theme.default.js"></script>
+    {% block beforehead %}<!-- before head  -->{% endblock %}
+<!-- BEGIN custom_header -->
+{{ __website__.custom_header|safe }}
+<!-- END custom_header -->
+</head>
+<body>
+    <div class="x-goto-top">
+        <div class="x-arrow"></div>
+        <div class="x-stick"></div>
+    </div>
+    <div id="header">
+        <div class="x-top"></div>
+        <div class="container" style="height:100px;">
+            <div class="row">
+                <div class="span6">
+                    <div style="margin:24px 0 10px 0;"><a href="/" style="font-size:28px;font-weight:bold;">{{ __website__.name }}</a></div>
+                    <div>{{ __website__.description }}</div>
+                </div>
+                <div class="span6">
+                    <div class="x-head-right pull-right" style="margin-top:20px;">
+                        <!-- if sign in -->
+                        <p class="x-auth-signed"><img src="about:blank" class="x-user-image x-user-image-small" style="margin-right:12px;" />{{ _('Welcome') }}, <span class="x-user-name"><script> document.write(g_user_name); </script></span> | <a href="/auth/signout">{{ _('Sign Out') }}</a></p>
+                        <!-- else -->
+                    {% for s in __signins__ %}
+                        <p class="x-auth-not-signed"><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+                    {% endfor %}
+                        <!-- end signin -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="navbar" class="navbar navbar-static-top navbar-blue">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a href="/" class="brand x-auto-display" style="display:none;">{{ __website__.name }}</a>
+                    <ul id="main-nav-bar" class="nav">
+                        <li><a href="/">{{ _('Home') }}</a></li>
+{% for nav in __navigations__ %}
+                        <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+{% endfor %}
+                    </ul>
+                    <ul class="nav pull-right x-auto-display" style="display:none">
+                        <li class="navbar-text">&nbsp;</li>
+                        <!-- if sign in -->
+                        <li class="dropdown x-auth-signed">
+                            <a href="javascript:void(0)" class="dropdown-toggle x-user-dropdown" data-toggle="dropdown"><span class="x-user-name"><script> document.write(g_user_name); </script></span> <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a rel="nofollow" href="/me/message"><i class="icon-comment"></i> Messages</a></li>
+                                <li><a rel="nofollow" href="/me/profile"><i class="icon-edit"></i> Profile</a></li>
+                                <li><a rel="nofollow" href="/auth/signout"><i class="icon-off"></i> {{ _('Sign Out') }}</a></li>
+                            </ul>
+                        </li>
+                        <!-- else -->
+                        <li class="navbar-text x-auth-not-signed">&nbsp;{{ _('Please sign in') }}&nbsp;</li>
+                    {% for s in __signins__ %}
+                        <li class="x-auth-not-signed"><a href="#0" onclick="authFrom('{{ s }}')" class="x-signin x-signin-small" style="width:24px; background-image:url(/static/themes/default/img/signin.{{ s }}.small.png);">&nbsp;</a></li>
+                    {% endfor %}
+                        <!-- end sign in -->
+                    </ul>
+
+                    <form class="navbar-search pull-right" target="_blank" action="/search" onsubmit="return $.trim($('input.search-query').val())!==''">
+                        <input type="text" name="q" maxlength="50" class="search-query x-search-query" placeholder="{{ _('Search') }}" style="width:80px;" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div class="container x-main">
+{% block container %}
+        <div class="row">
+            <div class="span8">
+                <div id="main">
+                    <!-- block main -->
+                    {% block main %}{% endblock %}
+                    <!-- // block main -->
+                </div><!-- // main -->
+            </div>
+            <div class="span4">
+                <div class="x-sidebar-right">
+                    <!-- block sidebar -->
+                    {% block sidebar %}{% endblock %}
+                    <!-- // block sidebar -->
+                </div>
+            </div>
+        </div>
+{% endblock %}
+    </div>
+
+    <div id="footer">
+{% if __website__.custom_footer %}
+<!-- BEGIN custom_footer -->
+{{ __website__.custom_footer|safe }}
+<!-- END custom_footer -->
+{% else %}
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                    <hr/>
+                    <div style="text-align:center;">
+                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endif %}
+    </div>
+</body>
+</html>
