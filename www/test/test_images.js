@@ -2,13 +2,11 @@
 
 // test images:
 
-var fs = require('fs');
-
 var
     _ = require('lodash'),
-    should = require('should');
-
-var images = require('../controllers/_images');
+    fs = require('fs'),
+    should = require('should'),
+    images = require('../controllers/_images');
 
 describe('#images', function () {
 
