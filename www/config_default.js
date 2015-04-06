@@ -1,9 +1,12 @@
+'use strict';
+
 /*
  * This is the default configuration for iTranswarp.js.
  * 
  * DO NOT change it. Instead, make a copy and name to "config_override.js",
  * then edit the settings.
  */
+
 module.exports = {
     session: {
         // sync comments to SNS?
@@ -29,7 +32,11 @@ module.exports = {
         // maximum concurrent db connections:
         connectionLimit: 20
     },
+    cdn: {
+        static_prefix: ''
+    },
     cache: {
+        prefix: 'IT@',
         // host or ip address of memcached:
         host: '127.0.0.1',
         // port of memcached, default to 11211:
@@ -68,5 +75,7 @@ module.exports = {
         //     'app_secret': 'your-app-secret',
         //     'redirect_uri': 'http://your-redirect-uri/config/in/facebook'
         // }
-    }
+    },
+    // END:
+    END: 'END'
 };
