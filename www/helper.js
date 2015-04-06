@@ -3,6 +3,7 @@
 // helper:
 
 var
+    _ = require('lodash'),
     marked = require('marked'),
     htmlparser = require('htmlparser2'),
     api = require('./api'),
@@ -181,7 +182,7 @@ module.exports = {
     checkPermission: function (request, expectedRole) {
         if (!request.user || (request.user.role > expectedRole)) {
             console.log('check permission failed: expected = ' + expectedRole + ', actual = ' + (request.user ? request.user.role : 'null'));
-            throw api.notAllowed();
+            throw api.notAllowed('Do not have permission.');
         }
     },
 
