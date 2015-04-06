@@ -1,6 +1,6 @@
 'use strict';
 
-// test tags:
+// test images:
 
 var fs = require('fs');
 
