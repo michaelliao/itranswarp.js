@@ -93,55 +93,59 @@ describe('#attachment', function () {
             parseInt(ds.headers['content-length'], 10).should.approximately(25269, 1000);
         });
 
-        it('upload image but says text/plain', function (done) {
+        it('upload text as text/plain', function* () {
             // create attachment:
-            remote.post(remote.contributor, '/api/attachments?image=true', {
+            var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
                 name: ' Text   ',
-                description: '   blablabla\nhaha...  \n   ',
-                file: remote.createReadStream('./test/res-plain.txt')
-            }, function (r) {
-                should(r.error).be.ok;
-                r.error.should.equal('parameter:invalid');
-                r.data.should.equal('file');
-                done();
+                description: '   bla bla bla...  \n   ',
+                mime: 'text/plain',
+                data: remote.readFileSync('res-plain.txt').toString('base64')
             });
+            remote.shouldNoError(r);
+            r.name.should.equal('Text');
+            r.description.should.equal('bla bla bla...');
+            r.mime.should.equal('text/plain');
         });
 
-        it('upload text file by contributor then delete', function (done) {
+        it('upload image but said text/plain', function* () {
             // create attachment:
-            remote.post(remote.contributor, '/api/attachments', {
-                name: ' Text   ',
-                description: '   blablabla\nhaha...  \n   ',
-                file: remote.createReadStream('./test/res-plain.txt')
-            }, function (r) {
-                r.name.should.equal('Text');
-                r.width.should.equal(0);
-                r.height.should.equal(0);
-                r.size.should.equal(25197);
-                // try delete by another users:
-                var tasks = _.map([roles.SUBSCRIBER, remote.editor], function (user) {
-                    return function (callback) {
-                        remote.post(user, '/api/attachments/' + r.id + '/delete', {}, function (r2) {
-                            should(r2).be.ok;
-                            should(r2.error).be.ok;
-                            r2.error.should.equal('permission:denied');
-                            r2.message.should.be.ok;
-                            callback();
-                        });
-                    };
-                });
-                async.parallel(tasks, function (err, results) {
-                    should(err===null).be.ok;
-                    // delete by admin:
-                    remote.post(remote.admin, '/api/attachments/' + r.id + '/delete', {}, function (r3) {
-                        should(r3).be.ok;
-                        should(r3.error).not.be.ok;
-                        should(r3.id).be.ok;
-                        r3.id.should.equal(r.id);
-                        done();
-                    });
-                });
+            var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
+                name: ' Fake Text   ',
+                description: '   bla bla bla...  \n   ',
+                mime: 'text/plain',
+                data: remote.readFileSync('res-image.jpg').toString('base64')
             });
+            remote.shouldNoError(r);
+            r.name.should.equal('Fake Text');
+            r.description.should.equal('bla bla bla...');
+            r.mime.should.equal('image/jpeg');
+        });
+
+        it('upload text file by contributor then delete it', function* () {
+            // create attachment:
+            var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
+                name: ' Text To Delete   ',
+                description: '   bla bla bla...  \n   ',
+                data: remote.readFileSync('res-image.jpg').toString('base64')
+            });
+            remote.shouldNoError(r);
+            var r2 = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
+                name: ' Text2 To Delete   ',
+                description: '   bla bla bla...  \n   ',
+                data: remote.readFileSync('res-image.jpg').toString('base64')
+            });
+            remote.shouldNoError(r2);
+            // try delete by another users:
+            var d1 = yield remote.$post(roles.SUBSCRIBER, '/api/attachments/' + r.id + '/delete');
+            remote.shouldHasError(d1, 'permission:denied');
+            // try delete by owner:
+            var d2 = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments/' + r.id + '/delete');
+            remote.shouldNoError(d2);
+            d2.id.should.equal(r.id);
+            // try delete by admin:
+            var d3 = yield remote.$post(roles.ADMIN, '/api/attachments/' + r2.id + '/delete');
+            remote.shouldNoError(d3);
+            d3.id.should.equal(r2.id);
         });
 
     });
