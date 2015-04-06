@@ -1,11 +1,12 @@
+'use strict';
+
 // wiki api
 
 var
     _ = require('lodash'),
-    async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils'),
+    helper = require('../helper'),
     images = require('./_images'),
     search = require('../search/search'),
     constants = require('../constants');
@@ -32,7 +33,7 @@ function indexWiki(r) {
             tags: r.tags || '',
             name: r.name,
             description: r.description || '',
-            content: utils.html2text(utils.md2html(r.content)),
+            content: helper.html2text(helper.md2html(r.content, true)),
             created_at: r.created_at,
             updated_at: r.updated_at,
             url: '/wiki/' + (r.wiki_id ? r.wiki_id + '/' : '') + r.id,

@@ -5,10 +5,7 @@
 var
     _ = require('lodash'),
     api = require('../api'),
-    db = require('../db'),
-    helper = require('../helper'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    db = require('../db');
 
 var
     Setting = db.setting,

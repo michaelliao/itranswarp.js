@@ -1,9 +1,10 @@
+'use strict';
+
 // manage.js
 
 var
     _ = require('lodash'),
-    fs = require('fs'),
-    async = require('async');
+    fs = require('fs');
 
 var
     api = require('../api'),
@@ -22,7 +23,7 @@ var
     commentApi = require('./commentApi'),
     categoryApi = require('./categoryApi'),
     articleApi = require('./articleApi'),
-    pageApi = require('./pageApi'),
+    webpageApi = require('./webpageApi'),
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
     attachmentApi = require('./attachmentApi'),
@@ -30,7 +31,7 @@ var
     userApi = require('./userApi'),
     settingApi = require('./settingApi');
 
-var apisList = [commentApi, categoryApi, articleApi, pageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
+var apisList = [commentApi, categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
 function getAllNavigationMenus(callback) {
     var fns = _.map(apisList, function (theApi) {

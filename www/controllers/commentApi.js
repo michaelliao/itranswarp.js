@@ -1,8 +1,9 @@
+'use strict';
+
 // comment api
 
 var
     _ = require('lodash'),
-    async = require('async'),
     api = require('../api'),
     db = require('../db'),
 

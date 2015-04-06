@@ -1,13 +1,12 @@
-// user api
+'use strict';
+
+// navigation api
 
 var
     _ = require('lodash'),
-    async = require('async');
-var
     api = require('../api'),
     db = require('../db'),
-    auth = require('./_auth'),
-    utils = require('./_utils'),
+    helper = require('../helper'),
     config = require('../config'),
     cache = require('../cache'),
     constants = require('../constants');
@@ -17,128 +16,67 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function getNavigation(id, callback) {
-    Navigation.find(id, function (err, nav) {
-        if (err) {
-            return callback(err);
-        }
-        if (nav === null) {
-            return callback(api.notFound('Navigation'));
-        }
-        callback(null, nav);
-    });
+function* $getNavigation(id) {
+    var navigation = yield Navigation.$find(id);
+    if (navigation === null) {
+        throw api.notFound('Navigation');
+    }
+    return navigation;
 }
 
-function getNavigations(callback) {
-    Navigation.findAll({
+function* $getNavigations() {
+    return yield Navigation.$findAll({
         order: 'display_order'
-    }, callback);
-}
-
-function sort(ids, callback) {
-    getNavigations(function (err, entities) {
-        var i, entity, pos;
-        if (err) {
-            return callback(err);
-        }
-        if (!Array.isArray(ids)) {
-            ids = [ids];
-        }
-        if (entities.length !== ids.length) {
-            return callback(api.invalidParam('id', 'Invalid id list.'));
-        }
-        for (i = 0; i < entities.length; i++) {
-            entity = entities[i];
-            pos = ids.indexOf(entity.id);
-            if (pos === (-1)) {
-                return callback(api.invalidParam('id', 'Invalid id parameters.'));
-            }
-            entity.display_order = pos;
-        }
-        warp.transaction(function (err, tx) {
-            if (err) {
-                return callback(err);
-            }
-            async.series(_.map(entities, function (entity) {
-                return function (callback) {
-                    entity.update(['display_order', 'updated_at', 'version'], tx, callback);
-                };
-            }), function (err, result) {
-                tx.done(err, function (err) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    return callback(null, { sort: true });
-                });
-            });
-        });
     });
 }
 
 module.exports = {
 
-    getNavigation: getNavigation,
+    $getNavigation: $getNavigation,
 
-    getNavigations: getNavigations,
+    $getNavigations: $getNavigations,
 
-    'GET /api/navigations': function (req, res, next) {
+    'GET /api/navigations': function* () {
         /**
          * Get all navigations.
-         *
+         * 
          * @name Get Navigations
          * @return {object} Result like {"navigations": [navigation array]}
          */
-        getNavigations(function (err, navigations) {
-            if (err) {
-                return next(err);
-            }
-            return res.send({ navigations: navigations });
-        });
+        this.body = {
+            navigations: yield $getNavigations()
+        };
     },
 
-    'POST /api/navigations': function (req, res, next) {
+    'POST /api/navigations': function* () {
         /**
          * Create a navigation.
-         *
+         * 
          * @name Create Navigation
          * @param {string} name: The name of the navigation.
          * @param {string} url: The URL of the navigation.
          * @return {object} The navigation object.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var name, url;
-        try {
-            name = utils.getRequiredParam('name', req);
-            url = utils.getRequiredParam('url', req);
-        } catch (e) {
-            return next(e);
-        }
-        getNavigations(function (err, navigations) {
-            if (err) {
-                return next(err);
-            }
-            var
-                dis = _.map(navigations, function (nav) {
-                    return nav.display_order;
-                }),
-                max = dis.length ? _.max(dis) + 1 : 0;
-            Navigation.create({
-                name: name,
-                url: url,
-                display_order: max
-            }, function (err, nav) {
-                if (err) {
-                    return next(err);
-                }
-                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
-                return res.send(nav);
-            });
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var
+            name,
+            url,
+            max,
+            data = this.request.body;
+        json_schema.validate('createNavigation', data);
+        name = data.name.trim();
+        url = data.url.trim();
+
+        num = yield Navigation.$findNumber('max(display_order)');
+        this.body = yield Navigation.create({
+            name: name,
+            url: url,
+            display_order: (num === null) ? 0 : num + 1
         });
+        yield cache.$remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/sort': function (req, res, next) {
+    'POST /api/navigations/sort': function* () {
         /**
          * Sort navigations.
          *
@@ -146,19 +84,16 @@ module.exports = {
          * @param {array} id: The ids of the navigation.
          * @return {object} The sort result like {"sort":true}.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        sort(req.body.id, function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            cache.remove(constants.CACHE_KEY_NAVIGATIONS);
-            return res.send({ sort: true });
-        });
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var data = this.request.body;
+        json_schema.validate('sortNavigation', data);
+        this.body = {
+            navigations: yield helper.$sort(data.ids, yield $getNavigations())
+        };
+        yield cache.$remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/:id/delete': function (req, res, next) {
+    'POST /api/navigations/:id/delete': function* (id) {
         /**
          * Delete a navigation.
          *
@@ -166,24 +101,16 @@ module.exports = {
          * @param {string} id: The id of the navigation.
          * @return {object} The deleted navigation id like {"id":"123"}.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        getNavigation(req.params.id, function (err, nav) {
-            if (err) {
-                return next(err);
-            }
-            nav.destroy(function (err, r) {
-                if (err) {
-                    return next(err);
-                }
-                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
-                return res.send({ id: nav.id });
-            });
-        });
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var navigation = yield $getNavigation(id);
+        yield navigation.$destroy();
+        this.body = {
+            id: id
+        };
+        yield cache.$remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/:id': function (req, res, next) {
+    'POST /api/navigations/:id': function* (id) {
         /**
          * Update a navigation.
          *
@@ -193,35 +120,29 @@ module.exports = {
          * @param {string} [url]: The URL of the navigation.
          * @return {object} The navigation object.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
+        helper.checkPermission(this.request, constants.role.ADMIN);
         var
-            name = utils.getParam('name', null, req),
-            url = utils.getParam('url', null, req);
-        if (name !== null && name === '') {
-            return next(api.invalidParam('name', 'name cannot be empty.'));
+            navigation,
+            props = [],
+            data = this.request.body;
+        json_schema.validate('updateNavigation', data);
+        navigation = yield $getNavigation(id);
+        if (data.name) {
+            navigation.name = data.name.trim();
+            props.push('name');
         }
-        if (url !== null && url === '') {
-            return next(api.invalidParam('url', 'url cannot be empty.'));
+        if (data.url) {
+            navigation.url = data.url.trim();
+            props.push('url');
         }
-        getNavigation(req.params.id, function (err, nav) {
-            if (err) {
-                return next(err);
-            }
-            if (name !== null) {
-                nav.name = name;
-            }
-            if (url !== null) {
-                nav.url = url;
-            }
-            nav.update(function (err, entity) {
-                if (err) {
-                    return next(err);
-                }
-                cache.remove(constants.CACHE_KEY_NAVIGATIONS);
-                return res.send(entity);
-            });
-        });
+        if (props.length > 0) {
+            props.push('updated_at');
+            props.push('version');
+            yield navigation.$update(props);
+        }
+        this.body = {
+            navigation: navigation
+        };
+        yield cache.$remove(constants.cache.NAVIGATIONS);
     }
 };
