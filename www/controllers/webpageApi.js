@@ -7,7 +7,8 @@ var
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    json_schema = require('../json_schema');
 
 var
     User = db.user,
@@ -83,9 +84,7 @@ module.exports = {
             webpage = yield $getWebpage(id),
             text = yield Text.$find(webpage.content_id);
         webpage.content = text.value;
-        this.body = {
-            webpage: webpage
-        };
+        this.body = webpage;
     },
 
     'GET /api/webpages': function* () {
@@ -140,9 +139,7 @@ module.exports = {
         });
         // attach content:
         webpage.content = data.content;
-        this.body = {
-            webpage: webpage
-        };
+        this.body = webpage;
     },
 
     'POST /api/webpages/:id': function* (id) {
@@ -208,9 +205,7 @@ module.exports = {
             text = yield Text.$find(webpage.content_id);
             webpage.content = text.value;
         }
-        this.body = {
-            webpage: webpage
-        };
+        this.body = webpage;
     },
 
     'POST /api/webpages/:id/delete': function* (id) {
