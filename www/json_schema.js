@@ -129,6 +129,11 @@ var PROPERTY = {
         default: []
     },
 
+    MIME: {
+        type: 'string',
+        pattern: '^[0-9a-z]{1,15}\\/[0-9a-z\\.\\-]{1,24}$'
+    },
+
     DURATION: {
         type: 'integer',
         minimum: 0,
@@ -138,7 +143,7 @@ var PROPERTY = {
     IMAGE: {
         type: 'string',
         minLength: 1,
-        maxLength: 1398102 // 1MB before base64, 1.33M after base64
+        maxLength: 1400000 // 1MB before base64, 1.33M after base64
     }
 };
 
@@ -219,8 +224,20 @@ var schemas = {
             draft: {
                 type: 'boolean'
             }
+        }
+    },
+    createAttachment: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            mime: PROPERTY.MIME,
+            data: {
+                type: 'string',
+                minLength: 1
+            }
         },
-        required: ['name', 'alias', 'content']
+        required: ['name', 'data']
     },
 
 
