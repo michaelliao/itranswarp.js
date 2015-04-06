@@ -1,3 +1,5 @@
+'use strict';
+
 // api console:
 
 var _ = require('lodash');

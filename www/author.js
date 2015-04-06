@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 
 var s = fs.readFileSync('./author', 'utf-8');
