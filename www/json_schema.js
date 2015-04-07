@@ -134,10 +134,16 @@ var PROPERTY = {
         pattern: '^[0-9a-z]{1,15}\\/[0-9a-z\\.\\-]{1,24}$'
     },
 
-    DURATION: {
+    FILE: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 1400000 // 1 MB binary, 1.33 M with base64
+    },
+
+    TIMESTAMP: {
         type: 'integer',
         minimum: 0,
-        maximum: 600 // 600 min = 10 hours
+        maximum: 32506358400000 // 3000-1-1 0:0:0 UTC
     },
 
     IMAGE: {
@@ -232,13 +238,24 @@ var schemas = {
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
             mime: PROPERTY.MIME,
-            data: {
-                type: 'string',
-                minLength: 1
-            }
+            data: PROPERTY.FILE
         },
         required: ['name', 'data']
     },
+    createArticle: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS,
+            publish_at: PROPERTY.TIMESTAMP,
+            content: PROPERTY.TEXT,
+            image: PROPERTY.FILE
+        },
+        required: ['name', 'content', 'image']
+    },
+
+
 
 
 
