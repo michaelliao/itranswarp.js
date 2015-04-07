@@ -25,7 +25,7 @@ backup/*.sql
 *.csr
 
 # private config files:
-config_override.*
+config_production.js
 
 # temp output dir:
 output
