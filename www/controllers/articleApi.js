@@ -7,17 +7,16 @@ var
     api = require('../api'),
     db = require('../db'),
     cache = require('../cache'),
-    utils = require('./_utils'),
     images = require('./_images'),
+    helper = require('../helper'),
     constants = require('../constants'),
-    search = require('../search/search');
+    search = require('../search/search'),
+    json_schema = require('../json_schema');
 
 var
     commentApi = require('./commentApi'),
-    attachmentApi = require('./attachmentApi'),
     settingApi = require('./settingApi'),
-    checkAttachment = attachmentApi.checkAttachment,
-    createAttachmentTaskInTx = attachmentApi.createAttachmentTaskInTx;
+    attachmentApi = require('./attachmentApi');
 
 var
     User = db.user,
@@ -52,212 +51,158 @@ function unindexArticle(r) {
     });
 }
 
-function getRecentArticles(max, callback) {
+function* $getRecentArticles(max) {
     var now = Date.now();
-    Article.findAll({
+    return yield Article.$findAll({
         where: 'publish_at<?',
         order: 'publish_at desc',
         params: [now],
         offset: 0,
         limit: max
-    }, function (err, entities) {
-        if (err) {
-            return callback(err);
-        }
-        return callback(null, entities);
     });
 }
 
-function doGetArticles(page, countOptions, findOptions, callback) {
-    Article.findNumber(countOptions, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        page.totalItems = num;
-        if (page.isEmpty) {
-            return callback(null, { page: page, articles: [] });
-        }
-        findOptions.offset = page.offset;
-        findOptions.limit = page.limit;
-        Article.findAll(findOptions, function (err, entities) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, {
-                page: page,
-                articles: entities
-            });
-        });
-    });
-}
-
-function getAllArticles(page, callback) {
-    var
-        countOptions = 'count(*)',
-        findOptions = {
-            order: 'publish_at desc'
-        };
-    doGetArticles(page, countOptions, findOptions, callback);
-}
-
-function getArticlesByCategory(page, categoryId, callback) {
-    var
-        now = Date.now(),
-        countOptions = {
-            select: 'count(*)',
-            where: 'publish_at<? and category_id=?',
-            params: [now, categoryId]
-        },
-        findOptions = {
-            order: 'publish_at desc',
-            where: 'publish_at<? and category_id=?',
-            params: [now, categoryId]
-        };
-    doGetArticles(page, countOptions, findOptions, callback);
-}
-
-function getArticles(page, callback) {
-    var
-        now = Date.now(),
-        countOptions = {
-            select: 'count(*)',
-            where: 'publish_at<?',
-            params: [now]
-        },
-        findOptions = {
-            where: 'publish_at<?',
-            params: [now]
-        };
-    doGetArticles(page, countOptions, findOptions, callback);
-}
-
-function getArticle(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
+function* $getAllArticles(page) {
+    page.total = yield Article.$findNumber('count(id)');
+    if (page.isEmpty) {
+        return [];
     }
-    Article.find(id, function (err, article) {
-        if (err) {
-            return callback(err);
-        }
-        if (article === null) {
-            return callback(api.notFound('Article'));
-        }
-        Text.find(article.content_id, function (err, text) {
-            if (err) {
-                return callback(err);
-            }
-            if (text === null) {
-                return callback(api.notFound('Text'));
-            }
-            article.content = text.value;
-            callback(null, article);
-        });
+    return yield Article.$findAll({
+        offset: page.offset,
+        limit: page.limit,
+        order: 'publish_at desc'
     });
+}
+
+function* $getArticles(page) {
+    var now = Date.now();
+    page.total = yield Article.$findNumber({
+        select: 'count(id)',
+        where: 'publish_at<?',
+        params: [now]
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Article.$findAll({
+        offset: page.offset,
+        limit: page.limit,
+        order: 'publish_at desc'
+    });
+}
+
+function* $getArticlesByCategory(categoryId, page) {
+    var now = Date.now();
+    page.total = yield Article.$findNumber({
+        select: 'count(id)',
+        where: 'publish_at<? and category_id=?',
+        params: [now, categoryId]
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Article.$findAll({
+        order: 'publish_at desc',
+        where: 'publish_at<? and category_id=?',
+        params: [now, categoryId],
+        offset: page.offset,
+        limit: page.limit
+    });
+}
+
+function* $getArticle(id) {
+    var
+        text,
+        article = yield Article.$find(id);
+    if (article === null) {
+        throw api.notFound('Article');
+    }
+    text = yield Text.$find(article.content_id);
+    if (text === null) {
+        throw api.notFound('Text');
+    }
+    article.content = text.value;
+    return article;
 }
 
 function toRssDate(dt) {
     return new Date(dt).toGMTString();
 }
 
-function getFeed(domain, callback) {
-    async.parallel({
-        articles: function (callback) {
-            getRecentArticles(20, callback);
-        },
-        website: function (callback) {
-            settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
-        }
-    }, function (err, results) {
-        if (err) {
-            return callback(err);
-        }
-        var
-            articles = results.articles,
-            website = results.website,
-            last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
-            rss_header,
-            rss_footer = '</channel></rss>';
+function* $getFeed(domain) {
+    var
+        i, text, article, url,
+        articles = yield $getRecentArticles(20),
+        last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
+        website = yield $settingApi.$getSettingsByDefaults('website', settingApi.defaultSettings.website),
+        rss = [],
+        rss_footer = '</channel></rss>';
+    rss.push('<?xml version="1.0"?>\n');
+    rss.push('<rss version="2.0"><channel><title><![CDATA[');
+    rss.push(website.name);
+    rss.push(']]></title><link>http://');
+    rss.push(domain);
+    rss.push('/</link><description><![CDATA[');
+    rss.push(website.description);
+    rss.push(']]></description><lastBuildDate>');
+    rss.push(toRssDate(last_publish_at));
+    rss.push('</lastBuildDate><generator>iTranswarp.js</generator><ttl>3600</ttl>');
 
-        rss_header = '<?xml version="1.0"?>\n' +
-                '<rss version="2.0"><channel><title><![CDATA[' +
-                website.name +
-                ']]></title><link>http://' +
-                domain +
-                '/</link><description><![CDATA[' +
-                website.description +
-                ']]></description><lastBuildDate>' +
-                toRssDate(last_publish_at) +
-                '</lastBuildDate><generator>iTranswarp.js</generator><ttl>3600</ttl>';
-
-        if (articles.length === 0) {
-            return callback(null, rss_header + rss_footer);
+    if (articles.length === 0) {
+        rss.push(rss_footer);
+    }
+    else {
+        for (i=0; i<articles.length; i++) {
+            article = articles[i];
+            text = yield Text.$find(article.content_id);
+            url = 'http://' + domain + '/article/' + article.id;
+            rss.push('<item><title><![CDATA[');
+            rss.push(article.name);
+            rss.push(']]></title><link>');
+            rss.push(url);
+            rss.push('</link><guid>');
+            rss.push(url);
+            rss.push('</guid><author><![CDATA[');
+            rss.push(article.user_name);
+            rss.push(']]></author><pubDate>');
+            rss.push(toRssDate(article.publish_at));
+            rss.push('</pubDate><description><![CDATA[');
+            rss.push(helper.md2html(text.value, true));
+            rss.push(']]></description></item>');
         }
-        // find texts:
-        async.parallelLimit(_.map(articles, function (a) {
-            return function (callback) {
-                Text.find(a.content_id, callback);
-            };
-        }), 5, function (err, texts) {
-            if (err) {
-                return callback(err);
-            }
-            var n = 0, L = [rss_header];
-            _.each(articles, function (a) {
-                var
-                    url = 'http://' + domain + '/article/' + a.id,
-                    content = utils.md2html((texts[n] && texts[n].value) || '');
-                n++;
-                L.push('<item><title><![CDATA[');
-                L.push(a.name);
-                L.push(']]></title><link>');
-                L.push(url);
-                L.push('</link><guid>');
-                L.push(url);
-                L.push('</guid><author><![CDATA[');
-                L.push(a.user_name);
-                L.push(']]></author><pubDate>');
-                L.push(toRssDate(a.publish_at));
-                L.push('</pubDate><description><![CDATA[');
-                L.push(content);
-                L.push(']]></description></item>');
-            });
-            L.push(rss_footer);
-            callback(null, L.join(''));
-        });
-    });
+        rss.push(rss_footer);
+    }
+    return rss.join('');
 }
 
 var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 module.exports = {
 
-    getRecentArticles: getRecentArticles,
+    $getRecentArticles: $getRecentArticles,
 
-    getArticlesByCategory: getArticlesByCategory,
+    $getArticlesByCategory: $getArticlesByCategory,
 
-    getAllArticles: getAllArticles,
+    $getAllArticles: $getAllArticles,
 
-    getArticles: getArticles,
+    $getArticles: $getArticles,
 
-    getArticle: getArticle,
+    $getArticle: $getArticle,
 
-    'GET /feed': function (req, res, next) {
-        var fn = function (callback) {
-            getFeed(req.host, callback);
-        };
-        fn.lifetime = 3600;
-        cache.get('cached_rss', fn, function (err, rss) {
-            if (err) {
-                return next(err);
-            }
-            res.type('application/rss+xml');
-            res.set('Cache-Control', 'max-age: 3600');
-            res.send(rss);
+    'GET /feed': function* () {
+        var
+            rss,
+            gf = function* () {
+                return yield $getFeed(req.host);
+            };
+        rss = yield cache.$get('cached_rss', gf);
+        this.type = 'application/rss+xml';
+        this.set('Cache-Control', 'max-age: 3600');
+        this.body = rss;
         });
     },
 
-    'GET /api/articles/:id': function (req, res, next) {
+    'GET /api/articles/:id': function* (id) {
         /**
          * Get article.
          * 
@@ -267,18 +212,17 @@ module.exports = {
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
-        getArticle(req.params.id, function (err, article) {
-            if (err) {
-                return next(err);
-            }
-            if (req.query.format === 'html') {
-                article.content = utils.md2html(article.content);
-            }
-            return res.send(article);
-        });
+        var article = yield $getArticle(id);
+        if (article.publish_at > Date.now() && (this.request.user===null || this.request.user.role > constants.role.CONTRIBUTOR)) {
+            throw api.notFound('Article');
+        }
+        if (this.request.query.format === 'html') {
+            article.content = helper.md2html(article.content, true);
+        }
+        this.body = article;
     },
 
-    'GET /api/articles': function (req, res, next) {
+    'GET /api/articles': function* () {
         /**
          * Get articles by page.
          * 
@@ -286,16 +230,17 @@ module.exports = {
          * @param {number} [page=1]: The page number, starts from 1.
          * @return {object} Article objects and page information.
          */
-        var page = utils.getPage(req);
-        getArticles(page, function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(r);
-        });
+        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
+        var
+            page = helper.getPage(req),
+            articles = yield $getAllArticles(page);
+        this.body = {
+            page: page,
+            articles: articles
+        };
     },
 
-    'POST /api/articles': function (req, res, next) {
+    'POST /api/articles': function* () {
         /**
          * Create a new article.
          * 
@@ -306,14 +251,16 @@ module.exports = {
          * @param {string} content: Content of the article.
          * @param {string} [tags]: Tags of the article, seperated by ','.
          * @param {string} [publish_at]: Publish time of the article with format 'yyyy-MM-dd HH:mm:ss', default to current time.
-         * @param {file} [file]: File to upload as cover image.
+         * @param {image} [image]: Base64 encoded image to upload as cover image.
          * @return {object} The created article object.
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            data = this.request.body;
+        json_schema.validate('createArticle', data);
+
         var name, description, category_id, content, tags, publish_at, file, content_id, article_id, fnCreate;
         try {
             name = utils.getRequiredParam('name', req);
@@ -409,7 +356,7 @@ module.exports = {
         return fnCreate(null);
     },
 
-    'POST /api/articles/:id': function (req, res, next) {
+    'POST /api/articles/:id': function* () {
         /**
          * Update an exist article.
          * 
@@ -574,7 +521,7 @@ module.exports = {
         return fnUpdate(null);
     },
 
-    'POST /api/articles/:id/comments': function (req, res, next) {
+    'POST /api/articles/:id/comments': function* () {
         /**
          * Create a comment on an article.
          * 
@@ -608,7 +555,7 @@ module.exports = {
         });
     },
 
-    'POST /api/articles/:id/delete': function (req, res, next) {
+    'POST /api/articles/:id/delete': function* () {
         /**
          * Delete an article.
          * 
