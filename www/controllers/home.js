@@ -9,9 +9,10 @@ var
     auth = require('../auth'),
     config = require('../config'),
     cache = require('../cache'),
+    helper = require('../helper'),
     constants = require('../constants'),
     searchEngine = require('../search/search').engine,
-    utils = require('./_utils');
+    json_schema = require('../json_schema');
 
 var signins = _.map(config.oauth2, function (value, key) {
     return key;

@@ -10,8 +10,9 @@ var
     api = require('../api'),
     db = require('../db'),
     cache = require('../cache'),
+    helper = require('../helper'),
     constants = require('../constants'),
-    utils = require('./_utils');
+    json_schema = require('../json_schema');
 
 var
     User = db.user,

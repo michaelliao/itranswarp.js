@@ -6,9 +6,10 @@ var
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils'),
+    helper = require('../helper'),
     constants = require('../constants'),
-    search = require('../search/search');
+    search = require('../search/search'),
+    json_schema = require('../json_schema');
 
 var
     Board = db.board,
