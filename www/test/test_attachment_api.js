@@ -1,6 +1,6 @@
 'use strict';
 
-// test article api:
+// test attachment api:
 
 var
     _ = require('lodash'),
