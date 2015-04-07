@@ -4,10 +4,9 @@
 
 var
     _ = require('lodash'),
-    async = require('async'),
-    should = require('should');
-
-var cache = require('../cache');
+    should = require('should'),
+    thunkify = require('thunkify'),
+    cache = require('../cache');
 
 var keyPrefix = require('node-uuid').v4().replace(/\-/g, '');
 
@@ -20,218 +19,155 @@ function toKeys(keys) {
     });
 }
 
+var $sleep = thunkify(function (ms, callback) {
+    setTimeout(function () {
+        callback(null, 'done');
+    }, ms);
+});
+
 describe('#cache', function () {
 
-    it('#get', function (done) {
+    it('get cache but missing', function* () {
         var keys = toKeys(['aa', 'bb', 'cc']);
-        async.series({
-            aa: function (callback) {
-                cache.get(keys[0], callback);
-            },
-            bb: function (callback) {
-                cache.get(keys[1], callback);
-            },
-            cc: function (callback) {
-                cache.get(keys[2], callback);
-            }
-        }, function (err, data) {
-            should(err===null).be.true;
-            should(data).be.ok;
-            should(data.aa===null).be.true;
-            should(data.bb===null).be.true;
-            should(data.cc===null).be.true;
-            done();
-        });
+        var aa = yield cache.$get(keys[0]);
+        var bb = yield cache.$get(keys[1]);
+        var cc = yield cache.$get(keys[2]);
+        should(aa===null).be.true;
+        should(bb===null).be.true;
+        should(cc===null).be.true;
     });
 
-    it('#getByDefaultValue', function (done) {
+    it('get missing value with default value', function* () {
         var key1 = keyPrefix + 'k1';
-        cache.get(key1, 'DEFAULT-1', function (err, data) {
-            should(err===null).be.true;
-            should(data==='DEFAULT-1').be.true;
-            // should not in cache:
-            cache.get(key1, function (err, data2) {
-                should(err===null).be.true;
-                should(data2===null).be.true;
-                done();
-            });
-        });
+        var data = yield cache.$get(key1, 'DEFAULT-1');
+        should(data==='DEFAULT-1').be.true;
+        // should not in cache:
+        var data2 = yield cache.$get(key1);
+        should(data2===null).be.true;
     });
 
-    it('#getByFunctionValue', function (done) {
+    it('get by function value', function* () {
         var key1 = keyPrefix + 'f1';
-        cache.get(key1, function () { return ['F1', null, {}] }, function (err, data) {
-            should(err===null).be.true;
-            data.should.be.instanceof(Array).and.have.lengthOf(3);
-            data[0].should.equal('F1');
-            should(data[1]===null).be.true;
-            data[2].should.be.instanceof(Object);
-            // should in cache:
-            cache.get(key1, function (err, data2) {
-                should(err===null).be.true;
-                data2.should.be.instanceof(Array).and.have.lengthOf(3);
-                data2[0].should.equal('F1');
-                should(data2[1]===null).be.true;
-                data2[2].should.be.instanceof(Object);
-                done();
-            });
+        var data = yield cache.$get(key1, function () {
+            return ['F1', null, { 't': 999 }];
         });
+        data.should.be.instanceof(Array).and.have.lengthOf(3);
+        data[0].should.equal('F1');
+        should(data[1]===null).be.true;
+        data[2].should.be.instanceof(Object);
+        data[2].t.should.equal(999);
+        // should in cache:
+        var data2 = yield cache.$get(key1);
+        data2.should.be.instanceof(Array).and.have.lengthOf(3);
+        data2[0].should.equal('F1');
+        should(data2[1]===null).be.true;
+        data2[2].should.be.instanceof(Object);
+        data2[2].t.should.equal(999);
     });
 
-    it('#getByCallbackFunction', function (done) {
-        var key1 = keyPrefix + 'callback1';
-        cache.get(key1, function (callback) {
-            setTimeout(function () {
-                callback(null, 'Callback Value');
-            }, 500);
-        }, function (err, data) {
-            should(err===null).be.true;
-            should(data!==null).be.true;
-            data.should.be.equal('Callback Value');
-            // should in cache:
-            cache.get(key1, function (err, data2) {
-                should(err===null).be.true;
-                should(data2!==null).be.true;
-                data2.should.be.equal('Callback Value');
-                done();
-            });
+    it('get by generator function', function* () {
+        var key1 = keyPrefix + 'g1';
+        var data = yield cache.$get(key1, function* () {
+            yield $sleep(500);
+            return 'G1';
         });
+        should(data!==null).be.true;
+        data.should.be.equal('G1');
+        // should in cache:
+        var data2 = yield cache.$get(key1);
+        should(data2!==null).be.true;
+        data2.should.be.equal('G1');
     });
 
-    it('#setAndGet', function (done) {
+    it('set and get', function* () {
         var key1 = keyPrefix + 'set1';
-        cache.set(key1, 'Value1', function (err) {
-            should(err===null).be.true;
-            // get:
-            cache.get(key1, function (err, data) {
-                should(err===null).be.true;
-                should(data==='Value1').be.true;
-                done();
-            });
-        });
+        yield cache.$set(key1, 'Value1');
+        // get:
+        var data = yield cache.$get(key1, '@@@');
+        should(data==='Value1').be.true;
     });
 
-    it('#gets', function (done) {
+    it('gets multikeys', function* () {
         var key1 = keyPrefix + 'multi-1';
         var key2 = keyPrefix + 'multi-2';
         var key3 = keyPrefix + 'multi-3';
         var keys = [key1, key2, key3];
-        cache.gets(keys, function (err, data) {
-            should(err===null).be.ok;
-            data.should.be.instanceof(Array).and.have.lengthOf(3);
-            should(data[0]===null).be.true;
-            should(data[1]===null).be.true;
-            should(data[2]===null).be.true;
-            cache.set(key1, 'Multi', function (err) {
-                should(err===null).be.true;
-                // gets again:
-                cache.gets(keys, function (err, data2) {
-                    should(err===null).be.ok;
-                    data2.should.be.instanceof(Array).and.have.lengthOf(3);
-                    should(data2[0]==='Multi').be.true;
-                    should(data2[1]===null).be.true;
-                    should(data2[2]===null).be.true;
-                    done();
-                });
-            });
-        });
+        var data = yield cache.$gets(keys);
+        data.should.be.instanceof(Array).and.have.lengthOf(3);
+        should(data[0]===null).be.true;
+        should(data[1]===null).be.true;
+        should(data[2]===null).be.true;
+        yield cache.$set(key1, 'Multi');
+        // gets again:
+        var data2 = yield cache.$gets(keys);
+        data2.should.be.instanceof(Array).and.have.lengthOf(3);
+        should(data2[0]==='Multi').be.true;
+        should(data2[1]===null).be.true;
+        should(data2[2]===null).be.true;
     });
 
-    it('#setAndGetThenExpires', function (done) {
+    it('set and get then expires', function* () {
         var key1 = keyPrefix + 'exp1';
-        cache.set(key1, { expires: 1234 }, 2, function (err) {
-            should(err===null).be.true;
-            // get:
-            cache.get(key1, function (err, data) {
-                should(err===null).be.true;
-                data.should.be.ok;
-                data.expires.should.equal(1234);
-                setTimeout(function () {
-                    cache.get(key1, function (err, data2) {
-                        should(err===null).be.true;
-                        should(data2===null).be.true;
-                        done();
-                    });
-                }, 2100);
-            });
-        });
+        yield cache.$set(key1, { expires: 1234 }, 2);
+        // get:
+        var data = yield cache.$get(key1);
+        data.should.be.ok;
+        data.expires.should.equal(1234);
+        // wait 3 seconds:
+        yield $sleep(3000);
+        // get again:
+        var data2 = yield cache.$get(key1);
+        should(data2===null).be.true;
     });
 
-    it('#incr', function (done) {
+    it('incr counter', function* () {
         var key1 = keyPrefix + 'inc1';
-        cache.incr(key1, function (err, num) {
-            should(err===null).be.true;
-            should(num===1).be.true;
-            // should get as 1:
-            cache.get('CT@' + key1, function (err, data) {
-                should(err===null).be.true;
-                should(data===1).be.true;
-                done();
-            });
-        });
+        var num = yield cache.$incr(key1);
+        should(num===1).be.true;
+        // should get as 1:
+        var data = yield cache.$get(key1);
+        should(data===1).be.true;
     });
 
-    it('#setInitialAndIncr', function (done) {
+    it('set initial and incr', function* () {
         var key1 = keyPrefix + 'countFrom100';
-        cache.incr(key1, 100, function (err, num) {
-            should(err===null).be.true;
-            should(num===101).be.true;
-            done();
-        });
+        var num = yield cache.$incr(key1, 100);
+        should(num===101).be.true;
     });
 
-    it('#countAs0', function (done) {
+    it('count as 0', function* () {
         var key1 = keyPrefix + 'notFoundButCount0';
-        cache.count(key1, function (err, data) {
-            should(err===null).be.true;
-            should(data===0).be.true;
-            done();
-        });
+        var num = yield cache.$count(key1);
+        should(num===0).be.true;
     });
 
-    it('#incrAndCounts', function (done) {
+    it('incr and counts', function* () {
         var key1 = keyPrefix + 'countMe';
-        cache.incr(key1, 20, function (err, num) {
-            should(err===null).be.true;
-            should(num===21).be.true;
-            // should get as 21:
-            cache.count(key1, function (err, data) {
-                should(err===null).be.true;
-                should(data===21).be.true;
-                // counts:
-                cache.counts([key1, 'count2', 'count3'], function (err, nums) {
-                    should(err===null).be.true;
-                    should(nums!==null).be.true;
-                    nums.should.be.instanceof(Array).and.have.lengthOf(3);
-                    should(nums[0]===21).be.true;
-                    should(nums[1]===0).be.true;
-                    should(nums[2]===0).be.true;
-                    done();
-                });
-            });
-        });
+        var num = yield cache.$incr(key1, 20);
+        should(num===21).be.true;
+        // should get as 21:
+        var data = yield cache.$count(key1);
+        should(data===21).be.true;
+        // counts:
+        var nums = yield cache.$counts([key1, 'count2', 'count3']);
+        should(nums!==null).be.true;
+        nums.should.be.instanceof(Array).and.have.lengthOf(3);
+        should(nums[0]===21).be.true;
+        should(nums[1]===0).be.true;
+        should(nums[2]===0).be.true;
     });
 
-    it('#remove', function (done) {
+    it('remove key', function* () {
         var key1 = keyPrefix + 'rm1';
-        cache.set(key1, 'To be removed', function (err) {
-            should(err===null).be.true;
-            // get:
-            cache.get(key1, function (err, data) {
-                should(err===null).be.true;
-                data.should.equal('To be removed');
-                // remove:
-                cache.remove(key1, function (err) {
-                    should(err===null).be.true;
-                    // get again:
-                    cache.get(key1, function (err, data) {
-                        should(err===null).be.true;
-                        should(data===null).be.true;
-                        done();
-                    });
-                });
-            });
-        });
+        yield cache.$set(key1, 'To be removed');
+        // get:
+        var data = yield cache.$get(key1);
+        data.should.equal('To be removed');
+        // remove:
+        yield cache.$remove(key1);
+        // get again:
+        var data2 = yield cache.$get(key1);
+        should(data2===null).be.true;
     });
 
 });

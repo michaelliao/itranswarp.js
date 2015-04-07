@@ -18,28 +18,42 @@ var
         'timeout': config.cache.timeout,
         'retries': config.cache.retries
     }),
-    $incr = thunkify(memcached.incr),
-    $get = thunkify(memcached.get),
-    $set = thunkify(memcached.set),
-    $del = thunkify(memcached.del),
-    $getMulti = thunkify(memcached.getMulti);
+    $m_incr = thunkify(function (key, inc, callback) {
+        memcached.incr(key, inc, callback);
+    }),
+    $m_get = thunkify(function (key, callback) {
+        memcached.get(key, callback);
+    }),
+    $m_set = thunkify(function (key, value, lifetime, callback) {
+        memcached.set(key, value, lifetime, callback);
+    }),
+    $m_del = thunkify(function (key, callback) {
+        memcached.del(key, callback);
+    }),
+    $m_getMulti = thunkify(function (keys, callback) {
+        memcached.getMulti(keys, callback);
+    });
 
 module.exports = {
 
     $incr: function* (key, initial) {
-        if (initial === undefined) {
-            initial = 0;
-        }
-        var data = yield $incr(k, 1);
+        var
+            k = CACHE_PREFIX + key,
+            data = yield $m_incr(k, 1);
         if (data === false) {
-            yield $set(k, initial + 1, DEFAULT_LIFETIME);
+            if (initial === undefined) {
+                initial = 0;
+            }
+            yield $m_set(k, initial + 1, DEFAULT_LIFETIME);
             data = initial + 1;
         }
         return data;
     },
 
     $count: function* (key) {
-        var num = yield $get(CACHE_PREFIX + key);
+        var
+            k = CACHE_PREFIX + key,
+            num = yield $m_get(k);
         return (num === false) ? 0 : num;
     },
 
@@ -51,7 +65,7 @@ module.exports = {
             multiKeys = _.map(keys, function (key) {
                 return CACHE_PREFIX + key;
             }),
-            data = yield $getMulti(multiKeys);
+            data = yield $m_getMulti(multiKeys);
         return _.map(multiKeys, function (key) {
             return data[key] || 0;
         });
@@ -66,7 +80,7 @@ module.exports = {
          */
         var
             k = CACHE_PREFIX + key,
-            data = yield $get(k);
+            data = yield $m_get(k);
         if (data) {
             return data;
         }
@@ -74,12 +88,14 @@ module.exports = {
             if (typeof (defaultValueOrFn) === 'function') {
                 lifetime = lifetime || DEFAULT_LIFETIME;
                 if (defaultValueOrFn.constructor.name === 'GeneratorFunction') {
-                    data = yield defaultValueOrFn;
+                    console.log('yield generator...');
+                    data = yield defaultValueOrFn();
+                    console.log('done!')
                 }
                 else {
                     data = defaultValueOrFn();
                 }
-                yield $set(k, data, lifetime);
+                yield $m_set(k, data, lifetime);
             }
             else {
                 data = defaultValueOrFn;
@@ -99,17 +115,19 @@ module.exports = {
             multiKeys = _.map(keys, function (key) {
                 return CACHE_PREFIX + key;
             }),
-            data = yield $getMulti(multiKeys);
+            data = yield $m_getMulti(multiKeys);
         return _.map(multiKeys, function (key) {
             return data[key] || null;
         });
     },
 
     $set: function* (key, value, lifetime) {
-        yield $set(CACHE_PREFIX + key, value, lifetime || DEFAULT_LIFETIME);
+        var k = CACHE_PREFIX + key;
+        yield $m_set(k, value, lifetime || DEFAULT_LIFETIME);
     },
 
     $remove: function* (key) {
-        yield $del(CACHE_PREFIX + key);
+        var k = CACHE_PREFIX + key;
+        yield $m_del(k);
     }
 };
