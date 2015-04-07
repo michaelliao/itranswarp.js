@@ -45,8 +45,7 @@ _.each(config.oauth2, function (cfg, name) {
 });
 
 function* $getUsers(page) {
-    var num = yield User.$findNumber('count(*)');
-    page.total = num;
+    page.total = yield User.$findNumber('count(id)');
     if (page.isEmpty) {
         return [];
     }
