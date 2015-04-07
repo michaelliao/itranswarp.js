@@ -109,7 +109,8 @@ var PROPERTY = {
 
     TAGS: {
         type: 'string',
-        maxLength: 100
+        maxLength: 100,
+        default: ''
     },
 
     CODE_TYPE: {
@@ -245,6 +246,7 @@ var schemas = {
     createArticle: {
         type: 'object',
         properties: {
+            category_id: PROPERTY.ID,
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
             tags: PROPERTY.TAGS,
@@ -252,7 +254,19 @@ var schemas = {
             content: PROPERTY.TEXT,
             image: PROPERTY.FILE
         },
-        required: ['name', 'content', 'image']
+        required: ['category_id', 'name', 'content', 'image']
+    },
+    updateArticle: {
+        type: 'object',
+        properties: {
+            category_id: PROPERTY.ID,
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS,
+            publish_at: PROPERTY.TIMESTAMP,
+            content: PROPERTY.TEXT,
+            image: PROPERTY.FILE
+        }
     },
 
 

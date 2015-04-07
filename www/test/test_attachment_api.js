@@ -4,7 +4,6 @@
 
 var
     _ = require('lodash'),
-    async = require('async'),
     should = require('should'),
     remote = require('./_remote'),
     constants = require('../constants'),

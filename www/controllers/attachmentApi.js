@@ -40,7 +40,7 @@ function* $getAttachments(page) {
 }
 
 // create function(callback) with Attachment object returned in callback:
-function* $createAttachment(user_id, name, description, buffer, mime) {
+function* $createAttachment(user_id, name, description, buffer, mime, expectedImage) {
     var
         att_id = next_id(),
         res_id = next_id(),
@@ -56,6 +56,12 @@ function* $createAttachment(user_id, name, description, buffer, mime) {
         if (['png', 'jpeg', 'gif'].indexOf(imageInfo.format) !== (-1)) {
             mime = 'image/' + imageInfo.format;
         }
+        else {
+            imageInfo = null;
+        }
+    }
+    if (imageInfo === null && expectedImage) {
+        throw api.invalidParam('image');
     }
     yield Resource.$create({
         id: res_id,
@@ -215,7 +221,8 @@ module.exports = {
             data.name.trim(),
             data.description.trim(),
             buffer,
-            data.mime || 'application/octet-stream'
+            data.mime || 'application/octet-stream',
+            false
         );
     }
 };
