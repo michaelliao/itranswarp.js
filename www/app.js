@@ -20,7 +20,8 @@ var
     app = koa();
 
 var db = require('./db'),
-    User = db.user;
+    User = db.user,
+    activeTheme = config.theme;
 
 app.name = 'itranswarp';
 app.proxy = true;
@@ -127,6 +128,7 @@ app.use(function* theMiddleware(next) {
             model.__static_prefix__ = static_prefix;
             model.__user__ = request.user;
             model.__time__ = Date.now();
+            model.__theme__ = activeTheme;
             var renderedHtml = swig.renderFile(swigTemplatePath + templ, model);
             response.set('X-Execution-Time', String(Date.now() - start));
             response.body = renderedHtml;
