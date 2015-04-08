@@ -376,6 +376,20 @@ module.exports = {
         };
     },
 
+    'GET /api/boards/:id/topics': function* (board_id) {
+        /**
+         * Get topics by page.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            topics = yield $getTopics(board_id, page);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
+
     'POST /api/boards/:id/topics': function* (board_id) {
         /**
          * Post a new topic.

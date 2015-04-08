@@ -132,7 +132,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r2, 'parameter:invalid', 'content');
         });
 
-        it('create topic ok', function* () {
+        it('create topic ok and delete topic', function* () {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',
@@ -156,7 +156,41 @@ describe('#discuss', function () {
                 t.content.should.equal('this is NO.' + i + ' topic...');
                 t.replies.should.equal(0);
             }
+            // check topics number:
+            var b2 = yield remote.$get(roles.EDITOR, '/api/boards/' + b.id);
+            remote.shouldNoError(b2);
+            b2.topics.should.equal(11);
+
+            // query by page:
+            var p1 = yield remote.$get(roles.EDITOR, '/api/boards/' + b.id + '/topics', {
+                page: 1,
+                size: 10
+            });
+            remote.shouldNoError(p1);
+            p1.page.total.should.equal(11);
+            p1.page.index.should.equal(1);
+            p1.topics.should.be.an.Array.and.have.length(10);
+            // page 2:
+            var p2 = yield remote.$get(roles.EDITOR, '/api/boards/' + b.id + '/topics', {
+                page: 2,
+                size: 10
+            });
+            remote.shouldNoError(p2);
+            p2.page.total.should.equal(11);
+            p2.page.index.should.equal(2);
+            p2.topics.should.be.an.Array.and.have.length(1);
         });
 
+        it('create reply failed for no permission', function* () {
+            //
+        });
+
+        it('create reply failed for invalid parameter', function* () {
+            //
+        });
+
+        it('create reply ok and delete reply', function* () {
+            //
+        });
     });
 });
