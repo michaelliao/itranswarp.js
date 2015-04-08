@@ -124,6 +124,13 @@ var PROPERTY = {
         default: ''
     },
 
+    TAG: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 50,
+        pattern: '^\\s*[^\\s]+.*$'
+    },
+
     CODE_TYPE: {
         type: 'string',
         enum: ['', 'html', 'css', 'javascript', 'java', 'csharp', 'php'],
@@ -332,16 +339,16 @@ var schemas = {
         properties: {
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
-            tags: PROPERTY.TAGS
+            tag: PROPERTY.TAG
         },
-        required: ['name', 'description']
+        required: ['name', 'description', 'tag']
     },
     updateBoard: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
-            tags: PROPERTY.TAGS
+            tag: PROPERTY.TAG
         }
     },
     sortBoards: {

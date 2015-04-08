@@ -25,7 +25,7 @@ function indexDiscuss(r) {
         tags: r.tags || '',
         name: r.name,
         description: '',
-        content: utils.html2text(r.content),
+        content: helper.html2text(r.content),
         created_at: r.created_at,
         updated_at: r.updated_at,
         url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
@@ -77,7 +77,7 @@ function* $getBoard(id) {
     return board;
 }
 
-function* $getBoards() {
+function* $getBoards(returnAsGroup) {
     // sort by display_order and group by tag:
     var
         boards = yield Board.$findAll({
@@ -101,6 +101,9 @@ function* $getBoards() {
         }
         return n1 < n2 ? -1 : 1;
     });
+    if (!returnAsGroup) {
+        return boards;
+    }
     // group:
     _.each(boards, function (b) {
         if (lastTag === b.tag) {
@@ -197,9 +200,28 @@ function* $getReplyUrl(topic_id, reply_id) {
     return url;
 }
 
+function* $createTopic(user, board_id, ref_type, ref_id, data) {
+    var
+        board = yield $getBoard(board_id),
+        topic = yield Topic.$create({
+            board_id: board_id,
+            user_id: user.id,
+            ref_type: ref_type,
+            ref_id: ref_id,
+            name: data.name.trim(),
+            tags: helper.formatTags(data.tags || ''),
+            content: data.content
+        });
+    yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
+    indexDiscuss(topic);
+    return topic;
+}
+
 module.exports = {
 
     $getNavigationMenus: $getNavigationMenus,
+
+    $createTopic: $createTopic,
 
     $getBoard: $getBoard,
 
@@ -214,6 +236,16 @@ module.exports = {
     $getReplies: $getReplies,
 
     $getReplyUrl: $getReplyUrl,
+
+    'GET /api/boards': function* () {
+        /**
+         * Get all boards.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        this.body = {
+            boards: yield $getBoards()
+        };
+    },
 
     'POST /api/boards': function* () {
         /**
@@ -233,10 +265,15 @@ module.exports = {
         num = yield Board.$findNumber('max(display_order)');
         this.body = yield Board.$create({
             name: data.name.trim(),
-            tag: helper.formatTags(data.tag),
+            tag: data.tag.trim(),
             description: data.description.trim(),
             display_order: ((num === null) ? 0 : num + 1)
         });
+    },
+
+    'GET /api/boards/:id': function* (id) {
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        this.body = yield $getBoard(id);
     },
 
     'POST /api/boards/:id': function* (id) {
@@ -266,9 +303,9 @@ module.exports = {
             board.description = data.description.trim();
             props.push('description');
         }
-        if (data.tags) {
-            board.tags = helper.formatTags(data.tags);
-            props.push('tags');
+        if (data.tag) {
+            board.tag = data.tag.trim();
+            props.push('tag');
         }
         if (props.length > 0) {
             props.push('updated_at');
@@ -351,21 +388,11 @@ module.exports = {
          */
         helper.checkPermission(this.request, constants.role.SUBSCRIBER);
         var
-            board, topic,
+            topic,
             data = this.request.body;
         json_schema.validate('createTopic', data);
-
-        board = yield $getBoard(board_id);
-        topic = yield Topic.$create({
-            board_id: board_id,
-            user_id: this.request.user.id,
-            name: data.name.trim(),
-            tags: helper.formatTags(data.tags),
-            content: data.content
-        });
-        yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
-        indexDiscuss(topic);
-        this.body = board;
+        topic = yield $createTopic(this.request.user, board_id, '', '', data);
+        this.body = topic;
     },
 
     'POST /api/replies/:id/delete': function* (id) {
