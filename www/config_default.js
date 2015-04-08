@@ -8,6 +8,10 @@
  */
 
 module.exports = {
+    // server domain name:
+    domain: 'www.example.com',
+    // the theme used, default to 'default':
+    theme: 'default',
     session: {
         // sync comments to SNS?
         syncComments: true,
@@ -63,10 +67,6 @@ module.exports = {
             domain: 'www.example.com'
         }
     },
-    // server domain name:
-    domain: 'www.example.com',
-    // the theme used, default to 'default':
-    theme: 'default',
     // oauth2 providers that allow sign in from other oauth2 providers:
     oauth2: {
         // e.g. facebook oauth2 configuration:
