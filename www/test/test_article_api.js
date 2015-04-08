@@ -50,6 +50,50 @@ describe('#articles', function () {
             remote.shouldHasError(r, 'permission:denied');
         });
 
+        it('create article by contributor failed', function* () {
+            // create article:
+            var r1 = yield remote.$post(roles.CONTRIBUTOR, '/api/articles', {
+                category_id: category.id,
+                name: ' Try create Article  ',
+                description: '   blablabla\nhaha...  \n   ',
+                tags: ' aaa,\n BBB,  \t ccc,CcC',
+                content: 'Long content...',
+                image: remote.readFileSync('res-image.jpg').toString('base64')
+            });
+            remote.shouldHasError(r1, 'permission:denied');
+        });
+
+        it('create by admin and update, delete by editor failed', function* () {
+            // create article:
+            var r1 = yield remote.$post(roles.ADMIN, '/api/articles', {
+                category_id: category.id,
+                name: ' Article 1   ',
+                description: '   blablabla\nhaha...  \n   ',
+                tags: ' aaa,\n BBB,  \t ccc,CcC',
+                content: 'Long content...',
+                image: remote.readFileSync('res-image.jpg').toString('base64')
+            });
+            remote.shouldNoError(r1);
+            r1.category_id.should.equal(category.id);
+            r1.name.should.equal('Article 1');
+            r1.description.should.equal('blablabla\nhaha...');
+            r1.tags.should.equal('aaa,BBB,ccc');
+            r1.content.should.equal('Long content...');
+            r1.content_id.should.be.ok;
+            r1.cover_id.should.be.ok;
+
+            // update by editor:
+            var r2 = yield remote.$post(roles.EDITOR, '/api/articles/' + r1.id, {
+                name: 'Name Changed  ',
+                content: 'Changed?'
+            });
+            remote.shouldHasError(r2, 'permission:denied');
+
+            // delete by editor:
+            var r3 = yield remote.$post(roles.EDITOR, '/api/articles/' + r1.id + '/delete');
+            remote.shouldHasError(r3, 'permission:denied');
+        });
+
         it('create and update article by editor', function* () {
             // create article:
             var r1 = yield remote.$post(roles.EDITOR, '/api/articles', {
@@ -130,7 +174,7 @@ describe('#articles', function () {
         it('create article with wrong parameter by editor', function* () {
             var
                 i, r, params,
-                required = ['name', 'category_id', 'content', 'image'],
+                required = ['name', 'description', 'category_id', 'content', 'image'],
                 prepared = {
                     name: 'Test Params',
                     description: 'blablabla...',
