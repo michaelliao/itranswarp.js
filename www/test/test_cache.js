@@ -5,7 +5,7 @@
 var
     _ = require('lodash'),
     should = require('should'),
-    thunkify = require('thunkify'),
+    remote = require('./_remote'),
     cache = require('../cache');
 
 var keyPrefix = require('node-uuid').v4().replace(/\-/g, '');
@@ -18,12 +18,6 @@ function toKeys(keys) {
         return keyPrefix + key;
     });
 }
-
-var $sleep = thunkify(function (ms, callback) {
-    setTimeout(function () {
-        callback(null, 'done');
-    }, ms);
-});
 
 describe('#cache', function () {
 
@@ -68,7 +62,7 @@ describe('#cache', function () {
     it('get by generator function', function* () {
         var key1 = keyPrefix + 'g1';
         var data = yield cache.$get(key1, function* () {
-            yield $sleep(500);
+            yield remote.$sleep(500);
             return 'G1';
         });
         should(data!==null).be.true;
@@ -114,7 +108,7 @@ describe('#cache', function () {
         data.should.be.ok;
         data.expires.should.equal(1234);
         // wait 3 seconds:
-        yield $sleep(3000);
+        yield remote.$sleep(3000);
         // get again:
         var data2 = yield cache.$get(key1);
         should(data2===null).be.true;
