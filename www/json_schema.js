@@ -303,11 +303,11 @@ var schemas = {
     createWikiPage: {
         type: 'object',
         properties: {
-            name: PROPERTY.NAME,
             parent_id: PROPERTY.ID_EMPTY,
+            name: PROPERTY.NAME,
             content: PROPERTY.TEXT
         },
-        required: ['name', 'parent_id', 'content']
+        required: ['parent_id', 'name', 'content']
     },
     updateWikiPage: {
         type: 'object',
@@ -319,13 +319,13 @@ var schemas = {
     moveWikiPage: {
         type: 'object',
         properties: {
-            target_id: PROPERTY.ID_EMPTY,
+            parent_id: PROPERTY.ID_EMPTY,
             index: {
                 type: 'integer',
                 minimum: 0
             }
         },
-        required: ['index']
+        required: ['parent_id', 'index']
     },
 
 
