@@ -59,6 +59,11 @@ var PROPERTY = {
         pattern: '^[0-9a-f]{50}$'
     },
 
+    ID_EMPTY: {
+        type: 'string',
+        pattern: '^([0-9a-f]{50})?$'
+    },
+
     EMAIL: {
         type: 'string',
         maxLength: 100,
@@ -85,6 +90,12 @@ var PROPERTY = {
     },
 
     DESCRIPTION: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 1000
+    },
+
+    DESCRIPTION_OPTIONAL: {
         type: 'string',
         maxLength: 1000,
         default: ''
@@ -167,7 +178,7 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION
+            description: PROPERTY.DESCRIPTION_OPTIONAL
         },
         required: ['name']
     },
@@ -175,7 +186,7 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION
+            description: PROPERTY.DESCRIPTION_OPTIONAL
         }
     },
     sortCategories: {
@@ -237,7 +248,7 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION,
+            description: PROPERTY.DESCRIPTION_OPTIONAL,
             mime: PROPERTY.MIME,
             data: PROPERTY.FILE
         },
@@ -254,7 +265,7 @@ var schemas = {
             content: PROPERTY.TEXT,
             image: PROPERTY.FILE
         },
-        required: ['category_id', 'name', 'content', 'image']
+        required: ['category_id', 'name', 'description', 'content', 'image']
     },
     updateArticle: {
         type: 'object',
@@ -268,7 +279,54 @@ var schemas = {
             image: PROPERTY.FILE
         }
     },
-
+    createWiki: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS,
+            content: PROPERTY.TEXT,
+            image: PROPERTY.FILE
+        },
+        required: ['name', 'description', 'content', 'image']
+    },
+    updateWiki: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS,
+            content: PROPERTY.TEXT,
+            image: PROPERTY.FILE
+        }
+    },
+    createWikiPage: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            parent_id: PROPERTY.ID_EMPTY,
+            content: PROPERTY.TEXT
+        },
+        required: ['name', 'parent_id', 'content']
+    },
+    updateWikiPage: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            content: PROPERTY.TEXT
+        },
+    },
+    moveWikiPage: {
+        type: 'object',
+        properties: {
+            target_id: PROPERTY.ID_EMPTY,
+            index: {
+                type: 'integer',
+                minimum: 0
+            }
+        },
+        required: ['index']
+    },
 
 
 
@@ -322,7 +380,7 @@ var schemas = {
             name: PROPERTY.NAME,
             teacher_id: PROPERTY.ID,
             image: PROPERTY.IMAGE,
-            description: PROPERTY.DESCRIPTION,
+            description: PROPERTY.DESCRIPTION_OPTIONAL,
             price: {
                 type: 'integer',
                 minimum: 0,
@@ -351,7 +409,7 @@ var schemas = {
             name: PROPERTY.NAME,
             teacher_id: PROPERTY.ID,
             image: PROPERTY.IMAGE,
-            description: PROPERTY.DESCRIPTION,
+            description: PROPERTY.DESCRIPTION_OPTIONAL,
             price: {
                 type: 'integer',
                 minimum: 0,
@@ -377,7 +435,7 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION,
+            description: PROPERTY.DESCRIPTION_OPTIONAL,
             visible: {
                 type: 'boolean'
             }
@@ -388,7 +446,7 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION,
+            description: PROPERTY.DESCRIPTION_OPTIONAL,
             visible: {
                 type: 'boolean'
             }
