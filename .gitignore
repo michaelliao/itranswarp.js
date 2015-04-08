@@ -27,6 +27,9 @@ backup/*.sql
 # private config files:
 config_production.js
 
+# generated css:
+itranswarp.css
+
 # temp output dir:
 output
 
