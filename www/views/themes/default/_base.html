@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
+
+<!--
+{% macro pagination(page_obj, url) %}
+    {% set pageIndex = page_obj.pageIndex %}
+    {% set range = page_obj.range() %}
+    <div class="x-pagination pagination">
+        <ul>
+        {% if page_obj.pageIndex > 1 %}
+            <li><a href="{{ url|safe }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
+        {% endif %}
+        {% for index in range %}
+            {% if index == pageIndex %}
+                <li class="active"><span>{{ index }}</span></li>
+            {% elif index %}
+                <li><a href="{{ url|safe }}{{ index }}">{{ index }}</a></li>
+            {% else %}
+                <li class="disabled"><span>...</span></li>
+            {% endif %}
+        {% endfor %}
+            {% if page_obj.pageIndex < page_obj.totalPages %}
+                <li><a href="{{ url|safe }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endmacro %}
+
+{% macro makeComments(url, comments) %}
+
+<form class="x-comment-box x-auth-not-signed">
+    <div class="x-comment-signin">
+        <p>请登录后发表评论：</p>
+    {% for s in __signins__ %}
+        <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
+    {% endfor %}
+    </div>
+</form>
+
+<form url="{{ url }}" onsubmit="return create_comment(this);" class="x-comment-box x-auth-signed x-comment-form">
+    <div class="x-comment-user-img">
+        <img src="about:blank" class="x-user-image x-user-image-small" />
+    </div>
+    <div class="x-comment-input-area">
+        <div class="x-comment-prompt">
+            <span class="x-user-name"><script> document.write(g_user_name); </script></span> <span class="x-comment-error"></span>
+        </div>
+        <div class="x-comment-input">
+            <textarea name="content" placeholder="{{ _('Say something') }}..." rows="4"></textarea>
+        </div>
+        <div class="x-comment-submit">
+            <span>评论将自动同步至微博，请发表有价值的信息。</span>
+            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> {{ _('Comment') }}</button>
+        </div>
+    </div>
+</form>
+
+<div class="x-comments-list"></div>
+
+<script>
+
+$(function() {
+    var $list = $('div.x-comments-list');
+    {% for c in comments %}
+    $list.append(addComment({
+        'id': '{{ c.id }}',
+        'user_id': '{{ c.user_id }}',
+        'user_name': '{{ c.user_name }}',
+        'user_image_url': '{{ c.user_image_url }}',
+        'created_at': {{ c.created_at }},
+        'content': {{ c.content|json|safe }}
+    }));
+    {% endfor %}
+    {% if __user__ and __user__.role===0 %}
+    $('a.x-delete-comment').css('display', '');
+    {% endif %}
+});
+
+</script>
+
+{% endmacro %}
+-->
+
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %} ??? {% endblock %} - {{ __website__.name }}</title>
+    <meta name="keywords" content="{{ __website__.keywords }}" />
+    <meta name="description" content="{{ __website__.description }}" />
+    {% block meta %}<!-- block meta  -->{% endblock %}
+    <!--[if lt IE 9]>
+        <script src="/static/themes/{{ __theme__ }}/static/js/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
+    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+    <style>
+{% if __user__ %}
+        .x-display-if-not-signin { display: none; }
+{% else %}
+        .x-display-if-signin { display: none; }
+{% endif %}
+    </style>
+    <script>
+        var g_time = parseFloat('{{ __time__ }}');
+//{% if __user__ %}
+        var g_user_name = '{{ __user__.name|addslashes }}';
+        var g_user_image = '{{ __user__.image_url }}';
+//{% else %}
+        var g_user_name = '';
+        var g_user_image = 'about:blank';
+//{% endif %}
+    </script>
+    {% block beforehead %}<!-- before head  -->{% endblock %}
+    <!-- BEGIN custom_header -->
+    {{ __website__.custom_header|safe }}
+    <!-- END custom_header -->
+</head>
+<body>
+    <div class="x-goto-top">
+        <div class="x-arrow"></div>
+        <div class="x-stick"></div>
+    </div>
+
+    <div id="header" class="uk-navbar uk-navbar-attached">
+        <div class="uk-container x-container">
+            <div class="uk-navbar uk-navbar-attached">
+                <a href="/" class="uk-navbar-brand uk-hidden-small">{{ __website__.name }}</a>
+                <a href="/" class="uk-navbar-brand uk-visible-small"><i class="uk-icon-home"></i></a>
+                <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
+                    <li><a href="/"><i class="uk-icon-home"></i> Home</a></li>
+                    <li><a href="/category/html"><i class="uk-icon-html5"></i> HTML5</a></li>
+                    <li><a href="/category/java">Java</a></li>
+                    <li><a href="/discuss">Discuss</a></li>
+
+                    {% for nav in __navigations__ %}
+                    <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                    {% endfor %}
+                </ul>
+                <ul class="uk-navbar-nav uk-visible-small">
+                    <li class="uk-parent" data-uk-dropdown>
+                        <a href="#0"><i class="uk-icon-user"></i> ???</a>
+                        <div class="uk-dropdown uk-dropdown-navbar">
+                            <ul class="uk-nav uk-nav-navbar">
+                                {% for nav in __navigations__ %}
+                                <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="uk-navbar-content uk-hidden-small">
+                    <form id="form-search" class="uk-form uk-margin-remove uk-display-inline-block">
+                        <input type="text" placeholder="Search">
+                    </form>
+                </div>
+
+                <div class="uk-navbar-flip">
+                    <ul class="uk-navbar-nav">
+                        <li class="uk-parent x-display-if-signin" data-uk-dropdown>
+                            <a href="#0"><i class="uk-icon-user"></i> <span class="x-user-name"></span></a>
+                            <div class="uk-dropdown uk-dropdown-navbar">
+                                <ul class="uk-nav uk-nav-navbar">
+                                    <li><a target="_blank" href="/my/courses"><i class="uk-icon-list-ul"></i> 我的课程</a></li>
+                                    <li><a target="_blank" href="/my/profile"><i class="uk-icon-cogs"></i> 个人设置</a></li>
+                                    <li class="uk-nav-divider"></li>
+                                    <li><a href="/auth/signout"><i class="uk-icon-power-off"></i> 安全注销</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="x-display-if-not-signin uk-hidden-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i> Sign In</a></li>
+                        <li class="x-display-if-not-signin uk-visible-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div id="main">
+        <div class="x-placeholder-50"><!-- placeholder --></div>
+        <div class="x-placeholder"><!-- placeholder --></div>
+        <div class="uk-container x-container">
+    </div>
+
+    <div id="footer">
+{% if __website__.custom_footer %}
+    <!-- BEGIN custom_footer -->
+    {{ __website__.custom_footer|safe }}
+    <!-- END custom_footer -->
+{% else %}
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                    <hr/>
+                    <div style="text-align:center;">
+                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endif %}
+    </div>
+</body>
+</html>
