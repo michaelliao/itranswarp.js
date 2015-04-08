@@ -19,6 +19,7 @@ module.exports = {
     // cache keys:
     cache: {
         NAVIGATIONS: '__navigations__',
+        WEBSITE: '__website__',
         SETTINGS: '__settings__'
     },
 

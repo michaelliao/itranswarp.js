@@ -143,49 +143,48 @@ function getHotArticles(articles) {
     return arr.length > 3 ? arr.slice(0, 3) : arr;
 }
 
+var THEME = config.theme;
+var KEY_WEBSITE = constants.cache.WEBSITE;
+
+function* $getModel(model) {
+    model.__website__ = yield settingApi.$getSettingsByDefaults(KEY_WEBSITE, settingApi.defaultSettings.website);
+    return model;
+}
+
+function getView(view) {
+    return 'themes/default/' + view;
+}
+
 module.exports = {
 
     'GET /': function* () {
-        var model = {};
-        async.waterfall([
-            function (callback) {
-                categories = categoryApi.$getCategories()
-            },
-            function (categories, callback) {
-                model.getCategoryName = function (cid) {
-                    var c, i;
-                    for (i = 0; i < categories.length; i++) {
-                        c = categories[i];
-                        if (c.id === cid) {
-                            return c.name;
-                        }
+        var
+            i, model,
+            categories = yield categoryApi.$getCategories(),
+            articles = yield articleApi.$getRecentArticles(20),
+            nums = yield cache.$counts(_.map(articles, function (a) {
+                return a.id;
+            })),
+            getCategoryName = function (cid) {
+                var c, i;
+                for (i = 0; i < categories.length; i++) {
+                    c = categories[i];
+                    if (c.id === cid) {
+                        return c.name;
                     }
-                    return '';
-                };
-                articleApi.getRecentArticles(20, callback);
-            },
-            function (articles, callback) {
-                cache.counts(_.map(articles, function (a) {
-                    return a.id;
-                }), function (err, nums) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    var i;
-                    for (i = 0; i < articles.length; i++) {
-                        articles[i].reads = nums[i];
-                    }
-                    callback(null, articles);
-                });
-            }
-        ], function (err, articles) {
-            if (err) {
-                return next(err);
-            }
-            model.articles = articles;
-            model.hotArticles = getHotArticles(articles);
-            return processTheme('index.html', model, req, res, next);
-        });
+                }
+                return '';
+            };
+        for (i = 0; i < articles.length; i++) {
+            articles[i].reads = nums[i];
+        }
+        model = {
+            //
+        };
+        //    model.articles = articles;
+        //    model.hotArticles = getHotArticles(articles);
+        //    return processTheme('index.html', model, req, res, next);
+        this.render(getView('index.html'), yield $getModel.apply(this, [model]));
     },
 
     'GET /category/:id': function (req, res, next) {
