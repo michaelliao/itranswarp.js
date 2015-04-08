@@ -288,7 +288,7 @@ module.exports = {
             attachment,
             props = [],
             data = this.request.body;
-        json_schema.validate('createWiki', data);
+        json_schema.validate('updateWiki', data);
 
         wiki = yield $getWiki(id);
         if (data.name) {
@@ -327,7 +327,7 @@ module.exports = {
         if (props.length > 0) {
             props.push('updated_at');
             props.push('version');
-            wiki.$update(props);
+            yield wiki.$update(props);
         }
         if (!wiki.content) {
             text = yield Text.$find(wiki.content_id);
@@ -403,7 +403,10 @@ module.exports = {
         content_id = next_id();
 
         // count:
-        num = yield warp.$queryNumber('select max(display_order) from wikipages where wiki_id=? and parent_id=?', [data.wiki_id, data.parent_id]);
+        num = yield warp.$queryNumber(
+            'select max(display_order) from wikipages where wiki_id=? and parent_id=?',
+            [wiki_id, data.parent_id]
+        );
         text = yield Text.$create({
             id: content_id,
             ref_id: wp_id,
@@ -504,14 +507,14 @@ module.exports = {
          * 
          * @name Move WikiPage
          * @param {string} id: The source id of the WikiPage.
-         * @param {string} target_id: The target id of the WikiPage. Specify '' if move to top of the tree.
+         * @param {string} parent_id: The target id of the WikiPage. Specify '' if move to top of the tree.
          * @param {int} index: The index of the moved page.
          * @return {object} The moved wiki object.
          */
         helper.checkPermission(this.request, constants.role.EDITOR);
 
         var
-            index, p, parentId,
+            index, p, parent_id, i, L,
             wiki,
             movingPage,
             parentPage,
@@ -520,14 +523,21 @@ module.exports = {
         json_schema.validate('moveWikiPage', data);
 
         index = data.index;
-        target_id = data.target_id;
+        parent_id = data.parent_id;
 
         movingPage = yield $getWikiPage(id);
-        wiki = yield $getWiki(wikipage.wiki_id);
 
-        parentPage = target_id === '' ? null : yield $getWikiPage(target_id);
+        if (movingPage.parent_id === parent_id && movingPage.display_order === index) {
+            console.log('>> No need to update.');
+            this.body = movingPage;
+            return;
+        }
+
+        wiki = yield $getWiki(movingPage.wiki_id);
+
+        parentPage = parent_id === '' ? null : yield $getWikiPage(parent_id);
         if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
-            throw api.invalidParam('target_id');
+            throw api.invalidParam('parent_id');
         }
 
         // check to prevent recursive:
@@ -543,10 +553,9 @@ module.exports = {
         }
 
         // get current children:
-        parentId = parentPage === null ? '' : parentPage.id,
         L = [];
         _.each(allPages, function (p, pid) {
-            if (p.parent_id === parentId && p.id !== movingPage.id) {
+            if (p.parent_id === parent_id && p.id !== movingPage.id) {
                 L.push(p);
             }
         });
@@ -562,7 +571,7 @@ module.exports = {
             yield warp.$update('update wikipages set display_order=? where id=?', [i, L[i].id]);
         }
         movingPage.display_order = index; // <-- already updated, but need to pass to result
-        movingPage.parent_id = parentId;
+        movingPage.parent_id = parent_id;
         yield movingPage.$update(['parent_id', 'updated_at', 'version']);
         this.body = movingPage;
     },
