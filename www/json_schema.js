@@ -327,185 +327,38 @@ var schemas = {
         },
         required: ['parent_id', 'index']
     },
-
-
-
-
-    //------
-    createUser: {
+    createBoard: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            email: {
-                type: 'string',
-                format: 'email'
-            },
-            passwd: PROPERTY.PASSWD,
-            role: {
-                type: 'integer',
-                enum: [constants.role.STUDENT, constants.role.TEACHER, constants.role.EDITOR]
-            },
-            gender: {
-                type: 'string',
-                enum: ['male', 'female', ''],
-                default: ''
-            }
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS
         },
-        required: ['name', 'email', 'passwd', 'role']
+        required: ['name', 'description']
     },
-    createMessage: {
-        type: 'object',
-        properties: {
-            from_id: PROPERTY.ID,
-            to_id: PROPERTY.ID,
-            name: PROPERTY.NAME,
-            content: PROPERTY.TEXT
-        },
-        required: ['to_id', 'name', 'content']
-    },
-    createResource: {
+    updateBoard: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            data: {
-                type: 'string',
-                minLength: 1
-            }
-        },
-        required: ['name', 'data']
-    },
-    createCourse: {
-        type: 'object',
-        properties: {
-            name: PROPERTY.NAME,
-            teacher_id: PROPERTY.ID,
-            image: PROPERTY.IMAGE,
-            description: PROPERTY.DESCRIPTION_OPTIONAL,
-            price: {
-                type: 'integer',
-                minimum: 0,
-                maximum: 10000
-            },
-            free_chapters: {
-                type: 'integer',
-                minimum: 0,
-                maximum: 10,
-                default: 0
-            },
-            difficulty: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 5
-            },
-            visible: {
-                type: 'boolean'
-            }
-        },
-        required: ['name', 'teacher_id', 'image', 'price', 'difficulty', 'visible']
-    },
-    updateCourse: {
-        type: 'object',
-        properties: {
-            name: PROPERTY.NAME,
-            teacher_id: PROPERTY.ID,
-            image: PROPERTY.IMAGE,
-            description: PROPERTY.DESCRIPTION_OPTIONAL,
-            price: {
-                type: 'integer',
-                minimum: 0,
-                maximum: 10000
-            },
-            free_chapters: {
-                type: 'integer',
-                minimum: 0,
-                maximum: 10,
-                default: 0
-            },
-            difficulty: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 5
-            },
-            visible: {
-                type: 'boolean'
-            }
+            description: PROPERTY.DESCRIPTION,
+            tags: PROPERTY.TAGS
         }
     },
-    createChapter: {
+    sortBoards: {
         type: 'object',
         properties: {
-            name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION_OPTIONAL,
-            visible: {
-                type: 'boolean'
-            }
+            ids: PROPERTY.ID_LIST
         },
-        required: ['name', 'visible']
-    },
-    updateChapter: {
-        type: 'object',
-        properties: {
-            name: PROPERTY.NAME,
-            description: PROPERTY.DESCRIPTION_OPTIONAL,
-            visible: {
-                type: 'boolean'
-            }
-        }
-    },
-    sortChapters: {
-        type: 'object',
-        properties: {
-            chapter_ids: PROPERTY.ID_LIST
-        },
-        required: ['chapter_ids']
-    },
-    createSection: {
-        type: 'object',
-        properties: {
-            name: PROPERTY.NAME,
-            duration: PROPERTY.DURATION,
-            visible: {
-                type: 'boolean'
-            },
-            video_id: PROPERTY.ID,
-            code_type: PROPERTY.CODE_TYPE,
-            code_initial: PROPERTY.TEXT_OPTIONAL,
-            code_check: PROPERTY.TEXT_OPTIONAL,
-            content: PROPERTY.TEXT_OPTIONAL
-        },
-        required: ['name', 'duration', 'visible']
-    },
-    updateSection: {
-        type: 'object',
-        properties: {
-            name: PROPERTY.NAME,
-            duration: PROPERTY.DURATION,
-            visible: {
-                type: 'boolean'
-            },
-            video_id: PROPERTY.ID,
-            code_type: PROPERTY.CODE_TYPE,
-            code_initial: PROPERTY.TEXT_OPTIONAL,
-            code_check: PROPERTY.TEXT_OPTIONAL,
-            content: PROPERTY.TEXT_OPTIONAL
-        }
-    },
-    sortSections: {
-        type: 'object',
-        properties: {
-            section_ids: PROPERTY.ID_LIST
-        },
-        required: ['section_ids']
+        required: ['ids']
     },
     createTopic: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
-            section_id: PROPERTY.ID,
-            tag: PROPERTY.DISCUSS_TAG,
+            tags: PROPERTY.TAGS,
             content: PROPERTY.TEXT
         },
-        required: ['name', 'tag', 'content']
+        required: ['name', 'content']
     },
     createReply: {
         type: 'object',
