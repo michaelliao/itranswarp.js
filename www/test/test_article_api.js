@@ -112,6 +112,7 @@ describe('#articles', function () {
             r1.content.should.equal('Long content...');
             r1.content_id.should.be.ok;
             r1.cover_id.should.be.ok;
+            r1.version.should.equal(0);
 
             // check image:
             var dl = yield remote.$download('/files/attachments/' + r1.cover_id + '/l');
@@ -131,11 +132,13 @@ describe('#articles', function () {
             r2.content_id.should.not.equal(r1.content_id);
             r2.cover_id.should.equal(r1.cover_id);
             r2.user_id.should.equal(r1.user_id);
+            r2.version.should.equal(1);
 
             // query:
             var r3 = yield remote.$get(roles.EDITOR, '/api/articles/' + r1.id);
             r3.name.should.equal(r2.name);
             r3.content.should.equal(r2.content);
+            r3.version.should.equal(1);
             // not updated:
             r3.tags.should.equal(r1.tags);
             r3.description.should.equal(r1.description);
