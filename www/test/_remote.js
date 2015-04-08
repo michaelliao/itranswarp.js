@@ -236,6 +236,12 @@ module.exports = {
 
     $upload: $upload,
 
+    $sleep: thunkify(function (ms, callback) {
+        setTimeout(function () {
+            callback(null, 'done');
+        }, ms);
+    }),
+
     readFileSync: function (filename) {
         return fs.readFileSync(__dirname + '/' + filename);
     },

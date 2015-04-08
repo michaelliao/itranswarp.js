@@ -153,20 +153,6 @@ function* $getTopics(board_id, page) {
     });
 }
 
-function* $getAllReplies(page) {
-    page.total = yield Reply.$findNumber({
-        select: 'count(id)'
-    });
-    if (page.isEmpty) {
-        return [];
-    }
-    return yield Reply.$findAll({
-        order: 'id desc',
-        offset: page.offset,
-        limit: page.limit
-    });
-}
-
 function* $getReplies(topic_id, page) {
     var num = yield Reply.$findNumber({
         select: 'count(id)',
@@ -210,7 +196,7 @@ function* $createTopic(user, board_id, ref_type, ref_id, data) {
             ref_id: ref_id,
             name: data.name.trim(),
             tags: helper.formatTags(data.tags || ''),
-            content: data.content
+            content: helper.md2html(data.content)
         });
     yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
     indexDiscuss(topic);
@@ -230,8 +216,6 @@ module.exports = {
     $getTopic: $getTopic,
 
     $getTopics: $getTopics,
-
-    $getAllReplies: $getAllReplies,
 
     $getReplies: $getReplies,
 
@@ -409,6 +393,33 @@ module.exports = {
         this.body = topic;
     },
 
+    'GET /api/replies': function* () {
+        /**
+         * Get replies by page.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            replies;
+        page.total = yield Reply.$findNumber({
+            select: 'count(id)'
+        });
+        if (page.isEmpty) {
+            replies = [];
+        }
+        else {
+            replies = yield Reply.$findAll({
+                order: 'id desc',
+                offset: page.offset,
+                limit: page.limit
+            });
+        }
+        this.body = {
+            page: page,
+            replies: replies
+        };
+    },
+
     'POST /api/replies/:id/delete': function* (id) {
         /**
          * Delete a reply by its id. NOTE delete a reply only mark it is deleted.
@@ -423,8 +434,7 @@ module.exports = {
             throw api.notFound('Reply');
         }
         reply.deleted = true;
-        reply.content = '';
-        yield reply.$update(['deleted', 'content', 'updated_at', 'version']);
+        yield reply.$update(['deleted', 'updated_at', 'version']);
         unindexDiscuss(reply);
         this.body = {
             id: id
