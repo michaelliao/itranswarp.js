@@ -1,10 +1,11 @@
 {% extends '_base.html' %}
 
-{% block meta %}
-    <meta property="x-nav" content="/" />
-{% endblock %}
-
 {% block title %}{{ _('Home') }}{% endblock %}
+
+{% block head %}
+    {% set __sidebar_left__ = true %}
+    {% set __sidebar_right__ = true %}
+{% endblock %}
 
 {% block container %}
     <div class="row">

@@ -2,29 +2,26 @@
 <html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
 
 <!--
-{% macro pagination(page_obj, url) %}
-    {% set pageIndex = page_obj.pageIndex %}
-    {% set range = page_obj.range() %}
-    <div class="x-pagination pagination">
-        <ul>
-        {% if page_obj.pageIndex > 1 %}
-            <li><a href="{{ url|safe }}{{ page_obj.pageIndex - 1 }}">← 上一页</a></li>
-        {% endif %}
-        {% for index in range %}
-            {% if index == pageIndex %}
-                <li class="active"><span>{{ index }}</span></li>
-            {% elif index %}
-                <li><a href="{{ url|safe }}{{ index }}">{{ index }}</a></li>
+{% macro pagination(url, page) %}
+    {% if page.isEmpty %}
+        <ul class="uk-pagination">
+            <li><span>No items available</span></li>
+        </ul>
+    {% else %}
+        <ul class="uk-pagination">
+        {% for _p in page.list %}
+            {% if _p == '...' %}
+            <li class="uk-disabled"><span>...</span></li>
+            {% elseif _p == page.index %}
+            <li class="uk-active"><span>{{ _p }}</span></li>
             {% else %}
-                <li class="disabled"><span>...</span></li>
+            <li><a href="{{ url }}page={{ _p }}">{{ _p }}</a></li>
             {% endif %}
         {% endfor %}
-            {% if page_obj.pageIndex < page_obj.totalPages %}
-                <li><a href="{{ url|safe }}{{ page_obj.pageIndex + 1 }}">下一页 →</a></li>
-            {% endif %}
         </ul>
-    </div>
+    {% endif %}
 {% endmacro %}
+
 
 {% macro makeComments(url, comments) %}
 
@@ -86,15 +83,24 @@ $(function() {
     <title>{% block title %} ??? {% endblock %} - {{ __website__.name }}</title>
     <meta name="keywords" content="{{ __website__.keywords }}" />
     <meta name="description" content="{{ __website__.description }}" />
-    {% block meta %}<!-- block meta  -->{% endblock %}
-    <!--[if lt IE 9]>
-        <script src="/static/themes/{{ __theme__ }}/static/js/html5.js"></script>
-    <![endif]-->
+    <meta property="x-nav" content="{% block nav %}/{% endblock %}" />
+    {% block meta %}<!-- meta here -->{% endblock %}
+
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/highlight.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
     <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
-
+    <!--[if lt IE 10]>
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css" />
+    <![endif]-->
     <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/marked.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/uikit.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit/tooltip.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit/htmleditor.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/itranswarp.js"></script>
     
     <style>
 {% if __user__ %}
@@ -113,13 +119,13 @@ $(function() {
         var g_user_image = 'about:blank';
 //{% endif %}
     </script>
-    {% set __sidebar_left__ = true %}
-    {% set __sidebar_left_width__ = '300px' %}
+    {% set __sidebar_left__ = false %}
+    {% set __sidebar_left_width__ = '316px' %}
     {% set __sidebar_left_padding__ = true %}
-    {% set __sidebar_right__ = true %}
-    {% set __sidebar_right_width__ = '200px' %}
+    {% set __sidebar_right__ = false %}
+    {% set __sidebar_right_width__ = '316px' %}
     {% set __sidebar_right_padding__ = true %}
-    {% block beforehead %}<!-- before head  -->{% endblock %}
+
     {% block head %}<!-- head  -->{% endblock %}
     <!-- BEGIN custom_header -->
     {{ __website__.custom_header|safe }}
@@ -134,21 +140,19 @@ $(function() {
     <div id="header" class="uk-navbar uk-navbar-attached">
         <div class="uk-container x-container">
             <div class="uk-navbar uk-navbar-attached">
-                <a href="/" class="uk-navbar-brand uk-hidden-small">{{ __website__.name }}</a>
-                <a href="/" class="uk-navbar-brand uk-visible-small"><i class="uk-icon-home"></i></a>
+                <a href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
+                <a href="/" class="uk-navbar-brand uk-hidden-large"><i class="uk-icon-home"></i></a>
                 <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
-                    <li><a href="/">NAV MENU</a></li>
-
                     {% for nav in __navigations__ %}
                     <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                     {% endfor %}
                 </ul>
+                {% if __navigations__ && __navigations__.length %}
                 <ul class="uk-navbar-nav uk-visible-small">
                     <li class="uk-parent" data-uk-dropdown>
                         <a href="#0"><i class="uk-icon-navicon"></i></a>
                         <div class="uk-dropdown uk-dropdown-navbar">
                             <ul class="uk-nav uk-nav-navbar">
-                                <li><a href="/">Home</a></li>
                                 {% for nav in __navigations__ %}
                                 <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                                 {% endfor %}
@@ -156,10 +160,14 @@ $(function() {
                         </div>
                     </li>
                 </ul>
+                {% endif %}
 
-                <div class="uk-navbar-content uk-hidden-small">
+                <div class="uk-navbar-content x-hidden-tiny">
                     <form id="form-search" class="uk-form uk-margin-remove uk-display-inline-block">
-                        <input type="text" placeholder="Search">
+                        <div class="uk-form-icon">
+                            <i class="uk-icon-search"></i>
+                            <input type="text" placeholder="Search">
+                        </div>
                     </form>
                 </div>
 
@@ -190,61 +198,59 @@ $(function() {
         <div class="uk-container x-container">
             <div class="uk-grid">
                 <div class="uk-width-1-1">
-                    {% block body_before %}{% endblock %}
+                    {% block body_before %}<!-- block body_before -->{% endblock %}
                 </div>
             </div>
             <div class="uk-flex">
             {% if __sidebar_left__ %}
-                {% block sidebar %}
-                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-left {% if !__sidebar_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_left_width__ }}">
+                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-left {% if !__sidebar_left_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_left_width__ }} !important">
                     <div class="uk-clearfix">
-                        {% block sidebar_before %}{% endblock %}
+                        {% block sidebar_left_before %}<!-- block sidebar_left_before -->{% endblock %}
                     </div>
-                    <h3>LEFT</h3>
-                    {% block sidebar_content %}
-                    {% endblock %}
+                    <div>
+                        {% block sidebar_left_content %}<h3>sidebar_left_content</h3>{% endblock %}
+                    </div>
                     <div class="uk-clearfix">
-                        {% block sidebar_after %}{% endblock %}
+                        {% block sidebar_left_after %}<!-- block sidebar_left_after -->{% endblock %}
                     </div>
                 </div>
-                {% endblock %}
             {% endif %}
-                <div class="uk-width-1-1 uk-flex-item-auto" style="flex-shrink:1000">
+                <div class="uk-width-1-1 uk-flex-item-auto" style="flex-shrink:1000;{% if __sidebar_right__ %}padding-right:15px;{% endif %}">
                     <div class="uk-clearfix">
                         {% block main_content_before %}{% endblock %}
                     </div>
-                    {% block main_content %} MAIN {% endblock %}
+                    <div>
+                        {% block main_content %}<h3>main_content</h3>{% endblock %}
+                    </div>
                     <div class="uk-clearfix">
                         {% block main_content_after %}{% endblock %}
                     </div>
                 </div>
             {% if __sidebar_right__ %}
-                {% block sidebar %}
-                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-right {% if !__sidebar_right_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_right_width__ }}">
+                <div class="uk-width-1-1 uk-margin-left uk-hidden-small x-sidebar-right {% if !__sidebar_right_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_right_width__ }} !important">
                     <div class="uk-clearfix">
-                        {% block sidebar_before %}{% endblock %}
+                        {% block sidebar_right_before %}<!-- block sidebar_right_before -->{% endblock %}
                     </div>
-                    <h3>LEFT</h3>
-                    {% block sidebar_content %}
-                    {% endblock %}
+                    <div>
+                        {% block sidebar_right_content %}<h3>sidebar_right_content</h3>{% endblock %}
+                    </div>
                     <div class="uk-clearfix">
-                        {% block sidebar_after %}{% endblock %}
+                        {% block sidebar_right_after %}<!-- block sidebar_right_after -->{% endblock %}
                     </div>
                 </div>
-                {% endblock %}
             {% endif %}
             </div>
+
             <div class="uk-grid">
                 <div class="uk-width-1-1">
-                    {% block body_after %}{% endblock %}
+                    {% block body_after %}<!-- block body_after -->{% endblock %}
                 </div>
             </div>
         </div>
-        <div id="push"></div>
+        <div class="x-push-to-bottom"></div>
     </div>
 
     <div id="footer">
-        <div class="x-placeholder"><!-- placeholder --></div>
         <div class="uk-container x-container">
             <hr>
             <div class="uk-flex">
@@ -269,6 +275,16 @@ $(function() {
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="oldBrowser">
+        <div class="uk-alert uk-alert-danger" data-uk-alert>
+            <a href="#0" class="uk-alert-close uk-close"></a>
+            <p>
+                WARNING: You are using an old browser that does not support HTML5.
+                Please choose a modern browser (<a href="http://www.google.com/chrome" target="_blank">Chrome</a> / <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a> / <a href="http://www.apple.com/safari/" target="_blank">Sarafi</a>) to get a good experience.
+            </p>
         </div>
     </div>
 </body>

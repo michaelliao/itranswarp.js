@@ -1,18 +1,21 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
+
+{% block nav %}
+    /category/{{ article.category_id }}
+{% endblock %}
 
 {% block meta %}
-    <meta property="x-nav" content="/category/{{ article.category_id }}" />
-
     <meta property="og:type" content="article" />
     <meta property="og:url" content="http://{{ __request__.host }}/article/{{ article.id }}" />
     <meta property="og:title" content="{{ article.name }}" />
     <meta property="og:description" content="{{ article.name }}" />
-    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" />
+    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/l" />
 {% endblock %}
 
 {% block title %}{{ article.name }}{% endblock %}
 
-{% block beforehead %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
 <script>
 var model = {
     article: {
@@ -29,20 +32,15 @@ var model = {
 </script>
 {% endblock %}
 
-{% block main %}
+{% block main_content %}
 
-<div class="x-article">
-    <div class="x-article-title">
-        <h4>{{ article.name }}</h4>
-    </div>
-    <div class="x-article-info">
-        <a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.reads }}
-    </div>
-    <div class="x-article-cover-large" style="background-image: url(/files/attachments/{{ article.cover_id }}/l)"></div>
+    <h3>{{ article.name }}</h3>
+    <p><img src="/files/attachments/{{ article.cover_id }}/l" class="uk-responsive-width"></p>
+    <p><a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.reads }}</p>
     <div class="x-article-content x-content">
-        {{ article.html_content|safe }}
+        {{ article.content|safe }}
     </div>
-</div>
+
 
 <h4>{{ _('Comments') }}</h4>
 
