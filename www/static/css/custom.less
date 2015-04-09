@@ -11,25 +11,9 @@ body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 20px;
-    color: #333;
+    color: #666;
     background-color: #fff;
 }
-
-#main {
-    min-height: 100%;
-    height: 100%;
-    margin: 0;
-
-    .x-placeholder-50 {
-        height: 50px;
-    }
-
-    .x-placeholder {
-        height: @global-grid-gutter;
-    }
-}
-
-// for nav-top bar:
 
 #header {
     position: fixed;
@@ -43,10 +27,118 @@ body {
     }
 }
 
+@height-push-to-bottom: 150px;
+
+#main {
+    height: 100%;
+    min-height: 100%;
+    margin: 0 0 -@height-push-to-bottom 0;
+
+    .x-sidebar-left {
+        padding-right: 15px;
+        border-right: 1px solid @grid-divider-border;
+    }
+
+    .x-sidebar-left.x-sidebar-no-padding {
+        padding-right: 0;
+    }
+
+    .x-sidebar-right {
+        padding-left: 15px;
+        border-left: 1px solid @grid-divider-border;
+    }
+
+    .x-sidebar-right.x-sidebar-no-padding {
+        padding-left: 0;
+    }
+
+    .x-push-to-bottom {
+        clear: both;
+        height: @height-push-to-bottom;
+    }
+}
+
+#footer {
+    height: @height-push-to-bottom;
+
+    .uk-icon-button {
+        color: #666;
+    }
+
+    hr {
+        margin: @global-grid-gutter -20px;
+    }
+}
+
+.x-placeholder-50 {
+    height: 50px;
+}
+
+.x-placeholder {
+    height: @global-grid-gutter;
+}
+
+@media (max-width: @breakpoint-small) {
+    .x-hidden-tiny {
+        display: none !important;
+    }
+}
+
 // for container:
 
 .x-container {
-    max-width: 100%;
+    max-width: 1200px;
     width: 100%;
+    margin-left: auto;
+    margin-right: auto;
     display: table;
+}
+
+// goto top:
+
+div.x-goto-top {
+    //display: none;
+    opacity: 0.9;
+    z-index: 999999;
+    position: fixed;
+    bottom: 113px;
+    left: 90%;
+    margin-left: 40px;
+    width: 38px;
+    height: 38px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: @button-background;
+    border: 1px solid @navbar-background;
+    &:hover {
+        background-color: @button-hover-background;
+        border-color: @x-navbar-hover-background;
+        div.x-arrow {
+            border-bottom-color: @x-navbar-hover-background;
+        }
+        div.x-stick {
+            background-color: @x-navbar-hover-background;
+        }
+    }
+
+    div.x-arrow {
+        position: absolute;
+        left: 10px;
+        top: -1px;
+        width: 0;
+        height: 0;
+        border: 9px solid transparent;
+        border-bottom-color: @navbar-background;
+    }
+
+    div.x-stick {
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        width: 8px;
+        height: 14px;
+        display: block;
+        border-radius: 1px;
+        background-color: @navbar-background;
+    }
 }

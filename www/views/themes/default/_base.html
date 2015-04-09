@@ -92,6 +92,10 @@ $(function() {
     <![endif]-->
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
     <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+
+    <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit.js"></script>
+    
     <style>
 {% if __user__ %}
         .x-display-if-not-signin { display: none; }
@@ -109,7 +113,14 @@ $(function() {
         var g_user_image = 'about:blank';
 //{% endif %}
     </script>
+    {% set __sidebar_left__ = true %}
+    {% set __sidebar_left_width__ = '300px' %}
+    {% set __sidebar_left_padding__ = true %}
+    {% set __sidebar_right__ = true %}
+    {% set __sidebar_right_width__ = '200px' %}
+    {% set __sidebar_right_padding__ = true %}
     {% block beforehead %}<!-- before head  -->{% endblock %}
+    {% block head %}<!-- head  -->{% endblock %}
     <!-- BEGIN custom_header -->
     {{ __website__.custom_header|safe }}
     <!-- END custom_header -->
@@ -126,10 +137,7 @@ $(function() {
                 <a href="/" class="uk-navbar-brand uk-hidden-small">{{ __website__.name }}</a>
                 <a href="/" class="uk-navbar-brand uk-visible-small"><i class="uk-icon-home"></i></a>
                 <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
-                    <li><a href="/"><i class="uk-icon-home"></i> Home</a></li>
-                    <li><a href="/category/html"><i class="uk-icon-html5"></i> HTML5</a></li>
-                    <li><a href="/category/java">Java</a></li>
-                    <li><a href="/discuss">Discuss</a></li>
+                    <li><a href="/">NAV MENU</a></li>
 
                     {% for nav in __navigations__ %}
                     <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
@@ -137,9 +145,10 @@ $(function() {
                 </ul>
                 <ul class="uk-navbar-nav uk-visible-small">
                     <li class="uk-parent" data-uk-dropdown>
-                        <a href="#0"><i class="uk-icon-user"></i> ???</a>
+                        <a href="#0"><i class="uk-icon-navicon"></i></a>
                         <div class="uk-dropdown uk-dropdown-navbar">
                             <ul class="uk-nav uk-nav-navbar">
+                                <li><a href="/">Home</a></li>
                                 {% for nav in __navigations__ %}
                                 <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                                 {% endfor %}
@@ -154,7 +163,7 @@ $(function() {
                     </form>
                 </div>
 
-                <div class="uk-navbar-flip">
+                <div class="uk-navbar-flip x-hidden-tiny">
                     <ul class="uk-navbar-nav">
                         <li class="uk-parent x-display-if-signin" data-uk-dropdown>
                             <a href="#0"><i class="uk-icon-user"></i> <span class="x-user-name"></span></a>
@@ -179,25 +188,88 @@ $(function() {
         <div class="x-placeholder-50"><!-- placeholder --></div>
         <div class="x-placeholder"><!-- placeholder --></div>
         <div class="uk-container x-container">
-    </div>
-
-    <div id="footer">
-{% if __website__.custom_footer %}
-    <!-- BEGIN custom_footer -->
-    {{ __website__.custom_footer|safe }}
-    <!-- END custom_footer -->
-{% else %}
-        <div class="container">
-            <div class="row">
-                <div class="span12">
-                    <hr/>
-                    <div style="text-align:center;">
-                        <a href="/">{{ __website__.name }}</a>&copy;2014 - <a href="#0">Copyright</a> - <a href="#0">Feedback</a>
+            <div class="uk-grid">
+                <div class="uk-width-1-1">
+                    {% block body_before %}{% endblock %}
+                </div>
+            </div>
+            <div class="uk-flex">
+            {% if __sidebar_left__ %}
+                {% block sidebar %}
+                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-left {% if !__sidebar_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_left_width__ }}">
+                    <div class="uk-clearfix">
+                        {% block sidebar_before %}{% endblock %}
                     </div>
+                    <h3>LEFT</h3>
+                    {% block sidebar_content %}
+                    {% endblock %}
+                    <div class="uk-clearfix">
+                        {% block sidebar_after %}{% endblock %}
+                    </div>
+                </div>
+                {% endblock %}
+            {% endif %}
+                <div class="uk-width-1-1 uk-flex-item-auto" style="flex-shrink:1000">
+                    <div class="uk-clearfix">
+                        {% block main_content_before %}{% endblock %}
+                    </div>
+                    {% block main_content %} MAIN {% endblock %}
+                    <div class="uk-clearfix">
+                        {% block main_content_after %}{% endblock %}
+                    </div>
+                </div>
+            {% if __sidebar_right__ %}
+                {% block sidebar %}
+                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-right {% if !__sidebar_right_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_right_width__ }}">
+                    <div class="uk-clearfix">
+                        {% block sidebar_before %}{% endblock %}
+                    </div>
+                    <h3>LEFT</h3>
+                    {% block sidebar_content %}
+                    {% endblock %}
+                    <div class="uk-clearfix">
+                        {% block sidebar_after %}{% endblock %}
+                    </div>
+                </div>
+                {% endblock %}
+            {% endif %}
+            </div>
+            <div class="uk-grid">
+                <div class="uk-width-1-1">
+                    {% block body_after %}{% endblock %}
                 </div>
             </div>
         </div>
-{% endif %}
+        <div id="push"></div>
+    </div>
+
+    <div id="footer">
+        <div class="x-placeholder"><!-- placeholder --></div>
+        <div class="uk-container x-container">
+            <hr>
+            <div class="uk-flex">
+                <div class="uk-width-1-1 uk-flex-item-auto">
+                    <p>
+                        <a href="/">{{ __website__.name }}</a>&copy;2015
+                        <br>
+                        Powered by <a href="http://js.itranswarp.com" target="_blank">iTranswarp.js</a>
+                    </p>
+                </div>
+                <div class="uk-width-small-1-2 uk-width-medium-1-3 x-hidden-tiny">
+                    <a href="/feed" target="_blank" class="uk-icon-button uk-icon-rss" data-uk-tooltip title="Subscribe the RSS"></a>
+                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
+                    <a href="https://twitter.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
+                    <a href="http://www.weibo.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
+                </div>
+                <div class="uk-width-medium-1-4 uk-hidden-small">
+                    <p>
+                        <a href="https://github.com/michaelliao/itranswarp.js/issues" target="_blank">Feedback</a>
+                        <br>
+                        <a href="https://github.com/michaelliao/itranswarp.js/blob/master/LICENSE" target="_blank">License</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
