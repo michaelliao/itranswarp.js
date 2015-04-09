@@ -42,7 +42,36 @@ var model = {
     </div>
 
 
-<h4>{{ _('Comments') }}</h4>
+<h3>{{ _('Comments') }}</h3>
+
+<ul class="uk-comment-list">
+                                <li>
+                                    <div class="uk-comment">
+                                        <div class="uk-comment-header">
+                                            <a href="#"><img class="uk-comment-avatar uk-border-circle" src="http://getuikit.com/docs/images/placeholder_avatar.svg" width="50" height="50" alt=""></a>
+                                            <h4 class="uk-comment-title"><a href="#">Author</a></h4>
+                                            <div class="uk-comment-meta">12 days ago | Profile | #</div>
+                                        </div>
+                                        <div class="uk-comment-body">
+                                            <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p>
+                                        </div>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <div class="uk-comment">
+                                                <div class="uk-comment-header">
+                                                    <img class="uk-comment-avatar" src="http://getuikit.com/docs/images/placeholder_avatar.svg" width="50" height="50" alt="">
+                                                    <h4 class="uk-comment-title">Author</h4>
+                                                    <div class="uk-comment-meta">12 days ago | Profile | #</div>
+                                                </div>
+                                                <div class="uk-comment-body">
+                                                    <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
 
 {{ makeComments('/article/' + article.id + '/comment', comments) }}
 
