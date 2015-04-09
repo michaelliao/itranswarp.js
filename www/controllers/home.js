@@ -66,8 +66,8 @@ var fnGetSettings = function (callback) {
     settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
 };
 
-var fnGetNavigations = function (callback) {
-    navigationApi.getNavigations(callback);
+var $getNavigations = function* () {
+    return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
 };
 
 function appendSettings(callback) {
@@ -147,6 +147,7 @@ var THEME = config.theme;
 var KEY_WEBSITE = constants.cache.WEBSITE;
 
 function* $getModel(model) {
+    model.__navigations__ = yield $getNavigations();
     model.__website__ = yield settingApi.$getSettingsByDefaults(KEY_WEBSITE, settingApi.defaultSettings.website);
     return model;
 }
@@ -187,77 +188,38 @@ module.exports = {
         this.render(getView('index.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /category/:id': function (req, res, next) {
+    'GET /category/:id': function* (id) {
         var
-            page = utils.getPage(req),
-            model = {};
-        async.waterfall([
-            function (callback) {
-                categoryApi.getCategory(req.params.id, callback);
+            page = helper.getPage(this.request, 10),
+            model = {
+                page: page,
+                category: yield categoryApi.$getCategory(id),
+                articles: yield articleApi.$getArticlesByCategory(id, page)
             },
-            function (category, callback) {
-                model.category = category;
-                articleApi.getArticlesByCategory(page, category.id, callback);
-            },
-            function (r, callback) {
-                cache.counts(_.map(r.articles, function (a) {
-                    return a.id;
-                }), function (err, nums) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    var i;
-                    for (i = 0; i < nums.length; i++) {
-                        r.articles[i].reads = nums[i];
-                    }
-                    callback(null, r);
-                });
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            model.articles = r.articles;
-            model.page = r.page;
-            return processTheme('article/category.html', model, req, res, next);
-        });
+            nums = yield cache.$counts(_.map(model.articles, function (a) {
+                return a.id;
+            })),
+            i;
+        for (i = 0; i < nums.length; i++) {
+            model.articles[i].reads = nums[i];
+        }
+        this.render(getView('article/category.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /article/:id': function (req, res, next) {
-        var model = {};
-        async.waterfall([
-            function (callback) {
-                articleApi.getArticle(req.params.id, callback);
-            },
-            function (article, callback) {
-                if (article.publish_at > Date.now()) {
-                    return callback(api.notFound('Article'));
-                }
-                cache.incr(article.id, function (err, num) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    article.reads = num;
-                    callback(null, article);
-                });
-            },
-            function (article, callback) {
-                model.article = article;
-                categoryApi.getCategory(article.category_id, callback);
-            },
-            function (category, callback) {
-                model.category = category;
-                commentApi.getCommentsByRef(model.article.id, callback);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            model.article.html_content = utils.md2html(model.article.content);
-            model.comments = r.comments;
-            model.nextCommentId = r.nextCommentId;
-            return processTheme('article/article.html', model, req, res, next);
-        });
+    'GET /article/:id': function* (id) {
+        var
+            article = yield articleApi.$getArticle(id, true),
+            num = yield cache.$incr(id),
+            category = yield categoryApi.$getCategory(article.category_id),
+            comments = [{}, {}],
+            model = {
+                article: article,
+                category: category,
+                comments: comments
+            };
+        article.reads = num;
+        article.content = helper.md2html(article.content, true);
+        this.render(getView('article/article.html'), yield $getModel.apply(this, [model]));
     },
 
     'GET /page/:alias': function (req, res, next) {

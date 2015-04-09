@@ -129,6 +129,7 @@ app.use(function* theMiddleware(next) {
             model.__user__ = request.user;
             model.__time__ = Date.now();
             model.__theme__ = activeTheme;
+            model.__request__ = request;
             var renderedHtml = swig.renderFile(swigTemplatePath + templ, model);
             response.set('X-Execution-Time', String(Date.now() - start));
             response.body = renderedHtml;
