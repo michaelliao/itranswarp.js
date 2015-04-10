@@ -82,8 +82,10 @@ module.exports = {
             k = CACHE_PREFIX + key,
             data = yield $m_get(k);
         if (data) {
+            console.log('[cache] hit: ' + key);
             return data;
         }
+        console.log('[cache] NOT hit: ' + key);
         if (defaultValueOrFn) {
             if (typeof (defaultValueOrFn) === 'function') {
                 lifetime = lifetime || DEFAULT_LIFETIME;
