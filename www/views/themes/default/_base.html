@@ -15,7 +15,7 @@
             {% elseif _p == page.index %}
             <li class="uk-active"><span>{{ _p }}</span></li>
             {% else %}
-            <li><a href="{{ url }}page={{ _p }}">{{ _p }}</a></li>
+            <li><a href="{{ url.replace('PAGE', _p) }}">{{ _p }}</a></li>
             {% endif %}
         {% endfor %}
         </ul>
@@ -101,7 +101,30 @@ $(function() {
     <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/itranswarp.js"></script>
-    
+
+    <script id="tplComment" type="text/plain">
+        <div class="uk-comment">
+            <div class="uk-comment-header">
+                <a href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle" src="{ user.image_url }" width="50" height="50" alt=""></a>
+                <h4 class="uk-comment-title"><a href="/user/{ user.id }">{ user.name }</a></h4>
+                <div class="uk-comment-meta">Created at { created_at }, Last updated at { updated_at }</div>
+            </div>
+            <div class="uk-comment-body x-content x-auto-content">
+                { content|safe }
+            </div>
+        </div>
+    </script>
+
+    <script id="tplCommentInfo" type="text/plain">
+        <li>
+            <div class="x-comment-info">
+                <hr>
+                <a class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }"><i class="uk-icon-list-ul"></i> {{ _('View Full Discuss') }}</a>
+                <a class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }#reply"><i class="uk-icon-reply"></i> {{ _('Reply This Topic') }}</a>
+            </div>
+        </li>
+    </script>
+
     <style>
 {% if __user__ %}
         .x-display-if-not-signin { display: none; }
