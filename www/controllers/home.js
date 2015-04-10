@@ -26,15 +26,14 @@ var
     warp = db.warp;
 
 var
+    userApi = require('./userApi'),
+    wikiApi = require('./wikiApi'),
+    settingApi = require('./settingApi'),
+    discussApi = require('./discussApi'),
+    webpageApi = require('./webpageApi'),
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
-    wikiApi = require('./wikiApi'),
-    discussApi = require('./discussApi'),
-    commentApi = require('./commentApi'),
-    webpageApi = require('./webpageApi'),
-    userApi = require('./userApi'),
-    navigationApi = require('./navigationApi'),
-    settingApi = require('./settingApi');
+    navigationApi = require('./navigationApi');
 
 var
     searchTypes = [
@@ -69,45 +68,6 @@ var fnGetSettings = function (callback) {
 var $getNavigations = function* () {
     return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
 };
-
-function appendSettings(callback) {
-    cache.get(constants.CACHE_KEY_WEBSITE_SETTINGS, fnGetSettings, function (err, r) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, r);
-    });
-}
-
-function appendNavigations(callback) {
-    cache.get(constants.CACHE_KEY_NAVIGATIONS, fnGetNavigations, function (err, r) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, r);
-    });
-}
-
-function processTheme(view, model, req, res, next) {
-    async.parallel({
-        website: appendSettings,
-        navigations: appendNavigations
-    }, function (err, results) {
-        model.__website__ = results.website;
-        model.__navigations__ = results.navigations;
-        model.__signins__ = signins;
-        model.__user__ = req.user;
-        model.__time__ = Date.now();
-        model.__request__ = {
-            host: req.host
-        };
-        return res.render(res.themePath + view, model);
-    });
-}
-
-function formatComment(s) {
-    return s.replace(/\n+/g, '\n').replace(/<\/?script\>/ig, '');
-}
 
 function createCommentByType(ref_type, checkFunction, req, res, next) {
     if (utils.isForbidden(req, constants.ROLE_GUEST)) {
@@ -208,34 +168,28 @@ module.exports = {
 
     'GET /article/:id': function* (id) {
         var
+            page = helper.getPage(this.request, 10),
             article = yield articleApi.$getArticle(id, true),
             num = yield cache.$incr(id),
             category = yield categoryApi.$getCategory(article.category_id),
-            comments = [{}, {}],
             model = {
+                page: page,
                 article: article,
-                category: category,
-                comments: comments
+                category: category
             };
         article.reads = num;
         article.content = helper.md2html(article.content, true);
         this.render(getView('article/article.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /page/:alias': function (req, res, next) {
-        pageApi.getPageByAlias(req.params.alias, function (err, page) {
-            if (err) {
-                return next(err);
-            }
-            if (page.draft) {
-                return res.send(404);
-            }
-            page.html_content = utils.md2html(page.content);
-            var model = {
-                page: page
-            };
-            return processTheme('page/page.html', model, req, res, next);
-        });
+    'GET /webpage/:alias': function* (alias) {
+        var webpage = yield webpageApi.$getWebpageByAlias(alias);
+        if (webpage.draft) {
+            this.throw(404);
+            return;
+        }
+        webpage.content = helper.md2html(webpage.content, true);
+        this.render(getView('webpage/webpage.html'), yield $getModel.apply(this, [model]));
     },
 
     'GET /wikipage/:id': function (req, res, next) {
