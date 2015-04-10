@@ -183,12 +183,17 @@ module.exports = {
     },
 
     'GET /webpage/:alias': function* (alias) {
-        var webpage = yield webpageApi.$getWebpageByAlias(alias);
+        var
+            webpage = yield webpageApi.$getWebpageByAlias(alias, true),
+            model;
         if (webpage.draft) {
             this.throw(404);
             return;
         }
         webpage.content = helper.md2html(webpage.content, true);
+        model = {
+            webpage: webpage
+        };
         this.render(getView('webpage/webpage.html'), yield $getModel.apply(this, [model]));
     },
 

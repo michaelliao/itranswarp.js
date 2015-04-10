@@ -1,20 +1,22 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
 
-{% block meta %}
-    <meta property="x-nav" content="/{{ page.id }}" />
+{% block nav %}
+    /webpage/{{ webpage.id }}"
 {% endblock %}
 
-{% block title %}{{ page.name }}{% endblock %}
+{% block title %}{{ webpage.name }}{% endblock %}
 
-{% block container %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
+{% endblock %}
 
-<div class="x-page">
-    <div class="x-page-title">
-        <h4>{{ page.name }}</h4>
-    </div>
+{% block main_content %}
+    <h3>{{ webpage.name }}</h3>
     <div class="x-page-content x-content">
-        {{ page.html_content|safe }}
+        {{ webpage.content|safe }}
     </div>
-</div>
+{% endblock %}
 
+{% block sidebar_right_content %}
+    <h3>ABOUT</h3>
 {% endblock %}

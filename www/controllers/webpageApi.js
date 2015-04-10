@@ -33,21 +33,33 @@ function* $getWebpages() {
     });
 }
 
-function* $getWebpage(id) {
-    var p = yield Webpage.$find(id);
+function* $getWebpage(id, includeContent) {
+    var
+        text,
+        p = yield Webpage.$find(id);
     if (p === null) {
         throw api.notFound('Webpage');
+    }
+    if (includeContent) {
+        text = yield Text.$find(p.content_id);
+        p.content = text.value;
     }
     return p;
 }
 
-function* $getWebpageByAlias(alias) {
-    var p = yield Webpage.$find({
-        where: 'alias=?',
-        params: [alias]
-    });    
+function* $getWebpageByAlias(alias, includeContent) {
+    var
+        text,
+        p = yield Webpage.$find({
+            where: 'alias=?',
+            params: [alias]
+        });
     if (p === null) {
         throw api.notFound('Webpage');
+    }
+    if (includeContent) {
+        text = yield Text.$find(p.content_id);
+        p.content = text.value;
     }
     return p;
 }
@@ -80,11 +92,7 @@ module.exports = {
          * @param {string} id - The id of the Webpage.
          * @return {object} Webpage object.
          */
-        var
-            webpage = yield $getWebpage(id),
-            text = yield Text.$find(webpage.content_id);
-        webpage.content = text.value;
-        this.body = webpage;
+        this.body = yield $getWebpage(id, true);
     },
 
     'GET /api/webpages': function* () {
