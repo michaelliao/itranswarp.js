@@ -78,10 +78,14 @@ function* $getUser(id) {
 }
 
 function* $bindUsers(entities, propName) {
-    var i, entity, prop = propName || 'user_id';
+    var i, entity, u, prop = propName || 'user_id';
     for (i=0; i<entities.length; i++) {
         entity = entities[i];
-        entity.user = yield $getUser(entity[prop]);
+        entity.user = yield User.$find({
+            select: ['id', 'name', 'image_url'],
+            where: 'id=?',
+            params: [entity[prop]]
+        });
     }
 }
 

@@ -6,10 +6,12 @@ var
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
+    cache = require('../cache'),
     helper = require('../helper'),
     search = require('../search/search'),
     constants = require('../constants'),
-    json_schema = require('../json_schema');
+    json_schema = require('../json_schema'),
+    userApi = require('./userApi');
 
 var
     Board = db.board,
@@ -136,7 +138,7 @@ function* $getTopic(id) {
 
 function* $getTopics(board_id, page) {
     page.total = yield Topic.$findNumber({
-        select: 'count(*)',
+        select: 'count(id)',
         where: 'board_id=?',
         params: [board_id]
     });
@@ -144,9 +146,27 @@ function* $getTopics(board_id, page) {
         return [];
     }
     return yield Topic.$findAll({
-        select: ['id', 'board_id', 'user_id', 'name', 'tags', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
+        select: ['id', 'board_id', 'ref_type', 'ref_id', 'user_id', 'name', 'tags', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
         where: 'board_id=?',
         params: [board_id],
+        order: 'updated_at desc',
+        offset: page.offset,
+        limit: page.limit
+    });
+}
+
+function* $getTopicsByRef(ref_id, page) {
+    page.total = yield Topic.$findNumber({
+        select: 'count(id)',
+        where: 'ref_id=?',
+        params: [ref_id]
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Topic.$findAll({
+        where: 'ref_id=?',
+        params: [ref_id],
         order: 'updated_at desc',
         offset: page.offset,
         limit: page.limit
@@ -170,6 +190,15 @@ function* $getReplies(topic_id, page) {
         order: 'id',
         offset: (page.index === 1) ? 0 : (page.offset - 1),
         limit: (page.index === 1) ? (page.limit - 1) : page.limit
+    });
+}
+
+function* $getFirstReplies(topic_id, num) {
+    return yield Reply.$findAll({
+        where: 'topic_id=?',
+        params: [topic_id],
+        order: 'id',
+        limit: num
     });
 }
 
@@ -203,6 +232,41 @@ function* $createTopic(user, board_id, ref_type, ref_id, data) {
     return topic;
 }
 
+function* $createTopicByRef(ref_id) {
+    var key = 'REF-TOPICS-' + ref_id;
+    cache.$remove(key);
+}
+
+function* $loadTopicsByRefWithCache(ref_id, page) {
+    if (page.index === 1) {
+        var key = 'REF-TOPICS-' + ref_id;
+        return yield cache.$get(key, function* () {
+            return yield $loadTopicsByRef(ref_id, page); 
+        });
+    }
+    return yield $loadTopicsByRef(ref_id, page);
+}
+
+function* $loadTopicsByRef(ref_id, page) {
+    var
+        i,
+        topics = yield $getTopicsByRef(ref_id, page);
+    yield userApi.$bindUsers(topics);
+    for (i=0; i<topics.length; i++) {
+        yield $bindReplies(topics[i]);
+    }
+    return topics;
+}
+
+function* $bindReplies(topic) {
+    var key = 'REPLIES-' + topic.id + '_' + topic.version;
+    topic.replies = yield cache.$get(key, function* () {
+        var replies = yield $getFirstReplies(topic.id, 10);
+        yield userApi.$bindUsers(replies);
+        return replies;
+    });
+}
+
 module.exports = {
 
     $getNavigationMenus: $getNavigationMenus,
@@ -217,9 +281,26 @@ module.exports = {
 
     $getTopics: $getTopics,
 
+    $getTopicsByRef: $getTopicsByRef,
+
     $getReplies: $getReplies,
 
+    $getFirstReplies: $getFirstReplies,
+
     $getReplyUrl: $getReplyUrl,
+
+    'GET /api/ref/:id/topics': function* (id) {
+        /**
+         * Get topics by ref id
+         */
+        var
+            page = helper.getPage(this.request, 10),
+            topics = yield $loadTopicsByRefWithCache(id, page);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
 
     'GET /api/boards': function* () {
         /**
