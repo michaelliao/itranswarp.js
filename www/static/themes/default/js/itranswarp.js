@@ -1,5 +1,154 @@
 // itranswarp.js
 
+// JS Template:
+
+function Template(tpl) {
+    var
+        fn,
+        match,
+        code = ['var r=[];\nvar _html = function (str) { return str.replace(/&/g, \'&amp;\').replace(/"/g, \'&quot;\').replace(/\'/g, \'&#39;\').replace(/</g, \'&lt;\').replace(/>/g, \'&gt;\'); };'],
+        re = /\{\s*([a-zA-Z\.\_0-9()]+)(\s*\|\s*safe)?\s*\}/m,
+        addLine = function (text) {
+            code.push('r.push(\'' + text.replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '\');');
+        };
+    while (match = re.exec(tpl)) {
+        if (match.index > 0) {
+            addLine(tpl.slice(0, match.index));
+        }
+        if (match[2]) {
+            code.push('r.push(String(this.' + match[1] + '));');
+        }
+        else {
+            code.push('r.push(_html(String(this.' + match[1] + ')));');
+        }
+        tpl = tpl.substring(match.index + match[0].length);
+    }
+    addLine(tpl);
+    code.push('return r.join(\'\');');
+    fn = new Function(code.join('\n'));
+    this.render = function (model) {
+        return fn.apply(model);
+    };
+}
+
+// load topics as comments:
+
+var
+    tplComment = null,
+    tplCommentInfo = null;
+
+function buildComments(data) {
+    if (tplComment === null) {
+        tplComment = new Template($('#tplComment').html());
+    }
+    if (tplCommentInfo === null) {
+        tplCommentInfo = new Template($('#tplCommentInfo').html());
+    }
+    var i, j, topic, reply, s, L = [], page = data.page;
+    for (i=0; i<data.topics.length; i++) {
+        topic = data.topics[i];
+        L.push('<li>');
+        L.push(tplComment.render(topic));
+        L.push('<ul>')
+        if (topic.replies.length > 0) {
+            for (j=0; j<topic.replies.length; j++) {
+                reply = topic.replies[j];
+                L.push('<li>');
+                L.push(tplComment.render(reply));
+                L.push('</li>');
+            }
+        }
+        L.push(tplCommentInfo.render(topic));
+        L.push('</ul>');
+        L.push('</li>');
+    }
+    return L.join('');
+}
+
+function ajaxLoadComments(insertIntoId, ref_id, page_index) {
+    var errorHtml = 'Error when loading. <a href="#0" onclick="ajaxLoadComments(\'' + insertIntoId + '\', \'' + ref_id + '\', ' + page_index + ')">Retry</a>';
+    $insertInto = $('#' + insertIntoId);
+    $insertInto.html('<i class="uk-icon-spinner uk-icon-spin"></i> Loading...');
+    $.getJSON('/api/ref/' + ref_id + '/topics?page=' + page_index).done(function(data) {
+        if (data.error) {
+            $insertInto.html(errorHtml);
+            return;
+        }
+        // build comment list:
+        $insertInto.html(buildComments(data));
+        $insertInto.find('.x-auto-content').each(function () {
+            makeCollapsable(this, 400);
+        });
+    }).fail(function() {
+        $insertInto.html(errorHtml);
+    });
+}
+
+var tmp_collapse = 1;
+
+function makeCollapsable(obj, max_height) {
+    var $o = $(obj);
+    if ($o.height() <= (max_height + 60)) {
+        $o.show();
+        return;
+    }
+    console.log('detect height: ' + $o.height());
+    var maxHeight = max_height + 'px';
+    $o.css('max-height', maxHeight);
+    $o.css('overflow', 'hidden');
+    $o.after('<p>' +
+        '<a href="#0"><i class="uk-icon-chevron-down"></i> Read More</a>' +
+        '<a href="#0" style="display:none"><i class="uk-icon-chevron-up"></i> Collapse</a>' +
+        '</p>');
+    var aName = 'COLLAPSE-' + tmp_collapse;
+    tmp_collapse ++;
+    $o.parent().before('<a name="' + aName + '" style="margin-top:60px;"></a>')
+    console.log($o.next().html());
+    var $p = $o.next();
+    var $aDown = $p.find('a:first');
+    var $aUp = $p.find('a:last');
+    $aDown.click(function () {
+        $o.css('max-height', 'none');
+        $aDown.hide();
+        $aUp.show();
+    });
+    $aUp.click(function () {
+        $o.css('max-height', maxHeight);
+        $aUp.hide();
+        $aDown.show();
+        location.assign('#' + aName);
+    });
+    $o.show();
+}
+
+function loadComments(ref_id) {
+    $(function () {
+        var
+            isCommentsLoaded = false,
+            $window = $(window),
+            targetOffset = $('#x-comment-list').get(0).offsetTop,
+            checkOffset = function () {
+                if (!isCommentsLoaded && (window.pageYOffset + window.innerHeight >= targetOffset)) {
+                    isCommentsLoaded = true;
+                    $window.off('scroll', checkOffset);
+                    console.log('loading comments...');
+                    ajaxLoadComments('x-comment-list', ref_id, 1);
+                }
+            };
+        console.log('will load comments at offset: ' + targetOffset);
+        $window.scroll(checkOffset);
+        checkOffset();
+    });
+
+}
+
+$(function() {
+    $('.x-auto-content').each(function () {
+        makeCollapsable(this, 300);
+    });
+});
+
+
 if (! window.console) {
     window.console = {
         log: function(s) {
