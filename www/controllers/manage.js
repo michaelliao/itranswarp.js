@@ -4,11 +4,9 @@
 
 var
     _ = require('lodash'),
-    fs = require('fs');
-
-var
-    api = require('../api'),
+    fs = require('fs'),
     db = require('../db'),
+    api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
     constants = require('../constants'),
@@ -21,18 +19,17 @@ var
     warp = db.warp;
 
 var
-    commentApi = require('./commentApi'),
-    categoryApi = require('./categoryApi'),
-    articleApi = require('./articleApi'),
-    webpageApi = require('./webpageApi'),
+    userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
+    articleApi = require('./articleApi'),
+    webpageApi = require('./webpageApi'),
+    settingApi = require('./settingApi'),
+    categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi'),
-    navigationApi = require('./navigationApi'),
-    userApi = require('./userApi'),
-    settingApi = require('./settingApi');
+    navigationApi = require('./navigationApi');
 
-var apisList = [commentApi, categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
+var apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
 function getAllNavigationMenus(callback) {
     var fns = _.map(apisList, function (theApi) {
@@ -59,48 +56,48 @@ function safeEncodeJSON(obj) {
 
 // do management console
 
+var KEY_WEBSITE = constants.cache.WEBSITE;
+
+function* $getModel(model) {
+    if (model === undefined) {
+        model = {};
+    }
+    model.__website__ = yield settingApi.$getSettingsByDefaults(KEY_WEBSITE, settingApi.defaultSettings.website);
+    return model;
+}
+
 module.exports = {
 
-    'GET /manage/': function (req, res, next) {
-        return res.redirect('/manage/comment/');
+    'GET /manage/signin': function* () {
+        /**
+         * Display authentication.
+         */
+        this.render('manage/signin.html', yield $getModel());
     },
 
-    // comment ////////////////////////////////////////////////////////////////
+    'GET /manage/': function* () {
+        this.response.redirect('/manage/article/');
+    },
 
-    'GET /manage/comment/(index)?': function (req, res, next) {
-        var page = utils.getPage(req);
-        commentApi.getComments(page, function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/comment/comment_list.html', {
-                page: JSON.stringify(r.page),
-                comments: JSON.stringify(r.comments)
-            });
-        });
+    // overview ///////////////////////////////////////////////////////////////
+
+    'GET /manage/overview/(index)?': function* () {
+        var page = helper.getPage(this.request);
+        this.body = '';
     },
 
     // article ////////////////////////////////////////////////////////////////
 
-    'GET /manage/article/(index)?': function (req, res, next) {
-        var page = utils.getPage(req);
-        async.parallel({
-            articles: function (callback) {
-                articleApi.getAllArticles(page, callback);
-            },
-            categories: function (callback) {
-                categoryApi.getCategories(callback);
-            }
-        }, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/article/article_list.html', {
-                page: JSON.stringify(results.articles.page),
-                articles: JSON.stringify(results.articles.articles),
-                categories: JSON.stringify(results.categories)
-            });
-        });
+    'GET /manage/article/(index)?': function* () {
+        this.render('manage/article/article_list.html', yield $getModel({
+            pageIndex: helper.getPageNumber(this.request)
+        }));
+    },
+
+    'GET /manage/article/category_list': function* () {
+        this.render('manage/article/category_list.html', yield $getModel({
+            pageIndex: helper.getPageNumber(this.request)
+        }));
     },
 
     'GET /manage/article/create_article': function (req, res, next) {
@@ -149,17 +146,6 @@ module.exports = {
                 },
                 categories: JSON.stringify(results.categories),
                 article: article
-            });
-        });
-    },
-
-    'GET /manage/article/category_list': function (req, res, next) {
-        categoryApi.getCategories(function (err, categories) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/article/category_list.html', {
-                categories: JSON.stringify(categories)
             });
         });
     },
