@@ -1,8 +1,6 @@
 {% extends '../_base.html' %}
 
-{% block nav %}
-    /category/{{ article.category_id }}
-{% endblock %}
+{% block nav %} /category/{{ article.category_id }} {% endblock %}
 
 {% block meta %}
     <meta property="og:type" content="article" />
@@ -48,6 +46,25 @@ var model = {
 
     <ul id="x-comment-list" class="uk-comment-list">
     </ul>
+
+    <h3>Make a Comment</h3>
+
+    <div>
+        <p><button type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i> Make a Comment</button></p>
+        <p>Please input your comment.</p>
+        <form action="#" class="uk-form">
+            <fieldset>
+                <div class="uk-form-row">
+                    <textarea data-uk-htmleditor="{markdown:true,mode:'split',maxsplitsize:600}"></textarea>
+                </div>
+                <div class="uk-form-row">
+                    <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Post</button>
+                    &nbsp;&nbsp;
+                    <button type="button" class="uk-button"><i class="uk-icon-close"></i> Cancel</button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
 
 {% endblock %}
 
