@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
-
 <!--
 {% macro pagination(url, page) %}
     {% if page.isEmpty %}
@@ -21,63 +20,7 @@
         </ul>
     {% endif %}
 {% endmacro %}
-
-
-{% macro makeComments(url, comments) %}
-
-<form class="x-comment-box x-auth-not-signed">
-    <div class="x-comment-signin">
-        <p>请登录后发表评论：</p>
-    {% for s in __signins__ %}
-        <p><a href="#0" onclick="authFrom('{{ s }}')"><img src="/static/themes/default/img/signin.{{ s }}.large.png" /></a></p>
-    {% endfor %}
-    </div>
-</form>
-
-<form url="{{ url }}" onsubmit="return create_comment(this);" class="x-comment-box x-auth-signed x-comment-form">
-    <div class="x-comment-user-img">
-        <img src="about:blank" class="x-user-image x-user-image-small" />
-    </div>
-    <div class="x-comment-input-area">
-        <div class="x-comment-prompt">
-            <span class="x-user-name"><script> document.write(g_user_name); </script></span> <span class="x-comment-error"></span>
-        </div>
-        <div class="x-comment-input">
-            <textarea name="content" placeholder="{{ _('Say something') }}..." rows="4"></textarea>
-        </div>
-        <div class="x-comment-submit">
-            <span>评论将自动同步至微博，请发表有价值的信息。</span>
-            <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> {{ _('Comment') }}</button>
-        </div>
-    </div>
-</form>
-
-<div class="x-comments-list"></div>
-
-<script>
-
-$(function() {
-    var $list = $('div.x-comments-list');
-    {% for c in comments %}
-    $list.append(addComment({
-        'id': '{{ c.id }}',
-        'user_id': '{{ c.user_id }}',
-        'user_name': '{{ c.user_name }}',
-        'user_image_url': '{{ c.user_image_url }}',
-        'created_at': {{ c.created_at }},
-        'content': {{ c.content|json|safe }}
-    }));
-    {% endfor %}
-    {% if __user__ and __user__.role===0 %}
-    $('a.x-delete-comment').css('display', '');
-    {% endif %}
-});
-
-</script>
-
-{% endmacro %}
 -->
-
 <head>
     <meta charset="utf-8" />
     <title>{% block title %} ??? {% endblock %} - {{ __website__.name }}</title>
@@ -100,14 +43,14 @@ $(function() {
     <script src="/static/themes/{{ __theme__ }}/js/uikit/htmleditor.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
-    <script src="/static/themes/{{ __theme__ }}/js/itranswarp.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/theme.js"></script>
 
     <script id="tplComment" type="text/plain">
         <div class="uk-comment">
             <div class="uk-comment-header">
-                <a href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle" src="{ user.image_url }" width="50" height="50" alt=""></a>
+                <a href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{ user.image_url }" width="50" height="50" alt=""></a>
                 <h4 class="uk-comment-title"><a href="/user/{ user.id }">{ user.name }</a></h4>
-                <div class="uk-comment-meta">Created at { created_at }, Last updated at { updated_at }</div>
+                <div class="uk-comment-meta">Created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
             </div>
             <div class="uk-comment-body x-content x-auto-content">
                 { content|safe }
