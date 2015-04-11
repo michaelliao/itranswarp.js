@@ -13,6 +13,7 @@ module.exports = {
     // the theme used, default to 'default':
     theme: 'default',
     session: {
+        cookie: 'isession',
         // sync comments to SNS?
         syncComments: true,
         // used to generate secure session cookie, can be set to any random string:
@@ -40,7 +41,7 @@ module.exports = {
         static_prefix: ''
     },
     cache: {
-        prefix: 'IT@',
+        prefix: 'it^',
         // host or ip address of memcached:
         host: '127.0.0.1',
         // port of memcached, default to 11211:
