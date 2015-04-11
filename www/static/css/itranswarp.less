@@ -76,7 +76,13 @@
     transition: background-color 1s, border-color 1s;
 }
 
+// table:
+
+@table-hover-background:                        darken(@table-striped-background, 2%);
+
 // customize comments:
+
+@comment-list-padding-left:                     75px;
 
 .hook-comment-header() {
     padding: @comment-padding;
@@ -86,6 +92,7 @@
     background-color: transparent;
 }
 
-.hook-comment-avatar() {
-    border: 1px solid @comment-border;
+.hook-comment-body() {
+    padding-left: 75px;
 }
+
