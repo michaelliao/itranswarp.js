@@ -1,18 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>{{ _('Please Sign In') }}</title>
-    <link rel="stylesheet" href="/static/css/itranswarp-manage.css" />
-    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/js/jquery.md5.js"></script>
-    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/static/js/vue.min.js"></script>
-    <script type="text/javascript" src="/static/js/itranswarp.js"></script>
-    <script type="text/javascript">
+{% extends '_manage.html' %}
+
+{% block title %}{{ _('Sign In') }}{% endblock %}
+
+{% block head %}
+{% set __show_navigations__ = false %}
+
+<script>
 $(function() {
     var vmAuth = new Vue({
-        el: '#formAuth',
+        el: '#form-auth',
         data: {
             email: '',
             passwd: ''
@@ -20,63 +16,61 @@ $(function() {
         methods: {
             onSubmit: function(event) {
                 event.preventDefault();
-                var email = this.email.trim().toLowerCase();
-                var passwd = $.md5(email + ':' + this.passwd);
-                showError();
-                showLoading(true);
-                postJSON('/api/authenticate', { email: email, passwd: passwd }, function(err, result) {
-                    if (err) {
-                        showError(err);
-                        showLoading(false);
-                        return;
+                var
+                    $form = $('#form-auth'),
+                    email = this.email.trim().toLowerCase(),
+                    data = {
+                        email: email,
+                        passwd: this.passwd==='' ? '' : CryptoJS.SHA1(email + ':' + this.passwd).toString()
+                    };
+                $form.postJSON('/api/authenticate', data, function(err, result) {
+                    if (! err) {
+                        location.assign('/manage/overview');
                     }
-                    location.assign('/manage/');
                 });
             }
         }
     });
 });
-    </script>
-</head>
-<body>
-    <div class="container">
-        <div class="row" style="height:40px"></div>
+</script>
 
-        <div class="row">
-            <div class="span8 offset2">
-                <div class="row">
-                    <div class="span6 offset1">
-                        <form id="formAuth" v-on="submit: onSubmit">
-                            <legend>{{ _('Please Sign In') }}:</legend>
-                            <div class="alert alert-error hide"></div>
-                            <div style="margin: 16px 0;">
-                                <label class="control-label">{{ _('Email') }}:</label>
-                                <input v-model="email" type="text" name="email" maxlength="50" class="input-xlarge" />
-                            </div>
-                            <div style="margin: 16px 0;">
-                                <label class="control-label">{{ _('Password') }}:</label>
-                                <input v-model="passwd" type="password" maxlength="50" class="input-xlarge" />
-                            </div>
-                            <div style="margin: 16px 0;">
-                                <button type="submit" class="btn btn-primary"><i class="icon-lock icon-white"></i> {{ _('Sign In') }}</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="span6 offset1">
-                        <i class="icon-question-sign"></i> <a href="/auth/forgot">{{ _('Forgot password') }}?</a>
-                        &nbsp;&nbsp;
-                        <i class="icon-circle-arrow-left"></i> <a href="/">{{ _('Home') }}</a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="span8">
-                        <div style="margin-top: 24px; padding: 12px 0px; text-align: center; border-top: 1px solid #ccc;">
-                            <p>Powered by <a href="http://www.itranswarp.com" target="_blank">iTranswarp.js</a> &copy; 2014.</p>
-                        </div>
+{% endblock %}
+
+{% block main %}
+    <div class="uk-width-3-10">&nbsp;</div>
+    <div class="uk-width-4-10">
+        <form id="form-auth" v-on="submit: onSubmit" class="uk-form uk-form-stack">
+            <legend>{{ _('Please Sign In') }}</legend>
+            <div class="uk-alert uk-alert-danger uk-hidden"></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label" for="email">{{ _('Email') }}:</label>
+                <div class="uk-form-controls">
+                    <div class="uk-form-icon">
+                        <i class="uk-icon-envelope-o"></i>
+                        <input v-model="email" type="text" id="email" name="email" maxlength="50" style="width:300px" placeholder="email@example.com">
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="uk-form-row">
+                <label class="uk-form-label" for="passwd">{{ _('Password') }}:</label>
+                <div class="uk-form-controls">
+                    <div class="uk-form-icon">
+                        <i class="uk-icon-lock"></i>
+                        <input v-model="passwd" type="password" id="passwd" name="passwd" maxlength="50" style="width:300px" placeholder="password">
+                    </div>
+                </div>
+            </div>
+            <div class="uk-form-row">
+                <div class="uk-form-controls">
+                    <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-sign-in"></i> {{ _('Sign In') }}</button>
+                </div>
+            </div>
+            <div class="uk-form-row">
+                <div class="uk-form-controls">
+                    <i class="uk-icon-question-circle"></i> <a href="/auth/forgot">{{ _('Forgot password') }}</a>
+                </div>
+            </div>
+        </form>
     </div>
-</body>
-</html>
+    <div class="uk-width-3-10">&nbsp;</div>
+{% endblock %}
