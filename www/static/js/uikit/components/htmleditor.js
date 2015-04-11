@@ -29,7 +29,7 @@
             maxsplitsize : 1000,
             markedOptions: { gfm: true, tables: true, breaks: true, pedantic: true, sanitize: false, smartLists: true, smartypants: false, langPrefix: 'lang-'},
             codemirror   : { mode: 'htmlmixed', lineWrapping: true, dragDrop: false, autoCloseTags: true, matchTags: true, autoCloseBrackets: true, matchBrackets: true, indentUnit: 4, indentWithTabs: false, tabSize: 4, hintOptions: {completionSingle:false} },
-            toolbar      : [ 'bold', 'italic', 'strike', 'link', 'image', 'blockquote', 'listUl', 'listOl' ],
+            toolbar      : [ 'bold', 'italic', 'code', 'link', 'image', 'blockquote', 'listUl', 'listOl' ],
             lblPreview   : 'Preview',
             lblCodeview  : 'HTML',
             lblMarkedview: 'Markdown'
@@ -408,6 +408,10 @@
                     title  : 'Strikethrough',
                     label  : '<i class="uk-icon-strikethrough"></i>'
                 },
+                code: {
+                    title  : 'code',
+                    label  : '<i class="uk-icon-code"></i>'
+                },
                 blockquote : {
                     title  : 'Blockquote',
                     label  : '<i class="uk-icon-quote-right"></i>'
@@ -434,6 +438,7 @@
             addAction('bold', '<strong>$1</strong>');
             addAction('italic', '<em>$1</em>');
             addAction('strike', '<del>$1</del>');
+            addAction('code', '<pre><code>$1</code></pre>');
             addAction('blockquote', '<blockquote><p>$1</p></blockquote>', 'replaceLine');
             addAction('link', '<a href="http://">$1</a>');
             addAction('image', '<img src="http://" alt="$1">');
@@ -518,6 +523,7 @@
             addAction('bold', '**$1**');
             addAction('italic', '*$1*');
             addAction('strike', '~~$1~~');
+            addAction('code', '\n\n```\n// your code here$1\n```\n\n');
             addAction('blockquote', '> $1', 'replaceLine');
             addAction('link', '[$1](http://)');
             addAction('image', '![$1](http://)');
