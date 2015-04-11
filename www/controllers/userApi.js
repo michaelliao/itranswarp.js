@@ -19,7 +19,7 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-var LOCAL_SIGNIN_EXPIRES = 3600 * 24 * 7; // 7 days
+var LOCAL_SIGNIN_EXPIRES = 1000 * 3600 * 24 * 7; // 7 days
 
 var LOCK_TIMES = {
     d: 86400000,
@@ -333,12 +333,5 @@ module.exports = {
         this.body = {
             locked_until: locked_until
         };
-    },
-
-    'GET /manage/signin': function (req, res, next) {
-        /**
-         * Display authentication page.
-         */
-        res.render('manage/signin.html', {});
     }
 };
