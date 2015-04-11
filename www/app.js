@@ -108,6 +108,7 @@ app.use(function* theMiddleware(next) {
         prefix8 = path.substring(0, 8),
         prefix4 = path.substring(0, 4),
         start = Date.now(),
+        execTime,
         isApi = path.indexOf('/api/') === 0;
     console.log('%s %s', method, path);
 
@@ -131,18 +132,23 @@ app.use(function* theMiddleware(next) {
             model.__theme__ = activeTheme;
             model.__request__ = request;
             var renderedHtml = swig.renderFile(swigTemplatePath + templ, model);
-            response.set('X-Execution-Time', String(Date.now() - start));
             response.body = renderedHtml;
             response.type = '.html';
         };
     }
     try {
         yield next;
+        execTime = String(Date.now() - start);
+        response.set('X-Execution-Time', execTime);
+        console.log('X-Execution-Time: ' + execTime);
         if (response.status === 404) {
             this.throw(404);
         }
     }
     catch (err) {
+        execTime = String(Date.now() - start);
+        response.set('X-Execution-Time', execTime);
+        console.log('X-Execution-Time: ' + execTime);
         console.log('[error] error cached!');
         console.log(err.stack);
         response.set('X-Execution-Time', String(Date.now() - start));
