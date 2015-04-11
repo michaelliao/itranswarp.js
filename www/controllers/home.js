@@ -61,9 +61,6 @@ var
 
 var isSyncComments = config.session.syncComments;
 
-var fnGetSettings = function (callback) {
-    settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, callback);
-};
 
 var $getNavigations = function* () {
     return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
@@ -168,12 +165,10 @@ module.exports = {
 
     'GET /article/:id': function* (id) {
         var
-            page = helper.getPage(this.request, 10),
             article = yield articleApi.$getArticle(id, true),
             num = yield cache.$incr(id),
             category = yield categoryApi.$getCategory(article.category_id),
             model = {
-                page: page,
                 article: article,
                 category: category
             };
@@ -188,7 +183,6 @@ module.exports = {
             model;
         if (webpage.draft) {
             this.throw(404);
-            return;
         }
         webpage.content = helper.md2html(webpage.content, true);
         model = {
@@ -197,144 +191,109 @@ module.exports = {
         this.render(getView('webpage/webpage.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /wikipage/:id': function (req, res, next) {
-        wikiApi.getWikiPage(req.params.id, function (err, wp) {
-            if (err) {
-                return next(err);
-            }
-            res.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
-        });
+    'GET /wikipage/:id': function* (id) {
+        var wp = yield wikiApi.$getWikiPage(id);
+        this.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
     },
 
-    'GET /wiki/:id': function (req, res, next) {
-        var model = {};
-        async.waterfall([
-            function (callback) {
-                wikiApi.getWikiWithContent(req.params.id, callback);
-            },
-            function (wiki, callback) {
-                cache.incr(wiki.id, function (err, num) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    wiki.reads = num;
-                    callback(null, wiki);
-                });
-            },
-            function (wiki, callback) {
-                model.wiki = wiki;
-                wikiApi.getWikiTree(wiki.id, true, callback);
-            },
-            function (tree, callback) {
-                model.tree = tree.children;
-                commentApi.getCommentsByRef(model.wiki.id, callback);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            model.html_content = utils.md2html(model.wiki.content);
-            model.comments = r.comments;
-            return processTheme('wiki/wiki.html', model, req, res, next);
-        });
-    },
-
-    'GET /wiki/:wid/:pid': function (req, res, next) {
-        var model = {};
-        async.waterfall([
-            function (callback) {
-                wikiApi.getWikiPageWithContent(req.params.pid, callback);
-            },
-            function (page, callback) {
-                cache.incr(page.id, function (err, num) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    page.reads = num;
-                    callback(null, page);
-                });
-            },
-            function (page, callback) {
-                if (page.wiki_id !== req.params.wid) {
-                    return callback(api.notFound('Wiki'));
-                }
-                model.page = page;
-                wikiApi.getWikiTree(page.wiki_id, true, callback);
-            },
-            function (wiki, callback) {
-                model.wiki = wiki;
-                model.tree = wiki.children;
-                commentApi.getCommentsByRef(model.page.id, callback);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            model.html_content = utils.md2html(model.page.content);
-            model.comments = r.comments;
-            return processTheme('wiki/wiki.html', model, req, res, next);
-        });
-    },
-
-    'POST /article/:id/comment': function (req, res, next) {
-        createCommentByType('article', function (id, callback) {
-            articleApi.getArticle(id, function (err, article) {
-                return callback(err, article, '/article/' + article.id);
-            });
-        }, req, res, next);
-    },
-
-    'POST /wiki/:id/comment': function (req, res, next) {
-        createCommentByType('wiki', function (id, callback) {
-            wikiApi.getWiki(id, function (err, wiki) {
-                return callback(err, wiki, '/wiki/' + wiki.id);
-            });
-        }, req, res, next);
-    },
-
-    'POST /wikipage/:id/comment': function (req, res, next) {
-        createCommentByType('wikipage', function (id, callback) {
-            wikiApi.getWikiPage(id, function (err, wp) {
-                return callback(err, wp, '/wiki/' + wp.wiki_id + '/' + wp.id);
-            });
-        }, req, res, next);
-    },
-
-    'GET /discuss': function (req, res, next) {
-        discussApi.getBoards(function (err, boards) {
-            if (err) {
-                return next(err);
-            }
-            var model = {
-                boards: boards
-            };
-            return processTheme('discuss/boards.html', model, req, res, next);
-        });
-    },
-
-    'GET /discuss/:id': function (req, res, next) {
+    'GET /wiki/:id': function* (id) {
         var
-            page = utils.getPage(req),
-            model = {};
-        async.waterfall([
-            function (callback) {
-                discussApi.getBoard(req.params.id, callback);
-            },
-            function (board, callback) {
-                model.board = board;
-                discussApi.getTopics(board.id, page, callback);
-            },
-            function (r, callback) {
-                model.page = r.page;
-                model.topics = r.topics;
-                userApi.bindUsers(model.topics, callback);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            return processTheme('discuss/board.html', model, req, res, next);
-        });
+            model,
+            wiki = yield wikiApi.$getWiki(id, true),
+            tree = yield wikiApi.$getWikiTree(wiki.id, true);
+        wiki.content = helper.md2html(wiki.content, true);
+        wiki.reads = yield cache.$incr(wiki.id);
+        model = {
+            wiki: wiki,
+            current: wiki,
+            tree: tree.children
+        };
+        this.render(getView('wiki/wiki.html'), yield $getModel.apply(this, [model]));
+    },
+
+    'GET /wiki/:wid/:pid': function* (id, pid) {
+        var
+            model, wiki, tree,
+            wikipage = yield wikiApi.$getWikiPage(pid, true);
+        if (wikipage.wiki_id !== id) {
+            this.throw(404);
+        }
+        wiki = yield wikiApi.$getWiki(id);
+        tree = yield wikiApi.$getWikiTree(id, true);
+        wikipage.reads = yield cache.$incr(wikipage.id);
+        wikipage.content = helper.md2html(wikipage.content, true);
+        model = {
+            wiki: yield wikiApi.$getWiki(id),
+            current: wikipage,
+            tree: tree.children
+        };
+        this.render(getView('wiki/wiki.html'), yield $getModel.apply(this, [model]));
+    },
+
+    'POST /:type/:id/comment': function* (type, id) {
+        if (type === 'article') {
+            //
+        }
+        else if (type === 'wiki') {
+            //
+        }
+        else if (type === 'wikipage') {
+            //
+        }
+        else {
+            this.throw(404);
+        }
+    },
+
+    'GET /discuss': function* () {
+        var
+            model,
+            boards = yield discussApi.$getBoards();
+        model = {
+            boards: boards
+        };
+        this.render(getView('discuss/boards.html'), yield $getModel.apply(this, [model]));
+    },
+
+    'GET /discuss/:id': function* (id) {
+        var
+            page = helper.getPage(this.request, 10),
+            board = yield discussApi.$getBoard(id),
+            topics = yield discussApi.$getTopics(id, page),
+            model;
+        yield userApi.$bindUsers(topics);
+        model = {
+            page: page,
+            board: board,
+            topics: topics
+        };
+        this.render(getView('discuss/board.html'), yield $getModel.apply(this, [model]));
+    },
+
+    'GET /discuss/:bid/:tid': function* (bid, tid) {
+        var
+            topic = yield discussApi.$getTopic(tid),
+            page,
+            board,
+            replies,
+            model;
+        if (topic.board_id !== bid) {
+            this.throw(404);
+        }
+        page = helper.getPage(this.request, 10);
+        board = yield discussApi.$getBoard(bid);
+        replies = yield discussApi.$getReplies(tid, page);
+        if (page.index === 1) {
+            replies.unshift(topic);
+        }
+        yield userApi.$bindUsers(replies);
+        model = {
+            page: page,
+            board: board,
+            topic: topic,
+            replies: replies
+        };
+        this.render(getView('discuss/topic.html'), yield $getModel.apply(this, [model]));
     },
 
     'GET /discuss/:id/topics/create': function (req, res, next) {
@@ -343,41 +302,6 @@ module.exports = {
                 return next(err);
             }
             return processTheme('discuss/topic_form.html', { board: board }, req, res, next);
-        });
-    },
-
-    'GET /discuss/:bid/:tid': function (req, res, next) {
-        var
-            board_id = req.params.bid,
-            topic_id = req.params.tid,
-            page = utils.getPage(req),
-            model = {};
-        async.waterfall([
-            function (callback) {
-                discussApi.getBoard(board_id, callback);
-            },
-            function (board, callback) {
-                model.board = board;
-                discussApi.getTopic(topic_id, callback);
-            },
-            function (topic, callback) {
-                if (topic.board_id !== board_id) {
-                    return callback(api.notFound('Topic'));
-                }
-                model.topic = topic;
-                discussApi.getReplies(topic_id, page, callback);
-            },
-            function (r, callback) {
-                model.replies = r.replies;
-                model.page = r.page;
-                var arr = model.replies.concat([model.topic]);
-                userApi.bindUsers(arr, callback);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            return processTheme('discuss/topic.html', model, req, res, next);
         });
     },
 
