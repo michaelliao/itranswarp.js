@@ -3,7 +3,6 @@
 // discuss api
 
 var
-    _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
     cache = require('../cache'),
@@ -79,44 +78,10 @@ function* $getBoard(id) {
     return board;
 }
 
-function* $getBoards(returnAsGroup) {
-    // sort by display_order and group by tag:
-    var
-        boards = yield Board.$findAll({
-            order: 'display_order'
-        }),
-        lastTag = null,
-        groups = [],
-        tagDict = {},
-        tags = _.uniq(_.map(boards, function (b) {
-            return b.tag;
-        }));
-    _.each(tags, function (tag, index) {
-        tagDict[tag] = index;
+function* $getBoards() {
+    return yield Board.$findAll({
+        order: 'display_order'
     });
-    boards.sort(function (b1, b2) {
-        var
-            n1 = tagDict[b1.tag],
-            n2 = tagDict[b2.tag];
-        if (n1 === n2) {
-            return 0;
-        }
-        return n1 < n2 ? -1 : 1;
-    });
-    if (!returnAsGroup) {
-        return boards;
-    }
-    // group:
-    _.each(boards, function (b) {
-        if (lastTag === b.tag) {
-            groups[groups.length - 1].push(b);
-        }
-        else {
-            lastTag = b.tag;
-            groups.push([b]);
-        }
-    });
-    return groups;
 }
 
 function* $lockBoard(id, locked) {
