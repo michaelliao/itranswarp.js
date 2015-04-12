@@ -155,7 +155,7 @@ module.exports = {
             form: {
                 name: 'Create Web Page',
                 action: '/api/webpages',
-                redirect: '/manage/webpage/webpage_list'
+                redirect: 'webpage_list'
             },
         }));
     },
@@ -167,62 +167,44 @@ module.exports = {
             form: {
                 name: 'Edit Web Page',
                 action: '/api/webpages/' + id,
-                redirect: '/manage/webpage/webpage_list'
+                redirect: 'webpage_list'
             },
         }));
     },
 
     // wiki ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/wiki/(index)?': function (req, res, next) {
-        wikiApi.getWikis(function (err, wikis) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/wiki/wiki_list.html', {
-                wikis: JSON.stringify(wikis)
-            });
-        });
+    'GET /manage/wiki/(wiki_list)?': function* () {
+        this.render('manage/wiki/wiki_list.html', yield $getModel({}));
     },
 
-    'GET /manage/wiki/create_wiki': function (req, res, next) {
-        return res.render('manage/wiki/wiki_form.html', {
+    'GET /manage/wiki/create_wiki': function* () {
+        this.render('manage/wiki/wiki_form.html', yield $getModel({
             form: {
                 name: 'Create Wiki',
-                action: '/api/wikis/',
-                redirect: '/manage/wiki/'
-            },
-            wiki: {
-                safe_content: safeEncodeJSON('')
+                action: '/api/wikis',
+                redirect: 'wiki_list'
             }
-        });
+        }));
     },
 
-    'GET /manage/wiki/list_wiki': function (req, res, next) {
-        var id = req.query.id;
-        wikiApi.getWiki(id, function (err, wiki) {
-            return res.render('manage/wiki/wiki_tree.html', {
-                wiki: wiki
-            });
-        });
+    'GET /manage/wiki/edit_wiki': function* () {
+        var id = this.request.query.id || '?';
+        this.render('manage/wiki/wiki_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Wiki',
+                action: '/api/wikis/' + id,
+                redirect: 'wiki_list'
+            }
+        }));
     },
 
-    'GET /manage/wiki/edit_wiki': function (req, res, next) {
-        var id = req.query.id;
-        wikiApi.getWikiWithContent(id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            wiki.safe_content = safeEncodeJSON(wiki.content);
-            return res.render('manage/wiki/wiki_form.html', {
-                form: {
-                    name: 'Edit Wiki',
-                    action: '/api/wikis/' + id + '/',
-                    redirect: '/manage/wiki/list_wiki?id=' + id
-                },
-                wiki: wiki
-            });
-        });
+    'GET /manage/wiki/wikipage_list': function* () {
+        var id = this.request.query.id || '?';
+        this.render('manage/wiki/wiki_tree.html', yield $getModel({
+            id: id
+        }));
     },
 
     'GET /manage/wiki/edit_wikipage': function* () {
