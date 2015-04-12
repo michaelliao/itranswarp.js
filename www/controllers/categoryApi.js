@@ -105,7 +105,7 @@ module.exports = {
          */
         helper.checkPermission(this.request, constants.role.ADMIN);
         var data = this.request.body;
-        json_schema.validate('sortCategory', data);
+        json_schema.validate('sortCategories', data);
         this.body = {
             categories: yield helper.$sort(data.ids, yield $getCategories())
         };
@@ -153,7 +153,16 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         helper.checkPermission(this.request, constants.role.ADMIN);
-        var category = yield $getCategory(id);
+        var
+            category = yield $getCategory(id),
+            num = yield Article.$findNumber({
+                select: 'count(id)',
+                where: 'category_id=?',
+                params: [id]
+            });
+        if (num > 0) {
+            throw api.conflictError('Category', 'Cannot delete category for there are some articles reference it.');
+        }
         yield category.$destroy();
         this.body = {
             id: id
