@@ -159,13 +159,13 @@ module.exports = {
     $sort: function* (ids, entities) {
         var i, pos, entity;
         if (entities.length !== ids.length) {
-            throw api.invalidParam('ids', 'Invalid id list.');
+            throw api.invalidParam('ids', 'Invalid id list: expected ' + entities.length + ' ids.');
         }
         for (i=0; i<entities.length; i++) {
             entity = entities[i];
-            pos = ids.indexOf(entities.id);
+            pos = ids.indexOf(entity.id);
             if (pos === (-1)) {
-                throw api.invalidParam('ids', 'Invalid id list.');
+                throw api.invalidParam('ids', 'Invalid id list: id \"' + entity.id + '\" not found.');
             }
             entity.display_order = i;
         }
