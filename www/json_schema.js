@@ -144,8 +144,7 @@ var PROPERTY = {
             pattern: '^[0-9a-f]{50}$'
         },
         minItems: 1,
-        uniqueItems: true,
-        default: []
+        uniqueItems: true
     },
 
     MIME: {
