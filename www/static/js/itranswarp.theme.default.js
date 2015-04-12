@@ -1,3 +1,5 @@
+// DEPRECATED
+
 // theme/default js:
 
 var authFrom = (function() {
