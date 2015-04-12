@@ -88,7 +88,7 @@ module.exports = {
 
     // article ////////////////////////////////////////////////////////////////
 
-    'GET /manage/article/(index)?': function* () {
+    'GET /manage/article/(article_list)?': function* () {
         this.render('manage/article/article_list.html', yield $getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
@@ -100,84 +100,48 @@ module.exports = {
         }));
     },
 
-    'GET /manage/article/create_article': function (req, res, next) {
-        categoryApi.getCategories(function (err, categories) {
-            if (err) {
-                return next(err);
+    'GET /manage/article/create_article': function* () {
+        this.render('manage/article/article_form.html', yield $getModel({
+            form: {
+                name: 'Create Article',
+                action: '/api/articles',
+                redirect: 'article_list'
             }
-            return res.render('manage/article/article_form.html', {
-                form: {
-                    name: 'Create Article',
-                    action: '/api/articles/',
-                    redirect: '/manage/article/'
-                },
-                categories: JSON.stringify(categories),
-                article: {
-                    safe_content: safeEncodeJSON('')
-                }
-            });
-        });
+        }));
     },
 
-    'GET /manage/article/edit_article': function (req, res, next) {
-        async.parallel({
-            article: function (callback) {
-                articleApi.getArticle(req.query.id, function (err, article) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    callback(null, article);
-                });
-            },
-            categories: function (callback) {
-                categoryApi.getCategories(callback);
+    'GET /manage/article/edit_article': function* () {
+        var id = this.request.query.id || '?';
+        this.render('manage/article/article_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Article',
+                action: '/api/articles/' + id,
+                redirect: 'article_list'
             }
-        }, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            var article = results.article;
-            article.safe_content = safeEncodeJSON(article.content);
-            return res.render('manage/article/article_form.html', {
-                form: {
-                    name: 'Edit Article',
-                    action: '/api/articles/' + article.id,
-                    redirect: '/manage/article/'
-                },
-                categories: JSON.stringify(results.categories),
-                article: article
-            });
-        });
+        }));
     },
 
-    'GET /manage/article/create_category': function (req, res, next) {
-        return res.render('manage/article/category_form.html', {
+    'GET /manage/article/create_category': function* () {
+        this.render('manage/article/category_form.html', yield $getModel({
             form: {
                 name: 'Create Category',
-                action: '/api/categories/',
-                redirect: '/manage/article/category_list'
-            },
-            category: {}
-        });
+                action: '/api/categories',
+                redirect: 'category_list'
+            }
+        }));
     },
 
-    'GET /manage/article/edit_category': function (req, res, next) {
-        categoryApi.getCategory(req.query.id, function (err, obj) {
-            if (err) {
-                return next(err);
+    'GET /manage/article/edit_category': function* () {
+        var id = this.request.query.id || '?';
+        this.render('manage/article/category_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Category',
+                action: '/api/categories/' + id,
+                redirect: 'category_list'
             }
-            if (obj === null) {
-                return next(api.notFound('Category'));
-            }
-            return res.render('manage/article/category_form.html', {
-                form: {
-                    name: 'Edit Category',
-                    action: '/api/categories/' + obj.id + '/',
-                    redirect: '/manage/article/category_list'
-                },
-                category: obj
-            });
-        });
+        }));
     },
 
     // page ///////////////////////////////////////////////////////////////////
