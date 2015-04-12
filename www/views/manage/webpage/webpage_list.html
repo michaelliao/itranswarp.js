@@ -1,0 +1,104 @@
+{% extends '../_manage.html' %}
+
+{% block title %} {{ ('All Web Pages') }} {% endblock %}
+
+{% block head %}
+<script>
+
+$(function() {
+    getJSON('/api/webpages', function (err, data) {
+        if (err) {
+            return fatal(err);
+        }
+        initVM(data.webpages);
+    });
+});
+
+function initVM(webpages) {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            webpages: webpages
+        },
+        methods: {
+            find: function(id) {
+                for (var i = 0; i < this.webpages.length; i ++) {
+                    var p = this.webpages[i];
+                    if (p.id===id) {
+                        return i;
+                    }
+                }
+                throw 'logic error';
+            },
+            editWebage: function(id) {
+                location.assign('edit_webpage?id=' + id);
+            },
+            deleteWebage: function(id) {
+                var p = this.webpages[this.find(id)];
+                if (confirm('Web page \"' + p.name + '\" will be deleted. Continue?')) {
+                    postJSON('/api/webpages/' + p.id + '/delete', function(err, result) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
+                    });
+                }
+            }
+        }
+    });
+    $('#loading').hide();
+    $('#vm').show();
+};
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_webpage" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Web Page') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="45%">{{ _('Name') }}</th>
+                    <th width="20%">{{ _('Alias') }}</th>
+                    <th width="10%">{{ _('Draft') }}</th>
+                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="10%">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="p: webpages">
+                    <td>
+                        <a v-text="p.name" v-attr="href: '/webpage/'+p.alias" target="_blank"></a>
+                    </td>
+                    <td><span v-text="p.alias"></span></td>
+                    <td>
+                        <span v-show="p.draft">Draft</span>
+                    </td>
+                    <td><span v-text="p.created_at.toDateTime()"></span></td>
+                    <td>
+                        <a v-on="click: editWebpage(p.id)" title="Edit Web Page" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on="click: deleteWebpage(p.id)" title="Delete Web Page" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+                <tr v-if="webpages.length===0">
+                    <td colspan="5">No web page found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock%}
