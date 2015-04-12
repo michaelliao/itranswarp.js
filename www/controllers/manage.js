@@ -144,17 +144,10 @@ module.exports = {
         }));
     },
 
-    // page ///////////////////////////////////////////////////////////////////
+    // webpage ////////////////////////////////////////////////////////////////
 
-    'GET /manage/page/(index)?': function (req, res, next) {
-        pageApi.getPages(function (err, pages) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/page/page_list.html', {
-                pages: JSON.stringify(pages)
-            });
-        });
+    'GET /manage/webpage/(webpage_list)?': function* () {
+        this.render('manage/webpage/webpage_list.html', yield $getModel({}));
     },
 
     'GET /manage/page/create_page': function (req, res, next) {
