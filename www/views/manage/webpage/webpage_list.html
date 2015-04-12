@@ -30,10 +30,10 @@ function initVM(webpages) {
                 }
                 throw 'logic error';
             },
-            editWebage: function(id) {
+            editWebpage: function(id) {
                 location.assign('edit_webpage?id=' + id);
             },
-            deleteWebage: function(id) {
+            deleteWebpage: function(id) {
                 var p = this.webpages[this.find(id)];
                 if (confirm('Web page \"' + p.name + '\" will be deleted. Continue?')) {
                     postJSON('/api/webpages/' + p.id + '/delete', function(err, result) {

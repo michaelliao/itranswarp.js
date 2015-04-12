@@ -1,135 +1,131 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ form.name }}
-{% endblock %}
+{% block title %} {{ form.name }} {% endblock %}
 
 {% block head %}
-
-<script src="/static/js/marked.js"></script>
-<script src="/static/js/markdown-editor.js"></script>
-
 <script>
-
-var vmPage = null;
-var initial_content = JSON.parse(decodeURIComponent({{ page.safe_content|safe }}));
-
-function beforeUnload() {
-    if (isChanged()) {
-        return 'Content has been changed.';
-    }
-};
-
-function isChanged() {
-    return vmPage.content !== initial_content;
-}
-
 $(function() {
-    vmPage = new Vue({
-        el: '#formPage',
+    var id = '{{ id }}';
+    if (id) {
+        getJSON('/api/webpages/' + id, function (err, webpage) {
+            if (err) {
+                return fatal(err);
+            }
+            initVM(webpage);
+        });
+    }
+    else {
+        initVM({ id: '', draft: false });
+    }
+});
+
+function initVM(webpage) {
+    var vm = new Vue({
+        el: '#vm',
         data: {
-            name: {{ page.name|json|safe }},
-            alias: '{{ page.alias }}',
-            tags: {{ page.tags|json|safe }},
-            draft: {{ page.draft|safe }},
-            content: initial_content
+            name: webpage.name,
+            alias: webpage.alias,
+            tags: webpage.tags,
+            draft: webpage.draft,
+            content: webpage.content || ''
         },
         methods: {
             submit: function(event) {
                 event.preventDefault();
-                showError();
-                var fieldNames = ['name', 'alias', 'content'];
-                for (var i = 0; i < fieldNames.length; i++) {
-                    var f = fieldNames[i];
-                    if (this[f].trim()==='') {
-                        showError(f + ' cannot be empty.', f.toLowerCase());
-                        return;
-                    }
-                }
                 var data = {
                     name: this.name,
                     alias: this.alias,
                     tags: this.tags,
                     draft: this.draft
                 };
-                if (isChanged()) {
-                    data.content = this.content;
+                var content = $('#content-editor').val();
+                if (this.content !== content) {
+                    data.content = content;
                 }
-                showLoading(true);
-                postJSON('{{ form.action }}', data, function(err, result) {
+                $('#vm').find('form').postJSON('{{ form.action }}', data, function(err, result) {
                     if (err) {
-                        showError(err);
-                        showLoading(false);
                         return;
                     }
-                    window.beforeUnload = null;
+                    window.onbeforeunload = null;
                     location.assign('{{ form.redirect }}');
                 });
             }
         }
     });
+    $('#loading').hide();
+    $('#vm').show();
 
-    $('#markdown-editor').markdown({
-        'upload_image_url': '/api/attachments?image=true&url=true'
+    // check content when unload:
+    window.onbeforeunload = function() {
+        if (vm.content !== $('#content-editor').val()) {
+            return 'Content has been changed.';
+        }
+    };
+
+    $('#content-editor').val(webpage.content || '');
+    var htmleditor = UIkit.htmleditor($('#content-editor').get(0), {
+        markdown: true,
+        maxsplitsize: 600
     });
-});
-
+}
 </script>
 
 {% endblock %}
 
 {% block main %}
 
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/page/">All Pages</a> <span class="divider">/</span></li>
-        <li class="active">{{ form.name }}</li>
-    </ul>
-</div>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <form v-on="submit: submit" id="formPage" class="form-horizontal">
-        <legend>{{ form.name }}</legend>
-        <fieldset>
-            <div class="field-name control-group">
-                <label class="control-label">Name:</label>
-                <div class="controls">
-                    <input v-model="name" name="name" type="text" class="input-xlarge" style="width:600px;" />
+    <div id="vm" class="uk-width-1-1">
+        <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
+            <legend>{{ form.name }}</legend>
+            <fieldset>
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Name:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                    </div>
                 </div>
-            </div>
-            <div class="field-alias control-group">
-                <label class="control-label">Alias:</label>
-                <div class="controls">
-                    <input v-model="alias" name="alias" type="text" class="input-xlarge" style="width:600px;" />
-                    <span class="help-inline">Alphabet and numeric characters only.</span>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Alias:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="alias" name="alias" type="text" class="uk-width-1-1" placeholder="alias" />
+                    </div>
                 </div>
-            </div>
-            <div class="field-tags control-group">
-                <label class="control-label">Tags:</label>
-                <div class="controls">
-                    <input v-model="tags" name="tags" type="text" class="input-xlarge" style="width:600px;" />
-                    <span class="help-inline">Tags seperated by ,</span>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Tags:</label>
+                    <div class="controls">
+                        <input v-model="tags" name="tags" type="text" class="uk-width-1-1" placeholder="tag1, tag2, tag3">
+                    </div>
                 </div>
-            </div>
-            <div class="field-draft control-group">
-                <label class="control-label">Draft:</label>
-                <div class="controls">
-                    <label class="checkbox">
-                        <input v-model="draft" name="draft" type="checkbox" /> Draft
-                    </label>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Draft:</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input v-model="draft" name="draft" type="checkbox" /> Draft
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <div class="field-content control-group">
-                <label class="control-label">Content:</label>
-                <div class="controls">
-                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Content:</label>
+                    <div class="controls">
+                        <textarea id="content-editor" rows="20" style="width:100%; resize:none;"></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
-                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
-            </div>
+                <div class="uk-form-row">
+                    <div class="controls">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                        <button type="button" class="uk-button" onclick="location.assign('webpage_list')"><i class="uk-icon-times"></i> Cancel</button>
+                    </div>
+                </div>
         </fieldset>
     </form>
 </div>

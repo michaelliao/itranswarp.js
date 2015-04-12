@@ -150,40 +150,26 @@ module.exports = {
         this.render('manage/webpage/webpage_list.html', yield $getModel({}));
     },
 
-    'GET /manage/page/create_page': function (req, res, next) {
-        return res.render('manage/page/page_form.html', {
+    'GET /manage/webpage/create_webpage': function* () {
+        this.render('manage/webpage/webpage_form.html', yield $getModel({
             form: {
-                name: 'Create Page',
-                action: '/api/pages/',
-                redirect: '/manage/page/'
+                name: 'Create Web Page',
+                action: '/api/webpages',
+                redirect: '/manage/webpage/webpage_list'
             },
-            page: {
-                tags: '',
-                name: '',
-                alias: '',
-                draft: false,
-                content: '',
-                safe_content: safeEncodeJSON('')
-            }
-        });
+        }));
     },
 
-    'GET /manage/page/edit_page': function (req, res, next) {
-        var id = req.query.id;
-        pageApi.getPage(id, function (err, page) {
-            if (err) {
-                return next(err);
-            }
-            page.safe_content = safeEncodeJSON(page.content);
-            return res.render('manage/page/page_form.html', {
-                form: {
-                    name: 'Edit Page',
-                    action: '/api/pages/' + id,
-                    redirect: '/manage/page/'
-                },
-                page: page
-            });
-        });
+    'GET /manage/webpage/edit_webpage': function* () {
+        var id = this.request.query.id || '?';
+        this.render('manage/webpage/webpage_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Web Page',
+                action: '/api/webpages/' + id,
+                redirect: '/manage/webpage/webpage_list'
+            },
+        }));
     },
 
     // wiki ///////////////////////////////////////////////////////////////////
@@ -239,7 +225,7 @@ module.exports = {
         });
     },
 
-    'GET /manage/wiki/edit_wikipage': function (req, res, next) {
+    'GET /manage/wiki/edit_wikipage': function* () {
         var
             id = req.query.id,
             wikipage = null;
