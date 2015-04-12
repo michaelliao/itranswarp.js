@@ -76,7 +76,7 @@ function initVM(data) {
                     if (confirm('Category \"' + c.name + '\" will be deleted. Continue?')) {
                         postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
                             if (err) {
-                                return fatal(err);
+                                return error(err);
                             }
                             refresh();
                         });
