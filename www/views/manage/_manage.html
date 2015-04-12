@@ -3,9 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
+    <link rel="stylesheet" href="/static/css/codemirror.css" />
     <link rel="stylesheet" href="/static/css/itranswarp.css" />
     <script src="/static/js/jquery.js"></script>
     <script src="/static/js/sha1.min.js"></script>
+    <script src="/static/js/codemirror.js"></script>
     <script src="/static/js/marked.js"></script>
     <script src="/static/js/uikit/uikit.js"></script>
     <script src="/static/js/uikit/components/htmleditor.js"></script>
@@ -15,6 +17,13 @@
 #vm {
     display: none;
 }
+#loading {
+    margin-bottom: 15px;
+}
+#error {
+    display: none;
+    margin-bottom: 15px;
+}
 .x-container {
     min-width: 760px;
 }
@@ -22,6 +31,27 @@
     margin-right: 10px;
 }
 </style>
+<script>
+function _display_error($obj, err) {
+    if ($obj.is(':visible')) {
+        $obj.hide();
+    }
+    var msg = err.message || String(err);
+    var L = ['<div class="uk-alert uk-alert-danger">'];
+    L.push('<p>Error: ');
+    L.push(msg);
+    L.push('</p><p>Code: ');
+    L.push(err.error || '500');
+    L.push('</p></div>');
+    $obj.html(L.join('')).slideDown();
+}
+function error(err) {
+    _display_error($('#error'), err);
+}
+function fatal(err) {
+    _display_error($('#loading'), err);
+}
+</script>
 {% set __show_navigations__ = true %}
 {% block head %}<!-- block head  -->{% endblock %}
 </head>
