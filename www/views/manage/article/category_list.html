@@ -1,31 +1,37 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ _('All Categories') }}
-{% endblock %}
+{% block title %} {{ _('All Categories') }} {% endblock %}
 
 {% block head %}
 <script>
+
 $(function() {
-    var categories = {{ categories|safe }};
-    var vmCategories = new Vue({
-        el: '#categories',
+    getJSON('/api/categories', function (err, data) {
+        if (err) {
+            return fatal(err);
+        }
+        initVM(data);
+    });
+});
+
+function initVM(data) {
+    console.log('init vm...');
+    var vm = new Vue({
+        el: '#vm',
         data: {
-            categories: categories
+            categories: data.categories
         },
         methods: {
             sort: function(event) {
                 var ids = [];
                 for (var i = 0; i < this.categories.length; i ++) {
-                    ids.push('id=' + this.categories[i].id);
+                    ids.push(this.categories[i].id);
                 }
-                showError();
-                showLoading(true);
-                postJSON('/api/categories/all/sort', ids.join('&'), function(err, result) {
+                postJSON('/api/categories/all/sort', {
+                    ids: ids
+                }, function(err, result) {
                     if (err) {
-                        showError(err);
-                        showLoading(false);
-                        return;
+                        return fatal(err);
                     }
                     refresh();
                 });
@@ -67,78 +73,75 @@ $(function() {
                 if (index !== (-1)) {
                     var categories = this.categories;
                     var c = categories[index];
-                    showConfirm('Confirm Deletion', 'Category \"' + c.name + '\" will be deleted. Continue?', function(modal) {
-                        showError();
-                        modal.showLoading(true);
+                    if (confirm('Category \"' + c.name + '\" will be deleted. Continue?')) {
                         postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
-                            modal.hide();
                             if (err) {
-                                showError(err);
-                                return;
+                                return fatal(err);
                             }
-                            categories.splice(index, 1);
+                            refresh();
                         });
-                    });
+                    };
                 }
             }
         }
     });
-});
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 {% endblock %}
 
 {% block main %}
-<div id="categories">
 
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/article/">{{ _('All Articles') }}</a> <span class="divider">/</span></li>
-        <li class="active">{{ _('All Categories') }} (<span v-text="categories.length"></span>)</li>
-    </ul>
-</div>
-
-<div class="span12">
-    <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_category" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Category') }}</a>
+    <div id="error" class="uk-width-1-1">
     </div>
-</div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th width="30%">{{ _('Name') }}</th>
-                <th width="40%">{{ _('Description') }}</th>
-                <th width="15%">{{ _('Created At') }}</th>
-                <th width="15%">&nbsp;</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-repeat="c: categories">
-                <td>
-                    <a v-text="c.name" v-attr="href: '/category/'+c.id" target="_blank"></a>
-                </td>
-                <td><span v-text="c.description"></span></td>
-                <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
-                <td>
-                    <a v-on="click: moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i class="icon-arrow-up"></i></a>
-                    <a v-on="click: moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i class="icon-arrow-down"></i></a>
-                    <a v-on="click: editCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="icon-edit"></i></a>
-                    <a v-on="click: deleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="icon-trash"></i></a>
-                </td>
-            </tr>
-            <tr v-if="categories.length===0">
-                <td colspan="5">No category found.</td>
-            </tr>
-        </tbody>
-    </table>
-    <div>
-        <div id="sort" class="btn-toolbar hide" style="text-align:right;">
-            <button v-on="click: sort" type="submit" class="btn btn-info"><i class="icon-list icon-white"></i> {{ _('Save Orders') }}</button>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li><a href="#0" onclick="location.assign('/manage/article/')">Articles</a></li>
+            <li class="uk-active"><a href="#0">Categories</a></li>
+        </ul>
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_category" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Category') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="30%">{{ _('Name') }}</th>
+                    <th width="40%">{{ _('Description') }}</th>
+                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="15%">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="c: categories">
+                    <td>
+                        <a v-text="c.name" v-attr="href: '/category/'+c.id" target="_blank"></a>
+                    </td>
+                    <td><span v-text="c.description"></span></td>
+                    <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                    <td>
+                        <a v-on="click: moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
+                        <a v-on="click: moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
+                        <a v-on="click: editCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on="click: deleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+                <tr v-if="categories.length===0">
+                    <td colspan="5">No category found.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div id="sort" class="uk-margin" style="text-align:right; display:none">
+            <button v-on="click: sort" type="submit" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
         </div>
     </div>
-</div>
 
-</div>
 {% endblock %}
