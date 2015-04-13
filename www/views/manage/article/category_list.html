@@ -43,7 +43,7 @@ function initVM(data) {
                         return i;
                     }
                 }
-                return (-1);
+                throw 'logic error';
             },
             swap: function(index1, index2) {
                 var obj = this.categories[index2];
@@ -69,19 +69,15 @@ function initVM(data) {
                 location.assign('edit_category?id=' + id);
             },
             deleteCategory: function(id) {
-                var index = this.find(id);
-                if (index !== (-1)) {
-                    var categories = this.categories;
-                    var c = categories[index];
-                    if (confirm('Category \"' + c.name + '\" will be deleted. Continue?')) {
-                        postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
-                            if (err) {
-                                return error(err);
-                            }
-                            refresh();
-                        });
-                    };
-                }
+                var c = this.categories[this.find(id)];
+                if (confirm('Category \"' + c.name + '\" will be deleted. Continue?')) {
+                    postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
+                    });
+                };
             }
         }
     });
