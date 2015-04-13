@@ -1,137 +1,198 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ form.name }}
-{% endblock %}
+{% block title %} {{ form.name }} {% endblock %}
 
 {% block head %}
-
-<script src="/static/js/marked.js"></script>
-<script src="/static/js/markdown.js"></script>
-<script src="/static/js/markdown-editor.js"></script>
-
 <script>
-function checkVm(vm) {
-    // check fields:
-    if (vm.name.trim()==='') {
-        showError('Name cannot be empty.', 'name');
-        return false;
+$(function () {
+    var id = '{{ id }}';
+    if (id) {
+        getJSON('/api/wikis/' + id, function (err, wiki) {
+            if (err) {
+                return fatal(err);
+            }
+            initVM(wiki);
+        });
     }
-    if (vm.description.trim()==='') {
-        showError('Description cannot be empty.', 'description');
-        return false;
+    else {
+        initVM({
+            id: ''
+        });
     }
-    if (vm.content.trim()==='') {
-        showError('Content cannot be empty.', 'content');
-        return false;
+});
+
+function processFile(file, callback) {
+    if (file.type!=='image/jpeg' && file.type!=='image/png') {
+        alert('File is not a valid image!');
+        return;
     }
-    return true;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var
+            data = e.target.result;
+            index = data.indexOf(';base64,');
+        if ((index >= 0) && (index < 100)) {
+            callback({
+                image: data,
+                data: data.substring(index + 8)
+            });
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
-$(function() {
-    var vm = null;
-    var helper = null;
-    vm = new Vue({
-        el: '#formWiki',
+function initVM(wiki) {
+    if (wiki.cover_id) {
+        $('#image-preview').css('background-image', 'url(/files/attachments/' + wiki.cover_id + '/l)');
+    }
+    var vm = new Vue({
+        el: '#vm',
         data: {
-            id: '{{ wiki.id }}',
-            cover_id: '{{ wiki.cover_id }}',
-            name: {{ wiki.name|json|safe }},
-            tags: {{ wiki.tags|json|safe }},
-            description: {{ wiki.description|json|safe }},
-            content: JSON.parse(decodeURIComponent({{ wiki.safe_content|safe }}))
+            image: null,
+            id: wiki.id,
+            cover_id: wiki.cover_id,
+            name: wiki.name,
+            tags: wiki.tags,
+            description: wiki.description,
+            content: wiki.content || ''
         },
         methods: {
+            getPostData: function () {
+                var data = {
+                    name: this.name,
+                    description: this.description,
+                    tags: this.tags
+                }
+                var content = $('#content-editor').val();
+                if (this.content !== content) {
+                    data.content = content;
+                }
+                if (this.image !== null) {
+                    data.image = this.image;
+                }
+                return data;
+            },
+
             submit: function(event) {
                 event.preventDefault();
-                showError();
-                if (! helper.checkImageBeforeUpload($('#file'), $('#preview'))) {
+                var
+                    data,
+                    form = $('#vm').find('form');
+                try {
+                    data = this.getPostData();
+                }
+                catch (e) {
+                    form.showFormError(e);
                     return;
                 }
-                if (! checkVm(this)) {
-                    return;
-                }
-                helper.ajaxPostMultipart($('#markdown-editor'), $('#formWiki'), '{{ form.action}}', '{{ form.redirect }}');
+                form.postJSON('{{ form.action}}', data, function (err, r) {
+                    if (!err) {
+                        window.onbeforeunload = null;
+                        location.assign('{{ form.redirect }}');
+                    }
+                });
             }
         }
     });
-    helper = createAjaxUploadUtils(vm);
+    $('#loading').hide();
+    $('#vm').show();
 
-    var
-        $file = $('#file'),
-        $preview = $('#preview');
-    if (vm.cover_id) {
-        $preview.css('background-image', 'url(/files/attachments/' + vm.cover_id + ')');
-    }
+    // check content when unload:
+    window.onbeforeunload = function() {
+        if (vm.content !== $('#content-editor').val()) {
+            return 'Content has been changed.';
+        }
+    };
 
-    // when file change:
-    $file.change(helper.onFileChange($file, $preview));
-
-    $('#markdown-editor').markdown({
-        'upload_image_url': '/api/attachments?image=true&url=true'
+    $('#content-editor').val(wiki.content || '');
+    var htmleditor = UIkit.htmleditor($('#content-editor').get(0), {
+        markdown: true,
+        maxsplitsize: 600
     });
 
-f=helper;
-});
-
-var f;
-
+    // watch file change:
+    $('#file').change(function (evt) {
+        evt.preventDefault();
+        var f = $('#file').val();
+        if (f === '') {
+            // user cancelled selected file:
+            vm.image = null;
+            $('#image-preview').css('background-image', 'none');
+            return;
+        }
+        try {
+            var file = $('#file').get(0).files[0];
+            processFile(file, function (r) {
+                vm.image = r.data;
+                $('#image-preview').css('background-image', 'url(' + r.image + ')');
+            });
+        }
+        catch (e) {
+            alert('Error when process file: ' + e);
+        }
+    });
+}
 </script>
 
 {% endblock %}
 
 {% block main %}
 
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/wiki/">All Wikis</a> <span class="divider">/</span></li>
-        <li class="active">{{ form.name }}</li>
-    </ul>
-</div>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <form v-on="submit: submit" id="formWiki" enctype="multipart/form-data" class="form-horizontal">
-        <legend>{{ form.name }}</legend>
-        <fieldset>
-            <div class="field-cover control-group">
-                <label class="control-label">Cover:</label>
-                <div class="controls">
-                    <div id="preview" style="border:solid 1px #ccc;width:612px;height:344px;background-size:cover;background-position:center center;"></div>
-                    <div style="margin-top:10px;"><input id="file" type="file" name="file" /></div>
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-breadcrumb">
+            <li><a href="wiki_list">{{ _('All Wikis') }}</a></li>
+            <li class="uk-active"><span>{{ form.name }}</span></li>
+        </ul>
+
+        <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
+            <legend>{{ form.name }}</legend>
+            <fieldset>
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Image:</label>
+                    <div class="uk-form-controls">
+                        <div id="image-preview" style="border: 1px solid #ccc; width:642px; height:362px; background-size:cover;"></div>
+                    </div>
+                    <div class="uk-form-controls">
+                        <input id="file" type="file">
+                    </div>
                 </div>
-            </div>
-            <div class="field-name control-group">
-                <label class="control-label">Name:</label>
-                <div class="controls">
-                    <input v-model="name" name="name" type="text" class="input-xlarge" style="width:600px;" />
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Name:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                    </div>
                 </div>
-            </div>
-            <div class="field-tags control-group">
-                <label class="control-label">Tags:</label>
-                <div class="controls">
-                    <input v-model="tags" name="tags" type="text" class="input-xlarge" style="width:600px;" />
-                    <span class="help-inline">Tags seperated by ,</span>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Description:</label>
+                    <div class="uk-form-controls">
+                        <textarea v-model="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="field-description control-group">
-                <label class="control-label">Description:</label>
-                <div class="controls">
-                    <textarea v-model="description" name="description" rows="5" style="width:600px; resize:none;"></textarea>
+                <div class="uk-form-row">
+                    <label class="control-label">Tags:</label>
+                    <div class="controls">
+                        <input v-model="tags" name="tags" type="text" class="uk-width-1-1" placeholder="tag1, tag2, tag3">
+                    </div>
                 </div>
-            </div>
-            <div class="field-content control-group">
-                <label class="control-label">Content:</label>
-                <div class="controls">
-                    <textarea v-model="content" id="markdown-editor" rows="20" style="width:600px;"></textarea>
+                <div class="uk-form-row">
+                    <label class="control-label">Content:</label>
+                    <div class="controls">
+                        <textarea id="content-editor" rows="20" style="width:100%; resize:none;"></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
-                <a href="{{ form.redirect }}" class="btn"><i class="icon-remove"></i> Cancel</a>
-            </div>
-        </fieldset>
-    </form>
-</div>
+                <div class="uk-form-row">
+                    <div class="controls">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
 
 {% endblock %}

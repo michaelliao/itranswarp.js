@@ -457,19 +457,19 @@ module.exports = {
             });
             wikipage.content_id = text.id;
             wikipage.content = data.content;
-            props.push('content');
+            props.push('content_id');
         }
         if (props.length > 0) {
             props.push('updated_at');
             props.push('version');
-            wikipage.$update(props);
+            yield wikipage.$update(props);
         }
         if (!wikipage.content) {
             text = yield Text.$find(wikipage.content_id);
             wikipage.content = text.value;
         }
 
-        indexWiki(wp);
+        indexWiki(wikipage);
         this.body = wikipage;
     },
 

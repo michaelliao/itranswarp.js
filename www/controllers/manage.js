@@ -58,6 +58,14 @@ function safeEncodeJSON(obj) {
 
 var KEY_WEBSITE = constants.cache.WEBSITE;
 
+function getId(request) {
+    var id = request.query.id;
+    if (id && id.length === 50) {
+        return id;
+    }
+    throw api.notFound('id');
+}
+
 function* $getModel(model) {
     if (model === undefined) {
         model = {};
@@ -111,7 +119,7 @@ module.exports = {
     },
 
     'GET /manage/article/edit_article': function* () {
-        var id = this.request.query.id || '?';
+        var id = getId(this.request);
         this.render('manage/article/article_form.html', yield $getModel({
             id: id,
             form: {
@@ -133,7 +141,7 @@ module.exports = {
     },
 
     'GET /manage/article/edit_category': function* () {
-        var id = this.request.query.id || '?';
+        var id = getId(this.request);
         this.render('manage/article/category_form.html', yield $getModel({
             id: id,
             form: {
@@ -161,7 +169,7 @@ module.exports = {
     },
 
     'GET /manage/webpage/edit_webpage': function* () {
-        var id = this.request.query.id || '?';
+        var id = getId(this.request);
         this.render('manage/webpage/webpage_form.html', yield $getModel({
             id: id,
             form: {
@@ -189,19 +197,19 @@ module.exports = {
     },
 
     'GET /manage/wiki/edit_wiki': function* () {
-        var id = this.request.query.id || '?';
+        var id = getId(this.request);
         this.render('manage/wiki/wiki_form.html', yield $getModel({
             id: id,
             form: {
                 name: 'Edit Wiki',
                 action: '/api/wikis/' + id,
-                redirect: 'wiki_list'
+                redirect: 'wiki_tree?id=' + id
             }
         }));
     },
 
-    'GET /manage/wiki/wikipage_list': function* () {
-        var id = this.request.query.id || '?';
+    'GET /manage/wiki/wiki_tree': function* () {
+        var id = getId(this.request);
         this.render('manage/wiki/wiki_tree.html', yield $getModel({
             id: id
         }));
@@ -209,31 +217,16 @@ module.exports = {
 
     'GET /manage/wiki/edit_wikipage': function* () {
         var
-            id = req.query.id,
-            wikipage = null;
-        async.waterfall([
-            function (callback) {
-                wikiApi.getWikiPageWithContent(id, callback);
-            },
-            function (wp, callback) {
-                wikipage = wp;
-                wikiApi.getWiki(wp.wiki_id, callback);
+            id = getId(this.request),
+            wp = yield wikiApi.$getWikiPage(id);
+        this.render('manage/wiki/wikipage_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Wiki Page',
+                action: '/api/wikis/wikipages/' + id,
+                redirect: 'wiki_tree?id=' + wp.wiki_id
             }
-        ], function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            wikipage.safe_content = safeEncodeJSON(wikipage.content);
-            return res.render('manage/wiki/wikipage_form.html', {
-                form: {
-                    name: 'Edit Wiki Page',
-                    action: '/api/wikis/wikipages/' + id + '/',
-                    redirect: '/manage/wiki/list_wiki?id=' + wiki.id
-                },
-                wikipage: wikipage,
-                wiki: wiki
-            });
-        });
+        }));
     },
 
     // board //////////////////////////////////////////////////////////////////
