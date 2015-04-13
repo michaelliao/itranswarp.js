@@ -26,6 +26,14 @@ function initVM(data) {
             days: 1
         },
         methods: {
+            getRoleName: function (u) {
+                return {
+                    '0': 'admin',
+                    '10': 'editor',
+                    '100': 'contributor',
+                    '10000': 'subscriber'
+                }[String(u.role)] || 'unknown';
+            },
             isLocked: function (u) {
                 return u.locked_until > g_currentTime;
             },
@@ -118,8 +126,9 @@ function initVM(data) {
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th width="20%">{{ _('Name') }}</th>
-                    <th width="50%">{{ _('Email') }}</th>
+                    <th width="10%">{{ _('Name') }}</th>
+                    <th width="15%">{{ _('Name') }}</th>
+                    <th width="45%">{{ _('Email') }}</th>
                     <th width="15%">{{ _('Created At') }}</th>
                     <th width="15%">{{ _('Lock') }}</th>
                 </tr>
@@ -127,15 +136,19 @@ function initVM(data) {
             <tbody>
                 <tr v-repeat="u: users">
                     <td>
-                        <span v-text="u.name"></span>
-                        <i v-if="u.locked" class="icon-lock"></i>
+                        <a v-attr="href: '/user/'+u.id" target="_blank"><img v-attr="src: u.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;"></a>
+                    </td>
+                    <td>
+                        <a v-attr="href: '/user/'+u.id" target="_blank"><span v-text="u.name"></span></a>
+                        <br>
+                        <span v-text="getRoleName(u)"></span>
                     </td>
                     <td><span v-text="u.email"></span></td>
                     <td><span v-text="u.created_at.toDateTime()"></span></td>
                     <td>
                         <a v-if="! isLocked(u)" v-on="click: lockUser(u)" title="Lock User" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
+                        <a href="#0" v-if="isLocked(u)" v-on="click: unlockUser(u)"><i class="uk-icon-circle-o"></i></a>
                         <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
-                        <a href="#0" v-if="isLocked(u)" v-on="click: unlockUser(u)">unlock</a>
                     </td>
                 </tr>
             </tbody>

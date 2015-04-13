@@ -314,16 +314,13 @@ module.exports = {
         });
     },
 
-    'GET /user/:id': function (req, res, next) {
-        userApi.getUser(req.params.id, function (err, user) {
-            if (err) {
-                return next(err);
-            }
-            var model = {
+    'GET /user/:id': function* (id) {
+        var
+            user = yield userApi.$getUser(id),
+            model = {
                 user: user
             };
-            return processTheme('user/profile.html', model, req, res, next);
-        });
+        this.render(getView('user/profile.html'), yield $getModel.apply(this, [model]));
     },
 
     'GET /search': function (req, res, next) {

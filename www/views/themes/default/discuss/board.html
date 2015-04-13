@@ -4,11 +4,9 @@
 
 {% block title %}{{ board.name }}{% endblock %}
 
-
 {% block head %}
     {% set __sidebar_right__ = true %}
 {% endblock %}
-
 
 {% block main_content %}
     <div class="uk-alert x-board-nav">
@@ -32,7 +30,7 @@
         {% for t in topics %}
             <tr>
                 <td>
-                    <a href="/user/{{ t.user.id }}" target="_blank"><img class="uk-comment-avatar uk-border-circle" src="{{ t.user.image_url }}" style="width:50px"></a>
+                    <a href="/user/{{ t.user.id }}" target="_blank"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{{ t.user.image_url }}" style="width:50px"></a>
                     <div style="margin-left:70px;">
                         <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a></div>
                         <div>
