@@ -318,17 +318,10 @@ module.exports = {
 
     // attachment /////////////////////////////////////////////////////////////
 
-    'GET /manage/attachment/(index)?': function (req, res, next) {
-        var page = utils.getPage(req);
-        attachmentApi.getAttachments(page, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/attachment/attachment_list.html', {
-                page: JSON.stringify(results.page),
-                attachments: JSON.stringify(results.attachments)
-            });
-        });
+    'GET /manage/attachment/(attachment_list)?': function* () {
+        this.render('manage/attachment/attachment_list.html', yield $getModel({
+            pageIndex: helper.getPageNumber(this.request)
+        }));
     },
 
     // user ///////////////////////////////////////////////////////////////////
