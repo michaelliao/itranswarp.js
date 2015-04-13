@@ -1,50 +1,76 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ _('All Users') }}
-{% endblock %}
+{% block title %} {{ _('All Users') }} {% endblock %}
 
 {% block head %}
 <script>
+var g_currentTime = {{ currentTime }};
 
 $(function() {
-    var now = {{ now|safe }};
-    var page = {{ page|safe }};
-    var users = {{ users|safe }};
-    for (var i = 0; i < users.length; i ++) {
-        var u = users[i];
-        u.locked = u.locked_util > now;
-    }
-    var vmUsers = new Vue({
-        el: '#users',
+    getJSON('/api/users', {
+        page: {{ pageIndex }}
+    }, function (err, data) {
+        if (err) {
+            return fatal(err);
+        }
+        initVM(data);
+    });
+});
+
+function initVM(data) {
+    var vm = new Vue({
+        el: '#vm',
         data: {
-            num: '',
-            unit: 'd',
-            selectedUser: null,
-            users: users,
-            page: definePagination(page)
+            users: data.users,
+            page: data.page,
+            days: 1
         },
         methods: {
-            selectUser: function(id) {
-                showError();
-                this.selectedUser = null;
-                this.num = '';
-                this.unit = 'd';
-                for (var i = 0; i < this.users.length; i ++) {
-                    var u = this.users[i];
-                    if (u.id===id) {
-                        this.selectedUser = u;
-                        $('#lockModal').modal('show');
-                        break;
+            isLocked: function (u) {
+                return u.locked_until > g_currentTime;
+            },
+            getLockTime: function (u) {
+                var t = u.locked_until - g_currentTime;
+                console.log('t >>> ' + t);
+                if (t < 3600000) {
+                    return 'Less in 1 hour';
+                }
+                if (t < 86400000) {
+                    return 'in ' + parseInt(t / 3600000, 10) + ' hours';
+                }
+                if (t > 3000000000000) {
+                    return 'forever';
+                }
+                if (t > 31536000000) {
+                    var y = parseInt(t / 31536000000, 10);
+                    var m = parseInt((t - 31536000000 * y) / 2592000000, 10);
+                    var s = 'in ' + y + ' years';
+                    if (m > 0) {
+                        s = s + ' ' + m + ' months';
                     }
+                    return s;
+                }
+                return 'in ' + parseInt(t / 86400000, 10) + ' days';
+            },
+            lockUser: function (u) {
+                if (confirm('Do you want to lock user \"' + u.name + '\" for ' + $('option[value=' + this.days + ']').text() + '?')) {
+                    postJSON('/api/users/' + u.id + '/lock', {
+                        locked_until: this.days * 3600000 * 24 + g_currentTime
+                    }, function(err, r) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
+                    });
                 }
             },
-            lockUser: function() {
-                if (this.selectedUser!==null) {
-                    postJSON('/api/users/' + this.selectedUser.id + '/lock', { time: this.num + this.unit }, function(err, r) {
-                        $('#lockModal').modal('hide');
+            unlockUser: function (u) {
+                if (confirm('Do you want to unlock user \"' + u.name + '\"?')) {
+                    postJSON('/api/users/' + u.id + '/lock', {
+                        locked_until: 0
+                    }, function(err, r) {
                         if (err) {
-                            return showError(err);
+                            return error(err);
                         }
                         refresh();
                     });
@@ -52,80 +78,70 @@ $(function() {
             }
         }
     });
-});
-
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 {% endblock %}
 
 {% block main %}
 
-<div id="users">
-
-<div id="lockModal" class="modal hide fade" data-backdrop="static">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Lock User</h3>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
     </div>
-    <div class="modal-body">
-        <p>Lock user <span v-model="selectedUser && selectedUser.name"></span> (<span v-model="selectedUser && selectedUser.email"></span>) for:</p>
-        <form class="form-inline">
-            <input v-model="num" type="text" class="input-small" />
-            <select v-model="unit">
-                <option value="d">Days</option>
-                <option value="w">Weeks</option>
-                <option value="m">Month</option>
-                <option value="y">Years</option>
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+
+        <h3>All Users</h3>
+
+        <div class="uk-margin uk-clearfix">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_user" class="uk-button uk-button-primary"><i class="uk-icon-plus"></i> {{ _('New User') }}</a>
+            <select id="days" v-model="days" class="uk-float-right">
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="7">1 week</option>
+                <option value="14">2 weeks</option>
+                <option value="30">1 month</option>
+                <option value="60">2 months</option>
+                <option value="90">3 months</option>
+                <option value="180">6 months</option>
+                <option value="365">1 year</option>
+                <option value="40000">forever</option>
             </select>
-        </form>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="20%">{{ _('Name') }}</th>
+                    <th width="50%">{{ _('Email') }}</th>
+                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="15%">{{ _('Lock') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="u: users">
+                    <td>
+                        <span v-text="u.name"></span>
+                        <i v-if="u.locked" class="icon-lock"></i>
+                    </td>
+                    <td><span v-text="u.email"></span></td>
+                    <td><span v-text="u.created_at.toDateTime()"></span></td>
+                    <td>
+                        <a v-if="! isLocked(u)" v-on="click: lockUser(u)" title="Lock User" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
+                        <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
+                        <a href="#0" v-if="isLocked(u)" v-on="click: unlockUser(u)">unlock</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div v-component="pagination" v-with="page"></div>
     </div>
-    <div class="modal-footer">
-        <a v-on="click: lockUser" href="#0" class="btn btn-primary">{{ _('OK') }}</a>
-        <a href="#0" class="btn" data-dismiss="modal">{{ _('Cancel') }}</a>
-    </div>
-</div>
-
-<div class="span12">
-    <ul class="breadcrumb">
-        <li class="active">{{ _('All Users') }} (<span v-text="page.totalItems"></span>)</li>
-    </ul>
-</div>
-
-<div class="span12">
-    <div class="btn-toolbar" style="text-align:right;">
-        <a href="javascript:refresh()" class="btn btn-info"><i class="icon-refresh icon-white"></i> {{ _('Refresh') }}</a>
-        <a href="create_user" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New User') }}</a>
-    </div>
-</div>
-
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th width="20%">{{ _('Name') }}</th>
-                <th width="50%">{{ _('Email') }}</th>
-                <th width="15%">{{ _('Created At') }}</th>
-                <th width="15%">{{ _('Lock') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-repeat="u: users">
-                <td>
-                    <span v-text="u.name"></span>
-                    <i v-if="u.locked" class="icon-lock"></i>
-                </td>
-                <td><span v-text="u.email"></span></td>
-                <td><span v-text="u.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
-                <td>
-                    <a v-if="! u.locked" v-on="click: selectUser(u.id)" title="Lock User" href="#0" class="x-btn"><i class="icon-ban-circle"></i></a>
-                    <span v-if="u.locked" v-text="u.locked_util.toDateTime('yyyy-MM-dd hh:mm')"></span>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <div v-component="vc-pagination"></div>
-</div>
-
-</div>
 
 {% endblock%}

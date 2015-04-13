@@ -326,18 +326,11 @@ module.exports = {
 
     // user ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/user/(index)?': function (req, res, next) {
-        var page = utils.getPage(req);
-        userApi.getUsers(page, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/user/user_list.html', {
-                now: Date.now(),
-                page: JSON.stringify(results.page),
-                users: JSON.stringify(results.users)
-            });
-        });
+    'GET /manage/user/(user_list)?': function* () {
+        this.render('manage/user/user_list.html', yield $getModel({
+            currentTime: Date.now(),
+            pageIndex: helper.getPageNumber(this.request)
+        }));
     },
 
     // navigation /////////////////////////////////////////////////////////////
