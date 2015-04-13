@@ -125,8 +125,8 @@ function initVM(data) {
                         <p><i class="uk-icon-user"></i> <span v-text="a.user_name"></span></p>
                     </td>
                     <td>
-                        <p><span v-text="a.publish_at.toDateTime('yyyy-MM-dd hh:mm')"></span></p>
-                        <p><span v-text="a.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></p>
+                        <p><span v-text="a.publish_at.toDateTime()"></span></p>
+                        <p><span v-text="a.created_at.toDateTime()"></span></p>
                     </td>
                     <td>
                         <a v-on="click: editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
