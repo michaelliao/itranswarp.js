@@ -231,89 +231,42 @@ module.exports = {
 
     // board //////////////////////////////////////////////////////////////////
 
-    'GET /manage/discuss/(index)?': function (req, res, next) {
-        discussApi.getBoards(function (err, boards) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/discuss/board_list.html', {
-                boards: JSON.stringify(_.flatten(boards))
-            });
-        });
+    'GET /manage/discuss/(board_list)?': function* () {
+        this.render('manage/discuss/board_list.html', yield $getModel({}));
     },
 
-    'GET /manage/discuss/create_board': function (req, res, next) {
-        return res.render('manage/discuss/board_form.html', {
+    'GET /manage/discuss/create_board': function* () {
+        this.render('manage/discuss/board_form.html', yield $getModel({
             form: {
                 name: 'Create Board',
                 action: '/api/boards',
-                redirect: '/manage/discuss/'
-            },
-            board: {}
-        });
+                redirect: 'board_list'
+            }
+        }));
     },
 
-    'GET /manage/discuss/edit_board': function (req, res, next) {
-        discussApi.getBoard(req.query.id, function (err, obj) {
-            if (err) {
-                return next(err);
+    'GET /manage/discuss/edit_board': function* () {
+        var id = getId(this.request);
+        this.render('manage/discuss/board_form.html', yield $getModel({
+            id: id,
+            form: {
+                name: 'Edit Board',
+                action: '/api/boards/' + id,
+                redirect: 'board_list'
             }
-            if (obj === null) {
-                return next(api.notFound('Board'));
-            }
-            return res.render('manage/discuss/board_form.html', {
-                form: {
-                    name: 'Edit Board',
-                    action: '/api/boards/' + obj.id + '/',
-                    redirect: '/manage/discuss/'
-                },
-                board: obj
-            });
-        });
+        }));
     },
 
-    'GET /manage/discuss/reply_list': function (req, res, next) {
-        var page = utils.getPage(req);
-        discussApi.getAllReplies(page, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            userApi.bindUsers(results.replies, function (err, r) {
-                if (err) {
-                    return next(err);
-                }
-                return res.render('manage/discuss/reply_list.html', {
-                    page: JSON.stringify(results.page),
-                    replies: JSON.stringify(results.replies)
-                });
-            });
-        });
+    'GET /manage/discuss/reply_list': function* () {
+        this.render('manage/discuss/reply_list.html', yield $getModel({
+            pageIndex: helper.getPageNumber(this.request)
+        }));
     },
 
-    'GET /manage/discuss/topic_list': function (req, res, next) {
-        var
-            board_id = req.query.board_id,
-            page = utils.getPage(req);
-        discussApi.getBoard(board_id, function (err, board) {
-            if (err) {
-                return next(err);
-            }
-            discussApi.getTopics(board_id, page, function (err, results) {
-                if (err) {
-                    return next(err);
-                }
-                userApi.bindUsers(results.topics, function (err, r) {
-                    if (err) {
-                        return next(err);
-                    }
-                    return res.render('manage/discuss/topic_list.html', {
-                        board: JSON.stringify(board),
-                        page: JSON.stringify(results.page),
-                        topics: JSON.stringify(results.topics)
-                    });
-                });
-            });
-        });
+    'GET /manage/discuss/topic_list': function* () {
+        this.render('manage/discuss/topic_list.html', yield $getModel({
+            pageIndex: helper.getPageNumber(this.request)
+        }));
     },
 
     // attachment /////////////////////////////////////////////////////////////
