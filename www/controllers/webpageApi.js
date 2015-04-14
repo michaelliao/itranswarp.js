@@ -65,7 +65,7 @@ function* $getWebpageByAlias(alias, includeContent) {
 }
 
 function* $getNavigationMenus() {
-    var ps = yield getWebpages();
+    var ps = yield $getWebpages();
     return _.map(ps, function (p) {
         return {
             name: p.name,
