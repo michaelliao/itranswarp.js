@@ -185,6 +185,59 @@ describe('#wikis', function () {
             remote.shouldHasError(r3, 'entity:notfound', 'Wiki');
         });
 
+        it('create wiki page, update and delete it', function* () {
+            // create wiki:
+            var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
+                name: ' Test For WikiPage   ',
+                description: '   blablabla\nhaha...  \n   ',
+                content: 'Long long long content... ',
+                image: remote.readFileSync('res-image.jpg').toString('base64')
+            });
+            remote.shouldNoError(w1);
+
+            // create wiki page:
+            // w1
+            // +- p1
+            var p1 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
+                parent_id: '',
+                name: 'First Wiki Page   ',
+                content: 'This is a first wiki page...'
+            });
+            remote.shouldNoError(p1);
+            p1.wiki_id.should.equal(w1.id);
+            p1.parent_id.should.equal('');
+            p1.display_order.should.equal(0);
+            p1.name.should.equal('First Wiki Page');
+            p1.content.should.equal('This is a first wiki page...');
+            p1.version.should.equal(0);
+            // query p1:
+            var p2 = yield remote.$get(roles.EDITOR, '/api/wikis/wikipages/' + p1.id);
+            remote.shouldNoError(p2);
+            p2.wiki_id.should.equal(p1.wiki_id);
+            p2.parent_id.should.equal(p1.parent_id);
+            p2.display_order.should.equal(p1.display_order);
+            p2.name.should.equal(p1.name);
+            p2.content.should.equal(p1.content);
+            p2.version.should.equal(1);
+            // update p1:
+            var p3 = yield remote.$post(roles.EDITOR, '/api/wikis/wikipages/' + p1.id, {
+                name: 'Changed',
+                content: 'content changed.'
+            });
+            remote.shouldNoError(p3);
+            p3.name.should.equal('Changed');
+            p3.content.should.equal('content changed');
+            // query again:
+            var p4 = yield remote.$post(roles.EDITOR, '/api/wikis/wikipages/' + p1.id);
+            remote.shouldNoError(p4);
+            p4.wiki_id.should.equal(p3.wiki_id);
+            p4.parent_id.should.equal(p3.parent_id);
+            p4.display_order.should.equal(p3.display_order);
+            p4.name.should.equal(p3.name);
+            p4.content.should.equal(p3.content);
+            p4.version.should.equal(1);
+        });
+
         it('create wiki tree, move and try delete wiki', function* () {
             // create wiki:
             var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
