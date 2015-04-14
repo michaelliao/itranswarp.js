@@ -185,10 +185,12 @@ module.exports = {
     $getWebsiteSettings: $getWebsiteSettings,
 
     'GET /api/settings/definitions': function* () {
+        helper.checkPermission(this.request, constants.role.ADMIN);
         this.body = defaultSettingDefinitions;
     },
 
     'GET /api/settings/website': function* () {
+        helper.checkPermission(this.request, constants.role.ADMIN);
         this.body = yield $getWebsiteSettings();
     },
 
