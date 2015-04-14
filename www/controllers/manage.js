@@ -335,47 +335,18 @@ module.exports = {
 
     // navigation /////////////////////////////////////////////////////////////
 
-    'GET /manage/navigation/(index)?': function (req, res, next) {
-        navigationApi.getNavigations(function (err, navigations) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/navigation/navigation_list.html', {
-                navigations: JSON.stringify(navigations)
-            });
-        });
+    'GET /manage/navigation/(navigation_list)?': function* () {
+        this.render('manage/navigation/navigation_list.html', yield $getModel({}));
     },
 
-    'GET /manage/navigation/create_navigation': function (req, res, next) {
-        getAllNavigationMenus(function (err, menus) {
-            if (err) {
-                return next(err);
+    'GET /manage/navigation/create_navigation': function* () {
+        this.render('manage/navigation/navigation_form.html', yield $getModel({
+            form: {
+                name: 'Create Navigation',
+                action: '/api/navigations',
+                redirect: 'navigation_list'
             }
-            return res.render('manage/navigation/navigation_menu_form.html', {
-                form: {
-                    name: 'Create Navigation',
-                    action: '/api/navigations/',
-                    redirect: '/manage/navigation/'
-                },
-                menus: menus
-            });
-        });
-    },
-
-    'GET /manage/navigation/edit_navigation': function (req, res, next) {
-        navigationApi.getNavigation(req.query.id, function (err, obj) {
-            if (err) {
-                return next(err);
-            }
-            return res.render('manage/navigation/navigation_form.html', {
-                form: {
-                    name: 'Edit Navigation',
-                    action: '/api/navigations/' + obj.id + '/',
-                    redirect: '/manage/navigation/'
-                },
-                navigation: obj
-            });
-        });
+        }));
     },
 
     // setting ////////////////////////////////////////////////////////////////
