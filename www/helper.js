@@ -167,7 +167,7 @@ module.exports = {
             if (pos === (-1)) {
                 throw api.invalidParam('ids', 'Invalid id list: id \"' + entity.id + '\" not found.');
             }
-            entity.display_order = i;
+            entity.display_order = pos;
         }
         // update:
         for (i=0; i<entities.length; i++) {
