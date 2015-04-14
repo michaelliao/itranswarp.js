@@ -4,25 +4,76 @@
 
 var
     _ = require('lodash'),
+    db = require('../db'),
     api = require('../api'),
-    db = require('../db');
+    cache = require('../cache'),
+    helper = require('../helper'),
+    constants = require('../constants'),
+    json_schema = require('../json_schema');
 
 var
     Setting = db.setting,
     warp = db.warp,
     next_id = db.next_id;
 
-// default setting for website:
-var website = {
-    name: 'My Website',
-    description: 'Powered by iTranswarp.js',
-    keywords: '',
-    custom_header: '<!-- custom header -->',
-    custom_footer: '<!-- custom footer -->',
-    xmlns: ''
+// default settings:
+var defaultSettingDefinitions = {
+    website: [
+        {
+            key: 'name',
+            label: 'Name',
+            description: 'Name of the website',
+            value: 'My Website',
+            type: 'text'
+        },
+        {
+            key: 'description',
+            label: 'Description',
+            description: 'Description of the website',
+            value: 'Powered by iTranswarp.js',
+            type: 'text',
+        },
+        {
+            key: 'keywords',
+            label: 'Keywords',
+            description: 'Keywords of the website',
+            value: '',
+            type: 'text',
+        },
+        {
+            key: 'xmlns',
+            label: 'XML Namespace',
+            description: 'xmlns value',
+            value: '',
+            type: 'text'
+        },
+        {
+            key: 'custom_header',
+            label: 'Custom Header',
+            description: 'Any HTML embeded in <head>...</head>',
+            value: '<!-- custom header -->',
+            type: 'textarea'
+        },
+        {
+            key: 'custom_footer',
+            label: 'Custom Footer',
+            description: 'Any HTML embaeded in <footer>...</footer>',
+            value: '',
+            type: 'textarea'
+        }
+    ]
 };
 
-var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
+var defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v, k) {
+    r[k] = _.reduce(v, function (result, item) {
+        result[item.key] = item.value;
+        return result;
+    }, {});
+    return r;
+}, {});
+
+console.log('default settings:');
+console.log(JSON.stringify(defaultSettingValues, null, '    '));
 
 function* $getNavigationMenus() {
     return [{
@@ -59,6 +110,8 @@ function* $getSetting(key, defaultValue) {
     return setting.value;
 }
 
+var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
+
 function* $setSetting(key, value) {
     var
         m = key.match(RE_KEY),
@@ -75,7 +128,7 @@ function* $setSetting(key, value) {
     });
 }
 
-function* $setSettings(group, settings, callback) {
+function* $setSettings(group, settings) {
     yield warp.$update('delete from settings where `group`=?', [group]);
     var key;
     for (key in settings) {
@@ -102,11 +155,20 @@ function* $getSettingsByDefaults(name, defaults) {
     return s;
 }
 
-module.exports = {
+var KEY_WEBSITE = constants.cache.WEBSITE;
 
-    defaultSettings: {
-        website: website
-    },
+function* $getWebsiteSettings() {
+    return yield cache.$get(KEY_WEBSITE, function* () {
+        return yield $getSettingsByDefaults('website', defaultSettingValues.website);
+    });
+}
+
+function* $setWebsiteSettings(settings) {
+    yield $setSettings('website', settings);
+    yield cache.$remove(KEY_WEBSITE);
+}
+
+module.exports = {
 
     $getNavigationMenus: $getNavigationMenus,
 
@@ -118,6 +180,23 @@ module.exports = {
 
     $setSettings: $setSettings,
 
-    $getSettingsByDefaults: $getSettingsByDefaults
+    $getSettingsByDefaults: $getSettingsByDefaults,
 
+    $getWebsiteSettings: $getWebsiteSettings,
+
+    'GET /api/settings/definitions': function* () {
+        this.body = defaultSettingDefinitions;
+    },
+
+    'GET /api/settings/website': function* () {
+        this.body = yield $getWebsiteSettings();
+    },
+
+    'POST /api/settings/website': function* () {
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var data = this.request.body;
+        json_schema.validate('updateWebsiteSettings', data);
+        yield $setWebsiteSettings(data);
+        this.body = yield $getWebsiteSettings();
+    }
 };

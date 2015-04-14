@@ -118,6 +118,12 @@ var PROPERTY = {
         default: ''
     },
 
+    SETTING: {
+        type: 'string',
+        minLength: 0,
+        maxLength: 16384, // 16K
+    },
+
     TAGS: {
         type: 'string',
         maxLength: 100,
@@ -372,6 +378,17 @@ var schemas = {
             content: PROPERTY.TEXT
         },
         required: ['content']
+    },
+    updateWebsiteSettings: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.SETTING,
+            description: PROPERTY.SETTING,
+            keywords: PROPERTY.SETTING,
+            xmlns: PROPERTY.SETTING,
+            custom_header: PROPERTY.SETTING,
+            custom_footer: PROPERTY.SETTING
+        }
     }
 }
 

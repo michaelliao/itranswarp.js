@@ -70,7 +70,7 @@ function* $getModel(model) {
     if (model === undefined) {
         model = {};
     }
-    model.__website__ = yield settingApi.$getSettingsByDefaults(KEY_WEBSITE, settingApi.defaultSettings.website);
+    model.__website__ = yield settingApi.$getWebsiteSettings();
     return model;
 }
 
@@ -351,74 +351,13 @@ module.exports = {
 
     // setting ////////////////////////////////////////////////////////////////
 
-    'GET /manage/setting/(index)?': function (req, res, next) {
-        var makeField = function (name, value, label, type) {
-            return {
-                name: name,
-                value: value,
-                label: label || (name.charAt(0) + name.substring(1)),
-                type: type || 'text'
-            };
-        };
-        settingApi.getSettingsByDefaults('website', settingApi.defaultSettings.website, function (err, website) {
-            if (err) {
-                return next(err);
+    'GET /manage/setting/(website)?': function* () {
+        this.render('manage/setting/setting_form.html', yield $getModel({
+            form: {
+                name: 'Edit Website Settings',
+                action: '/api/settings/website',
+                redirect: 'website'
             }
-            return res.render('manage/setting/setting_list.html', {
-                form: {
-                    name: 'Settings',
-                    action: '/manage/setting/save'
-                },
-                model: safeEncodeJSON({
-                    website: website,
-                    datetime: {
-                        timezone: 'GMT+08:00',
-                        date_format: 'yyyy-MM-dd',
-                        time_format: 'hh:mm:ss'
-                    }
-                }),
-                settings: [
-                    {
-                        name: 'website',
-                        label: 'Website',
-                        fields: [
-                            makeField('name', website.name, 'Name'),
-                            makeField('description', website.description, 'Description'),
-                            makeField('keywords', website.keywords, 'Keywords'),
-                            makeField('xmlns', website.xmlns, 'XML Namespace'),
-                            makeField('custom_header', website.custom_header, 'Custom Header', 'textarea'),
-                            makeField('custom_footer', website.custom_footer, 'Custom Footer', 'textarea')
-                        ]
-                    },
-                    {
-                        name: 'datetime',
-                        label: 'Date and Time',
-                        fields: [
-                            makeField('timezone', website.timezone, 'Timezone', 'select'),
-                            makeField('date_format', website.date_format, 'Date Format', 'select'),
-                            makeField('time_format', website.time_format, 'Time Format', 'select')
-                        ]
-                    }
-                ]
-            });
-        });
-    },
-
-    'POST /manage/setting/save': function (req, res, next) {
-        var
-            settings = ['website', 'datetime'],
-            tasks = [];
-        _.each(settings, function (group) {
-            tasks.push(function (callback) {
-                settingApi.setSettings(group, req.body[group], callback);
-            });
-        });
-        async.series(tasks, function (err, results) {
-            if (err) {
-                return next(err);
-            }
-            cache.remove(constants.CACHE_KEY_WEBSITE_SETTINGS);
-            return res.send({ result: true });
-        });
+        }));
     }
 };
