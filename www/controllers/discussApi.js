@@ -3,8 +3,9 @@
 // discuss api
 
 var
-    api = require('../api'),
+    _ = require('lodash'),
     db = require('../db'),
+    api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
     search = require('../search/search'),
@@ -101,6 +102,25 @@ function* $getTopic(id) {
     return topic;
 }
 
+var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(Topic.__selectAttributesArray, function (field) {
+    return field !== 'content';
+});
+
+function* $getAllTopics(page) {
+    page.total = yield Topic.$findNumber({
+        select: 'count(id)'
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Topic.$findAll({
+        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
+        order: 'id desc',
+        offset: page.offset,
+        limit: page.limit
+    });
+}
+
 function* $getTopics(board_id, page) {
     page.total = yield Topic.$findNumber({
         select: 'count(id)',
@@ -111,7 +131,7 @@ function* $getTopics(board_id, page) {
         return [];
     }
     return yield Topic.$findAll({
-        select: ['id', 'board_id', 'ref_type', 'ref_id', 'user_id', 'name', 'tags', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
+        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
         where: 'board_id=?',
         params: [board_id],
         order: 'updated_at desc',
@@ -439,9 +459,23 @@ module.exports = {
         this.body = topic;
     },
 
+    'GET /api/topics': function* () {
+        /**
+         * Get all topics.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            topics = yield $getAllTopics(page);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
+
     'GET /api/replies': function* () {
         /**
-         * Get replies by page.
+         * Get all replies by page.
          */
         helper.checkPermission(this.request, constants.role.EDITOR);
         var

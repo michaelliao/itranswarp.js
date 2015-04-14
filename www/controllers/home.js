@@ -61,7 +61,6 @@ var
 
 var isSyncComments = config.session.syncComments;
 
-
 var $getNavigations = function* () {
     return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
 };
@@ -101,11 +100,10 @@ function getHotArticles(articles) {
 }
 
 var THEME = config.theme;
-var KEY_WEBSITE = constants.cache.WEBSITE;
 
 function* $getModel(model) {
     model.__navigations__ = yield $getNavigations();
-    model.__website__ = yield settingApi.$getSettingsByDefaults(KEY_WEBSITE, settingApi.defaultSettings.website);
+    model.__website__ = yield settingApi.$getWebsiteSettings();
     return model;
 }
 
