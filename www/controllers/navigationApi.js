@@ -4,12 +4,13 @@
 
 var
     _ = require('lodash'),
-    api = require('../api'),
     db = require('../db'),
+    api = require('../api'),
+    cache = require('../cache'),
     helper = require('../helper'),
     config = require('../config'),
-    cache = require('../cache'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    json_schema = require('../json_schema');
 
 var
     Navigation = db.navigation,
@@ -30,11 +31,41 @@ function* $getNavigations() {
     });
 }
 
+function* $getNavigationMenus() {
+    var
+        apiNames = ['categoryApi', 'articleApi', 'wikiApi', 'webpageApi', 'discussApi', 'attachmentApi', 'userApi', 'settingApi'],
+        apis = _.filter(
+            _.map(apiNames, function (name) {
+                return require('./' + name);
+            }), function (api) {
+                return api.hasOwnProperty('$getNavigationMenus');
+            }),
+        menus = [],
+        i;
+    for (i = 0; i < apis.length; i ++) {
+        menus = menus.concat(yield apis[i].$getNavigationMenus());
+    }
+    return menus;
+}
+
 module.exports = {
 
     $getNavigation: $getNavigation,
 
     $getNavigations: $getNavigations,
+
+    'GET /api/navigations/all/menus': function* () {
+        /**
+         * Get all navigation menus.
+         * 
+         * @name Get NavigationMenus
+         * @return {object} Result like {"navigationMenus": [navigation array]}
+         */
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        this.body = {
+            navigationMenus: yield $getNavigationMenus()
+        };
+    },
 
     'GET /api/navigations': function* () {
         /**
@@ -43,6 +74,7 @@ module.exports = {
          * @name Get Navigations
          * @return {object} Result like {"navigations": [navigation array]}
          */
+        helper.checkPermission(this.request, constants.role.ADMIN);
         this.body = {
             navigations: yield $getNavigations()
         };
@@ -61,14 +93,14 @@ module.exports = {
         var
             name,
             url,
-            max,
+            num,
             data = this.request.body;
         json_schema.validate('createNavigation', data);
         name = data.name.trim();
         url = data.url.trim();
 
         num = yield Navigation.$findNumber('max(display_order)');
-        this.body = yield Navigation.create({
+        this.body = yield Navigation.$create({
             name: name,
             url: url,
             display_order: (num === null) ? 0 : num + 1
@@ -76,7 +108,7 @@ module.exports = {
         yield cache.$remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/sort': function* () {
+    'POST /api/navigations/all/sort': function* () {
         /**
          * Sort navigations.
          *
@@ -86,7 +118,7 @@ module.exports = {
          */
         helper.checkPermission(this.request, constants.role.ADMIN);
         var data = this.request.body;
-        json_schema.validate('sortNavigation', data);
+        json_schema.validate('sortNavigations', data);
         this.body = {
             navigations: yield helper.$sort(data.ids, yield $getNavigations())
         };
@@ -106,42 +138,6 @@ module.exports = {
         yield navigation.$destroy();
         this.body = {
             id: id
-        };
-        yield cache.$remove(constants.cache.NAVIGATIONS);
-    },
-
-    'POST /api/navigations/:id': function* (id) {
-        /**
-         * Update a navigation.
-         *
-         * @name Update Navigation
-         * @param {string} id: The id of the navigation.
-         * @param {string} [name]: The name of the navigation.
-         * @param {string} [url]: The URL of the navigation.
-         * @return {object} The navigation object.
-         */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        var
-            navigation,
-            props = [],
-            data = this.request.body;
-        json_schema.validate('updateNavigation', data);
-        navigation = yield $getNavigation(id);
-        if (data.name) {
-            navigation.name = data.name.trim();
-            props.push('name');
-        }
-        if (data.url) {
-            navigation.url = data.url.trim();
-            props.push('url');
-        }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            yield navigation.$update(props);
-        }
-        this.body = {
-            navigation: navigation
         };
         yield cache.$remove(constants.cache.NAVIGATIONS);
     }
