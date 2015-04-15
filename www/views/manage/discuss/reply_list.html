@@ -1,104 +1,100 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-All Topics
-{% endblock %}
+{% block title %} {{ _('All Replies') }} {% endblock %}
 
 {% block head %}
 <script>
 $(function() {
-    var page = {{ page|safe }};
-    var replies = {{ replies|safe }};
-
-    var vm = new Vue({
-        el: '#replies',
-        data: {
-            replies: replies,
-            page: definePagination(page)
-        },
-        methods: {
-            find: function(id) {
-                for (var i = 0; i < this.replies.length; i ++) {
-                    var c = this.replies[i];
-                    if (c.id===id) {
-                        return c;
-                    }
-                }
-                return null;
-            },
-            deleteReply: function(id) {
-                var that = this;
-                var a = that.find(id);
-                if (a!==null) {
-                    showConfirm('Confirm Deletion', 'Reply will be deleted. Continue?', function(modal) {
-                        showError();
-                        modal.showLoading(true);
-                        postJSON('/api/replies/' + a.id + '/delete', function(err, result) {
-                            modal.hide();
-                            if (err) {
-                                showError(err);
-                                return;
-                            }
-                            // reload page:
-                            var pageIndex = page.index;
-                            location.assign('reply_list?page=' + pageIndex);
-                        });
-                    });
-                }
-            },
+    getJSON('/api/replies', {
+        page: {{ pageIndex }}
+    }, function (err, data) {
+        if (err) {
+            return fatal(err);
         }
+        initVM(data.replies, data.page)
     });
 });
+
+function initVM(replies, page) {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            replies: replies,
+            page: page
+        },
+        methods: {
+            deleteReply: function (r) {
+                if (confirm('Reply will be deleted. Continue?')) {
+                    postJSON('/api/replies/' + r.id + '/delete', function(err, result) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
+                    });
+                }
+            }
+        }
+    });
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 {% endblock %}
 
 {% block main %}
-<div id="replies">
 
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/discuss/">All Boards</a> <span class="divider">/</span></li>
-        <li class="active">{{ _('All Replies') }}</li>
-    </ul>
-</div>
+    <div id="error" class="uk-width-1-1">
+    </div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th width="20%">{{ _('User') }}</th>
-                <th width="60%">{{ _('Content') }}</th>
-                <th width="15%">Created</th>
-                <th width="5%"></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-repeat="obj: replies">
-                <td>
-                    <img v-attr="src: obj.user.image_url">
-                    <br>
-                    <span v-text="obj.user.name"></span>
-                </td>
-                <td>
-                    <div v-if="!obj.deleted" v-html="obj.content"></div>
-                    <div v-if="obj.deleted"><div class="alert alert-error">{{ _('Deleted') }}</div></div>
-                </td>
-                <td>
-                    <span v-text="obj.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span>
-                </td>
-                <td>
-                    <a v-if="!obj.deleted" v-on="click: deleteReply(obj.id)" title="Delete Reply" href="#0" class="x-btn"><i class="icon-trash"></i></a>
-                </td>
-            </tr>
-            <tr v-if="page.totalItems===0">
-                <td colspan="5">No reply found.</td>
-            </tr>
-        </tbody>
-    </table>
-    <div v-component="vc-pagination"></div>
-</div>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
 
-</div>
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li><a href="#0" onclick="location.assign('board_list')">Boards</a></li>
+            <li><a href="#0" onclick="location.assign('topic_list')">Topics</a></li>
+            <li class="uk-active"><a href="#0">Replies</a></li>
+        </ul>
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="10%">{{ _('Image') }}</th>
+                    <th width="20%">{{ _('User') }}</th>
+                    <th width="50%">{{ _('Content') }}</th>
+                    <th width="15%">Created</th>
+                    <th width="5%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="obj: replies">
+                    <td>
+                        <img v-attr="src: obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
+                    </td>
+                    <td>
+                        <span v-text="obj.user.name"></span>
+                    </td>
+                    <td>
+                        <div v-if="!obj.deleted" v-html="obj.content"></div>
+                        <div v-if="obj.deleted"><div class="uk-alert uk-alert-danger">{{ _('Deleted') }}</div></div>
+                    </td>
+                    <td>
+                        <span v-text="obj.created_at.toDateTime()"></span>
+                    </td>
+                    <td>
+                        <a v-if="!obj.deleted" v-on="click: deleteReply(obj)" title="Delete Reply" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+                <tr v-if="page.totalItems===0">
+                    <td colspan="6">No reply found.</td>
+                </tr>
+            </tbody>
+        </table>
+        <div v-component="pagination" v-with="page"></div>
+    </div>
 
 {% endblock%}

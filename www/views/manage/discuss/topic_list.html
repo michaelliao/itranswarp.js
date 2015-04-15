@@ -1,8 +1,6 @@
 {% extends '../_manage.html' %}
 
-{% block title %}
-All Topics
-{% endblock %}
+{% block title %} {{ _('All Topics') }} {% endblock %}
 
 {% block head %}
 <script>
@@ -51,10 +49,12 @@ function initVM(topics, page) {
                 }
                 throw 'logic error';
             },
-            deleteTopic: function(id) {
-                var a = this.find(id);
-                if (confirm('Topic \"' + a.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/topics/' + a.id + '/delete', function(err, result) {
+            lockTopic: function (t) {
+                alert('unsupported yet.');
+            },
+            deleteTopic: function (t) {
+                if (confirm('Topic \"' + t.name + '\" will be deleted. Continue?')) {
+                    postJSON('/api/topics/' + t.id + '/delete', function(err, result) {
                         if (err) {
                             return error(err);
                         }
@@ -92,7 +92,8 @@ function initVM(topics, page) {
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th width="20%">{{ _('User') }}</th>
+                    <th width="10%">{{ _('Image') }}</th>
+                    <th width="10%">{{ _('User') }}</th>
                     <th width="35%">{{ _('Name') }}</th>
                     <th width="15%">{{ _('Tags') }}</th>
                     <th width="15%">Created</th>
@@ -102,12 +103,14 @@ function initVM(topics, page) {
             <tbody>
                 <tr v-repeat="obj: topics">
                     <td>
-                        <img v-attr="src: obj.user.image_url">
-                        <br>
+                        <img v-attr="src: obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
+                    </td>
+                    <td>
                         <span v-text="obj.user.name"></span>
                     </td>
                     <td>
-                        <a v-text="obj.name" v-attr="href: '/discuss/' + board.id + '/' + obj.id" target="_blank"></a>
+                        <p><a v-text="obj.name" v-attr="href: '/discuss/' + obj.board.id + '/' + obj.id" target="_blank"></a></p>
+                        <p v-if="obj.ref_id"><a v-attr="href: '/' + obj.ref_type + '/' + obj.ref_id" target="_blank">问题来源</a></p>
                     </td>
                     <td>
                         <i class="icon-tag"></i> <span v-text="obj.tags"></span>
@@ -116,12 +119,12 @@ function initVM(topics, page) {
                         <span v-text="obj.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span>
                     </td>
                     <td>
-                        <a v-on="click: lockTopic(obj.id)" title="Lock Topic" href="#0" class="x-btn"><i class="icon-lock"></i></a>
-                        <a v-on="click: deleteTopic(obj.id)" title="Delete Topic" href="#0" class="x-btn"><i class="icon-trash"></i></a>
+                        <a v-on="click: lockTopic(obj)" title="Lock Topic" href="#0" class="x-btn"><i class="uk-icon-lock"></i></a>
+                        <a v-on="click: deleteTopic(obj)" title="Delete Topic" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
                 <tr v-if="page.totalItems===0">
-                    <td colspan="5">No topic found.</td>
+                    <td colspan="6">No topic found.</td>
                 </tr>
             </tbody>
         </table>

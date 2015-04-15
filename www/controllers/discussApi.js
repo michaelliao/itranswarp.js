@@ -158,6 +158,20 @@ function* $getTopicsByRef(ref_id, page) {
     });
 }
 
+function* $getAllReplies(page) {
+    page.total = yield Reply.$findNumber({
+        select: 'count(id)'
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Reply.$findAll({
+        order: 'id desc',
+        offset: page.offset,
+        limit: page.limit
+    });
+}
+
 function* $getReplies(topic_id, page) {
     var num = yield Reply.$findNumber({
         select: 'count(id)',
@@ -467,6 +481,7 @@ module.exports = {
         var
             page = helper.getPage(this.request),
             topics = yield $getAllTopics(page);
+        yield userApi.$bindUsers(topics);
         this.body = {
             page: page,
             topics: topics
@@ -480,20 +495,8 @@ module.exports = {
         helper.checkPermission(this.request, constants.role.EDITOR);
         var
             page = helper.getPage(this.request),
-            replies;
-        page.total = yield Reply.$findNumber({
-            select: 'count(id)'
-        });
-        if (page.isEmpty) {
-            replies = [];
-        }
-        else {
-            replies = yield Reply.$findAll({
-                order: 'id desc',
-                offset: page.offset,
-                limit: page.limit
-            });
-        }
+            replies = yield $getAllReplies(page);
+        yield userApi.$bindUsers(replies);
         this.body = {
             page: page,
             replies: replies
