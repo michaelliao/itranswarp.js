@@ -1,5 +1,14 @@
 // itranswarp.js
 
+if (! window.console) {
+    window.console = {
+        log: function(s) {
+        }
+    };
+}
+
+console.log('init itranswarp.js...');
+
 // JS Template:
 
 function Template(tpl) {
@@ -28,13 +37,6 @@ function Template(tpl) {
     fn = new Function(code.join('\n'));
     this.render = function (model) {
         return fn.apply(model);
-    };
-}
-
-if (! window.console) {
-    window.console = {
-        log: function(s) {
-        }
     };
 }
 
@@ -129,6 +131,17 @@ if (! Number.prototype.toFileSize) {
 }
 
 // global functions:
+
+function getObjectURL(file) {
+    var url = '';
+    if (window.createObjectURL!=undefined) // basic
+        url = window.createObjectURL(file);
+    else if (window.URL!=undefined) // mozilla(firefox)
+        url = window.URL.createObjectURL(file);
+    else if (window.webkitURL!=undefined) // webkit or chrome
+        url = window.webkitURL.createObjectURL(file);
+    return url;
+}
 
 function encodeHtml(str) {
     return String(str)

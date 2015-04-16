@@ -52,10 +52,141 @@ function fatal(err) {
     _display_error($('#loading'), err);
 }
 </script>
+
 {% set __show_navigations__ = true %}
 {% block head %}<!-- block head  -->{% endblock %}
+
+<script>
+var modalUploadImage = null;
+
+function uploadImage(callback) {
+    if (modalUploadImage === null) {
+        var
+            $modal = $('#modal-upload-image'),
+            $preview = $modal.find('.x-upload-preview'),
+            $alert = $modal.find('.uk-alert-danger'),
+            $form = $modal.find('form'),
+            $text = $form.find('input[name=name]'),
+            $file = $form.find('input[type=file]'),
+            $upload = $form.find('button[type=submit]'),
+            $cancel = $modal.find('button.x-cancel');
+        var imageData = null, mime = null;
+        modalUploadImage = UIkit.modal('#modal-upload-image');
+        $('#modal-upload-image').on({
+            'show.uk.modal': function () {
+                console.log('show upload image modal...');
+                $file.val('');
+                $text.val('');
+                $alert.text('').hide();
+                $preview.css('background-image', '');
+            },
+            'hide.uk.modal': function () {
+                console.log('hide upload image modal...');
+            }
+        });
+        $file.change(function () {
+            imageData = null;
+            $alert.hide();
+            $preview.css('background-image', '');
+            $upload.attr('disabled', 'disabled');
+
+            var f = $file.val();
+            if (!f) {
+                return;
+            }
+            var lf = $file.get(0).files[0];
+            if (lf.size > 1024*1024) {
+                $alert.text('Image is too large.').show();
+                return;
+            }
+            mime = lf.type;
+            if (mime==='image/png' || mime==='image/jpeg') {
+                // extract filename without ext:
+                var pos = Math.max(f.lastIndexOf('\\'), f.lastIndexOf('/'));
+                if (pos>0) {
+                    f = f.substring(pos + 1);
+                }
+                var pos = f.lastIndexOf('.');
+                if (pos>0) {
+                    f = f.substring(0, pos);
+                }
+                $text.val(f);
+                processFile(lf, function (r) {
+                    imageData = r.data;
+                    $preview.css('background-image', 'url(' + r.image + ')');
+                    $upload.removeAttr('disabled');
+                });
+            }
+            else {
+                $alert.text('Not a valid web image.').show();
+            }
+        });
+        // upload:
+        $form.submit(function (e) {
+            e.preventDefault();
+            var data = {
+                name: $text.val(),
+                mime: mime,
+                data: imageData
+            };
+            $form.postJSON('/api/attachments', data, function (err, result) {
+                if (err) {
+                    alert(err.message || err.error || 'ERROR: ' + String(err));
+                    return;
+                }
+                callback(err, {
+                    name: result.name,
+                    url: '/files/attachments/' + result.id + '/l'
+                });
+                modalUploadImage.hide();
+                return true;
+            });
+        });
+        // cancel:
+        $modal.find('button.x-cancel').click(function () {
+            modalUploadImage.hide();
+        });
+    }
+    modalUploadImage.show();
+}
+</script>
 </head>
 <body>
+    <div id="modal-upload-image" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">Upload Image</div>
+            <div class="x-upload-preview" style="background-repeat:no-repeat;background-position:center center;background-size:cover;height:320px;border:solid 1px #ccc">
+                Preview
+            </div>
+            <div>
+                <form class="uk-form uk-form-stacked">
+                    <div class="uk-alert uk-alert-danger" style="display:none;">
+                        ERROR: upload failed.
+                    </div>
+                    <div class="uk-form-row">
+                        <label class="uk-form-label">Image File</label>
+                        <div class="uk-form-controls">
+                            <input name="file" type="file">
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        <label class="uk-form-label">Image Name</label>
+                        <div class="uk-form-controls">
+                            <input name="name">
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        <div class="uk-form-controls">
+                            <button type="submit" disabled class="uk-button uk-button-primary"><i class="uk-icon-upload"></i> Upload</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="uk-modal-footer uk-text-right">
+                <button type="button" class="uk-button x-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="header" class="uk-navbar uk-navbar-attached">
         <div class="uk-container x-container">
             <div class="uk-navbar uk-navbar-attached">

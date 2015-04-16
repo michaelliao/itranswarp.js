@@ -27,7 +27,7 @@
             autocomplete : true,
             height       : 500,
             maxsplitsize : 1000,
-            markedOptions: { gfm: true, tables: true, breaks: true, pedantic: true, sanitize: false, smartLists: true, smartypants: false, langPrefix: 'lang-'},
+            markedOptions: { gfm: true, tables: true, breaks: true, pedantic: true, sanitize: true, smartLists: true, smartypants: false, langPrefix: 'lang-'},
             codemirror   : { mode: 'htmlmixed', lineWrapping: true, dragDrop: false, autoCloseTags: true, matchTags: true, autoCloseBrackets: true, matchBrackets: true, indentUnit: 4, indentWithTabs: false, tabSize: 4, hintOptions: {completionSingle:false} },
             toolbar      : [ 'bold', 'italic', 'code', 'link', 'image', 'blockquote', 'listUl', 'listOl' ],
             lblPreview   : 'Preview',
@@ -523,10 +523,21 @@
             addAction('bold', '**$1**');
             addAction('italic', '*$1*');
             addAction('strike', '~~$1~~');
-            addAction('code', '\n\n```\n// your code here$1\n```\n\n');
+            addAction('code', '\n\n```\n// your code here\n$1\n```\n\n');
             addAction('blockquote', '> $1', 'replaceLine');
             addAction('link', '[$1](http://)');
-            addAction('image', '![$1](http://)');
+            // addAction('image', '![$1](http://)');
+
+            // MODIFY:
+            editor.on('action.image', function() {
+                uploadImage(function (err, result) {
+                    if (err) {
+                        return;
+                    }
+                    editor['replaceSelection']('\n\n![' + result.name + '](' + result.url + ')\n\n');
+                });
+            });
+            // END
 
             editor.on('action.listUl', function() {
 
