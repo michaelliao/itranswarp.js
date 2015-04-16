@@ -205,7 +205,7 @@ module.exports = {
          * @name Create Attachment
          * @param {string} [name]: Name of the attachment, default to filename.
          * @param {string} [mime=null]: Mime of the attachment, e.g. "application/pdf", all lowercase.
-         * @param {string} [description]: Description of the attachment, default to filename.
+         * @param {string} [description]: Description of the attachment, default to ''.
          * @param {data} data: File data as base64.
          * @return {object} The created attachment object.
          * @error {permission:denied} If current user has no permission.
