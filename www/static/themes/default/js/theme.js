@@ -1,5 +1,9 @@
 // itranswarp.js
 
+function showSignin() {
+    //
+}
+
 // JS Template:
 
 function Template(tpl) {
