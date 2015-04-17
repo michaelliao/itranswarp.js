@@ -321,6 +321,28 @@ module.exports = {
         this.render(getView('user/profile.html'), yield $getModel.apply(this, [model]));
     },
 
+    'GET /me/profile': function* (id) {
+        var
+            user = this.request.user,
+            model = {
+                user: user
+            };
+        if (user === null) {
+            this.response.redirect('/auth/signin');
+            return;
+        }
+        this.render(getView('user/profile.html'), yield $getModel.apply(this, [model]));
+    },
+
+    'GET /auth/signin': function* (id) {
+        var
+            user = this.request.user;
+        if (user !== null) {
+            //
+        }
+        this.render(getView('signin.html'), yield $getModel.apply(this, [{}]));
+    },
+
     'GET /search': function (req, res, next) {
         var
             page,
