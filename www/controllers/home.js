@@ -14,10 +14,6 @@ var
     searchEngine = require('../search/search').engine,
     json_schema = require('../json_schema');
 
-var signins = _.map(config.oauth2, function (value, key) {
-    return key;
-});
-
 var
     User = db.user,
     Article = db.article,
@@ -34,6 +30,16 @@ var
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
     navigationApi = require('./navigationApi');
+
+var
+    signins = _.reduce(config.oauth2, function (results, conf, oauthId) {
+        results.push({
+            id: oauthId,
+            icon: conf.icon,
+            name: conf.name
+        });
+        return results;
+    }, []);
 
 var
     searchTypes = [
@@ -104,6 +110,7 @@ var THEME = config.theme;
 function* $getModel(model) {
     model.__navigations__ = yield $getNavigations();
     model.__website__ = yield settingApi.$getWebsiteSettings();
+    model.__signins__ = signins;
     return model;
 }
 
@@ -228,19 +235,34 @@ module.exports = {
         this.render(getView('wiki/wiki.html'), yield $getModel.apply(this, [model]));
     },
 
-    'POST /:type/:id/comment': function* (type, id) {
-        if (type === 'article') {
-            //
+    'POST /api/comments/:ref_type/:ref_id': function* (ref_type, ref_id) {
+        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
+        var
+            board,
+            user = this.request.user,
+            data = this.request.body;
+        json_schema.validate('createComment', data);
+        console.log('--> validated')
+        if (!data.content.trim()) {
+            throw api.invalidParam('content', 'Empty input.');
         }
-        else if (type === 'wiki') {
-            //
+        if (ref_type === 'article') {
+            yield articleApi.$getArticle(ref_id);
         }
-        else if (type === 'wikipage') {
-            //
+        else if (ref_type === 'wiki') {
+            yield wikiApi.$getWiki(ref_id);
+        }
+        else if (ref_type === 'wikipage') {
+            yield wikiApi.$getWikiPage(ref_id);
         }
         else {
             this.throw(404);
         }
+        console.log('--> ref_type ok')
+        board = yield discussApi.$getBoardByTag(data.tag);
+        console.log('--> tag ok')
+        this.body = yield discussApi.$createTopicByRef(user, board.id, ref_type, ref_id, data);
+        console.log('--> ok')
     },
 
     'GET /discuss': function* () {
