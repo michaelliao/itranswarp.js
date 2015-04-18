@@ -71,7 +71,7 @@ function initVM(wikis) {
             <thead>
                 <tr>
                     <th width="20%">{{ _('Cover') }}</th>
-                    <th width="55%">{{ _('Name') }} / {{ _('Description') }}</th>
+                    <th width="55%">{{ _('Name') }} / {{ _('Tag') }} / {{ _('Description') }}</th>
                     <th width="15%">{{ _('Created At') }}</th>
                     <th width="10%">&nbsp;</th>
                 </tr>
@@ -81,6 +81,7 @@ function initVM(wikis) {
                     <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
                     <td>
                         <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
+                        <p v-text="w.tag"></p>
                         <p v-text="w.description"></p>
                     </td>
                     <td><span v-text="w.created_at.toDateTime()"></span></td>

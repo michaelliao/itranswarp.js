@@ -52,7 +52,7 @@ function initVM(wiki) {
             id: wiki.id,
             cover_id: wiki.cover_id,
             name: wiki.name,
-            tags: wiki.tags,
+            tag: wiki.tag,
             description: wiki.description,
             content: wiki.content || ''
         },
@@ -61,7 +61,7 @@ function initVM(wiki) {
                 var data = {
                     name: this.name,
                     description: this.description,
-                    tags: this.tags
+                    tag: this.tag
                 }
                 var content = $('#content-editor').val();
                 if (this.content !== content) {
@@ -168,15 +168,15 @@ function initVM(wiki) {
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Description:</label>
-                    <div class="uk-form-controls">
-                        <textarea v-model="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
+                    <label class="control-label">Tag:</label>
+                    <div class="controls">
+                        <input v-model="tag" name="tag" type="text" class="uk-width-1-1" placeholder="tag">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="control-label">Tags:</label>
-                    <div class="controls">
-                        <input v-model="tags" name="tags" type="text" class="uk-width-1-1" placeholder="tag1, tag2, tag3">
+                    <label class="uk-form-label">Description:</label>
+                    <div class="uk-form-controls">
+                        <textarea v-model="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">

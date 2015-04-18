@@ -302,18 +302,18 @@ var schemas = {
         properties: {
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
-            tags: PROPERTY.TAGS,
+            tag: PROPERTY.TAG,
             content: PROPERTY.TEXT,
             image: PROPERTY.FILE
         },
-        required: ['name', 'description', 'content', 'image']
+        required: ['name', 'description', 'tag', 'content', 'image']
     },
     updateWiki: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
-            tags: PROPERTY.TAGS,
+            tag: PROPERTY.TAG,
             content: PROPERTY.TEXT,
             image: PROPERTY.FILE
         }
