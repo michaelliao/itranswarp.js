@@ -28,7 +28,7 @@ var
 
 var
     User = db.user,
-    AuthUser = db.auth_user;
+    AuthUser = db.authuser;
 
 var
     COOKIE_NAME = config.session.cookie,
