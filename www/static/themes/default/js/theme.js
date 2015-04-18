@@ -40,8 +40,8 @@ function initCommentArea(ref_type, ref_id, tag) {
 
 var signinModal = null;
 
-function showSignin() {
-    if (g_signins.length === 1) {
+function showSignin(forceModal) {
+    if (g_signins.length === 1 && !forceModal) {
         return authFrom(g_signins[0].id);
     }
     if (signinModal === null) {

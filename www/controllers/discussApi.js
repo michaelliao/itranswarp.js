@@ -213,20 +213,17 @@ function* $getFirstReplies(topic_id, num) {
     });
 }
 
-function* $getReplyUrl(topic_id, reply_id) {
+function* $getReplyPageIndex(topic, reply_id) {
     var
-        topic = yield $getTopic(topic_id),
         num = yield Reply.$findNumber({
             select: 'count(id)',
             where: 'topic_id=? and id < ?',
-            params: [topic_id, reply_id]
-        }),
-        p = Math.floor((num + 1) / 20) + 1,
-        url = '/discuss/' + topic.board_id + '/' + topic_id + '?page=' + p + '#' + reply_id;
-    return url;
+            params: [topic.id, reply_id]
+        });
+    return Math.floor((num + 1) / 20) + 1;
 }
 
-function* $createTopicByRef(user, board_id, ref_type, ref_id, data) {
+function* $createTopic(user, board_id, ref_type, ref_id, data) {
     var
         board = yield $getBoard(board_id),
         topic = yield Topic.$create({
@@ -235,13 +232,14 @@ function* $createTopicByRef(user, board_id, ref_type, ref_id, data) {
             ref_type: ref_type,
             ref_id: ref_id,
             name: data.name.trim(),
-            tags: data.tag.trim(),
+            tags: data.tags.trim(),
             content: helper.md2html(data.content)
-        }),
-        key = 'REF-TOPICS-' + ref_id;
+        });
     yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
     indexDiscuss(topic);
-    yield cache.$remove(key);
+    if (ref_id) {
+        yield cache.$remove('REF-TOPICS-' + ref_id);
+    }
     return topic;
 }
 
@@ -279,7 +277,7 @@ module.exports = {
 
     $getNavigationMenus: $getNavigationMenus,
 
-    $createTopicByRef: $createTopicByRef,
+    $createTopic: $createTopic,
 
     $getBoard: $getBoard,
 
@@ -297,7 +295,7 @@ module.exports = {
 
     $getFirstReplies: $getFirstReplies,
 
-    $getReplyUrl: $getReplyUrl,
+    $getReplyPageIndex: $getReplyPageIndex,
 
     'GET /api/ref/:id/topics': function* (id) {
         /**

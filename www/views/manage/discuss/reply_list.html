@@ -79,6 +79,7 @@ function initVM(replies, page) {
                         <span v-text="obj.user.name"></span>
                     </td>
                     <td>
+                        <p><a target="_blank" v-attr="href: '/discuss/topic/' + obj.topic_id + '/find/' + obj.id">Topic</a></p>
                         <div v-if="!obj.deleted" v-html="obj.content"></div>
                         <div v-if="obj.deleted"><div class="uk-alert uk-alert-danger">{{ _('Deleted') }}</div></div>
                     </td>

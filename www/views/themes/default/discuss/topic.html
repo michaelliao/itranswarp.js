@@ -15,6 +15,81 @@
 {% block head %}
     {% set __sidebar_right__ = true %}
     {% set __sidebar_right_width__ = '216px' %}
+
+<script id="tplReplyArea" type="text/plain">
+        <div class="x-display-if-signin">
+            <p><button id="reply-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-reply"></i> Make a Reply</button></p>
+            <form id="reply-form" class="uk-form" style="display:none;">
+                <fieldset>
+                    <div class="uk-alert uk-alert-danger" style="display:none"></div>
+                    <div class="uk-form-row">
+                        <label>Reply: {{ topic.name }}</label>
+                    </div>
+                    <div class="uk-form-row">
+                        <label>Content:</label>
+                    </div>
+                    <div class="uk-form-row x-textarea">
+                    </div>
+                    <div class="uk-form-row">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Reply</button>
+                        &nbsp;&nbsp;
+                        <button type="button" class="uk-button x-cancel"><i class="uk-icon-close"></i> Cancel</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+</script>
+
+<script>
+
+function initReplyArea(topic_id) {
+    console.log('auth success, display reply form...');
+    $('#x-reply-area').html($('#tplReplyArea').html());
+    var $makeReply = $('#reply-make-button');
+    var $replyForm = $('#reply-form');
+    var $postReply = $replyForm.find('button[type=submit]');
+    var $cancelReply = $replyForm.find('button.x-cancel');
+    $makeReply.click(function () {
+        $replyForm.showFormError();
+        $replyForm.show();
+        $replyForm.find('div.x-textarea').html('<textarea></textarea>');
+        var htmleditor = UIkit.htmleditor($replyForm.find('textarea').get(0), {
+            mode: 'split',
+            maxsplitsize: 600,
+            markdown: true
+        });
+        $makeReply.hide();
+    });
+    $cancelReply.click(function () {
+        $replyForm.find('div.x-textarea').html('');
+        $replyForm.hide();
+        $makeReply.show();
+    });
+    $replyForm.submit(function (e) {
+        e.preventDefault();
+        $replyForm.postJSON('/api/topics/' + topic_id + '/replies', {
+            content: $replyForm.find('textarea').val()
+        }, function (err, result) {
+            if (err) {
+                return;
+            }
+            gotoPage({{ page.size }} > {{ replies.length }} ? {{ page.index }} : {{ page.index+1 }});
+        });
+    });
+}
+
+function onAuthSuccess() {
+    initReplyArea('{{ topic.id }}');
+}
+
+$(function () {
+    if (g_user !== null) {
+        initReplyArea('{{ topic.id }}');
+    }
+});
+
+</script>
+
 {% endblock %}
 
 {% block beforehead %}
@@ -108,6 +183,7 @@
 {% for r in replies %}
     {% set index = index + 1 %}
     <div class="uk-comment">
+        <div class="x-anchor"><a name="{{ r.id }}"></a></div>
         <div class="uk-comment-header">
             <a href="/user/{{ r.user.id }}"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{{ r.user.image_url }}" width="50" height="50" alt=""></a>
             <h4 class="uk-comment-title"><a href="/user/{{ r.user.id }}">{{ r.user.name }}</a></h4>
@@ -133,23 +209,12 @@
 
     <h3>Reply</h3>
 
-    <div class="uk-margin">
-        <button type="button" class="uk-button uk-button-primary"><i class="uk-icon-sign-in"></i> Please Sign In First</button>
+    <div class="x-display-if-not-signin">
+        <p><button type="button" class="uk-button" onclick="showSignin()"><i class="uk-icon-signin"></i> Sign In to Make a Comment</button></p>
     </div>
 
-    <form class="uk-form x-auth-if-signed" url="/api/topics/{{ topic.id }}/replies" onsubmit="return createReply(this);">
-        <div class="uk-comment">
-            <div class="uk-comment-header">
-                <img class="uk-comment-avatar uk-border-circle x-avatar x-user-image" src="about:blank" width="50" height="50" alt="">
-                <h4 class="uk-comment-title"><span></span></h4>
-                <div class="uk-comment-meta">You are reply to the topic: {{ topic.name }}</div>
-            </div>
-            <div class="uk-comment-body uk-margin x-content">
-                <div><textarea id="reply-editor" name="content" rows="10"></textarea></div>
-                <div class="uk-margin"><button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-reply"></i> Reply</button></div>
-            </div>
-        </div>
-    </form>
+    <div id="x-reply-area"></div>
+
 
 {% endblock %}
 

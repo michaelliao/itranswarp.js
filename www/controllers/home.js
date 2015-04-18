@@ -242,7 +242,6 @@ module.exports = {
             user = this.request.user,
             data = this.request.body;
         json_schema.validate('createComment', data);
-        console.log('--> validated')
         if (!data.content.trim()) {
             throw api.invalidParam('content', 'Empty input.');
         }
@@ -258,11 +257,8 @@ module.exports = {
         else {
             this.throw(404);
         }
-        console.log('--> ref_type ok')
         board = yield discussApi.$getBoardByTag(data.tag);
-        console.log('--> tag ok')
-        this.body = yield discussApi.$createTopicByRef(user, board.id, ref_type, ref_id, data);
-        console.log('--> ok')
+        this.body = yield discussApi.$createTopic(user, board.id, ref_type, ref_id, data);
     },
 
     'GET /discuss': function* () {
@@ -316,22 +312,24 @@ module.exports = {
         this.render(getView('discuss/topic.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /discuss/:id/topics/create': function (req, res, next) {
-        discussApi.getBoard(req.params.id, function (err, board) {
-            if (err) {
-                return next(err);
-            }
-            return processTheme('discuss/topic_form.html', { board: board }, req, res, next);
-        });
+    'GET /discuss/:bid/topics/create': function* (bid) {
+        if (this.request.user === null) {
+            this.response.redirect('/auth/signin');
+            return;
+        }
+        var
+            board = yield discussApi.$getBoard(bid),
+            model = {
+                board: board
+            };
+        this.render(getView('discuss/topic_form.html'), yield $getModel.apply(this, [model]));
     },
 
-    'GET /discuss/topics/:topic_id/find/:reply_id': function (req, res, next) {
-        discussApi.getReplyUrl(req.params.topic_id, req.params.reply_id, function (err, url) {
-            if (err) {
-                return next(err);
-            }
-            res.redirect(301, url);
-        });
+    'GET /discuss/topic/:tid/find/:rid': function* (tid, rid) {
+        var
+            topic = yield discussApi.$getTopic(tid),
+            p = yield discussApi.$getReplyPageIndex(tid, rid);
+        this.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
     },
 
     'GET /user/:id': function* (id) {
@@ -358,9 +356,11 @@ module.exports = {
 
     'GET /auth/signin': function* (id) {
         var
+            referer = this.request.get('referer') || '/',
             user = this.request.user;
+        console.log('Referer: ' + referer);
         if (user !== null) {
-            //
+            
         }
         this.render(getView('signin.html'), yield $getModel.apply(this, [{}]));
     },
