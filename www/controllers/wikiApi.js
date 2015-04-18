@@ -13,7 +13,6 @@ var
     json_schema = require('../json_schema');
 
 var
-    commentApi = require('./commentApi'),
     attachmentApi = require('./attachmentApi');
 
 var
@@ -29,7 +28,6 @@ function indexWiki(r) {
         search.engine.index({
             type: 'wiki',
             id: r.id,
-            tags: r.tags || '',
             name: r.name,
             description: r.description || '',
             content: helper.html2text(helper.md2html(r.content, true)),
@@ -218,7 +216,7 @@ module.exports = {
          * @param {string} name: Name of the wiki.
          * @param {string} description: Description of the wiki.
          * @param {string} content: Content of the wiki.
-         * @param {string} [tags]: Tags of the wiki, seperated by ','.
+         * @param {string} [tag]: Tag of the wiki, seperated by ','.
          * @param {string} [image]: Base64 encoded string as cover image.
          * @return {object} The created wiki object.
          * @error {parameter:invalid} If some parameter is invalid.
@@ -260,7 +258,7 @@ module.exports = {
             cover_id: attachment.id,
             name: data.name.trim(),
             description: data.description.trim(),
-            tags: helper.formatTags(data.tags)
+            tag: data.tag.trim()
         });
         wiki.content = data.content;
         this.body = wiki;
@@ -274,7 +272,7 @@ module.exports = {
          * @param {string} id: The id of the wiki.
          * @param {string} [name]: The name of the wiki.
          * @param {string} [description]: The description of the wiki.
-         * @param {string} [tags]: The tags of the wiki.
+         * @param {string} [tag]: The tag of the wiki.
          * @param {string} [content]: The content of the wiki.
          * @param {string} [image]: Base64 encoded string as cover image.
          * @return {object} The updated wiki object.
@@ -299,9 +297,9 @@ module.exports = {
             wiki.description = data.description.trim();
             props.push('description');
         }
-        if (data.tags) {
-            wiki.tags = helper.formatTags(data.tags);
-            props.push('tags');
+        if (data.tag) {
+            wiki.tag = data.tag.trim();
+            props.push('tag');
         }
         if (data.image) {
             // create image:
@@ -334,40 +332,6 @@ module.exports = {
             wiki.content = text.value;
         }
         this.body = wiki;
-    },
-
-    'POST /api/wikis/:id/comments': function* () {
-        /**
-         * Create a comment on a wiki.
-         * 
-         * @name Comment Wiki
-         * @param {string} id: Id of the wiki.
-         * @param {string} [content]: Content of the comment.
-         * @return {object} The comment object.
-         * @error {resource:notfound} Wiki was not found by id.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
-         */
-        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var content;
-        try {
-            content = utils.getRequiredParam('content', req);
-        } catch (e) {
-            return next(e);
-        }
-        Wiki.find(req.params.id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            commentApi.createComment('wiki', wiki.id, req.user, content, function (err, c) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send(c);
-            });
-        });
     },
 
     'POST /api/wikis/:id/wikipages': function* (wiki_id) {
@@ -574,38 +538,6 @@ module.exports = {
         movingPage.parent_id = parent_id;
         yield movingPage.$update(['parent_id', 'updated_at', 'version']);
         this.body = movingPage;
-    },
-
-    'POST /api/wikis/wikipages/:id/comments': function* () {
-        /**
-         * Create a comment on a wiki page.
-         * 
-         * @name Comment WikiPage
-         * @param {string} id: Id of the wiki page.
-         * @param {string} [content]: Content of the comment.
-         * @return {object} The comment object.
-         * @error {resource:notfound} WikiPage was not found by id.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
-         */
-        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-        var content;
-        try {
-            content = utils.getRequiredParam('content', req);
-        } catch (e) {
-            return next(e);
-        }
-        WikiPage.find(req.params.id, function (err, wikipage) {
-            if (err) {
-                return next(err);
-            }
-            commentApi.createComment('wikipage', wikipage.id, req.user, content, function (err, c) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send(c);
-            });
-        });
     },
 
     'POST /api/wikis/wikipages/:id/delete': function* (id) {

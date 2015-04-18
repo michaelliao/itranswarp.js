@@ -79,6 +79,18 @@ function* $getBoard(id) {
     return board;
 }
 
+function* $getBoardByTag(tag) {
+    var
+        boards = yield $getBoards(),
+        filtered = _.filter(boards, function (b) {
+            return b.tag = tag;
+        });
+    if (filtered.length === 0) {
+        throw api.notFound('Board');
+    }
+    return filtered[0];
+}
+
 function* $getBoards() {
     return yield Board.$findAll({
         order: 'display_order'
@@ -214,7 +226,7 @@ function* $getReplyUrl(topic_id, reply_id) {
     return url;
 }
 
-function* $createTopic(user, board_id, ref_type, ref_id, data) {
+function* $createTopicByRef(user, board_id, ref_type, ref_id, data) {
     var
         board = yield $getBoard(board_id),
         topic = yield Topic.$create({
@@ -223,17 +235,14 @@ function* $createTopic(user, board_id, ref_type, ref_id, data) {
             ref_type: ref_type,
             ref_id: ref_id,
             name: data.name.trim(),
-            tags: helper.formatTags(data.tags || ''),
+            tags: data.tag.trim(),
             content: helper.md2html(data.content)
-        });
+        }),
+        key = 'REF-TOPICS-' + ref_id;
     yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
     indexDiscuss(topic);
+    yield cache.$remove(key);
     return topic;
-}
-
-function* $createTopicByRef(ref_id) {
-    var key = 'REF-TOPICS-' + ref_id;
-    cache.$remove(key);
 }
 
 function* $loadTopicsByRefWithCache(ref_id, page) {
@@ -270,9 +279,11 @@ module.exports = {
 
     $getNavigationMenus: $getNavigationMenus,
 
-    $createTopic: $createTopic,
+    $createTopicByRef: $createTopicByRef,
 
     $getBoard: $getBoard,
+
+    $getBoardByTag: $getBoardByTag,
 
     $getBoards: $getBoards,
 
