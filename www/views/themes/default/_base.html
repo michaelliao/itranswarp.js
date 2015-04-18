@@ -49,8 +49,8 @@
         <div class="uk-comment">
             <div class="uk-comment-header">
                 <a href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{ user.image_url }" width="50" height="50" alt=""></a>
-                <h4 class="uk-comment-title"><a href="/user/{ user.id }">{ user.name }</a></h4>
-                <div class="uk-comment-meta">Created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
+                <h4 class="uk-comment-title"><a href="/discuss/{ board_id }/{ id }">{ name }</a></h4>
+                <div class="uk-comment-meta"><a href="/user/{ user.id }">{ user.name }</a> created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
             </div>
             <div class="uk-comment-body x-content x-auto-content">
                 { content|safe }
@@ -68,7 +68,7 @@
         </li>
     </script>
 
-    <style>
+    <style id="x-doc-style">
 {% if __user__ %}
         .x-display-if-not-signin { display: none; }
 {% else %}
@@ -77,26 +77,30 @@
     </style>
     <script>
         var g_time = parseFloat('{{ __time__ }}');
+        var g_signins = {{ __signins__|json|safe }};
 //{% if __user__ %}
-        var g_user_name = '{{ __user__.name|addslashes }}';
-        var g_user_image = '{{ __user__.image_url }}';
+        var g_user = {
+            id: '{{ __user__.id }}',
+            name: '{{ __user__.name|addslashes }}',
+            image_url: '{{ __user__.image_url }}'
+        };
 //{% else %}
-        var g_user_name = '';
-        var g_user_image = 'about:blank';
+        var g_user = null;
 //{% endif %}
     </script>
-    {% set __sidebar_left__ = false %}
-    {% set __sidebar_left_width__ = '316px' %}
-    {% set __sidebar_left_padding__ = true %}
-    {% set __sidebar_right__ = false %}
-    {% set __sidebar_right_width__ = '316px' %}
-    {% set __sidebar_right_padding__ = true %}
+{% set __sidebar_left__ = false %}
+{% set __sidebar_left_width__ = '316px' %}
+{% set __sidebar_left_padding__ = true %}
+{% set __sidebar_right__ = false %}
+{% set __sidebar_right_width__ = '316px' %}
+{% set __sidebar_right_padding__ = true %}
 
-    {% block head %}<!-- head  -->{% endblock %}
-    <!-- BEGIN custom_header -->
-    {{ __website__.custom_header|safe }}
-    <!-- END custom_header -->
+{% block head %}<!-- head  -->{% endblock %}
+<!-- BEGIN custom_header -->
+{{ __website__.custom_header|safe }}
+<!-- END custom_header -->
 </head>
+
 <body>
     <div class="x-goto-top">
         <div class="x-arrow"></div>
@@ -140,7 +144,7 @@
                 <div class="uk-navbar-flip x-hidden-tiny">
                     <ul class="uk-navbar-nav">
                         <li class="uk-parent x-display-if-signin" data-uk-dropdown>
-                            <a href="#0"><i class="uk-icon-user"></i> <span class="x-user-name"></span></a>
+                            <a href="#0"><i class="uk-icon-user"></i> <span class="x-user-name">{% if __user__ %}{{ __user__.name }}{% endif %}</span></a>
                             <div class="uk-dropdown uk-dropdown-navbar">
                                 <ul class="uk-nav uk-nav-navbar">
                                     <li><a target="_blank" href="/me/profile"><i class="uk-icon-cogs"></i> {{ _('Profile') }}</a></li>
@@ -240,6 +244,20 @@
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="modal-signin" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <div class="uk-modal-header">
+                <h2>{{ _('Please Sign In') }}</h2>
+            </div>
+            <p>You can sign in directly without register:</p>
+            {% for signin in __signins__ %}
+            <h3><a href="/auth/from/weibo"><i class="uk-icon-weibo"></i> 使用新浪微博登录</a></h3>
+            {% endfor %}
+            <p>You need authorize to allow connect to your social passport for the first time.</p>
         </div>
     </div>
 
