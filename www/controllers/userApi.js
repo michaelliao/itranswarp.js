@@ -5,6 +5,7 @@
 var
     _ = require('lodash'),
     thunkify = require('thunkify'),
+    oauth2 = require('oauth2-warp'),
     api = require('../api'),
     db = require('../db'),
     auth = require('../auth'),
