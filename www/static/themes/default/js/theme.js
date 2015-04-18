@@ -1,5 +1,43 @@
 // itranswarp.js
 
+function initCommentArea(ref_type, ref_id, tag) {
+    console.log('auth success, display comment form...');
+    $('#x-comment-area').html($('#tplCommentArea').html());
+    var $makeComment = $('#comment-make-button');
+    var $commentForm = $('#comment-form');
+    var $postComment = $commentForm.find('button[type=submit]');
+    var $cancelComment = $commentForm.find('button.x-cancel');
+    $makeComment.click(function () {
+        $commentForm.showFormError();
+        $commentForm.show();
+        $commentForm.find('div.x-textarea').html('<textarea></textarea>');
+        var htmleditor = UIkit.htmleditor($commentForm.find('textarea').get(0), {
+            mode: 'split',
+            maxsplitsize: 600,
+            markdown: true
+        });
+        $makeComment.hide();
+    });
+    $cancelComment.click(function () {
+        $commentForm.find('div.x-textarea').html('');
+        $commentForm.hide();
+        $makeComment.show();
+    });
+    $commentForm.submit(function (e) {
+        e.preventDefault();
+        $commentForm.postJSON('/api/comments/' + ref_type + '/' + ref_id, {
+            tag: tag,
+            name: $commentForm.find('input[name=name]').val(),
+            content: $commentForm.find('textarea').val()
+        }, function (err, result) {
+            if (err) {
+                return;
+            }
+            refresh();
+        });
+    });
+}
+
 var signinModal = null;
 
 function showSignin() {

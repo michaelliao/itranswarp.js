@@ -17,6 +17,26 @@
     {% set __sidebar_left_padding__ = false %}
 <script>
 loadComments('{{ current.id }}');
+
+
+var
+    comment_type = '{% if page %}wikipage{% else %}wiki{% endif %}',
+    comment_ref_id = '{% if page %}{{ page.id }}{% else %}{{ wiki.id }}{% endif %}',
+    comment_tag = '{{ wiki.tag }}';
+
+function onAuthSuccess() {
+    initCommentArea(comment_type, comment_ref_id, comment_tag);
+}
+
+$(function () {
+    if (g_user !== null) {
+        initCommentArea(comment_type, comment_ref_id, comment_tag);
+    }
+});
+
+
+
+
 $(function () {
     var
         current = $('#{{ current.id }}'),
@@ -84,5 +104,13 @@ $(function () {
 
     <ul id="x-comment-list" class="uk-comment-list">
     </ul>
+
+    <h3>Make a Comment</h3>
+
+    <div class="x-display-if-not-signin">
+        <p><button type="button" class="uk-button" onclick="showSignin()"><i class="uk-icon-signin"></i> Sign In to Make a Comment</button></p>
+    </div>
+
+    <div id="x-comment-area"></div>
 
 {% endblock %}
