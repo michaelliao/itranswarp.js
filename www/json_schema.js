@@ -28,7 +28,11 @@ function translateMessage(field, invalids) {
     if (invalids.length === 0) {
         return '无效的值：' + field;
     }
-    return code2Message[invalids[0]] || '无效的值' + field;
+    var msg = code2Message[invalids[0]];
+    if (msg) {
+        return field + msg;
+    }
+    return '无效的值' + field;
 }
 
 var createApiError = function (errors) {
@@ -190,14 +194,16 @@ var schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
+            tag: PROPERTY.TAG,
             description: PROPERTY.DESCRIPTION_OPTIONAL
         },
-        required: ['name']
+        required: ['name', 'tag']
     },
     updateCategory: {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
+            tag: PROPERTY.TAG,
             description: PROPERTY.DESCRIPTION_OPTIONAL
         }
     },
@@ -389,6 +395,15 @@ var schemas = {
             custom_header: PROPERTY.SETTING,
             custom_footer: PROPERTY.SETTING
         }
+    },
+    createComment: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            tag: PROPERTY.TAG,
+            content: PROPERTY.TEXT
+        },
+        required: ['name', 'tag', 'content']
     }
 }
 

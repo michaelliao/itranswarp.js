@@ -28,6 +28,7 @@ function initVM(category) {
         el: '#vm',
         data: {
             name: category.name,
+            tag: category.tag,
             description: category.description
         },
         methods: {
@@ -51,7 +52,6 @@ function initVM(category) {
 
 {% block main %}
 
-
     <div id="loading" class="uk-width-1-1">
         <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
     </div>
@@ -69,6 +69,12 @@ function initVM(category) {
                     <label class="uk-form-label">Name:</label>
                     <div class="uk-form-controls">
                         <input v-model="name" type="text" maxlength="100" class="uk-width-1-1">
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Tag:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="tag" type="text" maxlength="100" class="uk-width-1-1">
                     </div>
                 </div>
                 <div class="uk-form-row">

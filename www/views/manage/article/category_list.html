@@ -109,8 +109,9 @@ function initVM(data) {
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th width="30%">{{ _('Name') }}</th>
-                    <th width="40%">{{ _('Description') }}</th>
+                    <th width="20%">{{ _('Name') }}</th>
+                    <th width="20%">{{ _('Tag') }}</th>
+                    <th width="30%">{{ _('Description') }}</th>
                     <th width="15%">{{ _('Created At') }}</th>
                     <th width="15%">&nbsp;</th>
                 </tr>
@@ -120,6 +121,7 @@ function initVM(data) {
                     <td>
                         <a v-text="c.name" v-attr="href: '/category/'+c.id" target="_blank"></a>
                     </td>
+                    <td><span v-text="c.tag"></span></td>
                     <td><span v-text="c.description"></span></td>
                     <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
                     <td>

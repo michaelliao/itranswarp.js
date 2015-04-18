@@ -90,6 +90,7 @@ module.exports = {
         num = yield Category.$findNumber('max(display_order)');
         this.body = yield Category.$create({
             name: data.name.trim(),
+            tag: data.tag.trim(),
             description: data.description.trim(),
             display_order: (num === null) ? 0 : num + 1
         });
@@ -131,6 +132,10 @@ module.exports = {
         if (data.name) {
             category.name = data.name.trim();
             props.push('name');
+        }
+        if (data.tag) {
+            category.tag = data.tag.trim();
+            props.push('tag');
         }
         if (data.description) {
             category.description = data.description.trim();
