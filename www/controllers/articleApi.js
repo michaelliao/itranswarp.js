@@ -14,7 +14,6 @@ var
     json_schema = require('../json_schema');
 
 var
-    commentApi = require('./commentApi'),
     settingApi = require('./settingApi'),
     categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi');
@@ -389,22 +388,6 @@ module.exports = {
             article.content = text.value;
         }
         this.body = article;
-    },
-
-    'POST /api/articles/:id/comments': function* (id) {
-        /**
-         * Create a comment on an article.
-         * 
-         * @name Comment Article
-         * @param {string} id: Id of the article.
-         * @param {string} [content]: Content of the comment.
-         * @return {object} The comment object.
-         * @error {resource:notfound} Article was not found by id.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
-         */
-        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-
     },
 
     'POST /api/articles/:id/delete': function* (id) {
