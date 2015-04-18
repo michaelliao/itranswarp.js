@@ -1,7 +1,18 @@
 // itranswarp.js
 
+var signinModal = null;
+
 function showSignin() {
-    //
+    if (g_signins.length === 1) {
+        return authFrom(g_signins[0].id);
+    }
+    if (signinModal === null) {
+        signinModal = UIkit.modal('#modal-signin', {
+            bgclose: false,
+            center: true
+        });
+    }
+    signinModal.show();
 }
 
 // JS Template:
@@ -155,7 +166,6 @@ $(function() {
     });
 });
 
-
 if (! window.console) {
     window.console = {
         log: function(s) {
@@ -287,6 +297,175 @@ function toSmartDate(timestamp) {
     return s;
 }
 
+// parse query string as object:
+
+function parseQueryString() {
+    var
+        q = location.search,
+        r = {},
+        i, pos, s, qs;
+    if (q && q.charAt(0)==='?') {
+        qs = q.substring(1).split('&');
+        for (i=0; i<qs.length; i++) {
+            s = qs[i];
+            pos = s.indexOf('=');
+            if (pos <= 0) {
+                continue;
+            }
+            r[s.substring(0, pos)] = decodeURIComponent(s.substring(pos+1)).replace(/\+/g, ' ');
+        }
+    }
+    return r;
+}
+
+function gotoPage(i) {
+    var r = parseQueryString();
+    r.page = i;
+    location.assign('?' + $.param(r));
+}
+
+function refresh() {
+    var r = parseQueryString();
+    r.t = new Date().getTime();
+    location.assign('?' + $.param(r));
+}
+
+// extends jQuery.form:
+
+$(function () {
+    console.log('Extends $form...');
+    $.fn.extend({
+        showFormError: function (err) {
+            return this.each(function () {
+                var
+                    $form = $(this),
+                    $alert = $form && $form.find('.uk-alert-danger'),
+                    fieldName = err && err.data;
+                if (! $form.is('form')) {
+                    console.error('Cannot call showFormError() on non-form object.');
+                    return;
+                }
+                $form.find('input').removeClass('uk-form-danger');
+                $form.find('select').removeClass('uk-form-danger');
+                $form.find('textarea').removeClass('uk-form-danger');
+                if ($alert.length === 0) {
+                    console.warn('Cannot find .uk-alert-danger element.');
+                    return;
+                }
+                if (err) {
+                    $alert.text(err.message ? err.message : (err.error ? err.error : err)).removeClass('uk-hidden').show();
+                    if (($alert.offset().top - 60) < $(window).scrollTop()) {
+                        $('html,body').animate({ scrollTop: $alert.offset().top - 60 });
+                    }
+                    if (fieldName) {
+                        $form.find('[name=' + fieldName + ']').addClass('uk-form-danger');
+                    }
+                }
+                else {
+                    $alert.addClass('uk-hidden').hide();
+                    $form.find('.uk-form-danger').removeClass('uk-form-danger');
+                }
+            });
+        },
+        showFormLoading: function (isLoading) {
+            return this.each(function () {
+                var
+                    $form = $(this),
+                    $submit = $form && $form.find('button[type=submit]'),
+                    $buttons = $form && $form.find('button');
+                    $i = $submit && $submit.find('i'),
+                    iconClass = $i && $i.attr('class');
+                if (! $form.is('form')) {
+                    console.error('Cannot call showFormLoading() on non-form object.');
+                    return;
+                }
+                if (!iconClass || iconClass.indexOf('uk-icon') < 0) {
+                    console.warn('Icon <i class="uk-icon-*>" not found.');
+                    return;
+                }
+                if (isLoading) {
+                    $buttons.attr('disabled', 'disabled');
+                    $i && $i.addClass('uk-icon-spinner').addClass('uk-icon-spin');
+                }
+                else {
+                    $buttons.removeAttr('disabled');
+                    $i && $i.removeClass('uk-icon-spinner').removeClass('uk-icon-spin');
+                }
+            });
+        },
+        postJSON: function (url, data, callback) {
+            if (arguments.length===2) {
+                callback = data;
+                data = {};
+            }
+            return this.each(function () {
+                var $form = $(this);
+                $form.showFormError();
+                $form.showFormLoading(true);
+                _httpJSON('POST', url, data, function (err, r) {
+                    if (err) {
+                        $form.showFormError(err);
+                        $form.showFormLoading(false);
+                    }
+                    if (callback) {
+                        if (callback(err, r)) {
+                            $form.showFormLoading(false);
+                        }
+                    }
+                });
+            });
+        }
+    });
+});
+
+// ajax submit form:
+
+function _httpJSON(method, url, data, callback) {
+    var opt = {
+        type: method,
+        dataType: 'json'
+    };
+    if (method==='GET') {
+        opt.url = url + '?' + data;
+    }
+    if (method==='POST') {
+        opt.url = url;
+        opt.data = JSON.stringify(data || {});
+        opt.contentType = 'application/json';
+    }
+    $.ajax(opt).done(function (r) {
+        if (r && r.error) {
+            return callback(r);
+        }
+        return callback(null, r);
+    }).fail(function (jqXHR, textStatus) {
+        return callback({'error': 'http_bad_response', 'data': '' + jqXHR.status, 'message': '网络好像出问题了 (HTTP ' + jqXHR.status + ')'});
+    });
+}
+
+function getJSON(url, data, callback) {
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    if (typeof (data)==='object') {
+        var arr = [];
+        $.each(data, function (k, v) {
+            arr.push(k + '=' + encodeURIComponent(v));
+        });
+        data = arr.join('&');
+    }
+    _httpJSON('GET', url, data, callback);
+}
+
+function postJSON(url, data, callback) {
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    _httpJSON('POST', url, data, callback);
+}
+
 $(function() {
     // activate nav:
     var xnav = $('meta[property="x-nav"]').attr('content');
@@ -329,3 +508,46 @@ $(function() {
     hljs.initHighlighting();
     // END
 });
+
+// signin with oauth:
+
+var isDesktop = (function() {
+    var ua = navigator.userAgent.toLowerCase();
+    return ua.indexOf('windows nt')>=0 || ua.indexOf('macintosh')>=0;
+})();
+
+function onAuthCallback(user) {
+    if (signinModal !== null) {
+        signinModal.hide();
+    }
+    g_user = {
+        id: user.id,
+        name: user.name,
+        image_url: user.image_url
+    };
+    // update user info:
+    $('.x-user-name').text(g_user.name);
+    // update css:
+    $('#x-doc-style').text('.x-display-if-signin {}\n.x-display-if-not-signin { display: none; }\n');
+    // reload if neccessary:
+    if (typeof(g_reload_after_signin) !== 'undefined' && g_reload_after_signin === true) {
+        location.reload();
+    }
+    else {
+        if (typeof(onAuthSuccess) === 'function') {
+            onAuthSuccess();
+        }
+    }
+}
+
+function authFrom(provider) {
+    var
+        url = '/auth/from/' + provider,
+        popupId = location.hostname.replace(/\./g, '_');
+    if (isDesktop) {
+        var w = window.open(url + '?jscallback=onAuthCallback', popupId, 'top=200,left=400,width=600,height=380,directories=no,menubar=no,toolbar=no,resizable=no');
+    }
+    else {
+        location.assign(url);
+    }
+}
