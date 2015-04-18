@@ -61,7 +61,8 @@ else {
             method = this.request.method,
             path = this.request.path,
             pos;
-        if (method === 'GET' && path.indexOf('/static/') === 0) {
+        if (method === 'GET' && (path.indexOf('/static/') === 0 || path === '/favicon.ico')) {
+            console.log('>>> static path: ' + path);
             pos = path.lastIndexOf('.');
             if (pos !== (-1)) {
                 this.type = path.substring(pos);
