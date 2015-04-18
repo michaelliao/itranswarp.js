@@ -50,11 +50,15 @@ function Template(tpl) {
 
 var
     tplComment = null,
+    tplCommentReply = null,
     tplCommentInfo = null;
 
 function buildComments(data) {
     if (tplComment === null) {
         tplComment = new Template($('#tplComment').html());
+    }
+    if (tplCommentReply === null) {
+        tplCommentReply = new Template($('#tplCommentReply').html());
     }
     if (tplCommentInfo === null) {
         tplCommentInfo = new Template($('#tplCommentInfo').html());
@@ -72,7 +76,7 @@ function buildComments(data) {
             for (j=0; j<topic.replies.length; j++) {
                 reply = topic.replies[j];
                 L.push('<li>');
-                L.push(tplComment.render(reply));
+                L.push(tplCommentReply.render(reply));
                 L.push('</li>');
             }
         }
