@@ -16,6 +16,12 @@
     {% set __sidebar_right__ = true %}
     {% set __sidebar_right_width__ = '216px' %}
 
+<style>
+.x-topic-visible {
+    display: block;
+}
+</style>
+
 <script id="tplReplyArea" type="text/plain">
         <div class="x-display-if-signin">
             <p><button id="reply-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-reply"></i> Make a Reply</button></p>
@@ -152,8 +158,5 @@ $(function () {
 {% endblock %}
 
 {% block sidebar_right_content %}
-    <h3>分享给朋友</h3>
-    <div style="height:66px">
-        <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ topic.name }}" picture_search="false"></wb:share-button>
-    </div>
+
 {% endblock %}

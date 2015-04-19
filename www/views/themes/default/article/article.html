@@ -15,6 +15,12 @@
 {% block head %}
     {% set __sidebar_right__ = true %}
 
+<style>
+.x-article-visible {
+    display: block;
+}
+</style>
+
 <script>
 loadComments('{{ article.id }}');
 
@@ -57,5 +63,9 @@ $(function () {
     </div>
 
     <div id="x-comment-area"></div>
+
+{% endblock %}
+
+{% block sidebar_right_content %}
 
 {% endblock %}
