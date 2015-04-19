@@ -20,6 +20,7 @@ module.exports = {
     cache: {
         NAVIGATIONS: '__navigations__',
         WEBSITE: '__website__',
+        SNIPPETS: '__snippet__',
         SETTINGS: '__settings__'
     },
 
