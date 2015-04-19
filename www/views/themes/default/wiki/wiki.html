@@ -4,12 +4,12 @@
 
 {% block meta %}
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="http://{{ __request__.host }}/wiki/{{ wiki.id }}{% if page %}/{{ page.id }}{% endif %}" />
-    <meta property="og:title" content="{% if page %}{{ page.name }}{% else %}{{ wiki.name }}{% endif %}" />
+    <meta property="og:url" content="http://{{ __request__.host }}/wiki/{{ wiki.id }}{% if current.type == 'wikipage' %}/{{ current.id }}{% endif %}" />
+    <meta property="og:title" content="{{ current.name }}" />
     <meta property="og:description" content="{{ wiki.description }}" />
 {% endblock %}
 
-{% block title %}{% if page %}{{ page.name }}{% else %}{{ wiki.name }}{% endif %}{% endblock %}
+{% block title %}{{ current.name }}{% endblock %}
 
 {% block head %}
     {% set __sidebar_left__ = true %}
@@ -18,10 +18,9 @@
 <script>
 loadComments('{{ current.id }}');
 
-
 var
-    comment_type = '{% if page %}wikipage{% else %}wiki{% endif %}',
-    comment_ref_id = '{% if page %}{{ page.id }}{% else %}{{ wiki.id }}{% endif %}',
+    comment_type = '{{ current.type }}',
+    comment_ref_id = '{{ current.id }}',
     comment_tag = '{{ wiki.tag }}';
 
 function onAuthSuccess() {
@@ -34,9 +33,6 @@ $(function () {
     }
 });
 
-
-
-
 $(function () {
     var
         current = $('#{{ current.id }}'),
@@ -44,8 +40,7 @@ $(function () {
         next = current.next().find('a'),
         L = [];
     current.addClass('uk-active');
-    L.push('<hr><div class="uk-text-"><h3>您的支持是作者写作最大的动力！</h3><p>如果您喜欢这个教程，读后觉得收获很大，预期工资涨幅能超过30%，不妨小额赞助一下，让我有动力继续写出高质量的教程。请狠狠地点击下面的按钮：</p><p><a href="/webpage/donate" target="_blank" class="uk-button uk-button-success">我要小额赞助</a></p></div>');
-    L.push('<hr><div class="uk-clearfix uk-margin-left uk-margin-right">');
+    L.push('<div class="uk-clearfix uk-margin-left uk-margin-right">');
     if (prev.length > 0) {
         L.push('<span class="uk-float-left"><i class="uk-icon-chevron-left"></i> <a href="');
         L.push(prev.attr('href'));
@@ -61,7 +56,7 @@ $(function () {
         L.push('</a> <i class="uk-icon-chevron-right"></i></span>')
     }
     L.push('</div>');
-    $('.x-wiki-content').after(L.join(''));
+    $('#x-wiki-prev-next').html(L.join(''));
 });
 </script>
 {% endblock %}
@@ -82,13 +77,7 @@ $(function () {
     <div class="x-placeholder"></div>
 {% endblock %}
 
-
-{% block sidebar_left_after %}
-    <h4>关于作者</h4>
-    <iframe width="99%" height="400" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=100%&height=400&fansRow=3&ptype=1&speed=0&skin=5&isTitle=0&noborder=0&isWeibo=0&isFans=1&uid=1658384301&verifier=078cedea&dpc=1"></iframe>
-{% endblock %}
-
-{% block main_content %}
+{% block content %}
     <h4>{{ current.name }}</h4>
     <div class="x-wiki-info"><span>{{ current.reads }}次阅读</span></div>
     <hr>

@@ -36,7 +36,7 @@ $(function () {
 </script>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
 
     <h3>{{ article.name }}</h3>
     <p><img src="/files/attachments/{{ article.cover_id }}/l" class="uk-responsive-width"></p>
@@ -58,23 +58,4 @@ $(function () {
 
     <div id="x-comment-area"></div>
 
-{% endblock %}
-
-{% block sidebar %}
-    <div class="x-sidebar-section">
-        <h4>喜欢这篇文章？</h4>
-        <div style="height:66px">
-            <wb:like appkey="2f89Ml"></wb:like>
-        </div>
-    </div>
-    <div class="x-sidebar-section">
-        <h4>分享给朋友</h4>
-        <div style="height:66px">
-            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ article.name }}：{{ article.description }}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" picture_search="false"></wb:share-button>
-        </div>
-    </div>
-    <div class="x-sidebar-section">
-        <h4>关于作者</h4>
-        <iframe width="278" height="330" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=zh_cn&width=278&height=330&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=1&uid=1658384301&verifier=078cedea&colors=0088cc,ffffff,333333,0082cb,d14836&dpc=1&rnd={{ __time__ }}"></iframe>
-    </div>
 {% endblock %}

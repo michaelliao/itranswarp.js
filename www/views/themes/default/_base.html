@@ -208,44 +208,44 @@
         <div class="uk-container x-container">
             <div class="uk-grid">
                 <div class="uk-width-1-1">
-                    {% block body_before %}<!-- block body_before -->{% endblock %}
+                    {% block body_before %}{{ __snippets__.body_top|safe }}{% endblock %}
                 </div>
             </div>
             <div class="uk-flex">
             {% if __sidebar_left__ %}
                 <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-left {% if !__sidebar_left_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_left_width__ }} !important">
                     <div class="uk-clearfix">
-                        {% block sidebar_left_before %}<!-- block sidebar_left_before -->{% endblock %}
+                        {% block sidebar_left_top %}{{ __snippets__.sidebar_left_top|safe }}{% endblock %}
                     </div>
                     <div>
-                        {% block sidebar_left_content %}<h3>sidebar_left_content</h3>{% endblock %}
+                        {% block sidebar_left_content %}<h3>override block "sidebar_left_content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
-                        {% block sidebar_left_after %}<!-- block sidebar_left_after -->{% endblock %}
+                        {% block sidebar_left_bottom %}{{ __snippets__.sidebar_left_bottom|safe }}{% endblock %}
                     </div>
                 </div>
             {% endif %}
                 <div class="uk-width-1-1 uk-flex-item-auto" style="flex-shrink:1000;{% if __sidebar_right__ %}padding-right:15px;{% endif %}">
                     <div class="uk-clearfix">
-                        {% block main_content_before %}{% endblock %}
+                        {% block content_top %}{{ __snippets__.content_top|safe }}{% endblock %}
                     </div>
                     <div>
-                        {% block main_content %}<h3>main_content</h3>{% endblock %}
+                        {% block content %}<h3>override block "content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
-                        {% block main_content_after %}{% endblock %}
+                        {% block content_bottom %}{{ __snippets__.content_bottom|safe }}{% endblock %}
                     </div>
                 </div>
             {% if __sidebar_right__ %}
                 <div class="uk-width-1-1 uk-margin-left uk-hidden-small x-sidebar-right {% if !__sidebar_right_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_right_width__ }} !important">
                     <div class="uk-clearfix">
-                        {% block sidebar_right_before %}<!-- block sidebar_right_before -->{% endblock %}
+                        {% block sidebar_right_top %}<!-- __snippets__.sidebar_right_top -->{{ __snippets__.sidebar_right_top|safe }}{% endblock %}
                     </div>
                     <div>
-                        {% block sidebar_right_content %}<h3>sidebar_right_content</h3>{% endblock %}
+                        {% block sidebar_right_content %}<h3>override block "sidebar_right_content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
-                        {% block sidebar_right_after %}<!-- block sidebar_right_after -->{% endblock %}
+                        {% block sidebar_right_bottom %}{{ __snippets__.sidebar_right_bottom|safe }}{% endblock %}
                     </div>
                 </div>
             {% endif %}
@@ -253,7 +253,7 @@
 
             <div class="uk-grid">
                 <div class="uk-width-1-1">
-                    {% block body_after %}<!-- block body_after -->{% endblock %}
+                    {% block body_after %}{{ __snippets__.body_bottom|safe }}{% endblock %}
                 </div>
             </div>
         </div>

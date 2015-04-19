@@ -48,7 +48,7 @@ $(function () {
 </script>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
 
     <div class="uk-alert x-board-nav">
         <a href="/discuss">{{ _('Discuss') }}</a>
@@ -62,7 +62,7 @@ $(function () {
         <a href="/discuss/{{ board.id }}" class="uk-button uk-float-left"><i class="uk-icon-arrow-left"></i> {{ _('Back') }}</a>
     </div>
 
-    <form id="topic-form" class="uk-form uk-form-stack">
+    <form id="topic-form" class="uk-form uk-form-stacked">
         <legend>{{ _('New Topic') }}</legend>
         <fieldset>
             <div class="uk-alert uk-alert-danger uk-hidden"></div>

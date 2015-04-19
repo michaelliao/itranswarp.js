@@ -23,16 +23,18 @@
 </script>
 
 <script>
+var GROUP = '{{ group }}';
+
 $(function() {
     getJSON('/api/settings/definitions', function (err, defs) {
         if (err) {
             return fatal(err);
         }
-        getJSON('/api/settings/website', function (err, settings) {
+        getJSON('/api/settings/' + GROUP, function (err, settings) {
             if (err) {
                 return fatal(err);
             }
-            initVM(defs.website, settings);
+            initVM(defs[GROUP], settings);
         });
     });
 });
@@ -81,6 +83,15 @@ function initVM(definitions, settings) {
     </div>
 
     <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            {% for t in tabs %}
+            {% if t.key === group %}
+            <li class="uk-active"><a href="#0">{{ t.name }}</a></li>
+            {% else %}
+            <li><a href="#0" onclick="location.assign('{{ t.key }}')">{{ t.name }}</a></li>
+            {% endif %}
+            {% endfor %}
+        </ul>
         <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
             <legend>{{ form.name }}</legend>
             <fieldset>

@@ -10,10 +10,12 @@
 
 {% block sidebar_left_content %}
     <h3>{{ user.name }}</h3>
-    <img src="{{ user.image_url }}" class="uk-comment-avatar uk-border-circle x-avatar">
+    <div class="uk-clearfix">
+        <img src="{{ user.image_url }}" class="uk-comment-avatar uk-border-circle x-avatar">
+    </div>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
 
     <h3>注册日期</h3>
     <p><span class="x-smartdate" date="{{ user.created_at }}"></span></p>

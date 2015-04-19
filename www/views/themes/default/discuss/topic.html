@@ -92,72 +92,7 @@ $(function () {
 
 {% endblock %}
 
-{% block beforehead %}
-    <script>
-    $(function() {
-        // init reply editor:
-        $('.x-discuss-content a').each(function () {
-            var a = $(this);
-            a.tooltip({
-                title: a.attr('href')
-            }); 
-        });
-        var editor = $('#markdown-editor');
-        editor.markdown({
-            buttons: ['heading', '|', 'bold', 'italic', '|', 'code', '|', 'link', 'preview']
-        });
-        // highlight target reply:
-        if (location.hash) {
-            var r_id = location.hash.substring(1);
-            if (r_id) {
-                var $a = $('a[name=' + r_id + ']');
-                if ($a.length > 0) {
-                    var $tr = $a.parents('tr.x-discuss-topic-tr');
-                    if ($tr.length > 0) {
-                        $tr.css('background-color', '#f2dede');
-                        setTimeout(function () {
-                            $tr.animate({backgroundColor: '#ffffff'}, 1000);
-                        }, 1000);
-                    }
-                }
-            }
-        }
-    });
-
-    function create_reply(form) {
-        var
-            $form = $(form),
-            $textarea = $form.find('textarea[name=content]');
-        setFormError($form, '');
-        if ($textarea.val().trim().length===0) {
-            setFormError($form, 'content', '请输入话题内容！');
-            return false;
-        }
-
-        showLoading(true);
-        postJSON($form.attr('url'), $form.serialize(), function(err, result) {
-            if (err) {
-                showLoading(false);
-                setFormError($form, err.data, err.message || err.error);
-                return;
-            }
-            var
-                lastIndex = {{ page.totalPages }},
-                total = {{ page.itemsPerPage * page.totalPages }},
-                items = {{ page.totalItems }},
-                nextIndex = lastIndex;
-            if (items === total) {
-                nextIndex ++;
-            }
-            location.assign('/discuss/{{ board.id }}/{{ topic.id }}?page=' + nextIndex + '&t=' + new Date().getTime() + '#' + result.id);
-        });
-        return false;
-    }
-
-    </script>
-{% endblock %}
-
-{% block main_content %}
+{% block content %}
     <div class="uk-alert x-board-nav">
         <a href="/discuss">{{ _('Discuss') }}</a>
         /
@@ -168,9 +103,7 @@ $(function () {
 
     <div class="uk-margin uk-clearfix">
         <a href="/discuss/{{ board.id }}" class="uk-button uk-float-left"><i class="uk-icon-arrow-left"></i> {{ _('Back') }}</a>
-        <a href="#reply" class="uk-button uk-button-success uk-float-right"><i class="uk-icon-reply"></i> {{ _('Reply') }}</a>
     </div>
-
 
     <div class="uk-margin">
         <h3 style="display:inline">{{ topic.name }}</h3>
