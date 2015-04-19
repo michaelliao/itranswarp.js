@@ -396,6 +396,19 @@ var schemas = {
             custom_footer: PROPERTY.SETTING
         }
     },
+    updateSnippets: {
+        type: 'object',
+        properties: {
+            body_top: PROPERTY.SETTING,
+            body_bottom: PROPERTY.SETTING,
+            sidebar_left_top: PROPERTY.SETTING,
+            sidebar_left_bottom: PROPERTY.SETTING,
+            sidebar_right_top: PROPERTY.SETTING,
+            sidebar_right_bottom: PROPERTY.SETTING,
+            content_top: PROPERTY.SETTING,
+            content_bottom: PROPERTY.SETTING,
+        }
+    },
     createComment: {
         type: 'object',
         properties: {

@@ -61,6 +61,64 @@ var defaultSettingDefinitions = {
             value: '',
             type: 'textarea'
         }
+    ],
+    snippets: [
+        {
+            key: 'body_top',
+            label: 'Top of the body',
+            description: 'Snippet on top of the body',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'body_bottom',
+            label: 'Bottom of the body',
+            description: 'Snippet on bottom of the body',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'sidebar_left_top',
+            label: 'Top of the left sidebar',
+            description: 'Snippet on top of the left sidebar',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'sidebar_left_bottom',
+            label: 'Bottom of the left sidebar',
+            description: 'Snippet on bottom of the left sidebar',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'sidebar_right_top',
+            label: 'Top of the right sidebar',
+            description: 'Snippet on top of the right sidebar',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'sidebar_right_bottom',
+            label: 'Bottom of the right sidebar',
+            description: 'Snippet on bottom of the right sidebar',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'content_top',
+            label: 'Top of the content',
+            description: 'Snippet on top of the content',
+            value: '',
+            type: 'textarea'
+        },
+        {
+            key: 'content_bottom',
+            label: 'Bottom of the content',
+            description: 'Snippet on bottom of the content',
+            value: '',
+            type: 'textarea'
+        }
     ]
 };
 
@@ -155,7 +213,9 @@ function* $getSettingsByDefaults(name, defaults) {
     return s;
 }
 
-var KEY_WEBSITE = constants.cache.WEBSITE;
+var
+    KEY_WEBSITE = constants.cache.WEBSITE,
+    KEY_SNIPPETS = constants.cache.SNIPPETS;
 
 function* $getWebsiteSettings() {
     return yield cache.$get(KEY_WEBSITE, function* () {
@@ -166,6 +226,17 @@ function* $getWebsiteSettings() {
 function* $setWebsiteSettings(settings) {
     yield $setSettings('website', settings);
     yield cache.$remove(KEY_WEBSITE);
+}
+
+function* $getSnippets() {
+    return yield cache.$get(KEY_SNIPPETS, function* () {
+        return yield $getSettingsByDefaults('snippets', defaultSettingValues.snippets);
+    });
+}
+
+function* $setSnippets(settings) {
+    yield $setSettings('snippets', settings);
+    yield cache.$remove(KEY_SNIPPETS);
 }
 
 module.exports = {
@@ -184,6 +255,8 @@ module.exports = {
 
     $getWebsiteSettings: $getWebsiteSettings,
 
+    $getSnippets: $getSnippets,
+
     'GET /api/settings/definitions': function* () {
         helper.checkPermission(this.request, constants.role.ADMIN);
         this.body = defaultSettingDefinitions;
@@ -200,5 +273,18 @@ module.exports = {
         json_schema.validate('updateWebsiteSettings', data);
         yield $setWebsiteSettings(data);
         this.body = yield $getWebsiteSettings();
+    },
+
+    'GET /api/settings/snippets': function* () {
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        this.body = yield $getSnippets();
+    },
+
+    'POST /api/settings/snippets': function* () {
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var data = this.request.body;
+        json_schema.validate('updateSnippets', data);
+        yield $setSnippets(data);
+        this.body = yield $getSnippets();
     }
 };

@@ -110,6 +110,7 @@ var THEME = config.theme;
 function* $getModel(model) {
     model.__navigations__ = yield $getNavigations();
     model.__website__ = yield settingApi.$getWebsiteSettings();
+    model.__snippets__ = yield settingApi.$getSnippets();
     model.__signins__ = signins;
     return model;
 }
@@ -206,6 +207,7 @@ module.exports = {
             model,
             wiki = yield wikiApi.$getWiki(id, true),
             tree = yield wikiApi.$getWikiTree(wiki.id, true);
+        wiki.type = 'wiki';
         wiki.content = helper.md2html(wiki.content, true);
         wiki.reads = yield cache.$incr(wiki.id);
         model = {
@@ -225,6 +227,7 @@ module.exports = {
         }
         wiki = yield wikiApi.$getWiki(id);
         tree = yield wikiApi.$getWikiTree(id, true);
+        wikipage.type = 'wikipage';
         wikipage.reads = yield cache.$incr(wikipage.id);
         wikipage.content = helper.md2html(wikipage.content, true);
         model = {

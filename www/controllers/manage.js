@@ -31,29 +31,6 @@ var
 
 var apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
-function getAllNavigationMenus(callback) {
-    var fns = _.map(apisList, function (theApi) {
-        // return [menu1, menu2, ... ]
-        if (typeof (theApi.getNavigationMenus) === 'function') {
-            return theApi.getNavigationMenus;
-        }
-        return function (callback) {
-            callback(null, []);
-        };
-    });
-    async.series(fns, function (err, results) {
-        var menus = _.flatten(results);
-        _.each(menus, function (m, index) {
-            m.index = index.toString();
-        });
-        return callback(null, menus);
-    });
-}
-
-function safeEncodeJSON(obj) {
-    return '\'' + encodeURIComponent(JSON.stringify(obj)).replace(/\'/g, '\\\'') + '\'';
-}
-
 // do management console
 
 var KEY_WEBSITE = constants.cache.WEBSITE;
@@ -304,12 +281,27 @@ module.exports = {
 
     // setting ////////////////////////////////////////////////////////////////
 
-    'GET /manage/setting/(website)?': function* () {
+    'GET /manage/setting/': function* () {
+        this.response.redirect('/manage/setting/website');
+    },
+
+    'GET /manage/setting/:g': function* (g) {
         this.render('manage/setting/setting_form.html', yield $getModel({
+            tabs: [
+                {
+                    key: 'website',
+                    name: 'Website'
+                },
+                {
+                    key: 'snippets',
+                    name: 'Snippets'
+                }
+            ],
+            group: g,
             form: {
-                name: 'Edit Website Settings',
-                action: '/api/settings/website',
-                redirect: 'website'
+                name: 'Edit Settings',
+                action: '/api/settings/' + g,
+                redirect: g
             }
         }));
     }
