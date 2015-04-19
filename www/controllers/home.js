@@ -119,35 +119,40 @@ function getView(view) {
     return 'themes/default/' + view;
 }
 
+function* getIndexModel() {
+    var
+        i, hotArticles,
+        categories = yield categoryApi.$getCategories(),
+        recentArticles = yield articleApi.$getRecentArticles(20),
+        nums = yield cache.$counts(_.map(recentArticles, function (a) {
+            return a.id;
+        })),
+        getCategoryName = function (cid) {
+            var c, i;
+            for (i = 0; i < categories.length; i++) {
+                c = categories[i];
+                if (c.id === cid) {
+                    return c.name;
+                }
+            }
+            return '';
+        };
+    for (i = 0; i < recentArticles.length; i++) {
+        recentArticles[i].reads = nums[i];
+    }
+    hotArticles = _.take(_.sortBy(recentArticles, function (a) {
+        return 0 - a.reads;
+    }), 5);
+    return {
+        recentArticles: recentArticles,
+        hotArticles: hotArticles
+    };
+}
+
 module.exports = {
 
     'GET /': function* () {
-        var
-            i, model,
-            categories = yield categoryApi.$getCategories(),
-            articles = yield articleApi.$getRecentArticles(20),
-            nums = yield cache.$counts(_.map(articles, function (a) {
-                return a.id;
-            })),
-            getCategoryName = function (cid) {
-                var c, i;
-                for (i = 0; i < categories.length; i++) {
-                    c = categories[i];
-                    if (c.id === cid) {
-                        return c.name;
-                    }
-                }
-                return '';
-            };
-        for (i = 0; i < articles.length; i++) {
-            articles[i].reads = nums[i];
-        }
-        model = {
-            //
-        };
-        //    model.articles = articles;
-        //    model.hotArticles = getHotArticles(articles);
-        //    return processTheme('index.html', model, req, res, next);
+        var model = yield cache.$get('INDEX-MODEL', getIndexModel);
         this.render(getView('index.html'), yield $getModel.apply(this, [model]));
     },
 
