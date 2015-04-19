@@ -174,6 +174,7 @@
                 </ul>
                 {% endif %}
 
+<!--
                 <div class="uk-navbar-content x-hidden-tiny">
                     <form id="form-search" class="uk-form uk-margin-remove uk-display-inline-block">
                         <div class="uk-form-icon">
@@ -182,11 +183,12 @@
                         </div>
                     </form>
                 </div>
+-->
 
-                <div class="uk-navbar-flip x-hidden-tiny">
+                <div class="uk-navbar-flip">
                     <ul class="uk-navbar-nav">
                         <li class="uk-parent x-display-if-signin" data-uk-dropdown>
-                            <a href="#0"><i class="uk-icon-user"></i> <span class="x-user-name">{% if __user__ %}{{ __user__.name }}{% endif %}</span></a>
+                            <a href="#0"><i class="uk-icon-user"></i><span class="x-hidden-tiny">&nbsp;</span><span class="x-user-name x-hidden-tiny">{% if __user__ %}{{ __user__.name }}{% endif %}</span></a>
                             <div class="uk-dropdown uk-dropdown-navbar">
                                 <ul class="uk-nav uk-nav-navbar">
                                     <li><a target="_blank" href="/me/profile"><i class="uk-icon-cogs"></i> {{ _('Profile') }}</a></li>
@@ -195,7 +197,7 @@
                                 </ul>
                             </div>
                         </li>
-                        <li class="x-display-if-not-signin uk-hidden-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i> Sign In</a></li>
+                        <li class="x-display-if-not-signin uk-hidden-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i> {{ _('Sign In') }}</a></li>
                         <li class="x-display-if-not-signin uk-visible-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i></a></li>
                     </ul>
                 </div>
