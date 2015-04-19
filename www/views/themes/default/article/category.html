@@ -30,7 +30,7 @@
         <div>
             <p><a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.reads }}</p>
             <p>{{ a.description }}</p>
-            <p><a href="/article/{{ a.id }}" class="uk-button uk-button-primary">Read More »</a></p>
+            <p><a href="/article/{{ a.id }}" class="uk-button uk-button-primary">{{ _('Read more') }} »</a></p>
         </div>
     </div>
     {% endfor %}
