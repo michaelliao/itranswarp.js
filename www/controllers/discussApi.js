@@ -232,7 +232,7 @@ function* $createTopic(user, board_id, ref_type, ref_id, data) {
             ref_type: ref_type,
             ref_id: ref_id,
             name: data.name.trim(),
-            tags: data.tags.trim(),
+            tags: (data.tags || '').trim(),
             content: helper.md2html(data.content)
         });
     yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
