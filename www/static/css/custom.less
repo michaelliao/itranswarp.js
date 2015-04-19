@@ -212,12 +212,20 @@ div.x-goto-top {
     }
 }
 
-// customize board nav:
+// make all invisible:
 
-.x-board-nav {
+.x-index-visible,
+.x-user-visible,
+.x-article-visible,
+.x-category-visible,
+.x-wiki-visible,
+.x-discuss-visible,
+.x-topic-visible,
+.x-webpage-visible {
+    display: none;
 }
 
-// uikit fix:
+// uikit slideshow copied from uikit-docs:
 
 .x-content {
     pre, p {
@@ -226,6 +234,8 @@ div.x-goto-top {
         white-space: pre-wrap;
     }
 }
+
+// uikit fix:
 
 .uk-pagination {
     > .uk-disabled {
