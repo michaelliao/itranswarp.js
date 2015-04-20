@@ -97,7 +97,7 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
         scale_height;
     if (resize_width * origin_height === origin_width * resize_height) {
         // fit!
-        console.log('resizeAsCover: fit!')
+        console.log('resizeAsCover: fit!');
         img = img.resize(resize_width, resize_height);
         return img.toBuffer(callback);
     }
@@ -129,6 +129,6 @@ module.exports = {
 
     $resizeAsCover: thunkify(resizeAsCover),
 
-    calcScaleSize: calcScaleSize,
-    
+    calcScaleSize: calcScaleSize
+
 };
