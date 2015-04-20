@@ -25,7 +25,7 @@ $(function() {
                     };
                 $form.postJSON('/api/authenticate', data, function(err, result) {
                     if (! err) {
-                        location.assign('/manage/overview');
+                        location.assign('/manage/');
                     }
                 });
             }
