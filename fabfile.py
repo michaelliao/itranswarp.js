@@ -54,7 +54,7 @@ def build():
     with lcd('www'):
         local('gulp')
     includes = ['*']
-    excludes = ['gulpfile.js', 'schema.js', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
+    excludes = ['config_development.js', 'gulpfile.js', 'schema.*', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
     local('rm -f dist/%s' % _TAR_FILE)
     with lcd('www'):
         cmd = ['tar', '--dereference', '-czvf', '../dist/%s' % _TAR_FILE]
