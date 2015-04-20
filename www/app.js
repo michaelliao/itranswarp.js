@@ -75,7 +75,6 @@ if (process.productionMode) {
     app.on('error', function (err) {
         console.error('unhandled error.', err);
     });
-    serveStatic();
 }
 else {
     serveStatic();
