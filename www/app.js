@@ -48,15 +48,10 @@ swig.setFilter('min', function (input) {
     return h + ' hours ' + m + ' minutes';
 });
 
-if (process.productionMode) {
-    app.on('error', function (err) {
-        console.error('unhandled error.', err);
-    });
-}
-else {
-    // serve static files:
+// serve static files:
+function serveStatic() {
     var root = __dirname;
-    app.use(function* serveStatic(next) {
+    app.use(function* (next) {
         var
             method = this.request.method,
             path = this.request.path,
@@ -74,6 +69,16 @@ else {
             yield next;
         }
     });
+}
+
+if (process.productionMode) {
+    app.on('error', function (err) {
+        console.error('unhandled error.', err);
+    });
+    serveStatic();
+}
+else {
+    serveStatic();
 }
 
 function logJSON(data) {
