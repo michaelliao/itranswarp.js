@@ -68,4 +68,4 @@ gulp.task('less', function () {
         .pipe(gulp.dest('./static/css'));
 });
 
-gulp.task('default', ['jslint', 'uglify', 'less']);
+gulp.task('default', ['uglify', 'less']);
