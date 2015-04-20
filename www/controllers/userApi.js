@@ -313,7 +313,7 @@ module.exports = {
         if (jscallback) {
             this.body = '<html><body><script> window.opener.'
                       + jscallback
-                      + '(' + JSON.stringify({
+                      + '(null,' + JSON.stringify({
                           id: user.id,
                           name: user.name,
                           image_url: user.image_url

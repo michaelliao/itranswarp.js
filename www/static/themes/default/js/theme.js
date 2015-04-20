@@ -558,9 +558,13 @@ var isDesktop = (function() {
     return ua.indexOf('windows nt')>=0 || ua.indexOf('macintosh')>=0;
 })();
 
-function onAuthCallback(user) {
+function onAuthCallback(err, user) {
     if (signinModal !== null) {
         signinModal.hide();
+    }
+    if (err) {
+        // handle error...
+        return;
     }
     g_user = {
         id: user.id,
