@@ -33,8 +33,10 @@
     "less": "1.x",
     "mocha": "2.x",
     "should": "3.x",
-    "gulp-jslint": "*",
     "gulp-less": "*",
+    "gulp-jslint": "*",
+    "gulp-uglify": "*",
+    "gulp-concat": "*",
     "gulp-minify-css": "*",
     "gulp": "^3.6.2"
   }
