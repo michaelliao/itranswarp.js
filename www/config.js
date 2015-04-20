@@ -34,9 +34,20 @@ if (process.productionMode) {
         throw 'config_production.js not found when running in production mode!';
     }
 }
+else {
+    if (fs.existsSync(__dirname + '/config_development.js')) {
+        console.log('loading config_development...');
+        var ovr = require('./config_development');
+        cfg = _.merge(cfg, ovr);
+    }
+    else {
+        console.warn('config_development.js not found!');
+    }
+}
 
 cfg.version = '1.0';
-cfg.build = '1503041223';
+// replace by deployment:
+cfg.build = '$BUILD$';
 
 console.log('configuration loaded:');
 console.log(JSON.stringify(cfg, null, '  '));
