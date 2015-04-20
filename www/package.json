@@ -35,6 +35,7 @@
     "should": "3.x",
     "gulp-jslint": "*",
     "gulp-less": "*",
+    "gulp-minify-css": "*",
     "gulp": "^3.6.2"
   }
 }
