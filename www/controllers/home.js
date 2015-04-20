@@ -71,43 +71,12 @@ var $getNavigations = function* () {
     return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
 };
 
-function createCommentByType(ref_type, checkFunction, req, res, next) {
-    if (utils.isForbidden(req, constants.ROLE_GUEST)) {
-        return next(api.notAllowed('Permission denied.'));
-    }
-    var content, ref_id;
-    try {
-        content = formatComment(utils.getRequiredParam('content', req)).trim();
-        if (!content) {
-            return next(api.invalidParam('content', 'Content cannot be empty.'));
-        }
-    } catch (e) {
-        return next(e);
-    }
-    ref_id = req.params.id;
-    checkFunction(ref_id, function (err, entity, path) {
-        if (err) {
-            return next(err);
-        }
-        commentApi.createComment(ref_type, ref_id, req.user, content, function (err, comment) {
-            if (isSyncComments) {
-                utils.sendToSNS(req.user, content, 'http://' + req.host + path);
-            }
-            return res.send(comment);
-        });
-    });
-}
-
-function getHotArticles(articles) {
-    var arr = articles.slice(0).sort(function (a1, a2) {
-        return a1.reads > a2.reads ? -1 : 1;
-    });
-    return arr.length > 3 ? arr.slice(0, 3) : arr;
-}
-
-var THEME = config.theme;
+var
+    THEME = config.theme,
+    PRODUCTION = process.productionMode;
 
 function* $getModel(model) {
+    model.__production__ = PRODUCTION;
     model.__navigations__ = yield $getNavigations();
     model.__website__ = yield settingApi.$getWebsiteSettings();
     model.__snippets__ = yield settingApi.$getSnippets();
