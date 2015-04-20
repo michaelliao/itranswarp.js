@@ -191,7 +191,7 @@ module.exports = {
          */
         var wiki = yield $getWiki(id, true);
         if (this.request.query.format === 'html') {
-            wiki.content = helper.md2html(wiki.content);
+            wiki.content = helper.md2html(wiki.content, true);
         }
         this.body = wiki;
     },
@@ -449,7 +449,7 @@ module.exports = {
          */
         var wp = yield $getWikiPage(id, true);
         if (this.request.query.format === 'html') {
-            wp.content = helper.md2html(wp.content);
+            wp.content = helper.md2html(wp.content, true);
         }
         this.body = wp;
     },

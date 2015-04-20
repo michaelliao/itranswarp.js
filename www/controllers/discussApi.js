@@ -223,6 +223,28 @@ function* $getReplyPageIndex(topic, reply_id) {
     return Math.floor((num + 1) / 20) + 1;
 }
 
+function* $createReply(user, topic_id, data) {
+    var
+        reply,
+        topic = yield $getTopic(topic_id);
+    if (topic.locked) {
+        throw api.conflictError('Topic', 'Topic is locked.');
+    }
+    reply = yield Reply.$create({
+        topic_id: topic_id,
+        user_id: user.id,
+        content: helper.md2html(data.content)
+    });
+    yield warp.$update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), topic_id]);
+    reply.name = 'Re:' + topic.name;
+    indexDiscuss(reply);
+    delete reply.name;
+    if (topic.ref_id) {
+        yield cache.$remove('REF-TOPICS-' + topic.ref_id);
+    }
+    return reply;
+}
+
 function* $createTopic(user, board_id, ref_type, ref_id, data) {
     var
         board = yield $getBoard(board_id),
@@ -564,26 +586,9 @@ module.exports = {
          * @return {object} The reply object.
          */
         helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-
-        var
-            topic, reply,
-            data = this.request.body;
+        var data = this.request.body;
         json_schema.validate('createReply', data);
-
-        topic = yield $getTopic(id);
-        if (topic.locked) {
-            throw api.conflictError('Topic', 'Topic is locked.');
-        }
-        reply = yield Reply.$create({
-            topic_id: id,
-            user_id: this.request.user.id,
-            content: helper.md2html(data.content)
-        });
-        yield warp.$update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), id]);
-        reply.name = 'Re:' + topic.name;
-        indexDiscuss(reply);
-        delete reply.name;
-        this.body = reply;
+        this.body = yield $createReply(this.request.user, id, data);
     }
 
 };
