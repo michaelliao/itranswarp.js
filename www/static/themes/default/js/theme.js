@@ -33,7 +33,7 @@ function initCommentArea(ref_type, ref_id, tag) {
             if (err) {
                 return;
             }
-            refresh();
+            refresh('#comments');
         });
     });
 }
@@ -366,10 +366,10 @@ function gotoPage(i) {
     location.assign('?' + $.param(r));
 }
 
-function refresh() {
+function refresh(anchor) {
     var r = parseQueryString();
     r.t = new Date().getTime();
-    location.assign('?' + $.param(r));
+    location.assign('?' + $.param(r) + (anchor ? anchor : ''));
 }
 
 // extends jQuery.form:
