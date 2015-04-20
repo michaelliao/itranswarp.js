@@ -14,7 +14,8 @@
 {% endblock %}
 
 {% block content %}
-    <div class="uk-slidenav-position" data-uk-slideshow="{autoplay:true,pauseOnHover:false,kenburns:true}">
+    <h3>{{ _('Hot Articles') }}</h3>
+    <div style="max-width:640px;" class="uk-slidenav-position" data-uk-slideshow="{autoplay:true,pauseOnHover:false,kenburns:true}">
         <ul class="uk-slideshow uk-overlay-active">
             {% for a in hotArticles %}
             <li>

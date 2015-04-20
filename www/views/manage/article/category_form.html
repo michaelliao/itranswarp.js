@@ -58,8 +58,8 @@ function initVM(category) {
 
     <div id="vm" class="uk-width-1-1">
         <ul class="uk-tab" data-uk-tab>
-            <li><a href="#0" onclick="location.assign('/manage/article/')">Articles</a></li>
-            <li class="uk-active"><a href="#0">Categories</a></li>
+            <li><a href="#0" onclick="location.assign('/manage/article/')">{{ _('Articles') }}</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Categories') }}</a></li>
         </ul>
         <form v-on="submit: submit" class="uk-margin uk-form uk-form-stacked">
             <legend>{{ form.name }}</legend>

@@ -92,8 +92,8 @@ function initVM(data) {
 
     <div id="vm" class="uk-width-1-1">
         <ul class="uk-tab" data-uk-tab>
-            <li class="uk-active"><a href="#0">Articles</a></li>
-            <li><a href="#0" onclick="location.assign('/manage/article/category_list')">Categories</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Articles') }}</a></li>
+            <li><a href="#0" onclick="location.assign('/manage/article/category_list')">{{ _('Categories') }}</a></li>
         </ul>
         <div class="uk-margin">
             <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
