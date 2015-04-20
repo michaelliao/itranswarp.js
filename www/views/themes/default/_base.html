@@ -27,15 +27,17 @@
     <meta name="keywords" content="{{ __website__.keywords }}" />
     <meta name="description" content="{{ __website__.description }}" />
     <meta property="x-nav" content="{% block nav %}/{% endblock %}" />
+    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
     {% block meta %}<!-- meta here -->{% endblock %}
-
+    <!-- BEGIN CSS COMPRESS -->
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/highlight.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
-    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+    <!-- END CSS COMPRESS -->
     <!--[if lt IE 10]>
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css" />
     <![endif]-->
+    <!-- BEGIN JAVASCRIPT COMPRESS -->
     <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/marked.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/uikit.js"></script>
@@ -45,6 +47,7 @@
     <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/theme.js"></script>
+    <!-- END JAVASCRIPT COMPRESS -->
 
     <script id="tplComment" type="text/plain">
         <div class="uk-comment">
