@@ -34,7 +34,11 @@ module.exports = {
         // timeout before initial a connection to mysql, default to 3 seconds:
         connectTimeout: 3000,
         // maximum concurrent db connections:
-        connectionLimit: 20
+        connectionLimit: 20,
+        // acquire timeout:
+        acquireTimeout: 3000,
+        // waiting queue size:
+        queueLimit: 10
     },
     // NOT USED NOW:
     cdn: {
