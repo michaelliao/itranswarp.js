@@ -342,45 +342,46 @@ module.exports = {
         this.render(getView('signin.html'), yield $getModel.apply(this, [{}]));
     },
 
-    'GET /search': function (req, res, next) {
-        var
-            page,
-            q = req.query.q || '',
-            type = req.query.type,
-            opt = {};
-        if (searchEngine.external) {
-            return res.redirect(searchEngine.search(q));
-        }
-        console.log(JSON.stringify(searchTypeValues));
-        if (!searchTypeValues[type]) {
-            type = searchTypes[0].value;
-        }
-        if (type) {
-            opt.filter = {
-                field: 'type',
-                value: type
-            };
-        }
-        page = utils.getPage(req);
-        opt.start = page.offset;
-        opt.hit = page.itemsPerPage;
+    'GET /search': function* () {
+        this.body = 'blank';
+        // var
+        //     page,
+        //     q = req.query.q || '',
+        //     type = req.query.type,
+        //     opt = {};
+        // if (searchEngine.external) {
+        //     return res.redirect(searchEngine.search(q));
+        // }
+        // console.log(JSON.stringify(searchTypeValues));
+        // if (!searchTypeValues[type]) {
+        //     type = searchTypes[0].value;
+        // }
+        // if (type) {
+        //     opt.filter = {
+        //         field: 'type',
+        //         value: type
+        //     };
+        // }
+        // page = utils.getPage(req);
+        // opt.start = page.offset;
+        // opt.hit = page.itemsPerPage;
 
-        searchEngine.search(q.replace(/\'/g, '').replace(/\"/g, ''), opt, function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            if (r.status !== 'OK') {
-                return res.send(500);
-            }
-            page.totalItems = r.result.total;
-            var model = {
-                searchTypes: searchTypes,
-                type: type,
-                page: page,
-                q: q,
-                results: r.result.items
-            };
-            return processTheme('search.html', model, req, res, next);
-        });
+        // searchEngine.search(q.replace(/\'/g, '').replace(/\"/g, ''), opt, function (err, r) {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     if (r.status !== 'OK') {
+        //         return res.send(500);
+        //     }
+        //     page.totalItems = r.result.total;
+        //     var model = {
+        //         searchTypes: searchTypes,
+        //         type: type,
+        //         page: page,
+        //         q: q,
+        //         results: r.result.items
+        //     };
+        //     return processTheme('search.html', model, req, res, next);
+        // });
     }
 };
