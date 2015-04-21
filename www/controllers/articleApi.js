@@ -136,7 +136,7 @@ function* $getFeed(domain) {
         i, text, article, url,
         articles = yield $getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
-        website = yield $settingApi.$getSettingsByDefaults('website', settingApi.defaultSettings.website),
+        website = yield settingApi.$getWebsiteSettings(),
         rss = [],
         rss_footer = '</channel></rss>';
     rss.push('<?xml version="1.0"?>\n');
@@ -194,12 +194,13 @@ module.exports = {
     'GET /feed': function* () {
         var
             rss,
+            host = this.request.host,
             gf = function* () {
-                return yield $getFeed(this.request.host);
+                return yield $getFeed(host);
             };
         rss = yield cache.$get('cached_rss', gf);
         this.set('Cache-Control', 'max-age: 3600');
-        this.type = 'application/rss+xml';
+        this.type = 'text/xml';
         this.body = rss;
     },
 
