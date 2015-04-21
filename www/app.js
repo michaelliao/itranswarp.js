@@ -170,11 +170,11 @@ app.use(function* theMiddleware(next) {
             };
         }
         else if (err.status === 404 || err.error === 'entity:notfound') {
-            this.render('404.html', {});
+            response.body = '404 Not Found'; //this.render('404.html', {});
         }
         else {
             console.log(err.stack);
-            this.render('500.html', {});
+            response.body = '500 Internal Server Error'; this.render('500.html', {});
         }
     }
     if (isApi) {
