@@ -77,15 +77,15 @@ function initVM(wiki) {
                 event.preventDefault();
                 var
                     data,
-                    form = $('#vm').find('form');
+                    $form = $('#vm').find('form');
                 try {
                     data = this.getPostData();
                 }
                 catch (e) {
-                    form.showFormError(e);
+                    $form.showFormError(e);
                     return;
                 }
-                form.postJSON('{{ form.action}}', data, function (err, r) {
+                $form.postJSON('{{ form.action}}', data, function (err, r) {
                     if (!err) {
                         window.onbeforeunload = null;
                         location.assign('{{ form.redirect }}');
