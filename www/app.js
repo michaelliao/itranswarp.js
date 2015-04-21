@@ -104,6 +104,8 @@ app.use(auth.$userIdentityParser);
 
 app.use(bodyParser());
 
+var isDevelopment = !process.productionMode;
+
 app.use(function* theMiddleware(next) {
     var
         request = this.request,
@@ -115,7 +117,7 @@ app.use(function* theMiddleware(next) {
         start = Date.now(),
         execTime,
         isApi = path.indexOf('/api/') === 0;
-    console.log('%s %s', method, path);
+    console.log('[%s] %s %s', new Date().toString(), method, path);
 
     if (prefix8 === '/manage/' && request.path !== '/manage/signin') {
         if (! request.user || request.user.role > constants.role.CONTRIBUTOR) {
@@ -125,8 +127,10 @@ app.use(function* theMiddleware(next) {
     }
 
     if (isApi) {
-        console.log('[Request]');
-        logJSON(request.body);
+        if (isDevelopment) {
+            console.log('[API Request]');
+            logJSON(request.body);
+        }
     }
     else {
         this.render = function (templ, model) {
@@ -174,8 +178,10 @@ app.use(function* theMiddleware(next) {
         }
     }
     if (isApi) {
-        console.log('[Response]');
-        logJSON(response.body);
+        if (isDevelopment) {
+            console.log('[API Response]');
+            logJSON(response.body);
+        }
     }
 });
 
