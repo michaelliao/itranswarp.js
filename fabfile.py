@@ -16,7 +16,7 @@ from fabric.api import *
 env.user = 'root'
 
 # linux hosts:
-env.hosts = ['www.liaoxuefeng.com']
+env.hosts = ['www.liaoxuefeng.com', 'www.liaoxuefeng.com:23']
 
 # linux mysql user and password:
 db_user = 'www'
@@ -79,7 +79,7 @@ def scp():
     with settings(warn_only=True):
         run('supervisorctl stop itranswarp')
         run('supervisorctl start itranswarp')
-        run('/etc/init.d/nginx reload')
+        #run('/etc/init.d/nginx reload')
 
 RE_FILES = re.compile('\r?\n')
 
