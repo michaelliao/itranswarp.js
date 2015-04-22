@@ -144,6 +144,8 @@
 {% set __sidebar_right_width__ = '316px' %}
 {% set __sidebar_right_padding__ = true %}
 
+{% set __offcanvas_left__ = false %}
+
 {% block head %}<!-- head  -->{% endblock %}
 <!-- BEGIN custom_header -->
 {{ __website__.custom_header|safe }}
@@ -159,6 +161,11 @@
     <div id="header" class="uk-navbar uk-navbar-attached">
         <div class="uk-container x-container">
             <div class="uk-navbar uk-navbar-attached">
+                {% if __offcanvas_left__ %}
+                <ul class="uk-navbar-nav uk-visible-small">
+                    <li><a href="#0" onclick="UIkit.offcanvas.show('#x-offcanvas-left')"><i class="uk-icon-chevron-right"></i></a></li>
+                </ul>
+                {% endif %}
                 <a href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
                 <a href="/" class="uk-navbar-brand uk-hidden-large"><i class="uk-icon-home"></i></a>
                 <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
@@ -269,6 +276,16 @@
         </div>
         <div class="x-push-to-bottom"></div>
     </div>
+
+{% if __offcanvas_left__ %}
+    <div id="x-offcanvas-left" class="uk-offcanvas">
+        <div class="uk-offcanvas-bar">
+            <div class="uk-panel">
+                {% block offcanvas_left %}override block "offcanvas_left"{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endif %}
 
     <div id="footer">
         <div class="uk-container x-container">

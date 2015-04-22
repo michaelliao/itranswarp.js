@@ -15,7 +15,7 @@
     {% set __sidebar_left__ = true %}
     {% set __sidebar_left_width__ = '260px' %}
     {% set __sidebar_left_padding__ = false %}
-
+    {% set __offcanvas_left__ = true %}
 <style>
 .x-wiki-visible {
     display: block;
@@ -47,6 +47,7 @@ $(function () {
         next = current.next().find('a'),
         L = [];
     current.addClass('uk-active');
+    $('#off-{{ current.id }}').addClass('uk-active');
     L.push('<div class="uk-clearfix uk-margin-left uk-margin-right">');
     if (prev.length > 0) {
         L.push('<span class="uk-float-left"><i class="uk-icon-chevron-left"></i> <a href="');
@@ -68,7 +69,6 @@ $(function () {
 </script>
 {% endblock %}
 
-
 {% block sidebar_left_content %}
     <ul class="uk-nav uk-nav-side">
         <li class="uk-nav-header">Index</li>
@@ -77,6 +77,21 @@ $(function () {
         <li id="{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
     {% for n in tree %}
         <li id="{{ n.id }}" style="margin-left:{{ n.depth + 1 }}em;">
+            <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+    <div class="x-placeholder"></div>
+{% endblock %}
+
+{% block offcanvas_left %}
+    <ul class="uk-nav uk-nav-side">
+        <li class="uk-nav-header">Index</li>
+    </ul>
+    <ul class="uk-nav uk-nav-side">
+        <li id="off-{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
+    {% for n in tree %}
+        <li id="off-{{ n.id }}" style="margin-left:{{ n.depth + 1 }}em;">
             <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
         </li>
     {% endfor %}
