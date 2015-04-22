@@ -158,7 +158,7 @@ app.use(function* theMiddleware(next) {
         execTime = String(Date.now() - start);
         response.set('X-Execution-Time', execTime);
         console.log('X-Execution-Time: ' + execTime);
-        console.log('[error] error cached!');
+        console.log('[Error] error when handle url: ' + request.path);
         console.log(err.stack);
         response.set('X-Execution-Time', String(Date.now() - start));
         if (isApi) {
@@ -174,7 +174,10 @@ app.use(function* theMiddleware(next) {
         }
         else {
             console.log(err.stack);
-            response.body = '500 Internal Server Error'; this.render('500.html', {});
+            response.body = '500 Internal Server Error'; //this.render('500.html', {});
+        }
+        if (execTime > 1000) {
+            console.error('[ERR] X-Execution-Time too long: ' + execTime);
         }
     }
     if (isApi) {
