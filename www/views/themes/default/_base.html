@@ -24,6 +24,7 @@
 <head>
     <meta charset="utf-8" />
     <title>{% block title %} ??? {% endblock %} - {{ __website__.name }}</title>
+    <meta name="viewport" content="width=device-width" />
     <meta name="keywords" content="{{ __website__.keywords }}" />
     <meta name="description" content="{{ __website__.description }}" />
     <meta property="x-nav" content="{% block nav %}/{% endblock %}" />
@@ -226,7 +227,7 @@
                     <div class="uk-clearfix">
                         {% block sidebar_left_top %}{{ __snippets__.sidebar_left_top|safe }}{% endblock %}
                     </div>
-                    <div>
+                    <div class="x-sidebar-left-content">
                         {% block sidebar_left_content %}<h3>override block "sidebar_left_content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
@@ -238,7 +239,7 @@
                     <div class="uk-clearfix">
                         {% block content_top %}{{ __snippets__.content_top|safe }}{% endblock %}
                     </div>
-                    <div>
+                    <div class="x-content">
                         {% block content %}<h3>override block "content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
@@ -250,7 +251,7 @@
                     <div class="uk-clearfix">
                         {% block sidebar_right_top %}<!-- __snippets__.sidebar_right_top -->{{ __snippets__.sidebar_right_top|safe }}{% endblock %}
                     </div>
-                    <div>
+                    <div class="x-sidebar-right-content">
                         {% block sidebar_right_content %}<h3>override block "sidebar_right_content"</h3>{% endblock %}
                     </div>
                     <div class="uk-clearfix">
