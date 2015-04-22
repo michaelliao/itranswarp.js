@@ -82,26 +82,29 @@ module.exports = {
             k = CACHE_PREFIX + key,
             data = yield $m_get(k);
         if (data) {
-            console.log('[cache] hit: ' + key);
+            // console.log('[cache] hit: ' + key);
             return data;
         }
-        console.log('[cache] NOT hit: ' + key);
+        console.log('[Cache] NOT hit: ' + key);
         if (defaultValueOrFn) {
             if (typeof (defaultValueOrFn) === 'function') {
                 lifetime = lifetime || DEFAULT_LIFETIME;
                 if (defaultValueOrFn.constructor.name === 'GeneratorFunction') {
-                    console.log('yield generator...');
+                    console.log('yield generator to fill cache...');
                     data = yield defaultValueOrFn();
-                    console.log('done!')
+                    console.log('yield generator ok.')
                 }
                 else {
+                    console.log('call function to fill cache...');
                     data = defaultValueOrFn();
+                    console.log('call function ok.');
                 }
-                yield $m_set(k, data, lifetime);
             }
             else {
                 data = defaultValueOrFn;
             }
+            yield $m_set(k, data, lifetime);
+            console.log('[cache] cache set for key: ' + key);
         }
         else {
             data = null;
