@@ -82,9 +82,21 @@
     transition: background-color 1s, border-color 1s;
 }
 
+@nav-side-header-color:   #ccc;
+
 // table:
 
 @table-hover-background:                        darken(@table-striped-background, 2%);
+
+// offcanvas:
+
+.hook-nav-side-hover() {
+    text-shadow: none;
+}
+
+.hook-offcanvas-panel() {
+    text-shadow: none;
+}
 
 // customize comments:
 
