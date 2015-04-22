@@ -74,7 +74,7 @@ function serveStatic() {
 
 if (process.productionMode) {
     app.on('error', function (err) {
-        console.error('unhandled error.', err);
+        console.error(new Date().toISOString() + ' [Unhandled ERR] ', err);
     });
 }
 else {
@@ -118,7 +118,7 @@ app.use(function* theMiddleware(next) {
         start = Date.now(),
         execTime,
         isApi = path.indexOf('/api/') === 0;
-    console.log('[%s] %s %s', new Date().toString(), method, path);
+    console.log('[%s] %s %s', new Date().toISOString(), method, path);
 
     if (prefix8 === '/manage/' && request.path !== '/manage/signin') {
         if (! request.user || request.user.role > constants.role.CONTRIBUTOR) {
@@ -165,6 +165,7 @@ app.use(function* theMiddleware(next) {
         response.set('X-Execution-Time', String(Date.now() - start));
         if (err.code && err.code === 'POOL_ENQUEUELIMIT') {
             // force kill node process:
+            console.error(new Date().toISOString() + ' [FATAL] POOL_ENQUEUELIMIT, process exit 1.');
             process.exit(1);
         }
         if (isApi) {
@@ -179,11 +180,11 @@ app.use(function* theMiddleware(next) {
             response.body = '404 Not Found'; //this.render('404.html', {});
         }
         else {
-            console.log(err.stack);
+            console.error(new Date().toISOString() + ' [ERROR] 500 ', err.stack);
             response.body = '500 Internal Server Error'; //this.render('500.html', {});
         }
         if (execTime > 1000) {
-            console.error('[ERR] X-Execution-Time too long: ' + execTime);
+            console.error(new Date().toISOString() + ' [ERROR] X-Execution-Time too long: ' + execTime);
         }
     }
     if (isApi) {
