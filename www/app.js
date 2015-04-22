@@ -21,6 +21,7 @@ var
 
 var db = require('./db'),
     User = db.user,
+    hostname = require('os').hostname(),
     activeTheme = config.theme;
 
 app.name = 'itranswarp';
@@ -148,6 +149,7 @@ app.use(function* theMiddleware(next) {
     try {
         yield next;
         execTime = String(Date.now() - start);
+        response.set('X-Cluster-Node', hostname);
         response.set('X-Execution-Time', execTime);
         console.log('X-Execution-Time: ' + execTime);
         if (response.status === 404) {
@@ -161,6 +163,10 @@ app.use(function* theMiddleware(next) {
         console.log('[Error] error when handle url: ' + request.path);
         console.log(err.stack);
         response.set('X-Execution-Time', String(Date.now() - start));
+        if (err.code && err.code === 'POOL_ENQUEUELIMIT') {
+            // force kill node process:
+            process.exit(1);
+        }
         if (isApi) {
             // API error:
             response.body = {
