@@ -83,7 +83,7 @@ function* $getBoardByTag(tag) {
     var
         boards = yield $getBoards(),
         filtered = _.filter(boards, function (b) {
-            return b.tag = tag;
+            return b.tag === tag;
         });
     if (filtered.length === 0) {
         throw api.notFound('Board');
