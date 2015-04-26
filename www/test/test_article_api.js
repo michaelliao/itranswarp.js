@@ -21,11 +21,13 @@ describe('#articles', function () {
     before(function (done) {
         co(function* () {
             category = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: 'Article Category'
+                name: 'Article Category',
+                tag: 'cat1'
             });
             remote.shouldNoError(category);
             category2 = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: 'Article Category 2'
+                name: 'Article Category 2',
+                tag: 'cat2'
             });
             remote.shouldNoError(category2);
             return 'ok';
