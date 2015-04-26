@@ -1,3 +1,5 @@
+'use strict';
+
 // init mysql-warp and expose all models under dir 'models':
 
 console.log('init mysql with mysql-warp...');
@@ -6,10 +8,25 @@ var
     _ = require('lodash'),
     Warp = require('mysql-warp'),
     next_id = require('./models/_id'),
-    config = require('./config');
+    config = require('./config'),
+    thunkify = require('thunkify');
 
 // init database:
 var warp = Warp.create(config.db);
+
+warp.$transaction = thunkify(warp.transaction);
+warp.$query = thunkify(warp.query);
+warp.$queryNumber = thunkify(warp.queryNumber);
+warp.$update = thunkify(warp.update);
+
+var baseModel = warp.__model;
+
+baseModel.$find = thunkify(baseModel.find);
+baseModel.$findAll = thunkify(baseModel.findAll);
+baseModel.$findNumber = thunkify(baseModel.findNumber);
+baseModel.$create = thunkify(baseModel.create);
+baseModel.$update = thunkify(baseModel.update);
+baseModel.$destroy = thunkify(baseModel.destroy);
 
 // export warp and all model objects:
 var dict = {
@@ -27,9 +44,14 @@ var models = _.map(_.filter(files, function (f) {
     return fname.substring(0, fname.length - 3);
 });
 
-_.each(models, function (model) {
-    console.log('found model: ' + model);
-    dict[model] = require('./models/' + model)(warp);
+_.each(models, function (modelName) {
+    console.log('found model: ' + modelName);
+    var model = require('./models/' + modelName)(warp);
+    // thunkify all database operations:
+    _.each(['find', 'findAll', 'findNumber', 'create', 'update', 'destroy'], function (key) {
+        model['$' + key] = thunkify(model[key]);
+    });
+    dict[modelName] = model;
 });
 
 module.exports = dict;

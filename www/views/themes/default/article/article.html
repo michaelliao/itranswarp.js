@@ -1,70 +1,73 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
+
+{% block nav %} /category/{{ article.category_id }} {% endblock %}
 
 {% block meta %}
-    <meta property="x-nav" content="/category/{{ article.category_id }}" />
-
     <meta property="og:type" content="article" />
     <meta property="og:url" content="http://{{ __request__.host }}/article/{{ article.id }}" />
     <meta property="og:title" content="{{ article.name }}" />
     <meta property="og:description" content="{{ article.name }}" />
-    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" />
+    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/l" />
 {% endblock %}
 
 {% block title %}{{ article.name }}{% endblock %}
 
-{% block beforehead %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
+
+<style>
+.x-article-visible {
+    display: block;
+}
+</style>
+
 <script>
-var model = {
-    article: {
-        id: '{{ article.id }}',
-        category_id: '{{ article.category_id }}',
-        cover_id: '{{ article.cover_id }}',
-        cover_url: 'http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/l',
-        name: {{ article.name|json|safe }},
-        description: {{ article.description|json|safe }},
-        user_id: '{{ article.user_id }}',
-        user_name: {{ article.user_name|json|safe }}
+loadComments('{{ article.id }}');
+
+var
+    comment_type = 'article',
+    comment_ref_id = '{{ article.id }}',
+    comment_tag = '{{ category.tag }}';
+
+function onAuthSuccess() {
+    initCommentArea(comment_type, comment_ref_id, comment_tag);
+}
+
+$(function () {
+    if (g_user !== null) {
+        initCommentArea(comment_type, comment_ref_id, comment_tag);
     }
-};
+});
+
 </script>
 {% endblock %}
 
-{% block main %}
+{% block content %}
 
-<div class="x-article">
-    <div class="x-article-title">
-        <h4>{{ article.name }}</h4>
+    <h3>{{ article.name }}</h3>
+    <p><img src="/files/attachments/{{ article.cover_id }}/l" class="uk-responsive-width"></p>
+    <p><a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.reads }}</p>
+    <div class="x-article-content">
+        {{ article.content|safe }}
     </div>
-    <div class="x-article-info">
-        <a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.reads }}
-    </div>
-    <div class="x-article-cover-large" style="background-image: url(/files/attachments/{{ article.cover_id }}/l)"></div>
-    <div class="x-article-content x-content">
-        {{ article.html_content|safe }}
-    </div>
-</div>
 
-<h4>{{ _('Comments') }}</h4>
+    <div class="x-anchor"><a name="comments"></a></div>
 
-{{ makeComments('/article/' + article.id + '/comment', comments) }}
+    <h3>{{ _('Comments') }}</h3>
+
+    <ul id="x-comment-list" class="uk-comment-list">
+    </ul>
+
+    <h3>{{ _('Make a Comment') }}</h3>
+
+    <div class="x-display-if-not-signin">
+        <p><button type="button" class="uk-button" onclick="showSignin()"><i class="uk-icon-signin"></i> Sign In to Make a Comment</button></p>
+    </div>
+
+    <div id="x-comment-area"></div>
 
 {% endblock %}
 
-{% block sidebar %}
-    <div class="x-sidebar-section">
-        <h4>喜欢这篇文章？</h4>
-        <div style="height:66px">
-            <wb:like appkey="2f89Ml"></wb:like>
-        </div>
-    </div>
-    <div class="x-sidebar-section">
-        <h4>分享给朋友</h4>
-        <div style="height:66px">
-            <wb:share-button appkey="2f89Ml" addition="full" type="button" default_text="{{ article.name }}：{{ article.description }}" ralateUid="1658384301" pic="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/0" picture_search="false"></wb:share-button>
-        </div>
-    </div>
-    <div class="x-sidebar-section">
-        <h4>关于作者</h4>
-        <iframe width="278" height="330" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=zh_cn&width=278&height=330&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=1&uid=1658384301&verifier=078cedea&colors=0088cc,ffffff,333333,0082cb,d14836&dpc=1&rnd={{ __time__ }}"></iframe>
-    </div>
+{% block sidebar_right_content %}
+
 {% endblock %}

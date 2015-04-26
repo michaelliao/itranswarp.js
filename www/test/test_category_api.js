@@ -1,8 +1,12 @@
+'use strict';
+
 // test category api:
 
 var
-    remote = require('./_test'),
-    should = require('should');
+    should = require('should'),
+    remote = require('./_remote'),
+    constants = require('../constants'),
+    roles = constants.role;
 
 describe('#categories', function () {
 
@@ -10,154 +14,152 @@ describe('#categories', function () {
 
     describe('#api', function () {
 
-        it('should get empty categories', function (done) {
-            remote.get(remote.guest, '/api/categories', null, function (r) {
-                r.categories.length.should.equal(0);
-                done();
-            });
+        it('should get empty categories', function* () {
+            var r = yield remote.$get(roles.GUEST, '/api/categories');
+            remote.shouldNoError(r);
+            should(r.categories).be.ok;
+            r.categories.should.be.an.Array.and.have.length(0);
         });
 
-        it('create a new category by admin', function (done) {
-            remote.post(remote.admin, '/api/categories', {
-                name: ' Test Category  \n\n ',
+        it('create a new category by admin ok', function* () {
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: ' Test Category   ',
+                tag: 'java',
                 description: '  this is a test category...  '
-            }, function (r) {
-                should(r.display_order).equal(0);
-                r.display_order.should.equal(0);
-                r.name.should.equal('Test Category');
-                r.description.should.equal('this is a test category...');
-                r.version.should.equal(0);
-                r.id.should.be.ok.and.have.lengthOf(50);
-                // get by id:
-                remote.get(remote.guest, '/api/categories/' + r.id, null, function (r2) {
-                    r2.id.should.equal(r.id);
-                    r2.name.should.equal(r.name);
-                    r2.description.should.equal(r.description);
-                    r2.created_at.should.equal(r.created_at);
-                    r2.updated_at.should.equal(r.updated_at);
-                    // create another:
-                    remote.post(remote.admin, '/api/categories', {
-                        name: 'Another Category'
-                    }, function (r3) {
-                        r3.display_order.should.equal(1);
-                        // get all category:
-                        remote.get(remote.guest, '/api/categories', {}, function (r4) {
-                            r4.categories.should.be.an.Array.and.have.lengthOf(2);
-                            done();
-                        });
-                    });
-                });
             });
+            remote.shouldNoError(r);
+            r.display_order.should.equal(0);
+            r.name.should.equal('Test Category');
+            r.tag.should.equal('java');
+            r.description.should.equal('this is a test category...');
+            r.version.should.equal(0);
+            r.id.should.be.ok.and.have.lengthOf(50);
+            // get by id:
+            var r2 = yield remote.$get(roles.GUEST, '/api/categories/' + r.id);
+            remote.shouldNoError(r2);
+            r2.id.should.equal(r.id);
+            r2.name.should.equal(r.name);
+            r2.description.should.equal(r.description);
+            r2.created_at.should.equal(r.created_at);
+            r2.updated_at.should.equal(r.updated_at);
+            r2.version.should.equal(r.version);
+            // create another:
+            var r3 = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: 'Another Category ',
+                tag: 'java'
+            });
+            remote.shouldNoError(r3);
+            r3.name.should.equal('Another Category');
+            r3.display_order.should.equal(1);
+            // get all category:
+            var rs = yield remote.$get(roles.GUEST, '/api/categories');
+            remote.shouldNoError(rs);
+            rs.categories.should.be.an.Array.and.have.lengthOf(2);
         });
 
-        it('create new category with wrong parameter by admin', function (done) {
-            remote.post(remote.admin, '/api/categories', {
+        it('create new category with wrong parameter by admin', function* () {
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                tag: 'java',
                 description: '  no name parameter...  '
-            }, function (r) {
-                r.error.should.equal('parameter:invalid');
-                r.data.should.equal('name');
-                r.message.should.be.ok;
-                done();
             });
+            remote.shouldHasError(r, 'parameter:invalid', 'name');
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: '  no tag parameter...  '
+            });
+            remote.shouldHasError(r, 'parameter:invalid', 'tag');
         });
 
-        it('create new category by editor', function (done) {
-            remote.post(remote.editor, '/api/categories', {
+        it('create new category by editor', function* () {
+            var r = yield remote.$post(roles.EDITOR, '/api/categories', {
                 name: 'by editor',
+                tag: 'java',
                 description: '  parameter...  '
-            }, function (r) {
-                r.error.should.equal('permission:denied');
-                r.data.should.equal('permission');
-                r.message.should.be.ok;
-                done();
             });
+            remote.shouldHasError(r, 'permission:denied', 'permission');
         });
 
-        it('update a category by admin', function (done) {
-            remote.post(remote.admin, '/api/categories', {
-                name: ' Before Update   \n\n '
-            }, function (r) {
-                // try update its name and description:
-                remote.post(remote.admin, '/api/categories/' + r.id, {
-                    name: ' After Update\n   ',
-                    description: '  added description...  \t  '
-                }, function (r2) {
-                    r2.id.should.equal(r.id);
-                    r2.name.should.equal('After Update');
-                    r2.description.should.equal('added description...');
-                    r2.created_at.should.equal(r.created_at);
-                    r2.updated_at.should.greaterThan(r.updated_at);
-                    r2.version.should.equal(1);
-                    done();
-                });
+        it('update a category by admin', function* () {
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: ' Before Update     ',
+                tag: 'java',
+                description: '  '
             });
+            remote.shouldNoError(r);
+            r.name.should.equal('Before Update');
+            r.tag.should.equal('java');
+            r.description.should.equal('');
+            r.version.should.equal(0);
+            var r2 = yield remote.$post(roles.ADMIN, '/api/categories/' + r.id, {
+                name: ' After Update    ',
+                tag: 'python',
+                description: '  added description...  \t  '
+            });
+            remote.shouldNoError(r2);
+            r2.id.should.equal(r.id);
+            r2.name.should.equal('After Update');
+            r2.tag.should.equal('python');
+            r2.description.should.equal('added description...');
+            r2.created_at.should.equal(r.created_at);
+            r2.updated_at.should.greaterThan(r.updated_at);
+            r2.version.should.equal(1);
+            // query to verify:
+            var r3 = yield remote.$get(roles.ADMIN, '/api/categories/' + r.id);
+            remote.shouldNoError(r3);
+            r3.id.should.equal(r.id);
+            r3.name.should.equal('After Update');
+            r3.tag.should.equal('python');
+            r3.description.should.equal('added description...');
+            r3.created_at.should.equal(r.created_at);
+            r3.updated_at.should.greaterThan(r.updated_at);
+            r3.version.should.equal(1);
         });
 
-        it('update a category by editor', function (done) {
-            remote.post(remote.admin, '/api/categories', {
-                name: ' Before Update   \n\n '
-            }, function (r) {
-                // try update its name and description:
-                remote.post(remote.editor, '/api/categories/' + r.id, {
-                    name: ' After Update\n   ',
-                    description: '  added description...  \t  '
-                }, function (r2) {
-                    r2.error.should.equal('permission:denied');
-                    r2.data.should.equal('permission');
-                    r2.message.should.be.ok;
-                    done();
-                });
+        it('update a category by editor', function* () {
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: ' Before Update    ',
+                tag: 'java',
+                description: '  '
             });
+            remote.shouldNoError(r);
+            // try update its name and description:
+            var r2 = yield remote.$post(roles.EDITOR, '/api/categories/' + r.id, {
+                name: ' Try Update\n   ',
+                description: '  added description...  \t  '
+            });
+            remote.shouldHasError(r2, 'permission:denied', 'permission');
         });
 
-        it('delete a category by admin', function (done) {
+        it('delete a category by admin', function* () {
             // create first:
-            remote.post(remote.admin, '/api/categories', {
-                name: ' Before Delete   \t '
-            }, function (r) {
-                r.name.should.equal('Before Delete');
-                r.description.should.equal('');
-                r.version.should.equal(0);
-                r.id.should.have.lengthOf(50);
-                // try delete:
-                remote.post(remote.admin, '/api/categories/' + r.id + '/delete', null, function (r2) {
-                    r2.id.should.equal(r.id);
-                    // try get again:
-                    remote.get(remote.guest, '/api/categories/' + r.id, null, function (r3) {
-                        r3.error.should.equal('resource:notfound');
-                        r3.data.should.equal('Category');
-                        r3.message.should.be.ok;
-                        done();
-                    });
-                });
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: ' Before Delete  ',
+                tag: 'java',
+                description: '  '
             });
+            remote.shouldNoError(r);
+            r.name.should.equal('Before Delete');
+            // try delete:
+            var r2 = yield remote.$post(roles.ADMIN, '/api/categories/' + r.id + '/delete');
+            remote.shouldNoError(r2);
+            r2.id.should.equal(r.id);
+            // try get again:
+            var r3 = yield remote.$get(roles.GUEST, '/api/categories/' + r.id);
+            remote.shouldHasError(r3, 'entity:notfound', 'Category');
         });
 
-        it('delete a non-exist category by editor', function (done) {
-            remote.post(remote.editor, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000/delete', null, function (r) {
-                r.error.should.equal('permission:denied');
-                r.data.should.equal('permission');
-                r.message.should.be.ok;
-                done();
-            });
+        it('delete a non-exist category by editor', function* () {
+            var r = yield remote.$post(roles.EDITOR, '/api/categories/' + remote.next_id() + '/delete');
+            remote.shouldHasError(r, 'permission:denied', 'permission');
         });
 
-        it('delete a non-exist category by admin', function (done) {
-            remote.post(remote.admin, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000/delete', null, function (r) {
-                r.error.should.equal('resource:notfound');
-                r.data.should.equal('Category');
-                r.message.should.be.ok;
-                done();
-            });
+        it('delete a non-exist category by admin', function* () {
+            var r = yield remote.$post(roles.ADMIN, '/api/categories/' + remote.next_id() + '/delete');
+            remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
 
-        it('get non-exist category', function (done) {
-            remote.get(remote.guest, '/api/categories/001390000000000ffffffffffffffffffffffffffffffff000', null, function (r) {
-                r.error.should.equal('resource:notfound');
-                r.data.should.equal('Category');
-                r.message.should.be.ok;
-                done();
-            });
+        it('get non-exist category', function* () {
+            var r = yield remote.$get(roles.GUEST, '/api/categories/' + remote.next_id());
+            remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
     });
 });

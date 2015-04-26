@@ -7,6 +7,39 @@ if (! window.console) {
     };
 }
 
+console.log('init itranswarp.js...');
+
+// JS Template:
+
+function Template(tpl) {
+    var
+        fn,
+        match,
+        code = ['var r=[];\nvar _html = function (str) { return str.replace(/&/g, \'&amp;\').replace(/"/g, \'&quot;\').replace(/\'/g, \'&#39;\').replace(/</g, \'&lt;\').replace(/>/g, \'&gt;\'); };'],
+        re = /\{\s*([a-zA-Z\.\_0-9()]+)(\s*\|\s*safe)?\s*\}/m,
+        addLine = function (text) {
+            code.push('r.push(\'' + text.replace(/\'/g, '\\\'').replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '\');');
+        };
+    while (match = re.exec(tpl)) {
+        if (match.index > 0) {
+            addLine(tpl.slice(0, match.index));
+        }
+        if (match[2]) {
+            code.push('r.push(String(this.' + match[1] + '));');
+        }
+        else {
+            code.push('r.push(_html(String(this.' + match[1] + ')));');
+        }
+        tpl = tpl.substring(match.index + match[0].length);
+    }
+    addLine(tpl);
+    code.push('return r.join(\'\');');
+    fn = new Function(code.join('\n'));
+    this.render = function (model) {
+        return fn.apply(model);
+    };
+}
+
 if (! String.prototype.trim) {
     String.prototype.trim = function() {
         return this.replace(/^\s+|\s+$/g, '');
@@ -99,6 +132,44 @@ if (! Number.prototype.toFileSize) {
 
 // global functions:
 
+function getObjectURL(file) {
+    var url = '';
+    if (window.createObjectURL!=undefined) // basic
+        url = window.createObjectURL(file);
+    else if (window.URL!=undefined) // mozilla(firefox)
+        url = window.URL.createObjectURL(file);
+    else if (window.webkitURL!=undefined) // webkit or chrome
+        url = window.webkitURL.createObjectURL(file);
+    return url;
+}
+
+function encodeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// to human readable size:
+
+function size2string(value) {
+    if (value < 1024) {
+        return value + ' bytes';
+    }
+    value = value / 1024;
+    if (value < 1024) {
+        return value.toFixed(2) + ' KB';
+    }
+    value = value / 1024;
+    if (value < 1024) {
+        return value.toFixed(2) + ' MB';
+    }
+    value = value / 1024;
+    return value.toFixed(2) + ' GB';
+}
+
 var parseDateTime = (function() {
     var replaces = {
         'yyyy': {
@@ -186,158 +257,198 @@ var parseDateTime = (function() {
     };
 })();
 
-function gotoPage(index) {
-    if (index) {
-        var search = location.search;
-        var hasPageParam = search.search(/page\=\d+\&?/)!==(-1);
-        if (hasPageParam) {
-            search = search.replace(/page\=\d+\&?/g, '');
+// parse query string as object:
+
+function parseQueryString() {
+    var
+        q = location.search,
+        r = {},
+        i, pos, s, qs;
+    if (q && q.charAt(0)==='?') {
+        qs = q.substring(1).split('&');
+        for (i=0; i<qs.length; i++) {
+            s = qs[i];
+            pos = s.indexOf('=');
+            if (pos <= 0) {
+                continue;
+            }
+            r[s.substring(0, pos)] = decodeURIComponent(s.substring(pos+1)).replace(/\+/g, ' ');
         }
-        search = (search==='' || search==='?') ? ('?page=' + index) : (search + '&page=' + index);
-        location.assign(search);
     }
+    return r;
+}
+
+function gotoPage(i) {
+    var r = parseQueryString();
+    r.page = i;
+    location.assign('?' + $.param(r));
 }
 
 function refresh() {
-    var
-        p = location.pathname,
-        s = location.search,
-        t = new Date().getTime();
-    var url;
-    if (s) {
-        url = p + s + '&t=' + t;
-    }
-    else {
-        url = p + '?t=' + t;
-    }
-    location.assign(url);
+    var r = parseQueryString();
+    r.t = new Date().getTime();
+    location.assign('?' + $.param(r));
 }
 
-function showLoading(show) {
-    if (show) {
-        $('button[type=submit]').attr('disabled', 'disabled');
-        $('button[type=submit] > i').addClass('x-loading');
-    }
-    else {
-        $('button[type=submit]').removeAttr('disabled');
-        $('button[type=submit] > i').removeClass('x-loading');
-    }
-}
+$(function() {
+    $('.x-smartdate').each(function() {
+        $(this).removeClass('x-smartdate').text(toSmartDate($(this).attr('date')));
+    });
+});
 
-function showError(err, fieldName) {
-    // clear all errors:
-    $('div.control-group').removeClass('error');
-    // set error:
-    if (err) {
-        fieldName = fieldName || err.data;
-        if (fieldName) {
-            $('.field-' + fieldName).addClass('error');
-        }
-        $('.alert-error').text(err.message || err.error || err).show();
-        try {
-            if ($('.alert-error').offset().top < ($(window).scrollTop() - 41)) {
-                $('html,body').animate({scrollTop: $('.alert-error').offset().top - 41});
+// extends jQuery.form:
+
+$(function () {
+    console.log('Extends $form...');
+    $.fn.extend({
+        showFormError: function (err) {
+            return this.each(function () {
+                var
+                    $form = $(this),
+                    $alert = $form && $form.find('.uk-alert-danger'),
+                    fieldName = err && err.data;
+                if (! $form.is('form')) {
+                    console.error('Cannot call showFormError() on non-form object.');
+                    return;
+                }
+                $form.find('input').removeClass('uk-form-danger');
+                $form.find('select').removeClass('uk-form-danger');
+                $form.find('textarea').removeClass('uk-form-danger');
+                if ($alert.length === 0) {
+                    console.warn('Cannot find .uk-alert-danger element.');
+                    return;
+                }
+                if (err) {
+                    $alert.text(err.message ? err.message : (err.error ? err.error : err)).removeClass('uk-hidden').show();
+                    if (($alert.offset().top - 60) < $(window).scrollTop()) {
+                        $('html,body').animate({ scrollTop: $alert.offset().top - 60 });
+                    }
+                    if (fieldName) {
+                        $form.find('[name=' + fieldName + ']').addClass('uk-form-danger');
+                    }
+                }
+                else {
+                    $alert.addClass('uk-hidden').hide();
+                    $form.find('.uk-form-danger').removeClass('uk-form-danger');
+                }
+            });
+        },
+        showFormLoading: function (isLoading) {
+            return this.each(function () {
+                var
+                    $form = $(this),
+                    $submit = $form && $form.find('button[type=submit]'),
+                    $buttons = $form && $form.find('button');
+                    $i = $submit && $submit.find('i'),
+                    iconClass = $i && $i.attr('class');
+                if (! $form.is('form')) {
+                    console.error('Cannot call showFormLoading() on non-form object.');
+                    return;
+                }
+                if (!iconClass || iconClass.indexOf('uk-icon') < 0) {
+                    console.warn('Icon <i class="uk-icon-*>" not found.');
+                    return;
+                }
+                if (isLoading) {
+                    $buttons.attr('disabled', 'disabled');
+                    $i && $i.addClass('uk-icon-spinner').addClass('uk-icon-spin');
+                }
+                else {
+                    $buttons.removeAttr('disabled');
+                    $i && $i.removeClass('uk-icon-spinner').removeClass('uk-icon-spin');
+                }
+            });
+        },
+        postJSON: function (url, data, callback) {
+            if (arguments.length===2) {
+                callback = data;
+                data = {};
             }
+            return this.each(function () {
+                var $form = $(this);
+                $form.showFormError();
+                $form.showFormLoading(true);
+                _httpJSON('POST', url, data, function (err, r) {
+                    if (err) {
+                        $form.showFormError(err);
+                        $form.showFormLoading(false);
+                    }
+                    if (callback) {
+                        if (callback(err, r)) {
+                            $form.showFormLoading(false);
+                        }
+                    }
+                });
+            });
         }
-        catch (e) {}
-    }
-    else {
-        // clear error:
-        $('.alert-error').text('').hide();
-    }
-}
+    });
+});
+
+// ajax submit form:
 
 function _httpJSON(method, url, data, callback) {
-    if (arguments.length==3) {
-        callback = data;
-        data = {};
-    }
-    $.ajax({
+    var opt = {
         type: method,
-        url: url,
-        data: data,
         dataType: 'json'
-    }).done(function(r) {
+    };
+    if (method==='GET') {
+        opt.url = url + '?' + data;
+    }
+    if (method==='POST') {
+        opt.url = url;
+        opt.data = JSON.stringify(data || {});
+        opt.contentType = 'application/json';
+    }
+    $.ajax(opt).done(function (r) {
         if (r && r.error) {
             return callback(r);
         }
         return callback(null, r);
-    }).fail(function(jqXHR, textStatus) {
-        callback({'error': 'HTTP ' + jqXHR.status, 'message': ' Network error (HTTP ' + jqXHR.status + ')'});
+    }).fail(function (jqXHR, textStatus) {
+        return callback({'error': 'http_bad_response', 'data': '' + jqXHR.status, 'message': '网络好像出问题了 (HTTP ' + jqXHR.status + ')'});
     });
 }
 
 function getJSON(url, data, callback) {
-    var args = Array.prototype.slice.call(arguments, 0);
-    args.unshift('GET');
-    _httpJSON.apply(null, args)
-    return false;
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    if (typeof (data)==='object') {
+        var arr = [];
+        $.each(data, function (k, v) {
+            arr.push(k + '=' + encodeURIComponent(v));
+        });
+        data = arr.join('&');
+    }
+    _httpJSON('GET', url, data, callback);
 }
 
 function postJSON(url, data, callback) {
-    var args = Array.prototype.slice.call(arguments, 0);
-    args.unshift('POST');
-    _httpJSON.apply(null, args)
-    return false;
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    _httpJSON('POST', url, data, callback);
 }
 
-function showConfirm(title, text_or_html, callback) {
-    var s = '<div class="modal hide fade"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button>'
-          + '<h3>' + $('<div/>').text(title).html() + '</h3></div>'
-          + '<div class="modal-body">'
-          + ((text_or_html.length > 0 && text_or_html[0]==='<') ? text_or_html : '<p>' + $('<div/>').text(text_or_html).html() + '</p>')
-          + '</div><div class="modal-footer"><a href="#" class="btn btn-primary"><i class="icon-ok icon-white"></i> OK</a><a href="#" class="btn" data-dismiss="modal"><i class="icon-remove"></i> Cancel</a></div></div>';
-    $('body').prepend(s);
-    var $modal = $('body').children(':first');
-    $modal.modal('show');
-    $modal.find('.btn-primary').click(function() {
-        $modal.attr('result', 'ok');
-        $btn = $(this);
-        callback({
-            showLoading: function() {
-                $btn.attr('disabled', 'disabled');
-                $btn.find('i').addClass('x-loading');
-            },
-            hide: function() {
-                $modal.modal('hide');
-            }
-        });
+// register custom filters for Vue:
+
+if (typeof(Vue)!=='undefined') {
+    Vue.filter('datetime', function (value) {
+        var d = value;
+        if (typeof(value)==='number') {
+            d = new Date(value);
+        }
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes();
     });
-    $modal.on('hidden', function() {
-        $modal.remove();
+    Vue.filter('size', size2string);
+    Vue.component('pagination', {
+        template: '<ul class="uk-pagination">' +
+                  '  <li v-repeat="i: list" v-attr="class: i===index?\'uk-active\':\'x-undefined\'">' +
+                  '    <a v-if="i!==\'...\' && i!==index" v-attr="href: \'javascript:gotoPage(\' + i + \')\'">{{ i }}</a>' +
+                  '    <span v-if="i===\'...\' || i===index">{{ i }}</span>' +
+                  '  </li>' +
+                  '</ul>'
     });
 }
-
-setTimeout(function() {
-    var s = "\n" +
-"This cool website is powered by:\n" +
-"  _ _____                                                     _      \n" +
-" (_)_   _| __ __ _ _ __  _____      ____ _ _ __ _ __         (_)___  \n" +
-" | | | || '__/ _` | '_ \\/ __\\ \\ /\\ / / _` | '__| '_ \\        | / __| \n" +
-" | | | || | | (_| | | | \\__ \\\\ V  V / (_| | |  | |_) |  _    | \\__ \\ \n" +
-" |_| |_||_|  \\__,_|_| |_|___/ \\_/\\_/ \\__,_|_|  | .__/  (_)  _/ |___/ \n" +
-"                                               |_|         |__/      \n" +
-"\n" +
-"Want to get author info? type:\nauthor();\n\n" +
-"Want to get source code? type:\nsource();\n" +
-"\n";
-    console.log(s);
-    window.source = function() {
-        console.log('Searching source code...');
-        setTimeout(function() {
-            console.log('Using Google search...');
-            setTimeout(function() {
-                console.log('Ask Siri...');
-                setTimeout(function() {
-                    console.log('Search on GitHub...');
-                    setTimeout(function() {
-                        console.log('Found!\n\nSource code can be folked from https://github.com/michaelliao/itranswarp.js\n\nCheers!\n');
-                    }, 1000);
-                }, 1000);
-            }, 1000);
-        }, 1000);
-    };
-    window.author = function() {
-        console.log('\nAuthor: Michael Liao\nOfficial Website: http://www.liaoxuefeng.com\n                           .... ... ... ... ...\n                        .:+I$OOOOOOOOOOOOO8OZ7I,..\n                      ,=8OOOZZZO8ZZZZOZ8OOOOOO88OOOOZ,..\n                   .~88OZO88OZZO88OOOOOO88OOOOOO8OOOZO88.\n                .,88O88OOD88OZ8Z .ZOOOOOO888OOOOO888OOOOO88:.\n              ..+8OO8DOO888OZ8Z.....DOOOOO888OZOO8888OOOO8OO8.\n              ~8OOO88888D8ZO8. .......78OZZZO88888888888OOOO8D8,\n            .IZZOO8DOO88OO8$.............=$8OOO888888888888O8888.\n            8ZZZO8D8ODDOD?...................~I888D8DD8888DD88888:\n           :OZOODD8ODD87 . ....................... ,7$O8D888888888,\n          ,8$ZOO8O8D$............................   ......,O888888D,\n          88OO8D8= ......... . . .,+O?==D888888OOZZZ8OZOOZ$777O888ZZIIIIII$O.\n         .D88D8~..........,+77OD888OOZZZ777$$Z$7ZZ$$OOO88888Z?$888D8ZI$O8II$,\n         ,DO$DO,,=888D8O$7Z$$7$ZO8D8OZZ77$8O......... ... ... ..8OOZ? :87?O:\n ...::::,8D8D88888Z7$ZOO888$?:... ..O8$$ZZ$8  ... ...: .. ... ...~8Z?.8$IO,\n  88IZDDO88888ZI=..................,O$8DI8Z$D......:DDD8. ... ... ..887I~\n   87ZD8:.... ........DDDZ.. . . .=8$D8, .D$$D . . =8DD8.       ..7DZIIZ.\n   .O$O8..    .........8DD+..... 8O787....,87I78+~,,.ZOZOZOOO88Z7I??IZO.\n    8OZO+.    ..........,. ....?8$7O+. 88$..88Z777$ZZ$Z$IIIIIIIIII77O,\n    .D8$ZZ... .........=O88D8ZO$7ZD: .=D$O.... ~ODD8888$I?.:.... ..,,\n     .DO7$O7I+?7+=+7DD8O$77$$7$8$, ....DO8............... ... ...  7.\n       :O77777777II77$$Z88DI:.. . ... ..+ ... ... ... ... ... ... ?8\n        .8ZZ$$$ZO8D88$=:. ... ... ... ... ... ... ... ... ... ...,D:\n           .8,.  ........................................ ... ..?O.\n           .O~.............. . . . . . . 7:  . . . . . ..     .,Z\n            .O8,.......................oDZO8o............ ... OZ.\n             .+8:............ ... ... ..8O88. ... ... ... ..ZO.\n                ~8=.......... ... ... .. ,  . ... ... ....=D:\n                  ?8?, ................................~O8?\n                    .OD8I=..                     . .888O.\n                       ..ZZZ888?: ... ... ... .:88O:\n                            .,O888DDD8888DDD888:\n                                       ,$IIO,\n                                      ,OIIOO..\n                                     ~88O8OZ88O8D..\n                                  .,8888O8DD88O8DD8:.\n                                 ODD888888DD88D888DDDD,\n                                88DD888DDDDDDDDDDDDD8OD,.\n                               :DDDZ8DDDDDNDNDNDDDDDDOZ88,\n                              .8ODDDDDDDDDDDDDD88888Z8O$DD:\n                             .OO8DOO88OO8888D88888OOZZD$$OD8.\n                            .O878OZOO8888888D888O8OOOO88??OD,.\n                           .O8778ZO88O888O88OOOZOOOOOOOD$+?88..\n                          ..8ZI78ZZOOOOOOOOOOOZZOOO88888O?+OD8..\n');
-    };
-}, 2000);

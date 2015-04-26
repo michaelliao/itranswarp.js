@@ -1,0 +1,15 @@
+{% extends '_base.html' %}
+
+{% block title %}{{ _('Sign In') }}{% endblock %}
+
+{% block head %}
+<script>
+$(function () {
+    showSignin(true);
+});
+</script>
+{% endblock %}
+
+{% block content %}
+    <h3>Please sign in:</h3>
+{% endblock %}

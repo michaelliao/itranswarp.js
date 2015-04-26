@@ -1,28 +1,60 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ form.name }}
-{% endblock %}
+{% block title %} {{ form.name }} {% endblock %}
 
 {% block head %}
 
 <script>
 $(function() {
+    getJSON('/api/navigations/all/menus', function (err, data) {
+        if (err) {
+            return fatal(err);
+        }
+        initVM(data.navigationMenus);
+    });
+});
+
+function initVM(menus) {
     var vm = new Vue({
-        el: '#formVm',
+        el: '#vm',
         data: {
-            name: {{ navigation.name|json|safe }},
-            url: {{ navigation.url|json|safe }},
+            menus: menus,
+            _menu: '',
+            name: '',
+            url: '',
+        },
+        computed: {
+            menu: {
+                $get: function () {
+                    return this._menu;
+                },
+                $set: function (url) {
+                    this._menu = url;
+                    if (url !== '') {
+                        var m = this.find(this._menu);
+                        this.name = m.name;
+                        this.url = m.url;
+                    }
+                }
+            }
         },
         methods: {
-            submit: function(event) {
+            find: function (url) {
+                for (var i=0; i<this.menus.length; i++) {
+                    if (menus[i].url === url) {
+                        return menus[i];
+                    }
+                }
+                throw 'logic error';
+            },
+            submit: function (event) {
                 event.preventDefault();
-                showError();
-                showLoading(true);
-                postJSON('{{ form.action }}', this.$data, function(err, result) {
+                var $form = $('#vm').find('form');
+                $form.postJSON('{{ form.action }}', {
+                    name: this.name,
+                    url: this.url
+                }, function(err, result) {
                     if (err) {
-                        showError(err);
-                        showLoading(false);
                         return;
                     }
                     location.assign('{{ form.redirect }}');
@@ -30,42 +62,64 @@ $(function() {
             }
         }
     });
-});
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 
 {% endblock %}
 
 {% block main %}
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/navigation/">All Navigations</a> <span class="divider">/</span></li>
-        <li class="active">{{ form.name }}</li>
-    </ul>
-</div>
 
-<div class="span12">
-    <form id="formVm" v-on="submit: submit" class="form-horizontal">
-        <legend>{{ form.name }}</legend>
-        <fieldset>
-            <div class="alert alert-error hide"></div>
-            <div class="field-name control-group">
-                <label class="control-label">Name:</label>
-                <div class="controls">
-                    <input v-model="name" type="text" class="input-xlarge" />
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-breadcrumb">
+            <li><a href="navigation_list">{{ _('All Navigations') }}</a></li>
+            <li class="uk-active"><span>{{ form.name }}</span></li>
+        </ul>
+
+        <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
+            <legend>{{ form.name }}</legend>
+            <fieldset>
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Type:</label>
+                    <div class="uk-form-controls">
+                        <select v-model="menu">
+                            <option value="">- Select a menu -</option>
+                        {% raw %}
+                            <option v-repeat="menu: menus" value="{{ menu.url }}">{{ menu.name }}</option>
+                        {% endraw %}
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="field-url control-group">
-                <label class="control-label">URL:</label>
-                <div class="controls">
-                    <input v-model="url" type="text" class="input-xlarge" />
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Name:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><i class="icon-ok icon-white"></i> Save</button>
-                <button type="button" class="btn" onclick="location.assign('{{ form.redirect }}')"><i class="icon-remove"></i> Cancel</button>
-            </div>
-        </fieldset>
-    </form>
-</div>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">URL:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="url" type="text" maxlength="100" class="uk-width-1-1" placeholder="http://">
+                    </div>
+                </div>
+
+                <div class="uk-form-row">
+                    <div class="uk-form-controls">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
 
 {% endblock %}

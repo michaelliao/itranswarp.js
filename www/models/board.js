@@ -1,3 +1,5 @@
+'use strict';
+
 // board.js
 
 var base = require('./_base.js');

@@ -1,22 +1,43 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-All Topics
-{% endblock %}
+{% block title %} {{ _('All Topics') }} {% endblock %}
 
 {% block head %}
 <script>
 $(function() {
-    var page = {{ page|safe }};
-    var board = {{ board|safe }};
-    var topics = {{ topics|safe }};
+    getJSON('/api/boards', function (err, r) {
+        if (err) {
+            return fatal(err);
+        }
+        getJSON('/api/topics', {
+            page: {{ pageIndex }}
+        }, function (err, data) {
+            if (err) {
+                return fatal(err);
+            }
+            bindBoards(data.topics, r.boards);
+            initVM(data.topics, data.page)
+        });
+    });
+});
 
+function bindBoards(topics, boards) {
+    var bs = {}, board, i;
+    for (i = 0; i < boards.length; i++) {
+        board = boards[i];
+        bs[board.id] = board;
+    }
+    for (i = 0; i < topics.length; i++) {
+        topics[i].board = bs[topics[i].board_id];
+    }
+}
+
+function initVM(topics, page) {
     var vm = new Vue({
-        el: '#topics',
+        el: '#vm',
         data: {
-            board: board,
             topics: topics,
-            page: definePagination(page)
+            page: page
         },
         methods: {
             find: function(id) {
@@ -26,92 +47,90 @@ $(function() {
                         return c;
                     }
                 }
-                return null;
+                throw 'logic error';
             },
-            deleteTopic: function(id) {
-                var that = this;
-                var a = that.find(id);
-                if (a!==null) {
-                    showConfirm('Confirm Deletion', 'Topic \"' + a.name + '\" will be deleted. Continue?', function(modal) {
-                        showError();
-                        modal.showLoading(true);
-                        postJSON('/api/topics/' + a.id + '/delete', function(err, result) {
-                            modal.hide();
-                            if (err) {
-                                showError(err);
-                                return;
-                            }
-                            // reload page:
-                            var pageIndex = page.index;
-                            if (that.topics.length===1) {
-                                pageIndex --;
-                            }
-                            if (pageIndex < 1) {
-                                pageIndex = 1;
-                            }
-                            location.assign('topic_list?board_id=' + board.id + '&page=' + pageIndex);
-                        });
+            lockTopic: function (t) {
+                alert('unsupported yet.');
+            },
+            deleteTopic: function (t) {
+                if (confirm('Topic \"' + t.name + '\" will be deleted. Continue?')) {
+                    postJSON('/api/topics/' + t.id + '/delete', function(err, result) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
                     });
                 }
-            },
+            }
         }
     });
-});
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 {% endblock %}
 
 {% block main %}
-<div id="topics">
 
-<div class="span12">
-    <ul class="breadcrumb">
-        <li><a href="/manage/discuss/">All Boards</a> <span class="divider">/</span></li>
-        <li class="active"><span v-text="board.name"></span> <span class="divider">/</span></li>
-        <li class="active">{{ _('All Topics') }} (<span v-text="page.totalItems"></span>)</li>
-    </ul>
-</div>
+    <div id="error" class="uk-width-1-1">
+    </div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th width="20%">{{ _('User') }}</th>
-                <th width="35%">{{ _('Name') }}</th>
-                <th width="15%">{{ _('Tags') }}</th>
-                <th width="15%">Created</th>
-                <th width="15%"></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-repeat="obj: topics">
-                <td>
-                    <img v-attr="src: obj.user.image_url">
-                    <br>
-                    <span v-text="obj.user.name"></span>
-                </td>
-                <td>
-                    <a v-text="obj.name" v-attr="href: '/discuss/' + board.id + '/' + obj.id" target="_blank"></a>
-                </td>
-                <td>
-                    <i class="icon-tag"></i> <span v-text="obj.tags"></span>
-                </td>
-                <td>
-                    <span v-text="obj.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span>
-                </td>
-                <td>
-                    <a v-on="click: lockTopic(obj.id)" title="Lock Topic" href="#0" class="x-btn"><i class="icon-lock"></i></a>
-                    <a v-on="click: deleteTopic(obj.id)" title="Delete Topic" href="#0" class="x-btn"><i class="icon-trash"></i></a>
-                </td>
-            </tr>
-            <tr v-if="page.totalItems===0">
-                <td colspan="5">No topic found.</td>
-            </tr>
-        </tbody>
-    </table>
-    <div v-component="vc-pagination"></div>
-</div>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
 
-</div>
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li><a href="#0" onclick="location.assign('board_list')">Boards</a></li>
+            <li class="uk-active"><a href="#0">Topics</a></li>
+            <li><a href="#0" onclick="location.assign('reply_list')">Replies</a></li>
+        </ul>
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="10%">{{ _('Image') }}</th>
+                    <th width="10%">{{ _('User') }}</th>
+                    <th width="35%">{{ _('Name') }}</th>
+                    <th width="15%">{{ _('Tags') }}</th>
+                    <th width="15%">Created</th>
+                    <th width="15%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="obj: topics">
+                    <td>
+                        <img v-attr="src: obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
+                    </td>
+                    <td>
+                        <span v-text="obj.user.name"></span>
+                    </td>
+                    <td>
+                        <p><a v-text="obj.name" v-attr="href: '/discuss/' + obj.board.id + '/' + obj.id" target="_blank"></a></p>
+                        <p v-if="obj.ref_id"><a v-attr="href: '/' + obj.ref_type + '/' + obj.ref_id" target="_blank">问题来源</a></p>
+                    </td>
+                    <td>
+                        <i class="icon-tag"></i> <span v-text="obj.tags"></span>
+                    </td>
+                    <td>
+                        <span v-text="obj.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span>
+                    </td>
+                    <td>
+                        <a v-on="click: lockTopic(obj)" title="Lock Topic" href="#0" class="x-btn"><i class="uk-icon-lock"></i></a>
+                        <a v-on="click: deleteTopic(obj)" title="Delete Topic" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+                <tr v-if="page.totalItems===0">
+                    <td colspan="6">No topic found.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div v-component="pagination" v-with="page"></div>
+
+    </div>
 
 {% endblock%}

@@ -16,7 +16,7 @@ from fabric.api import *
 env.user = 'root'
 
 # linux hosts:
-env.hosts = ['www.liaoxuefeng.com']
+env.hosts = ['www.liaoxuefeng.com', 'www.liaoxuefeng.com:23']
 
 # linux mysql user and password:
 db_user = 'www'
@@ -54,7 +54,7 @@ def build():
     with lcd('www'):
         local('gulp')
     includes = ['*']
-    excludes = ['gulpfile.js', 'schema.js', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
+    excludes = ['config_development.js', 'gulpfile.js', 'schema.*', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
     local('rm -f dist/%s' % _TAR_FILE)
     with lcd('www'):
         cmd = ['tar', '--dereference', '-czvf', '../dist/%s' % _TAR_FILE]
@@ -79,7 +79,7 @@ def scp():
     with settings(warn_only=True):
         run('supervisorctl stop itranswarp')
         run('supervisorctl start itranswarp')
-        run('/etc/init.d/nginx reload')
+        #run('/etc/init.d/nginx reload')
 
 RE_FILES = re.compile('\r?\n')
 

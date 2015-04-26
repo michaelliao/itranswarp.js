@@ -1,7 +1,11 @@
+'use strict';
+
 // image operation.
 
 var
+    api = require('../api'),
     fs = require('fs'),
+    thunkify = require('thunkify'),
     gm = require('gm').subClass({ imageMagick : true });
 
 function calcScaleSize(origin_width, origin_height, resize_width, resize_height, keepAspect) {
@@ -41,39 +45,90 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
     return { width: target_width, height: target_height, resized: true, enlarge: isEnlarge(target_width, target_height) };
 }
 
-module.exports = {
-
-    calcScaleSize: calcScaleSize,
-
-    getSize: function (imgData, callback) {
-        gm(imgData).size(callback);
-    },
-
-    /**
-     * default options: { force = false, keepAspect = true, format='jpeg', stream=true }
-     * if options.stream is true, callback should have signature (err, stdout, stderr), otherwise,
-     * callback(err, buffer).
-     */
-    resize: function (imgData, origin_width, origin_height, resize_width, resize_height, options, callback) {
-        if (typeof options === 'function') {
-            callback = options;
-            options = {};
+function getImageInfo(buffer, callback) {
+    var i = gm(buffer);
+    i.format(function (err, format) {
+        if (err) {
+            return callback(api.invalidParam('image', 'Invalid image data'));
         }
-        options = options || {};
-        var
-            opt_force = options.force === undefined ? false : true,
-            opt_stream = options.stream === undefined ? true : false,
-            img = gm(imgData),
-            r = calcScaleSize(origin_width, origin_height, resize_width, resize_height, options.keepAspect || true);
-        if (r.resized && (opt_force || !r.enlarge)) {
-            console.log('resized to ' + r.width + 'x' + r.height);
-            img = img.resize(r.width, r.height);
-        }
-        if (opt_stream) {
-            return img.stream('jpeg', callback);
-        }
+        i.size(function (err, size) {
+            if (err) {
+                return callback(api.invalidParam('image', 'Invalid image data'));
+            }
+            callback(null, {
+                data: buffer,
+                format: format.toLowerCase(), // 'png', 'jpeg', 'gif'...
+                width: size.width,
+                height: size.height
+            });
+        });
+    });
+}
+
+/**
+ * resize to specific width and height, but keep aspect.
+ * callback should have signature (err, buffer).
+ */
+function resizeKeepAspect(buffer, origin_width, origin_height, resize_width, resize_height, callback) {
+    if (origin_width * resize_height === origin_height * resize_width && origin_width <= resize_width) {
+        console.log('no need to resize!');
+        return callback(null, buffer);
+    }
+    var
+        img = gm(buffer),
+        r = calcScaleSize(origin_width, origin_height, resize_width, resize_height, true);
+    console.log('resized to ' + r.width + 'x' + r.height);
+    img = img.resize(r.width, r.height);
+    return img.toBuffer(callback);
+}
+
+/**
+ * resize to specific width and height, crop if neccessary.
+ * callback should have signature (err, buffer).
+ */
+function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize_height, callback) {
+    if (origin_width * resize_height === origin_height * resize_width && origin_width <= resize_width) {
+        console.log('no need to resize!');
+        return callback(null, buffer);
+    }
+    var
+        img = gm(buffer),
+        scale_width,
+        scale_height;
+    if (resize_width * origin_height === origin_width * resize_height) {
+        // fit!
+        console.log('resizeAsCover: fit!');
+        img = img.resize(resize_width, resize_height);
         return img.toBuffer(callback);
     }
-};
+    if (resize_width * origin_height > origin_width * resize_height) {
+        // cut off top and bottom:
+        scale_width = resize_width;
+        console.log('resizeAsCover: resize to: ' + scale_width + ' x ?');
+        img = img.resize(scale_width, null);
+        // crop:
+        scale_height = scale_width * origin_height / origin_width;
+        img = img.crop(resize_width, resize_height, 0, Math.floor((scale_height - resize_height) / 2));
+        return img.toBuffer(callback);
+    }
+    // cut off left and right:
+    scale_height = resize_height;
+    console.log('resizeAsCover: resize to: ? x ' + scale_height);
+    img = img.resize(null, scale_height);
+    // crop:
+    scale_width = scale_height * origin_width / origin_height;
+    img = img.crop(resize_width, resize_height, Math.floor((scale_width - resize_width) / 2), 0);
+    return img.toBuffer(callback);
+}
 
-calcScaleSize(1200, 1200, 800, 600);
+module.exports = {
+
+    $getImageInfo: thunkify(getImageInfo),
+
+    $resizeKeepAspect: thunkify(resizeKeepAspect),
+
+    $resizeAsCover: thunkify(resizeAsCover),
+
+    calcScaleSize: calcScaleSize
+
+};

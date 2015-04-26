@@ -1,42 +1,43 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
 
-{% block meta %}
-    <meta property="x-nav" content="/category/{{ category.id }}" />
+{% block nav %} /category/{{ category.id }} {% endblock %}
+
+{% block title %}
+    {{ category.name }}
 {% endblock %}
 
-{% block title %}{{ category.name }}{% endblock %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
 
-{% block main %}
-
-{% for a in articles %}
-    <div class="x-article">
-        <div class="x-article-title">
-            <h4><a href="/article/{{ a.id }}">{{ a.name }}</a></h4>
-        </div>
-        <div class="x-article-cover-small">
-            <a href="/article/{{ a.id }}" style="background-image:url(/files/attachments/{{ a.cover_id }}/s)"></a>
-        </div>
-        <div class="x-article-right">
-            <div class="x-article-info">
-                <a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.reads }}
-            </div>
-            <div class="x-article-description">
-                <p>{{ a.description }}</p>
-                <p><a href="/article/{{ a.id }}" class="x-readmore">{{ _('Read more') }} »</a></p>
-            </div>
-        </div>
-    </div>
-{% endfor %}
-
-    <div class="x-page">
-        {{ pagination(page, '?page=') }}
-    </div>
+<style>
+.x-category-visible {
+    display: block;
+}
+</style>
 
 {% endblock %}
 
-{% block sidebar %}
-    <div class="x-sidebar-section">
-        <h4>关于作者</h4>
-        <iframe width="278" height="330" class="share_self" frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=zh_cn&width=278&height=330&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=1&uid=1658384301&verifier=078cedea&colors=0088cc,ffffff,333333,0082cb,d14836&dpc=1&rnd={{ __time__ }}"></iframe>
+{% block content %}
+
+    <h3>{{ category.name }}</h3>
+
+    {% for a in articles %}
+    <div class="uk-article uk-clearfix">
+        <div>
+            <h3><a href="/article/{{ a.id }}">{{ a.name }}</a></h3>
+        </div>
+        <a class="x-cover-small" href="/article/{{ a.id }}"><img src="/files/attachments/{{ a.cover_id }}/s" alt="{{ a.name }}" style="width:160px"></a>
+        <div>
+            <p><a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.reads }}</p>
+            <p>{{ a.description }}</p>
+            <p><a href="/article/{{ a.id }}" class="uk-button uk-button-primary">{{ _('Read more') }} »</a></p>
+        </div>
     </div>
+    {% endfor %}
+    {{ pagination('/category/' + category.id + '?page=PAGE', page) }}
+
+{% endblock %}
+
+{% block sidebar_right_content %}
+
 {% endblock %}

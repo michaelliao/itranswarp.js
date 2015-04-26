@@ -1,3 +1,5 @@
+'use strict';
+
 // resource.js
 
 var base = require('./_base.js');

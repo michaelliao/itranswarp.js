@@ -1,3 +1,5 @@
+'use strict';
+
 // topic.js
 
 var base = require('./_base.js');

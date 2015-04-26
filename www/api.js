@@ -1,3 +1,5 @@
+'use strict';
+
 // api:
 
 function APIError(err_code, err_data, err_message) {
@@ -7,6 +9,15 @@ function APIError(err_code, err_data, err_message) {
 }
 
 var api = {
+    authRequired: function () {
+        return new APIError('auth:required', '', 'Please sign in.');
+    },
+    authFailed: function (paramName, message) {
+        return new APIError('auth:failed', paramName || '', message || 'Invalid email or password.');
+    },
+    invalidRequest: function (paramName, message) {
+        return new APIError('request:invalid', paramName, message || 'Invalid request: ' + paramName);
+    },
     invalidParam: function (paramName, message) {
         return new APIError('parameter:invalid', paramName, message || 'Invalid parameter: ' + paramName);
     },
@@ -14,10 +25,10 @@ var api = {
         return new APIError('permission:denied', 'permission', err_message);
     },
     notFound: function (err_data, err_message) {
-        return new APIError('resource:notfound', err_data, err_message || (err_data + ' not found.'));
+        return new APIError('entity:notfound', err_data, err_message || (err_data + ' not found.'));
     },
-    resourceConflictError: function (err_data, err_message) {
-        return new APIError('resource:conflict', err_data, err_message || (err_data + ' conflict.'));
+    conflictError: function (err_data, err_message) {
+        return new APIError('entity:conflict', err_data, err_message || (err_data + ' conflict.'));
     },
     serverError: function (err_code, err_data, err_message) {
         if (err_code instanceof Error) {

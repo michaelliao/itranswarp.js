@@ -1,0 +1,133 @@
+{% extends '../_manage.html' %}
+
+{% block title %} {{ form.name }} {% endblock %}
+
+{% block head %}
+<script>
+$(function() {
+    var id = '{{ id }}';
+    if (id) {
+        getJSON('/api/webpages/' + id, function (err, webpage) {
+            if (err) {
+                return fatal(err);
+            }
+            initVM(webpage);
+        });
+    }
+    else {
+        initVM({ id: '', draft: false });
+    }
+});
+
+function initVM(webpage) {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            name: webpage.name,
+            alias: webpage.alias,
+            tags: webpage.tags,
+            draft: webpage.draft,
+            content: webpage.content || ''
+        },
+        methods: {
+            submit: function(event) {
+                event.preventDefault();
+                var data = {
+                    name: this.name,
+                    alias: this.alias,
+                    tags: this.tags,
+                    draft: this.draft
+                };
+                var content = $('#content-editor').val();
+                if (this.content !== content) {
+                    data.content = content;
+                }
+                $('#vm').find('form').postJSON('{{ form.action }}', data, function(err, result) {
+                    if (err) {
+                        return;
+                    }
+                    window.onbeforeunload = null;
+                    location.assign('{{ form.redirect }}');
+                });
+            }
+        }
+    });
+    $('#loading').hide();
+    $('#vm').show();
+
+    // check content when unload:
+    window.onbeforeunload = function() {
+        if (vm.content !== $('#content-editor').val()) {
+            return 'Content has been changed.';
+        }
+    };
+
+    $('#content-editor').val(webpage.content || '');
+    var htmleditor = UIkit.htmleditor($('#content-editor').get(0), {
+        markdown: true,
+        maxsplitsize: 600
+    });
+}
+</script>
+
+{% endblock %}
+
+{% block main %}
+
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
+            <legend>{{ form.name }}</legend>
+            <fieldset>
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Name:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                    </div>
+                </div>
+
+                <div class="uk-form-row">
+                    <label class="uk-form-label">Alias:</label>
+                    <div class="uk-form-controls">
+                        <input v-model="alias" name="alias" type="text" class="uk-width-1-1" placeholder="alias" />
+                    </div>
+                </div>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Tags:</label>
+                    <div class="controls">
+                        <input v-model="tags" name="tags" type="text" class="uk-width-1-1" placeholder="tag1, tag2, tag3">
+                    </div>
+                </div>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Draft:</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input v-model="draft" name="draft" type="checkbox" /> Draft
+                        </label>
+                    </div>
+                </div>
+
+                <div class="uk-form-row">
+                    <label class="control-label">Content:</label>
+                    <div class="controls">
+                        <textarea id="content-editor" rows="20" style="width:100%; resize:none;"></textarea>
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <div class="controls">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                    </div>
+                </div>
+        </fieldset>
+    </form>
+</div>
+
+{% endblock %}

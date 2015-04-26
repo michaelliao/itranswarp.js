@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
+    <link rel="stylesheet" href="/static/css/codemirror.css" />
+    <link rel="stylesheet" href="/static/css/itranswarp.css" />
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/sha1.min.js"></script>
+    <script src="/static/js/codemirror.js"></script>
+    <script src="/static/js/marked.js"></script>
+    <script src="/static/js/uikit/uikit.js"></script>
+    <script src="/static/js/uikit/components/htmleditor.js"></script>
+    <script src="/static/js/vue.min.js"></script>
+    <script src="/static/js/itranswarp.js"></script>
+<style>
+#vm {
+    display: none;
+}
+#loading {
+    margin-bottom: 15px;
+}
+#error {
+    display: none;
+    margin-bottom: 15px;
+}
+.x-container {
+    min-width: 760px;
+}
+.x-btn {
+    margin-right: 10px;
+}
+</style>
+<script>
+function _display_error($obj, err) {
+    if ($obj.is(':visible')) {
+        $obj.hide();
+    }
+    var msg = err.message || String(err);
+    var L = ['<div class="uk-alert uk-alert-danger">'];
+    L.push('<p>Error: ');
+    L.push(msg);
+    L.push('</p><p>Code: ');
+    L.push(err.error || '500');
+    L.push('</p></div>');
+    $obj.html(L.join('')).slideDown();
+}
+function error(err) {
+    _display_error($('#error'), err);
+}
+function fatal(err) {
+    _display_error($('#loading'), err);
+}
+</script>
+
+{% set __show_navigations__ = true %}
+{% block head %}<!-- block head  -->{% endblock %}
+
+<script>
+var modalUploadImage = null;
+
+function uploadImage(callback) {
+    if (modalUploadImage === null) {
+        var
+            $modal = $('#modal-upload-image'),
+            $preview = $modal.find('.x-upload-preview'),
+            $alert = $modal.find('.uk-alert-danger'),
+            $form = $modal.find('form'),
+            $text = $form.find('input[name=name]'),
+            $file = $form.find('input[type=file]'),
+            $upload = $form.find('button[type=submit]'),
+            $cancel = $modal.find('button.x-cancel');
+        var imageData = null, mime = null;
+        modalUploadImage = UIkit.modal('#modal-upload-image');
+        $('#modal-upload-image').on({
+            'show.uk.modal': function () {
+                console.log('show upload image modal...');
+                $file.val('');
+                $text.val('');
+                $alert.text('').hide();
+                $preview.css('background-image', '');
+            },
+            'hide.uk.modal': function () {
+                console.log('hide upload image modal...');
+            }
+        });
+        $file.change(function () {
+            imageData = null;
+            $alert.hide();
+            $preview.css('background-image', '');
+            $upload.attr('disabled', 'disabled');
+
+            var f = $file.val();
+            if (!f) {
+                return;
+            }
+            var lf = $file.get(0).files[0];
+            if (lf.size > 1024*1024) {
+                $alert.text('Image is too large.').show();
+                return;
+            }
+            mime = lf.type;
+            if (mime==='image/png' || mime==='image/jpeg') {
+                // extract filename without ext:
+                var pos = Math.max(f.lastIndexOf('\\'), f.lastIndexOf('/'));
+                if (pos>0) {
+                    f = f.substring(pos + 1);
+                }
+                var pos = f.lastIndexOf('.');
+                if (pos>0) {
+                    f = f.substring(0, pos);
+                }
+                $text.val(f);
+                processFile(lf, function (r) {
+                    imageData = r.data;
+                    $preview.css('background-image', 'url(' + r.image + ')');
+                    $upload.removeAttr('disabled');
+                });
+            }
+            else {
+                $alert.text('Not a valid web image.').show();
+            }
+        });
+        // upload:
+        $form.submit(function (e) {
+            e.preventDefault();
+            var data = {
+                name: $text.val(),
+                mime: mime,
+                data: imageData
+            };
+            $form.postJSON('/api/attachments', data, function (err, result) {
+                if (err) {
+                    alert(err.message || err.error || 'ERROR: ' + String(err));
+                    return;
+                }
+                callback(err, {
+                    name: result.name,
+                    url: '/files/attachments/' + result.id + '/l'
+                });
+                modalUploadImage.hide();
+                return true;
+            });
+        });
+        // cancel:
+        $modal.find('button.x-cancel').click(function () {
+            modalUploadImage.hide();
+        });
+    }
+    modalUploadImage.show();
+}
+</script>
+</head>
+<body>
+    <div id="modal-upload-image" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">Upload Image</div>
+            <div class="x-upload-preview" style="background-repeat:no-repeat;background-position:center center;background-size:cover;height:320px;border:solid 1px #ccc">
+                Preview
+            </div>
+            <div>
+                <form class="uk-form uk-form-stacked">
+                    <div class="uk-alert uk-alert-danger" style="display:none;">
+                        ERROR: upload failed.
+                    </div>
+                    <div class="uk-form-row">
+                        <label class="uk-form-label">Image File</label>
+                        <div class="uk-form-controls">
+                            <input name="file" type="file">
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        <label class="uk-form-label">Image Name</label>
+                        <div class="uk-form-controls">
+                            <input name="name">
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        <div class="uk-form-controls">
+                            <button type="submit" disabled class="uk-button uk-button-primary"><i class="uk-icon-upload"></i> Upload</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="uk-modal-footer uk-text-right">
+                <button type="button" class="uk-button x-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="header" class="uk-navbar uk-navbar-attached">
+        <div class="uk-container x-container">
+            <div class="uk-navbar uk-navbar-attached">
+                {% if __show_navigations__ %}
+                <a href="/" target="_blank" class="uk-navbar-brand"><i class="uk-icon-home"></i></a>
+                <ul id="ul-navbar" class="uk-navbar-nav">
+                    <li><a href="/manage/discuss/">{{ _('Discuss') }}</a></li>
+                    <li><a href="/manage/article/">{{ _('Articles') }}</a></li>
+                    <li><a href="/manage/webpage/">{{ _('Web Pages') }}</a></li>
+                    <li><a href="/manage/wiki/">{{ _('Wikis') }}</a></li>
+                    <li><a href="/manage/attachment/">{{ _('Attachments') }}</a></li>
+                    <li><a href="/manage/user/">{{ _('Users') }}</a></li>
+                    <li><a href="/manage/navigation/">{{ _('Navigations') }}</a></li>
+                    <li><a href="/manage/setting/">{{ _('Settings') }}</a></li>
+                    <!-- <li><a href="/manage/api/">API</a></li> -->
+                </ul>
+                <div class="uk-navbar-flip">
+                    <ul class="uk-navbar-nav">
+                        <li><a href="/auth/signout"><i class="uk-icon-sign-out"></i> {{ _('Sign Out') }}</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <a href="/" target="_blank" class="uk-navbar-brand"><i class="uk-icon-home"></i> {{ __website__.name }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div id="main">
+        <div class="x-placeholder-50"><!-- placeholder --></div>
+        <div class="x-placeholder"><!-- placeholder --></div>
+        <div class="uk-container x-container">
+            <div class="uk-grid">
+                {% block main %}
+                    <div class="uk-width-1-6">
+                        <ul class="uk-nav uk-nav-side">
+                        {% block menu %}
+                            <li class="uk-nav-header">Sample Menu</li>
+                            <li id="menu-1"><a href="#0">Menu 1</a></li>
+                            <li id="menu-2"><a href="#0">Menu 2</a></li>
+                            <li id="menu-3"><a href="#0">Menu 3</a></li>
+                        {% endblock %}
+                        </ul>
+                    </div>
+                    <div class="uk-width-5-6">
+                        {% block content %}
+                        <h3>Content</h3>
+                        {% endblock %}
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+        <div class="x-push-to-bottom"></div>
+    </div>
+
+    <div id="footer">
+        <div class="uk-container x-container">
+            <hr>
+            <div class="uk-grid">
+                <div class="uk-width-2-6">
+                    <p>
+                        <a href="/">{{ __website__.name }}</a>&copy;2015
+                        <br>
+                        Powered by <a href="http://js.itranswarp.com" target="_blank">iTranswarp.js</a>
+                    </p>
+                </div>
+                <div class="uk-width-2-6">
+                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
+                    <a href="https://twitter.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
+                    <a href="http://www.weibo.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
+                </div>
+                <div class="uk-width-2-6">
+                    <p>
+                        <a href="https://github.com/michaelliao/itranswarp.js/issues" target="_blank">Feedback</a>
+                        <br>
+                        <a href="https://github.com/michaelliao/itranswarp.js/blob/master/LICENSE" target="_blank">License</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="oldBrowser">
+        <div class="uk-alert uk-alert-danger" data-uk-alert>
+            <a href="#0" class="uk-alert-close uk-close"></a>
+            <p>
+                WARNING: You are using an old browser that does not support HTML5.
+                Please choose a modern browser (<a href="http://www.google.com/chrome" target="_blank">Chrome</a> / <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a> / <a href="http://www.apple.com/safari/" target="_blank">Sarafi</a>) to get a good experience.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

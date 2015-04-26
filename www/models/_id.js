@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * the ID generator always generates 50-chars string:
  *

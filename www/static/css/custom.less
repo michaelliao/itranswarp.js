@@ -1,0 +1,417 @@
+// custom.less
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #666;
+    background-color: #fff;
+}
+
+#oldBrowser {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 15px;
+    right: 15px;
+    z-index: 9;
+}
+
+#header {
+    position: fixed;
+    left:     0;
+    right:    0;
+    top:      0;
+    z-index:  10;
+
+    .uk-navbar {
+        border-width: 0;
+    }
+}
+
+@height-push-to-bottom: 130px;
+
+#main {
+    min-height: 100%;
+    height: auto !important;
+    margin: 0 0 -@height-push-to-bottom 0;
+
+    .x-sidebar-left {
+        padding-right: 15px;
+        border-right: 1px solid @grid-divider-border;
+    }
+
+    .x-sidebar-left.x-sidebar-no-padding {
+        padding-right: 0;
+    }
+
+    .x-sidebar-right {
+        padding-left: 15px;
+        border-left: 1px solid @grid-divider-border;
+    }
+
+    .x-sidebar-right.x-sidebar-no-padding {
+        padding-left: 0;
+    }
+
+    .x-push-to-bottom {
+        clear: both;
+        height: @height-push-to-bottom;
+    }
+}
+
+#footer {
+    height: @height-push-to-bottom;
+
+    .uk-icon-button {
+        color: #666;
+    }
+
+    hr {
+        margin: @global-grid-gutter -20px;
+    }
+}
+
+.x-placeholder-50 {
+    height: 50px;
+}
+
+.x-placeholder {
+    height: @global-grid-gutter;
+}
+
+@media (max-width: @breakpoint-small) {
+    .x-hidden-tiny {
+        display: none !important;
+    }
+}
+
+// for container:
+
+.x-container {
+    max-width: 1600px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: table;
+}
+
+// article list:
+
+.uk-article + .uk-article {
+    border-top: none;
+}
+
+.uk-article {
+    a.x-cover-small {
+        &:hover {
+            opacity: 0.8;
+        }
+        img {
+            border: 1px solid @grid-divider-border;
+        }
+    }
+}
+
+@media (max-width: @breakpoint-small) {
+    .uk-article {
+        >div {
+
+        }
+        a.x-cover-small {
+            clear: both;
+            display: block;
+            margin-bottom: 15px;
+        }
+    }
+}
+
+@media (min-width: @breakpoint-small) {
+    .uk-article {
+        >div {
+            padding-left: 180px;
+        }
+        a.x-cover-small {
+            float: left;
+            margin-right: 15px;
+            margin-top: -39px;
+        }
+
+    }
+}
+
+// goto top:
+
+div.x-goto-top {
+    display: none;
+    opacity: 0.9;
+    z-index: 999999;
+    position: fixed;
+    bottom: 113px;
+    right: 5%;
+    margin-left: 40px;
+    width: 38px;
+    height: 38px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: @button-background;
+    border: 1px solid @navbar-background;
+    &:hover {
+        background-color: @button-hover-background;
+        border-color: @x-navbar-hover-background;
+        div.x-arrow {
+            border-bottom-color: @x-navbar-hover-background;
+        }
+        div.x-stick {
+            background-color: @x-navbar-hover-background;
+        }
+    }
+
+    div.x-arrow {
+        position: absolute;
+        left: 10px;
+        top: -1px;
+        width: 0;
+        height: 0;
+        border: 9px solid transparent;
+        border-bottom-color: @navbar-background;
+    }
+
+    div.x-stick {
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        width: 8px;
+        height: 14px;
+        display: block;
+        border-radius: 1px;
+        background-color: @navbar-background;
+    }
+}
+
+// avatar:
+
+.x-avatar {
+    border: 1px solid @comment-border;
+}
+
+// anchor:
+
+.x-anchor {
+    position: relative;
+    a[name] {
+        position: absolute;
+        top: -65px;
+    }
+}
+
+// make all invisible:
+
+.x-index-visible,
+.x-user-visible,
+.x-article-visible,
+.x-category-visible,
+.x-wiki-visible,
+.x-discuss-visible,
+.x-topic-visible,
+.x-webpage-visible {
+    display: none;
+}
+
+// uikit slideshow copied from uikit-docs:
+
+.x-content {
+    pre, p {
+        word-break: break-all;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+}
+
+// uikit fix:
+
+ins {
+    background-color: transparent;
+}
+
+.uk-pagination {
+    > .uk-disabled {
+        > span {
+            background-color: transparent;
+            border: none;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// jqTree
+// ----------------------------------------------------------------------------
+
+@red: #f00;
+
+ul.jqtree-tree .jqtree-toggler.jqtree-closed {
+
+    padding-top: 0px;
+    padding-left: 5px;
+
+    .caret {
+        border-top: 4px solid transparent;
+        border-left: 4px solid #333;
+        border-right: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+    }
+}
+
+ul.jqtree-tree, ul.jqtree-tree ul.jqtree_common {
+    list-style: none outside;
+    margin-bottom: 2px;
+    padding: 0;
+}
+
+ul.jqtree-tree {
+
+    margin-left: 12px;
+
+    ul.jqtree_common {
+        display: block;
+        margin-left: 12px;
+        margin-right: 0;
+    }
+
+    li.jqtree_common {
+        clear: both;
+        list-style-type: none;
+    }
+
+    li.jqtree-closed {
+        > ul.jqtree_common {
+            display: none;
+        }
+    }
+
+    .jqtree-toggler {
+        display: block;
+        position: absolute;
+        width: 12px;
+        padding: 3px;
+        left: -1.5em;
+        top: 30%;
+        *top: 0;  /* fix for ie7 */
+        font-size: 12px;
+        line-height: 12px;
+        font-family: arial;  /* fix for ie9 */
+        border-bottom: none;
+        color: darken(@comment-border, 20%);
+    }
+}
+
+ul.jqtree-tree .jqtree-element {
+    cursor: pointer;
+    &:hover {
+        background-color: @comment-border;
+    }
+}
+
+ul.jqtree-tree .jqtree-title {
+    vertical-align: middle;
+    padding: 0px 6px;
+    line-height: 26px;
+    height: 26px;
+}
+
+ul.jqtree-tree li.jqtree-folder {
+    margin-bottom: 2px;
+}
+
+ul.jqtree-tree li.jqtree-folder.jqtree-closed {
+    margin-bottom: 2px;
+}
+
+ul.jqtree-tree li.jqtree-folder .jqtree-title {
+    margin-left: 0;
+}
+
+ul.jqtree-tree .jqtree-toggler.jqtree-closed {
+    background-position: 0 0;
+}
+
+span.jqtree-dragging {
+    color: #fff;
+    background: darken(@comment-border, 20%);
+    opacity: 0.4;
+    cursor: pointer;
+    padding: 2px 8px;
+}
+
+ul.jqtree-tree {
+
+    li.jqtree-ghost {
+        position: relative;
+        z-index: 10;
+        margin-right: 10px;
+
+        span {
+            display: block;
+        }
+
+        span.jqtree-circle {
+            display: none;
+        }
+
+        span.jqtree-line {
+            background-color: @red;
+            height: 2px;
+            padding: 0;
+            position: absolute;
+            top: -1px;
+            left: 0px;
+            width: 100%;
+        }
+    }
+}
+
+ul.jqtree-tree li.jqtree-ghost.jqtree-inside {
+    margin-left: 48px;
+}
+
+ul.jqtree-tree {
+    span.jqtree-border {
+        position: absolute;
+        display: block;
+        left: -2px;
+        top: 0;
+        border: solid 2px @red;
+        -webkit-border-radius: 6px;
+        -moz-border-radius: 6px;
+        border-radius: 6px;
+        margin: 0;
+    }
+}
+
+ul.jqtree-tree {
+    .jqtree-element {
+        width: 100%; /* todo: why is this in here? */
+        *width: auto; /* ie7 fix; issue 41 */
+        position: relative;
+    }
+}
+
+ul.jqtree-tree {
+    li.jqtree-selected {
+        > .jqtree-element, > .jqtree-element:hover {
+            color: #fff;
+            background-color: @global-link-color;
+        }
+    }
+}
+
+ul.jqtree-tree .jqtree-moving > .jqtree-element .jqtree-title {
+    outline: dashed 1px @global-link-color;
+}

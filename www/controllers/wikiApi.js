@@ -1,20 +1,19 @@
+'use strict';
+
 // wiki api
 
 var
     _ = require('lodash'),
-    async = require('async'),
     api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils'),
+    helper = require('../helper'),
     images = require('./_images'),
     search = require('../search/search'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    json_schema = require('../json_schema');
 
 var
-    commentApi = require('./commentApi'),
-    attachmentApi = require('./attachmentApi'),
-    checkAttachment = attachmentApi.checkAttachment,
-    createAttachmentTaskInTx = attachmentApi.createAttachmentTaskInTx;
+    attachmentApi = require('./attachmentApi');
 
 var
     User = db.user,
@@ -29,10 +28,9 @@ function indexWiki(r) {
         search.engine.index({
             type: 'wiki',
             id: r.id,
-            tags: r.tags || '',
             name: r.name,
             description: r.description || '',
-            content: utils.html2text(utils.md2html(r.content)),
+            content: helper.html2text(helper.md2html(r.content, true)),
             created_at: r.created_at,
             updated_at: r.updated_at,
             url: '/wiki/' + (r.wiki_id ? r.wiki_id + '/' : '') + r.id,
@@ -49,48 +47,44 @@ function unindexWiki(r) {
     });
 }
 
-function getWikis(callback) {
-    Wiki.findAll({
+function* $getWikis() {
+    return yield Wiki.$findAll({
         order: 'name asc'
-    }, callback);
-}
-
-function getWiki(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    Wiki.find(id, function (err, entity) {
-        if (err) {
-            return callback(err);
-        }
-        if (entity === null) {
-            return callback(api.notFound('Wiki'));
-        }
-        callback(null, entity);
     });
 }
 
-function getWikiWithContent(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
+function* $getWiki(id, includeContent) {
+    var
+        text,
+        wiki = yield Wiki.$find(id);
+    if (wiki === null) {
+        throw api.notFound('Wiki');
     }
-    getWiki(id, tx, function (err, entity) {
-        if (err) {
-            return callback(err);
+    if (includeContent) {
+        text = yield Text.$find(wiki.content_id);
+        if (text === null) {
+            throw api.notFound('Text');
         }
-        Text.find(entity.content_id, function (err, text) {
-            if (err) {
-                return callback(err);
-            }
-            if (text === null) {
-                return callback(api.notFound('Text'));
-            }
-            entity.content = text.value;
-            callback(null, entity);
-        });
-    });
+        wiki.content = text.value;
+    }
+    return wiki;
+}
+
+function* $getWikiPage(id, includeContent) {
+    var
+        text,
+        wp = yield WikiPage.$find(id);
+    if (wp === null) {
+        throw api.notFound('Wiki');
+    }
+    if (includeContent) {
+        text = yield Text.$find(wp.content_id);
+        if (text === null) {
+            throw api.notFound('Text');
+        }
+        wp.content = text.value;
+    }
+    return wp;
 }
 
 function treeIterate(nodes, root) {
@@ -126,185 +120,66 @@ function flatten(arr, depth, children) {
     });
 }
 
-function getWikiPages(wiki_id, returnAsDict, callback) {
-    if (arguments.length === 2) {
-        callback = returnAsDict;
-        returnAsDict = false;
-    }
-    WikiPage.findAll({
-        where: 'wiki_id=?',
-        params: [wiki_id]
-    }, function (err, pages) {
-        if (err) {
-            return callback(err);
-        }
-        var proot, pdict = {};
-        pages.forEach(function (p) {
-            pdict[p.id] = p;
+function* $getWikiPages(wiki_id, returnAsDict) {
+    var
+        proot,
+        pdict = {},
+        pages = yield WikiPage.$findAll({
+            where: 'wiki_id=?',
+            params: [wiki_id]
         });
-        if (returnAsDict) {
-            return callback(null, pdict);
-        }
-        proot = { id: '' };
-        treeIterate(pdict, proot);
-        return callback(null, proot.children);
+    _.each(pages, function (p) {
+        pdict[p.id] = p;
     });
-}
-
-function getWikiTree(id, isFlatten, callback) {
-    if (arguments.length === 2) {
-        callback = isFlatten;
-        isFlatten = false;
+    if (returnAsDict) {
+        return pdict;
     }
-    getWiki(id, function (err, wiki) {
-        if (err) {
-            return callback(err);
-        }
-        getWikiPages(id, function (err, children) {
-            if (err) {
-                return callback(err);
-            }
-            if (isFlatten) {
-                var arr = [];
-                flatten(arr, 0, children);
-                wiki.children = arr;
-            } else {
-                wiki.children = children;
-            }
-            return callback(null, wiki);
-        });
-    });
-}
-
-// get wiki page by id:
-function getWikiPage(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    WikiPage.find(id, function (err, entity) {
-        if (err) {
-            return callback(err);
-        }
-        if (entity === null) {
-            return callback(api.notFound('WikiPage'));
-        }
-        callback(null, entity);
-    });
-}
-
-// get wiki page by id, with content attached:
-function getWikiPageWithContent(id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    getWikiPage(id, tx, function (err, entity) {
-        if (err) {
-            return callback(err);
-        }
-        Text.find(entity.content_id, function (err, text) {
-            if (err) {
-                return callback(err);
-            }
-            if (text === null) {
-                return callback(api.notFound('WikiPage'));
-            }
-            entity.content = text.value;
-            callback(null, entity);
-        });
-    });
-}
-
-function createWikiPage(wp, callback) {
-    var content, doCreateWikiPage;
-
-    content = wp.content;
-    doCreateWikiPage = function () {
-        warp.transaction(function (err, tx) {
-            if (err) {
-                return callback(err);
-            }
-            var
-                wp_id = next_id(),
-                content_id = next_id();
-            async.waterfall([
-                // create text:
-                function (callback) {
-                    Text.create({
-                        id: content_id,
-                        ref_id: wp_id,
-                        value: content
-                    }, tx, callback);
-                },
-                // count:
-                function (text, callback) {
-                    warp.queryNumber('select count(id) from wikipages where wiki_id=? and parent_id=?', [wp.wiki_id, wp.parent_id], tx, callback);
-                },
-                // create wiki:
-                function (num, callback) {
-                    wp.id = wp_id;
-                    wp.content_id = content_id;
-                    wp.display_order = num;
-                    WikiPage.create(wp, tx, callback);
-                }
-            ], function (err, result) {
-                tx.done(err, function (err) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    result.content = content;
-                    callback(null, result);
-                });
-            });
-        });
+    proot = {
+        id: ''
     };
-    if (wp.parent_id) {
-        getWikiPage(wp.parent_id, function (err, entity) {
-            if (err) {
-                return callback(err);
-            }
-            if (wp.wiki_id !== entity.wiki_id) {
-                return callback(api.invalidParam('parent_id'));
-            }
-            return doCreateWikiPage();
-        });
-        return;
-    }
-    return doCreateWikiPage();
+    treeIterate(pdict, proot);
+    return proot.children;
 }
 
-function getNavigationMenus(callback) {
-    getWikis(function (err, ws) {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, _.map(ws, function (w) {
-            return {
-                name: w.name,
-                url: '/wiki/' + w.id
-            };
-        }));
+function* $getWikiTree(id, isFlatten) {
+    var
+        arr,
+        wiki = yield $getWiki(id),
+        children = yield $getWikiPages(id);
+    if (isFlatten) {
+        arr = [];
+        flatten(arr, 0, children);
+        wiki.children = arr;
+    }
+    else {
+        wiki.children = children;
+    }
+    return wiki;
+}
+
+function* $getNavigationMenus() {
+    var ws = yield $getWikis();
+    return _.map(ws, function (w) {
+        return {
+            name: w.name,
+            url: '/wiki/' + w.id
+        };
     });
 }
 
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    $getNavigationMenus: $getNavigationMenus,
 
-    getWikiTree: getWikiTree,
+    $getWikiTree: $getWikiTree,
 
-    getWiki: getWiki,
+    $getWiki: $getWiki,
 
-    getWikis: getWikis,
+    $getWikis: $getWikis,
 
-    getWikiWithContent: getWikiWithContent,
+    $getWikiPage: $getWikiPage,
 
-    getWikiPage: getWikiPage,
-
-    getWikiPageWithContent: getWikiPageWithContent,
-
-    'GET /api/wikis/:id': function (req, res, next) {
+    'GET /api/wikis/:id': function* (id) {
         /**
          * Get wiki by id.
          * 
@@ -312,36 +187,28 @@ module.exports = {
          * @param {string} id: Id of the wiki.
          * @param {string} [format='']: Return html if format is 'html', default to raw.
          * @return {object} Wiki object.
-         * @error {resource:notfound} Wiki was not found by id.
+         * @error {entity:notfound} Wiki was not found by id.
          */
-        getWikiWithContent(req.params.id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-
-            if (req.query.format === 'html') {
-                wiki.content = utils.md2html(wiki.content);
-            }
-            return res.send(wiki);
-        });
+        var wiki = yield $getWiki(id, true);
+        if (this.request.query.format === 'html') {
+            wiki.content = helper.md2html(wiki.content, true);
+        }
+        this.body = wiki;
     },
 
-    'GET /api/wikis': function (req, res, next) {
+    'GET /api/wikis': function* () {
         /**
          * Get all wikis.
          * 
          * @name Get Wikis
          * @return {object} Wikis object.
          */
-        getWikis(function (err, entities) {
-            if (err) {
-                return next(err);
-            }
-            return res.send({ wikis: entities});
-        });
+        this.body = {
+            wikis: yield $getWikis()
+        };
     },
 
-    'POST /api/wikis': function (req, res, next) {
+    'POST /api/wikis': function* () {
         /**
          * Create a new wiki.
          * 
@@ -349,200 +216,55 @@ module.exports = {
          * @param {string} name: Name of the wiki.
          * @param {string} description: Description of the wiki.
          * @param {string} content: Content of the wiki.
-         * @param {string} [tags]: Tags of the wiki, seperated by ','.
-         * @param {file} [file]: File to upload as cover image.
+         * @param {string} [tag]: Tag of the wiki, seperated by ','.
+         * @param {string} [image]: Base64 encoded string as cover image.
          * @return {object} The created wiki object.
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var name, description, content, tags, file, content_id, wiki_id, fnCreate;
-        try {
-            name = utils.getRequiredParam('name', req);
-            description = utils.getRequiredParam('description', req);
-            content = utils.getRequiredParam('content', req);
-        } catch (e) {
-            return next(e);
-        }
-        tags = utils.formatTags(utils.getParam('tags', '', req));
-        file = req.files && req.files.file;
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            wiki,
+            text,
+            wiki_id,
+            content_id,
+            attachment,
+            data = this.request.body;
+        json_schema.validate('createWiki', data);
 
-        content_id = next_id();
         wiki_id = next_id();
+        content_id = next_id();
 
-        fnCreate = function (fileObject) {
-            warp.transaction(function (err, tx) {
-                if (err) {
-                    return next(err);
-                }
-                async.waterfall([
-                    // create text:
-                    function (callback) {
-                        Text.create({
-                            id: content_id,
-                            ref_id: wiki_id,
-                            value: content
-                        }, tx, callback);
-                    },
-                    // create attachment:
-                    function (text, callback) {
-                        if (fileObject) {
-                            var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
-                            return fn(callback);
-                        }
-                        callback(null, null);
-                    },
-                    // create wiki:
-                    function (atta, callback) {
-                        Wiki.create({
-                            id: wiki_id,
-                            cover_id: atta === null ? '' : atta.id,
-                            content_id: content_id,
-                            name: name,
-                            tags: tags,
-                            description: description
-                        }, tx, callback);
-                    }
-                ], function (err, result) {
-                    tx.done(err, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        result.content = content;
-                        indexWiki(result);
-                        return res.send(result);
-                    });
-                });
-            });
-        };
+        // create image:
+        attachment = yield attachmentApi.$createAttachment(
+            this.request.user.id,
+            data.name.trim(),
+            data.description.trim(),
+            new Buffer(data.image, 'base64'),
+            null,
+            true);
 
-        if (file) {
-            return checkAttachment(file, true, function (err, attachFileObject) {
-                if (err) {
-                    return next(err);
-                }
-                // override name:
-                attachFileObject.name = name;
-                fnCreate(attachFileObject);
-            });
-        }
-        return fnCreate(null);
-    },
-
-    'POST /api/wikis/:id/comments': function (req, res, next) {
-        /**
-         * Create a comment on a wiki.
-         * 
-         * @name Comment Wiki
-         * @param {string} id: Id of the wiki.
-         * @param {string} [content]: Content of the comment.
-         * @return {object} The comment object.
-         * @error {resource:notfound} Wiki was not found by id.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
-         */
-        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var content;
-        try {
-            content = utils.getRequiredParam('content', req);
-        } catch (e) {
-            return next(e);
-        }
-        Wiki.find(req.params.id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            commentApi.createComment('wiki', wiki.id, req.user, content, function (err, c) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send(c);
-            });
+        // create text:
+        text = yield Text.$create({
+            id: content_id,
+            ref_id: wiki_id,
+            value: data.content
         });
-    },
 
-    'POST /api/wikis/:id/wikipages': function (req, res, next) {
-        /**
-         * Create a new wiki page.
-         * 
-         * @name Create WikiPage
-         * @param {string} id: Id of the wiki.
-         * @param {string} name: Name of the wiki page.
-         * @param {string} parent_id: Parent id of the wiki page, specify 'ROOT' for top level wiki page.
-         * @param {string} content: Content of the wiki.
-         * @return {object} The created wiki page object.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
-         */
-        var name, content, parent_id;
-        try {
-            name = utils.getRequiredParam('name', req);
-            content = utils.getRequiredParam('content', req);
-            parent_id = utils.getRequiredParam('parent_id', req);
-        } catch (e) {
-            return next(e);
-        }
-        getWiki(req.params.id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            createWikiPage({
-                wiki_id: wiki.id,
-                parent_id: parent_id === 'ROOT' ? '' : parent_id,
-                name: name,
-                content: content
-            }, function (err, wikipage) {
-                if (err) {
-                    return next(err);
-                }
-                indexWiki(wikipage);
-                return res.send(wikipage);
-            });
+        // create wiki:
+        wiki = yield Wiki.$create({
+            id: wiki_id,
+            content_id: content_id,
+            cover_id: attachment.id,
+            name: data.name.trim(),
+            description: data.description.trim(),
+            tag: data.tag.trim()
         });
+        wiki.content = data.content;
+        this.body = wiki;
     },
 
-    'GET /api/wikis/wikipages/:id': function (req, res, next) {
-        /**
-         * Get wiki page by id.
-         * 
-         * @name Get Wiki Page
-         * @param {string} id: Id of the wiki page.
-         * @param {string} [format='']: Return html if format is 'html', default to raw.
-         * @return {object} WikiPage object.
-         * @error {resource:notfound} WikiPage was not found by id.
-         */
-        getWikiPageWithContent(req.params.id, function (err, wp) {
-            if (err) {
-                return next(err);
-            }
-            if (req.query.format === 'html') {
-                wp.content = utils.md2html(wp.content);
-            }
-            return res.send(wp);
-        });
-    },
-
-    'GET /api/wikis/:id/wikipages': function (req, res, next) {
-        /**
-         * Get wiki pages as a tree list.
-         * 
-         * @name Get WikiPages
-         * @param {string} id - The id of the wiki.
-         * @return {object} The full tree object.
-         */
-        getWikiTree(req.params.id, function (err, wiki) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(wiki);
-        });
-    },
-
-    'POST /api/wikis/:id': function (req, res, next) {
+    'POST /api/wikis/:id': function* (id) {
         /**
          * Update a wiki.
          * 
@@ -550,249 +272,126 @@ module.exports = {
          * @param {string} id: The id of the wiki.
          * @param {string} [name]: The name of the wiki.
          * @param {string} [description]: The description of the wiki.
-         * @param {string} [tags]: The tags of the wiki.
+         * @param {string} [tag]: The tag of the wiki.
          * @param {string} [content]: The content of the wiki.
-         * @param {file} [file]: The cover image of the wiki.
+         * @param {string} [image]: Base64 encoded string as cover image.
          * @return {object} The updated wiki object.
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
+        helper.checkPermission(this.request, constants.role.EDITOR);
         var
-            name = utils.getParam('name', req),
-            description = utils.getParam('description', req),
-            tags = utils.getParam('tags', req),
-            content = utils.getParam('content', req),
-            file,
-            fnUpdate;
-
-        if (name !== null && name === '') {
-            return next(api.invalidParam('name'));
-        }
-        if (description !== null && description === '') {
-            return next(api.invalidParam('description'));
-        }
-        if (content !== null && content === '') {
-            return next(api.invalidParam('content'));
-        }
-        if (tags !== null) {
-            tags = utils.formatTags(tags);
-        }
-
-        file = req.files && req.files.file;
-
-        fnUpdate = function (fileObject) {
-            warp.transaction(function (err, tx) {
-                if (err) {
-                    return next(err);
-                }
-                async.waterfall([
-                    // query wiki:
-                    function (callback) {
-                        Wiki.find(req.params.id, tx, callback);
-                    },
-                    // update text?
-                    function (wiki, callback) {
-                        if (wiki === null) {
-                            return callback(api.notFound('Wiki'));
-                        }
-                        if (content === null) {
-                            return callback(null, wiki);
-                        }
-                        var content_id = next_id();
-                        Text.create({
-                            id: content_id,
-                            ref_id: wiki.id,
-                            value: content
-                        }, tx, function (err, text) {
-                            if (err) {
-                                return callback(err);
-                            }
-                            wiki.content_id = content_id;
-                            callback(null, wiki);
-                        });
-                    },
-                    // update cover?
-                    function (wiki, callback) {
-                        if (fileObject) {
-                            var fn = createAttachmentTaskInTx(fileObject, tx, req.user.id);
-                            return fn(function (err, atta) {
-                                if (err) {
-                                    return callback(err);
-                                }
-                                wiki.cover_id = atta.id;
-                                callback(null, wiki);
-                            });
-                        }
-                        callback(null, wiki);
-                    },
-                    // update wiki:
-                    function (wiki, callback) {
-                        if (name !== null) {
-                            wiki.name = name;
-                        }
-                        if (description !== null) {
-                            wiki.description = description;
-                        }
-                        if (tags !== null) {
-                            wiki.tags = tags;
-                        }
-                        wiki.update(tx, callback);
-                    }
-                ], function (err, result) {
-                    tx.done(err, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        if (content !== null) {
-                            result.content = content;
-                            indexWiki(result);
-                            return res.send(result);
-                        }
-                        Text.find(result.content_id, function (err, text) {
-                            if (err) {
-                                return next(err);
-                            }
-                            result.content = text.value;
-                            indexWiki(result);
-                            return res.send(result);
-                        });
-                    });
-                });
-            });
-        };
-
-        if (file) {
-            return checkAttachment(file, true, function (err, attachFileObject) {
-                if (err) {
-                    return next(err);
-                }
-                // override name:
-                attachFileObject.name = name;
-                fnUpdate(attachFileObject);
-            });
-        }
-        return fnUpdate(null);
-    },
-
-    'POST /api/wikis/wikipages/:id/move/:target_id': function (req, res, next) {
-        /**
-         * Move a wikipage to another node.
-         * 
-         * @name Move WikiPage
-         * @param {string} id: The source id of the WikiPage.
-         * @param {string} target_id: The target id of the WikiPage. Specify 'ROOT' if move to top of the tree.
-         * @param {int} index: The index of the moved page.
-         * @return {object} The moved wiki object.
-         */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var
-            wpid = req.params.id,
-            target_id = req.params.target_id,
-            index,
             wiki,
-            movingPage,
-            parentPage,
-            allPages;
-        try {
-            index = parseInt(utils.getRequiredParam('index', req), 10);
-        } catch (e) {
-            return next(e);
+            text,
+            wiki_id,
+            content_id,
+            attachment,
+            props = [],
+            data = this.request.body;
+        json_schema.validate('updateWiki', data);
+
+        wiki = yield $getWiki(id);
+        if (data.name) {
+            wiki.name = data.name.trim();
+            props.push('name');
         }
-        if (isNaN(index) || index < 0) {
-            return next(api.invalidParam('index'));
+        if (data.description) {
+            wiki.description = data.description.trim();
+            props.push('description');
         }
-        // get the 2 pages:
-        async.waterfall([
-            function (callback) {
-                getWikiPage(wpid, callback);
-            },
-            function (wp, callback) {
-                movingPage = wp;
-                getWiki(movingPage.wiki_id, callback);
-            },
-            function (w, callback) {
-                wiki = w;
-                if (target_id === 'ROOT') {
-                    return callback(null, null);
-                }
-                getWikiPage(target_id, callback);
-            },
-            function (wp, callback) {
-                parentPage = wp;
-                if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
-                    return callback(api.invalidParam('target_id'));
-                }
-                callback(null, null);
-            },
-            function (prev, callback) {
-                getWikiPages(wiki.id, true, callback);
-            },
-            function (all, callback) {
-                allPages = all;
-                // check to prevent recursive:
-                if (parentPage !== null) {
-                    var p = parentPage;
-                    while (p.parent_id !== '') {
-                        if (p.parent_id === movingPage.id) {
-                            return callback(api.resourceConflictError('Will cause recursive.'));
-                        }
-                        p = allPages[p.parent_id];
-                    }
-                }
-                // check ok:
-                callback(null, null);
-            }
-        ], function (err, r) {
-            if (err) {
-                return next(err);
-            }
-            // get current children:
-            var
-                parentId = parentPage === null ? '' : parentPage.id,
-                L = [];
-            _.each(allPages, function (p, pid) {
-                if (p.parent_id === parentId && p.id !== movingPage.id) {
-                    L.push(p);
-                }
+        if (data.tag) {
+            wiki.tag = data.tag.trim();
+            props.push('tag');
+        }
+        if (data.image) {
+            // create image:
+            attachment = yield attachmentApi.$createAttachment(
+                this.request.user.id,
+                wiki.name,
+                wiki.description,
+                new Buffer(data.image, 'base64'),
+                null,
+                true);
+            wiki.cover_id = attachment.id;
+            props.push('cover_id');
+        }
+        if (data.content) {
+            text = yield Text.$create({
+                ref_id: wiki.id,
+                value: data.content
             });
-            if (index > L.length) {
-                return next(api.invalidParam('index'));
-            }
-            L.sort(function (p1, p2) {
-                return p1.display_order < p2.display_order ? (-1) : 1;
-            });
-            L.splice(index, 0, movingPage);
-            // update display order and movingPage:
-            warp.transaction(function (err, tx) {
-                if (err) {
-                    return next(err);
-                }
-                var tasks = _.map(L, function (p, index) {
-                    return function (callback) {
-                        warp.update('update wikipages set display_order=? where id=?', [index, p.id], tx, callback);
-                    };
-                });
-                tasks.push(function (callback) {
-                    movingPage.display_order = index; // <-- already updated, but need to pass to result
-                    movingPage.parent_id = parentId;
-                    movingPage.update(['parent_id', 'updated_at', 'version'], tx, callback);
-                });
-                async.series(tasks, function (err, results) {
-                    tx.done(err, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        return res.send(results.pop());
-                    });
-                });
-            });
-        });
+            wiki.content_id = text.id;
+            wiki.content = data.content;
+            props.push('content_id');
+        }
+        if (props.length > 0) {
+            props.push('updated_at');
+            props.push('version');
+            yield wiki.$update(props);
+        }
+        if (!wiki.content) {
+            text = yield Text.$find(wiki.content_id);
+            wiki.content = text.value;
+        }
+        this.body = wiki;
     },
 
-    'POST /api/wikis/wikipages/:id': function (req, res, next) {
+    'POST /api/wikis/:id/wikipages': function* (wiki_id) {
+        /**
+         * Create a new wiki page.
+         * 
+         * @name Create WikiPage
+         * @param {string} id: Id of the wiki.
+         * @param {string} name: Name of the wiki page.
+         * @param {string} parent_id: Parent id of the wiki page, specify '' for top level wiki page.
+         * @param {string} content: Content of the wiki.
+         * @return {object} The created wiki page object.
+         * @error {parameter:invalid} If some parameter is invalid.
+         * @error {permission:denied} If current user has no permission.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            wiki,
+            wikipage,
+            text,
+            num, wp_id, content_id,
+            data = this.request.body;
+        json_schema.validate('createWikiPage', data);
+
+        // check wiki id:
+        yield $getWiki(wiki_id);
+        // check parent id:
+        if (data.parent_id) {
+            yield $getWikiPage(data.parent_id);
+        }
+
+        wp_id = next_id(),
+        content_id = next_id();
+
+        // count:
+        num = yield warp.$queryNumber(
+            'select max(display_order) from wikipages where wiki_id=? and parent_id=?',
+            [wiki_id, data.parent_id]
+        );
+        text = yield Text.$create({
+            id: content_id,
+            ref_id: wp_id,
+            value: data.content
+        });
+        // create wiki page:
+        wikipage = yield WikiPage.$create({
+            id: wp_id,
+            wiki_id: wiki_id,
+            content_id: content_id,
+            parent_id: data.parent_id,
+            name: data.name.trim(),
+            display_order: ((num === null) ? 0 : num + 1)
+        });
+
+        wikipage.content = data.content;
+        indexWiki(wikipage);
+        this.body = wikipage;
+    },
+
+    'POST /api/wikis/wikipages/:id': function* (id) {
         /**
          * Update a wiki page.
          * 
@@ -802,108 +401,146 @@ module.exports = {
          * @param {string} [content]: The content of the wiki page.
          * @return {object} The updated wiki object.
          */
+        helper.checkPermission(this.request, constants.role.EDITOR);
         var
-            id = req.params.id,
-            name = utils.getParam('name', req),
-            content = utils.getParam('content', req),
-            content_id;
-        if (name !== null && name === '') {
-            return next(api.invalidParam('name'));
+            wikipage,
+            text,
+            props = [],
+            data = this.request.body;
+        json_schema.validate('updateWikiPage', data);
+
+        wikipage = yield $getWikiPage(id);
+        if (data.name) {
+            wikipage.name = data.name.trim();
+            props.push('name');
         }
-        if (content !== null && content === '') {
-            return next(api.invalidParam('content'));
-        }
-        content_id = next_id();
-        warp.transaction(function (err, tx) {
-            if (err) {
-                return next(err);
-            }
-            async.waterfall([
-                // query wiki page:
-                function (callback) {
-                    getWikiPage(id, tx, callback);
-                },
-                function (wp, callback) {
-                    if (content !== null) {
-                        Text.create({
-                            id: content_id,
-                            ref_id: id,
-                            value: content
-                        }, tx, function (err, text) {
-                            if (err) {
-                                return callback(err);
-                            }
-                            wp.content_id = content_id;
-                            callback(null, wp);
-                        });
-                        return;
-                    }
-                    callback(null, wp);
-                },
-                function (wp, callback) {
-                    if (name !== null) {
-                        wp.name = name;
-                    }
-                    wp.update(tx, callback);
-                }
-            ], function (err, wp) {
-                tx.done(err, function (err) {
-                    if (err) {
-                        return next(err);
-                    }
-                    if (content !== null) {
-                        wp.content = content;
-                        indexWiki(wp);
-                        return res.send(wp);
-                    }
-                    Text.find(wp.content_id, function (err, text) {
-                        if (err) {
-                            return next(err);
-                        }
-                        wp.content = text.value;
-                        indexWiki(wp);
-                        return res.send(wp);
-                    });
-                });
+        if (data.content) {
+            text = yield Text.$create({
+                ref_id: wikipage.id,
+                value: data.content
             });
-        });
+            wikipage.content_id = text.id;
+            wikipage.content = data.content;
+            props.push('content_id');
+        }
+        if (props.length > 0) {
+            props.push('updated_at');
+            props.push('version');
+            yield wikipage.$update(props);
+        }
+        if (!wikipage.content) {
+            text = yield Text.$find(wikipage.content_id);
+            wikipage.content = text.value;
+        }
+
+        indexWiki(wikipage);
+        this.body = wikipage;
     },
 
-    'POST /api/wikis/wikipages/:id/comments': function (req, res, next) {
+    'GET /api/wikis/wikipages/:id': function* (id) {
         /**
-         * Create a comment on a wiki page.
+         * Get wiki page by id.
          * 
-         * @name Comment WikiPage
+         * @name Get Wiki Page
          * @param {string} id: Id of the wiki page.
-         * @param {string} [content]: Content of the comment.
-         * @return {object} The comment object.
+         * @param {string} [format='']: Return html if format is 'html', default to raw.
+         * @return {object} WikiPage object.
          * @error {resource:notfound} WikiPage was not found by id.
-         * @error {parameter:invalid} If some parameter is invalid.
-         * @error {permission:denied} If current user has no permission.
          */
-        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
-            return next(api.notAllowed('Permission denied.'));
+        var wp = yield $getWikiPage(id, true);
+        if (this.request.query.format === 'html') {
+            wp.content = helper.md2html(wp.content, true);
         }
-        var content;
-        try {
-            content = utils.getRequiredParam('content', req);
-        } catch (e) {
-            return next(e);
-        }
-        WikiPage.find(req.params.id, function (err, wikipage) {
-            if (err) {
-                return next(err);
-            }
-            commentApi.createComment('wikipage', wikipage.id, req.user, content, function (err, c) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send(c);
-            });
-        });
+        this.body = wp;
     },
 
-    'POST /api/wikis/wikipages/:id/delete': function (req, res, next) {
+    'GET /api/wikis/:id/wikipages': function* (id) {
+        /**
+         * Get wiki pages as a tree list.
+         * 
+         * @name Get WikiPages
+         * @param {string} id - The id of the wiki.
+         * @return {object} The full tree object.
+         */
+        this.body = yield $getWikiTree(id);
+    },
+
+    'POST /api/wikis/wikipages/:id/move': function* (id) {
+        /**
+         * Move a wikipage to another node.
+         * 
+         * @name Move WikiPage
+         * @param {string} id: The source id of the WikiPage.
+         * @param {string} parent_id: The target id of the WikiPage. Specify '' if move to top of the tree.
+         * @param {int} index: The index of the moved page.
+         * @return {object} The moved wiki object.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+
+        var
+            index, p, parent_id, i, L,
+            wiki,
+            movingPage,
+            parentPage,
+            allPages,
+            data = this.request.body;
+        json_schema.validate('moveWikiPage', data);
+
+        index = data.index;
+        parent_id = data.parent_id;
+
+        movingPage = yield $getWikiPage(id);
+
+        if (movingPage.parent_id === parent_id && movingPage.display_order === index) {
+            console.log('>> No need to update.');
+            this.body = movingPage;
+            return;
+        }
+
+        wiki = yield $getWiki(movingPage.wiki_id);
+
+        parentPage = parent_id === '' ? null : yield $getWikiPage(parent_id);
+        if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
+            throw api.invalidParam('parent_id');
+        }
+
+        // check to prevent recursive:
+        allPages = yield $getWikiPages(wiki.id, true);
+        if (parentPage !== null) {
+            p = parentPage;
+            while (p.parent_id !== '') {
+                if (p.parent_id === movingPage.id) {
+                    throw api.conflictError('WikiPage', 'Will cause recursive.');
+                }
+                p = allPages[p.parent_id];
+            }
+        }
+
+        // get current children:
+        L = [];
+        _.each(allPages, function (p, pid) {
+            if (p.parent_id === parent_id && p.id !== movingPage.id) {
+                L.push(p);
+            }
+        });
+        if (index > L.length) {
+            throw api.invalidParam('index');
+        }
+        L.sort(function (p1, p2) {
+            return p1.display_order < p2.display_order ? (-1) : 1;
+        });
+        L.splice(index, 0, movingPage);
+        // update display order and movingPage:
+        for (i=0; i<L.length; i++) {
+            yield warp.$update('update wikipages set display_order=? where id=?', [i, L[i].id]);
+        }
+        movingPage.display_order = index; // <-- already updated, but need to pass to result
+        movingPage.parent_id = parent_id;
+        yield movingPage.$update(['parent_id', 'updated_at', 'version']);
+        this.body = movingPage;
+    },
+
+    'POST /api/wikis/wikipages/:id/delete': function* (id) {
         /**
          * Delete a wikipage if it has no child wikipage.
          *
@@ -911,35 +548,29 @@ module.exports = {
          * @param {string} id - The id of the wikipage.
          * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
-        var id = req.params.id;
-        getWikiPage(id, function (err, wp) {
-            if (err) {
-                return next(err);
-            }
-            WikiPage.findNumber({
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            wikipage = yield $getWikiPage(id),
+            num = yield WikiPage.$findNumber({
                 select: 'count(id)',
                 where: 'parent_id=?',
                 params: [id]
-            }, function (err, num) {
-                if (err) {
-                    return next(err);
-                }
-                if (num > 0) {
-                    return next(api.resourceConflictError('WikiPage', 'Cannot delete a non-empty wiki pages.'));
-                }
-                wp.destroy(function (err) {
-                    if (err) {
-                        return next(err);
-                    }
-                    var r = { id: req.params.id };
-                    unindexWiki(r);
-                    return res.send(r);
-                });
             });
-        });
+        if (num > 0) {
+            throw api.conflictError('WikiPage', 'Cannot delete a non-empty wiki pages.');
+        }
+        yield wikipage.$destroy();
+        // delete all texts:
+        yield warp.$update('delete from texts where ref_id=?', [id]);
+
+        unindexWiki(wikipage);
+
+        this.body = {
+            id: id
+        };
     },
 
-    'POST /api/wikis/:id/delete': function (req, res, next) {
+    'POST /api/wikis/:id/delete': function* (id) {
         /**
          * Delete a wiki by its id.
          * 
@@ -948,53 +579,27 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          * @error {resource:notfound} If resource not found by id.
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        warp.transaction(function (err, tx) {
-            if (err) {
-                return next(err);
-            }
-            async.waterfall([
-                function (callback) {
-                    Wiki.find(req.params.id, tx, callback);
-                },
-                function (wiki, callback) {
-                    if (wiki === null) {
-                        return callback(api.notFound('Wiki'));
-                    }
-                    // check wiki pages:
-                    WikiPage.findNumber({
-                        select: 'count(id)',
-                        where: 'wiki_id=?',
-                        params: [wiki.id]
-                    }, tx, function (err, num) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        if (num > 0) {
-                            return callback(api.resourceConflictError('Wiki', 'Wiki is not empty.'));
-                        }
-                        callback(null, wiki);
-                    });
-                },
-                function (wiki, callback) {
-                    wiki.destroy(tx, callback);
-                },
-                function (r, callback) {
-                    // delete all texts:
-                    warp.update('delete from texts where ref_id=?', [req.params.id], tx, callback);
-                }
-            ], function (err, result) {
-                tx.done(err, function (err) {
-                    if (err) {
-                        return next(err);
-                    }
-                    var r = { id: req.params.id };
-                    unindexWiki(r);
-                    res.send(r);
-                });
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            wiki = yield $getWiki(id),
+            num = yield WikiPage.$findNumber({
+                select: 'count(id)',
+                where: 'wiki_id=?',
+                params: [id]
             });
-        });
+        if (num > 0) {
+            throw api.conflictError('Wiki', 'Wiki is not empty.');
+        }
+
+        yield wiki.$destroy();
+
+        // delete all texts:
+        yield warp.$update('delete from texts where ref_id=?', [id]);
+
+        unindexWiki(wiki);
+
+        this.body = {
+            id: id
+        };
     }
 };

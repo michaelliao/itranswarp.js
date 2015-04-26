@@ -1,73 +1,64 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
 
-{% block meta %}
-    <meta property="x-nav" content="/discuss" />
-{% endblock %}
+{% block nav %} /discuss {% endblock %}
 
 {% block title %}{{ board.name }}{% endblock %}
 
-{% block main %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
 
-    <ul class="breadcrumb">
-        <li><a href="/discuss">{{ _('Discuss') }}</a> <span class="divider">/</span></li>
-        <li class="active">{{ board.name }}</li>
-    </ul>
+<style>
+.x-discuss-visible {
+    display: block;
+}
+</style>
 
-    <div class="btn-toolbar" style="text-align:right;">
-        <a href="/discuss" class="btn" style="float:left"><i class="icon-arrow-left"></i> {{ _('Back') }}</a>
-        <a href="/discuss/{{ board.id }}/topics/create" class="btn btn-success"><i class="icon-plus icon-white"></i> {{ _('New Topic') }}</a>
+{% endblock %}
+
+{% block content %}
+    <div class="uk-alert x-board-nav">
+        <a href="/discuss">{{ _('Discuss') }}</a>
+        /
+        {{ board.name }}
     </div>
 
-    <table class="table table-bordered table-hover">
-    {% for t in topics %}
-        <tr>
-            <td>
-                <div class="x-discuss-item">
-                    <div class="x-discuss-item-right">
-                        <img class="x-user-image-small" src="{{ t.user.image_url }}">
-                    </div>
-                    <div class="x-discuss-item-left">
-                        <div class="x-discuss-header">
-                            <a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a>
+    <div class="uk-margin uk-clearfix">
+        <a href="/discuss" class="uk-button uk-float-left"><i class="uk-icon-arrow-left"></i> {{ _('Back') }}</a>
+        <a href="/discuss/{{ board.id }}/topics/create" class="uk-button uk-button-success uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Topic') }}</a>
+    </div>
+
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th>{{ board.name }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in topics %}
+            <tr>
+                <td>
+                    <a href="/user/{{ t.user.id }}" target="_blank"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{{ t.user.image_url }}" style="width:50px"></a>
+                    <div style="margin-left:70px;">
+                        <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a></div>
+                        <div>
+                            <a href="/user/{{ t.user.id }}" target="_blank">{{ t.user.name }}</a> posted at <span class="x-smartdate" date="{{ t.created_at }}">...</span>
+                            {% if t.updated_at > t.created_at %}
+                            Last updated at <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
+                            {% endif %}
                         </div>
-                        <div class="x-discuss-info">
-                            {{ t.user.name }} 发表于 <span class="x-smartdate" date="{{ t.created_at }}">...</span> 最后更新于 <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
-                        </div>
                     </div>
-                </div>
-            </td>
-        </tr>
-    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
     </table>
 
     <div class="x-page">
-        {{ pagination(page, '?page=') }}
+        {{ pagination('?page=PAGE', page) }}
     </div>
 
 {% endblock %}
 
-{% block sidebar %}
-    <div class="x-sidebar-section">
+{% block sidebar_right_content %}
 
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- lxf-250x250 -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:250px;height:250px"
-     data-ad-client="ca-pub-6727358730461554"
-     data-ad-slot="9529040712"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- lxf-250x250 -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:250px;height:250px"
-     data-ad-client="ca-pub-6727358730461554"
-     data-ad-slot="9529040712"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-
-    </div>
 {% endblock %}

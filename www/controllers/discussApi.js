@@ -1,13 +1,17 @@
+'use strict';
+
 // discuss api
 
 var
     _ = require('lodash'),
-    async = require('async'),
-    api = require('../api'),
     db = require('../db'),
-    utils = require('./_utils'),
+    api = require('../api'),
+    cache = require('../cache'),
+    helper = require('../helper'),
+    search = require('../search/search'),
     constants = require('../constants'),
-    search = require('../search/search');
+    json_schema = require('../json_schema'),
+    userApi = require('./userApi');
 
 var
     Board = db.board,
@@ -23,7 +27,7 @@ function indexDiscuss(r) {
         tags: r.tags || '',
         name: r.name,
         description: '',
-        content: utils.html2text(r.content),
+        content: helper.html2text(r.content),
         created_at: r.created_at,
         updated_at: r.updated_at,
         url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
@@ -60,360 +64,285 @@ function unindexDiscussByIds(ids) {
     });
 }
 
-function getNavigationMenus(callback) {
-    callback(null, [{
+function* $getNavigationMenus() {
+    return [{
         name: 'Discuss',
         url: '/discuss'
-    }]);
+    }];
 }
 
-function getBoard(board_id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
+function* $getBoard(id) {
+    var board = yield Board.$find(id);
+    if (board === null) {
+        throw api.notFound('Board');
     }
-    Board.find(board_id, tx, function (err, board) {
-        if (err) {
-            return callback(err);
-        }
-        if (board === null) {
-            return callback(api.notFound('Board'));
-        }
-        return callback(null, board);
-    });
+    return board;
 }
 
-function getBoards(tx, callback) {
-    if (arguments.length === 1) {
-        callback = tx;
-        tx = undefined;
+function* $getBoardByTag(tag) {
+    var
+        boards = yield $getBoards(),
+        filtered = _.filter(boards, function (b) {
+            return b.tag === tag;
+        });
+    if (filtered.length === 0) {
+        throw api.notFound('Board');
     }
-    Board.findAll({
+    return filtered[0];
+}
+
+function* $getBoards() {
+    return yield Board.$findAll({
         order: 'display_order'
-    }, tx, function (err, boards) {
-        if (err) {
-            return callback(err);
-        }
-        // sort by display_order and group by tag:
-        var
-            lastTag = null,
-            groups = [],
-            tagDict = {},
-            tags = _.uniq(_.map(boards, function (b) {
-                return b.tag;
-            }));
-        _.each(tags, function (tag, index) {
-            tagDict[tag] = index;
-        });
-        boards.sort(function (b1, b2) {
-            var
-                n1 = tagDict[b1.tag],
-                n2 = tagDict[b2.tag];
-            if (n1 === n2) {
-                return 0;
-            }
-            return n1 < n2 ? -1 : 1;
-        });
-        // group:
-        _.each(boards, function (b) {
-            if (lastTag === b.tag) {
-                groups[groups.length - 1].push(b);
-            } else {
-                lastTag = b.tag;
-                groups.push([b]);
-            }
-        });
-        return callback(null, groups);
     });
 }
 
-function createBoard(data, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
-    }
-    Board.findNumber('max(display_order)', tx, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        var display_order = (num === null) ? 0 : num + 1;
-        Board.create({
-            name: data.name,
-            tag: data.tag,
-            description: data.description,
-            display_order: display_order
-        }, tx, callback);
-    });
-}
-
-function lockBoard(board_id, locked, callback) {
-    getBoard(board_id, function (err, board) {
-        if (err) {
-            return callback(err);
-        }
-        if (board.locked === locked) {
-            return callback(null, board);
-        }
+function* $lockBoard(id, locked) {
+    var board = yield $getBoard(id);
+    if (board.locked !== locked) {
         board.locked = locked;
-        board.update(callback);
-    });
-}
-
-function getTopic(topic_id, tx, callback) {
-    if (arguments.length === 2) {
-        callback = tx;
-        tx = undefined;
+        yield board.$update(['locked', 'updated_at', 'version']);
     }
-    Topic.find(topic_id, tx, function (err, topic) {
-        if (err) {
-            return callback(err);
-        }
-        if (topic === null) {
-            return callback(api.notFound('Topic'));
-        }
-        return callback(null, topic);
+    return board;
+}
+
+function* $getTopic(id) {
+    var topic = yield Topic.$find(id);
+    if (topic === null) {
+        throw api.notFound('Topic');
+    }
+    return topic;
+}
+
+var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(Topic.__selectAttributesArray, function (field) {
+    return field !== 'content';
+});
+
+function* $getAllTopics(page) {
+    page.total = yield Topic.$findNumber({
+        select: 'count(id)'
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Topic.$findAll({
+        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
+        order: 'id desc',
+        offset: page.offset,
+        limit: page.limit
     });
 }
 
-function getTopics(board_id, page, callback) {
-    Topic.findNumber({
-        select: 'count(*)',
+function* $getTopics(board_id, page) {
+    page.total = yield Topic.$findNumber({
+        select: 'count(id)',
         where: 'board_id=?',
         params: [board_id]
-    }, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        page.totalItems = num;
-        if (page.isEmpty) {
-            return callback(null, { page: page, topics: [] });
-        }
-        Topic.findAll({
-            select: ['id', 'board_id', 'user_id', 'name', 'tags', 'upvotes', 'downvotes', 'score', 'created_at', 'updated_at', 'version'],
-            where: 'board_id=?',
-            params: [board_id],
-            order: 'updated_at desc',
-            offset: page.offset,
-            limit: page.limit
-        }, function (err, entities) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, {
-                page: page,
-                topics: entities
-            });
-        });
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Topic.$findAll({
+        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
+        where: 'board_id=?',
+        params: [board_id],
+        order: 'updated_at desc',
+        offset: page.offset,
+        limit: page.limit
     });
 }
 
-function createTopic(board_id, user_id, name, tags, content, callback) {
-    warp.transaction(function (err, tx) {
-        if (err) {
-            return callback(err);
-        }
-        async.waterfall([
-            function (callback) {
-                getBoard(board_id, tx, callback);
-            },
-            function (board, callback) {
-                Topic.create({
-                    board_id: board_id,
-                    user_id: user_id,
-                    name: name,
-                    tags: tags,
-                    content: content
-                }, callback);
-            },
-            function (topic, callback) {
-                warp.update('update boards set topics = topics + 1 where id=?', [board_id], tx, function (err, r) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    return callback(null, topic);
-                });
-            }
-        ], function (err, result) {
-            tx.done(err, function (err) {
-                if (err) {
-                    return callback(err);
-                }
-                return callback(null, result);
-            });
-        });
+function* $getTopicsByRef(ref_id, page) {
+    page.total = yield Topic.$findNumber({
+        select: 'count(id)',
+        where: 'ref_id=?',
+        params: [ref_id]
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Topic.$findAll({
+        where: 'ref_id=?',
+        params: [ref_id],
+        order: 'updated_at desc',
+        offset: page.offset,
+        limit: page.limit
     });
 }
 
-function deleteTopic(topic_id, callback) {
-    var reply_ids = null;
-    warp.transaction(function (err, tx) {
-        if (err) {
-            return callback(err);
-        }
-        async.waterfall([
-            function (callback) {
-                getTopic(topic_id, tx, callback);
-            },
-            function (topic, callback) {
-                topic.destroy(tx, callback);
-            },
-            function (r, callback) {
-                warp.query('select id from replies where topic_id=?', [topic_id], tx, callback);
-            },
-            function (rids, callback) {
-                reply_ids = rids;
-                warp.update('delete from replies where topic_id=?', [topic_id], tx, callback);
-            }
-        ], function (err, results) {
-            tx.done(err, function (err) {
-                if (err) {
-                    return callback(err);
-                }
-                return callback(null, topic_id, reply_ids);
-            });
-        });
+function* $getAllReplies(page) {
+    page.total = yield Reply.$findNumber({
+        select: 'count(id)'
+    });
+    if (page.isEmpty) {
+        return [];
+    }
+    return yield Reply.$findAll({
+        order: 'id desc',
+        offset: page.offset,
+        limit: page.limit
     });
 }
 
-function getAllReplies(page, callback) {
-    Reply.findNumber({
-        select: 'count(*)'
-    }, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        page.totalItems = num;
-        if (num === 0) {
-            return callback(null, { page: page, replies: [] });
-        }
-        Reply.findAll({
-            order: 'id desc',
-            offset: page.offset,
-            limit: page.limit
-        }, function (err, entities) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, {
-                page: page,
-                replies: entities
-            });
-        });
-    });
-}
-
-function getReplies(topic_id, page, callback) {
-    Reply.findNumber({
-        select: 'count(*)',
+function* $getReplies(topic_id, page) {
+    var num = yield Reply.$findNumber({
+        select: 'count(id)',
         where: 'topic_id=?',
         params: [topic_id]
-    }, function (err, num) {
-        if (err) {
-            return callback(err);
-        }
-        // items = 1 topic + N replies:
-        page.totalItems = num + 1;
-        if (num === 0) {
-            return callback(null, { page: page, replies: [] });
-        }
-        Reply.findAll({
-            where: 'topic_id=?',
-            params: [topic_id],
-            order: 'id',
-            offset: (page.pageIndex === 1) ? 0 : (page.offset - 1),
-            limit: (page.pageIndex === 1) ? (page.limit - 1) : page.limit
-        }, function (err, entities) {
-            if (err) {
-                return callback(err);
-            }
-            return callback(null, {
-                page: page,
-                replies: entities
-            });
-        });
+    });
+    // items = 1 topic + N replies:
+    page.total = num + 1;
+    if (num === 0) {
+        return [];
+    }
+    return yield Reply.$findAll({
+        where: 'topic_id=?',
+        params: [topic_id],
+        order: 'id',
+        offset: (page.index === 1) ? 0 : (page.offset - 1),
+        limit: (page.index === 1) ? (page.limit - 1) : page.limit
     });
 }
 
-function getReplyUrl(topic_id, reply_id, callback) {
-    getTopic(topic_id, function (err, topic) {
-        if (err) {
-            return callback(err);
-        }
-        Reply.findNumber({
-            select: 'count(*)',
+function* $getFirstReplies(topic_id, num) {
+    return yield Reply.$findAll({
+        where: 'topic_id=?',
+        params: [topic_id],
+        order: 'id',
+        limit: num
+    });
+}
+
+function* $getReplyPageIndex(topic, reply_id) {
+    var
+        num = yield Reply.$findNumber({
+            select: 'count(id)',
             where: 'topic_id=? and id < ?',
-            params: [topic_id, reply_id]
-        }, function (err, num) {
-            if (err) {
-                return callback(err);
-            }
-            var
-                p = Math.floor((num + 1) / 20) + 1,
-                url = '/discuss/' + topic.board_id + '/' + topic_id + '?page=' + p + '#' + reply_id;
-            return callback(null, url);
+            params: [topic.id, reply_id]
         });
-    });
+    return Math.floor((num + 1) / 20) + 1;
 }
 
-function createReply(topic_id, user_id, content, callback) {
-    var topic = null;
-    warp.transaction(function (err, tx) {
-        if (err) {
-            return callback(err);
-        }
-        async.waterfall([
-            function (callback) {
-                getTopic(topic_id, tx, callback);
-            },
-            function (t, callback) {
-                if (t.locked) {
-                    return callback(api.invalidParam('id', 'Topic is locked.'));
-                }
-                topic = t;
-                Reply.create({
-                    topic_id: topic_id,
-                    user_id: user_id,
-                    content: content
-                }, callback);
-            },
-            function (reply, callback) {
-                warp.update('update topics set replies = replies + 1, updated_at = ? where id=?', [Date.now(), topic_id], tx, function (err, r) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    return callback(null, reply);
-                });
-            }
-        ], function (err, reply) {
-            tx.done(err, function (err) {
-                if (err) {
-                    return callback(err);
-                }
-                return callback(null, topic, reply);
-            });
+function* $createReply(user, topic_id, data) {
+    var
+        reply,
+        topic = yield $getTopic(topic_id);
+    if (topic.locked) {
+        throw api.conflictError('Topic', 'Topic is locked.');
+    }
+    reply = yield Reply.$create({
+        topic_id: topic_id,
+        user_id: user.id,
+        content: helper.md2html(data.content)
+    });
+    yield warp.$update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), topic_id]);
+    reply.name = 'Re:' + topic.name;
+    indexDiscuss(reply);
+    delete reply.name;
+    if (topic.ref_id) {
+        yield cache.$remove('REF-TOPICS-' + topic.ref_id);
+    }
+    return reply;
+}
+
+function* $createTopic(user, board_id, ref_type, ref_id, data) {
+    var
+        board = yield $getBoard(board_id),
+        topic = yield Topic.$create({
+            board_id: board_id,
+            user_id: user.id,
+            ref_type: ref_type,
+            ref_id: ref_id,
+            name: data.name.trim(),
+            tags: (data.tags || '').trim(),
+            content: helper.md2html(data.content)
         });
+    yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
+    indexDiscuss(topic);
+    if (ref_id) {
+        yield cache.$remove('REF-TOPICS-' + ref_id);
+    }
+    return topic;
+}
+
+function* $loadTopicsByRefWithCache(ref_id, page) {
+    if (page.index === 1) {
+        var key = 'REF-TOPICS-' + ref_id;
+        return yield cache.$get(key, function* () {
+            return yield $loadTopicsByRef(ref_id, page); 
+        });
+    }
+    return yield $loadTopicsByRef(ref_id, page);
+}
+
+function* $loadTopicsByRef(ref_id, page) {
+    var
+        i,
+        topics = yield $getTopicsByRef(ref_id, page);
+    yield userApi.$bindUsers(topics);
+    for (i=0; i<topics.length; i++) {
+        yield $bindReplies(topics[i]);
+    }
+    return topics;
+}
+
+function* $bindReplies(topic) {
+    var key = 'REPLIES-' + topic.id + '_' + topic.version;
+    topic.replies = yield cache.$get(key, function* () {
+        var replies = yield $getFirstReplies(topic.id, 10);
+        yield userApi.$bindUsers(replies);
+        return replies;
     });
 }
 
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    $getNavigationMenus: $getNavigationMenus,
 
-    getBoard: getBoard,
+    $createTopic: $createTopic,
 
-    getBoards: getBoards,
+    $getBoard: $getBoard,
 
-    getTopic: getTopic,
+    $getBoardByTag: $getBoardByTag,
 
-    getTopics: getTopics,
+    $getBoards: $getBoards,
 
-    getAllReplies: getAllReplies,
+    $getTopic: $getTopic,
 
-    getReplies: getReplies,
+    $getTopics: $getTopics,
 
-    getReplyUrl: getReplyUrl,
+    $getTopicsByRef: $getTopicsByRef,
 
-    'POST /api/boards': function (req, res, next) {
+    $getReplies: $getReplies,
+
+    $getFirstReplies: $getFirstReplies,
+
+    $getReplyPageIndex: $getReplyPageIndex,
+
+    'GET /api/ref/:id/topics': function* (id) {
+        /**
+         * Get topics by ref id
+         */
+        var
+            page = helper.getPage(this.request, 10),
+            topics = yield $loadTopicsByRefWithCache(id, page);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
+
+    'GET /api/boards': function* () {
+        /**
+         * Get all boards.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        this.body = {
+            boards: yield $getBoards()
+        };
+    },
+
+    'POST /api/boards': function* () {
         /**
          * Create new board.
          * 
@@ -422,30 +351,27 @@ module.exports = {
          * @param {string} description - The description of the board.
          * @return {object} Board object.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var name, tag, description;
-        try {
-            name = utils.getRequiredParam('name', req);
-        } catch (e) {
-            return next(e);
-        }
-        tag = utils.getParam('tag', '', req);
-        description = utils.getParam('description', '', req);
-        createBoard({
-            name: name,
-            tag: tag,
-            description: description
-        }, function (err, board) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(board);
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        var
+            num,
+            data = this.request.body;
+        json_schema.validate('createBoard', data);
+
+        num = yield Board.$findNumber('max(display_order)');
+        this.body = yield Board.$create({
+            name: data.name.trim(),
+            tag: data.tag.trim(),
+            description: data.description.trim(),
+            display_order: ((num === null) ? 0 : num + 1)
         });
     },
 
-    'POST /api/boards/:id': function (req, res, next) {
+    'GET /api/boards/:id': function* (id) {
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        this.body = yield $getBoard(id);
+    },
+
+    'POST /api/boards/:id': function* (id) {
         /**
          * Update a board.
          * 
@@ -455,83 +381,60 @@ module.exports = {
          * @param {string} [description] - The new description of the board.
          * @return {object} Board object that was updated.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
+        helper.checkPermission(this.request, constants.role.ADMIN);
+
+        var
+            board,
+            props = [],
+            data = this.request.body;
+        json_schema.validate('updateBoard', data);
+
+        board = yield $getBoard(id);
+        if (data.name) {
+            board.name = data.name.trim();
+            props.push('name');
         }
-        var name = utils.getParam('name', req),
-            tag = utils.getParam('tag', req),
-            description = utils.getParam('description', req);
-        if (name !== null) {
-            if (name === '') {
-                return next(api.invalidParam('name'));
-            }
+        if (data.description) {
+            board.description = data.description.trim();
+            props.push('description');
         }
-        if (tag !== null) {
-            if (tag === '') {
-                return next(api.invalidParam('tag'));
-            }
+        if (data.tag) {
+            board.tag = data.tag.trim();
+            props.push('tag');
         }
-        getBoard(req.params.id, function (err, entity) {
-            if (err) {
-                return next(err);
-            }
-            if (name !== null) {
-                entity.name = name;
-            }
-            if (tag !== null) {
-                entity.tag = tag;
-            }
-            if (description !== null) {
-                entity.description = description;
-            }
-            entity.update(function (err, entity) {
-                if (err) {
-                    return next(err);
-                }
-                return res.send(entity);
-            });
-        });
+        if (props.length > 0) {
+            props.push('updated_at');
+            props.push('version');
+            yield board.$update(props);
+        }
+        this.body = board;
     },
 
-    'POST /api/boards/:id/lock': function (req, res, next) {
+    'POST /api/boards/:id/lock': function* (id) {
         /**
          * Lock the board by its id.
          * 
          * @name Lock Board
          * @param {string} id - The id of the board.
-         * @return {object} Results contains locked id. e.g. {"id": "12345"}
+         * @return {object} Board object.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        lockBoard(req.params.id, true, function (err, board) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(board);
-        });
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        this.body = yield $lockBoard(id, true);
     },
 
-    'POST /api/boards/:id/unlock': function (req, res, next) {
+    'POST /api/boards/:id/unlock': function* (id) {
         /**
          * Unlock the board by its id.
          * 
          * @name Unlock Board
          * @param {string} id - The id of the board.
-         * @return {object} Results contains locked id. e.g. {"id": "12345"}
+         * @return {object} Board object.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        lockBoard(req.params.id, false, function (err, board) {
-            if (err) {
-                return next(err);
-            }
-            return res.send(board);
-        });
+        helper.checkPermission(this.request, constants.role.ADMIN);
+        this.body = yield $lockBoard(id, false);
     },
 
-    'POST /api/boards/all/sort': function (req, res, next) {
+    'POST /api/boards/all/sort': function* () {
         /**
          * Sort boards.
          *
@@ -539,104 +442,120 @@ module.exports = {
          * @param {array} id: The ids of boards.
          * @return {object} The sort result like { "sort": true }.
          */
-        if (utils.isForbidden(req, constants.ROLE_ADMIN)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var i, entity, pos;
-        Board.findAll(function (err, entities) {
-            if (err) {
-                return next(err);
-            }
-            var ids = req.body.id;
-            if (!Array.isArray(ids)) {
-                ids = [ids];
-            }
-            if (entities.length !== ids.length) {
-                return next(api.invalidParam('id', 'Invalid id list.'));
-            }
-            for (i = 0; i < entities.length; i++) {
-                entity = entities[i];
-                pos = ids.indexOf(entity.id);
-                if (pos === (-1)) {
-                    return next(api.invalidParam('id', 'Invalid id parameters.'));
-                }
-                entity.display_order = pos;
-            }
-            warp.transaction(function (err, tx) {
-                if (err) {
-                    return next(err);
-                }
-                async.series(_.map(entities, function (entity) {
-                    return function (callback) {
-                        entity.update(['display_order', 'updated_at', 'version'], tx, callback);
-                    };
-                }), function (err, result) {
-                    tx.done(err, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        return res.send({ sort: true });
-                    });
-                });
-            });
-        });
-    },
+        helper.checkPermission(this.request, constants.role.ADMIN);
 
-    'POST /api/boards/:id/topics': function (req, res, next) {
-        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
         var
-            board_id = req.params.id,
-            name = utils.getParam('name', null, req),
-            tags = utils.formatTags(utils.getParam('tags', '', req)),
-            content;
-        try {
-            name = utils.getRequiredParam('name', req);
-            content = utils.safeMd2html(utils.getRequiredParam('content', req));
-        } catch (e) {
-            return next(e);
+            board, boards,
+            i, pos, ids,
+            data = this.request.body;
+        json_schema.validate('sortBoards', data);
+
+        ids = data.ids;
+        boards = yield Board.$findAll();
+        if (ids.length !== boards.length) {
+            throw api.invalidParam('ids', 'Invalid id list.');
         }
-        createTopic(board_id, req.user.id, name, tags, content, function (err, topic) {
-            if (err) {
-                return next(err);
+        for (i=0; i<boards.length; i++) {
+            board = boards[i];
+            pos = ids.indexOf(board.id);
+            if (pos === (-1)) {
+                throw api.invalidParam('ids', 'Invalid id list.');
             }
-            indexDiscuss(topic);
-            return res.send(topic);
-        });
+            board.display_order = pos;
+        }
+        for (i=0; i<boards.length; i++) {
+            yield boards[i].$update(['display_order', 'updated_at', 'version']);
+        }
+        this.body = {
+            boards: yield $getBoards()
+        };
     },
 
-    'POST /api/replies/:id/delete': function (req, res, next) {
+    'GET /api/boards/:id/topics': function* (board_id) {
         /**
-         * Delete a reply by its id.
+         * Get topics by page.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            topics = yield $getTopics(board_id, page);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
+
+    'POST /api/boards/:id/topics': function* (board_id) {
+        /**
+         * Post a new topic.
+         *
+         * @param {string} id: The id of board.
+         * @param {string} name: The name of topic.
+         * @param {string} tags: The tags of topic.
+         * @param {string} content: The content of topic.
+         * @return {object} The topic object.
+         */
+        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
+        var
+            topic,
+            data = this.request.body;
+        json_schema.validate('createTopic', data);
+        topic = yield $createTopic(this.request.user, board_id, '', '', data);
+        this.body = topic;
+    },
+
+    'GET /api/topics': function* () {
+        /**
+         * Get all topics.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            topics = yield $getAllTopics(page);
+        yield userApi.$bindUsers(topics);
+        this.body = {
+            page: page,
+            topics: topics
+        };
+    },
+
+    'GET /api/replies': function* () {
+        /**
+         * Get all replies by page.
+         */
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            page = helper.getPage(this.request),
+            replies = yield $getAllReplies(page);
+        yield userApi.$bindUsers(replies);
+        this.body = {
+            page: page,
+            replies: replies
+        };
+    },
+
+    'POST /api/replies/:id/delete': function* (id) {
+        /**
+         * Delete a reply by its id. NOTE delete a reply only mark it is deleted.
          * 
          * @name Delete Reply.
          * @param {string} id - The id of the reply.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var reply = yield Reply.$find(id);
+        if (reply === null) {
+            throw api.notFound('Reply');
         }
-        Reply.find(req.params.id, function (err, reply) {
-            if (err) {
-                return next(err);
-            }
-            if (reply === null) {
-                return next(api.notFound('Reply'));
-            }
-            reply.deleted = true;
-            reply.content = '';
-            reply.update(function (err, entity) {
-                if (err) {
-                    return next(err);
-                }
-                unindexDiscuss(entity);
-                return res.send(entity);
-            });
-        });
+        reply.deleted = true;
+        yield reply.$update(['deleted', 'updated_at', 'version']);
+        unindexDiscuss(reply);
+        this.body = {
+            id: id
+        };
     },
 
-    'POST /api/topics/:id/delete': function (req, res, next) {
+    'POST /api/topics/:id/delete': function* (id) {
         /**
          * Delete a topic by its id.
          * 
@@ -644,41 +563,32 @@ module.exports = {
          * @param {string} id - The id of the topic.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
-        if (utils.isForbidden(req, constants.ROLE_EDITOR)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        deleteTopic(req.params.id, function (err, topic_id, reply_ids) {
-            if (err) {
-                return next(err);
-            }
-            var r = { id: req.params.id };
-            unindexDiscuss(r);
-            unindexDiscussByIds(reply_ids);
-            return res.send(r);
-        });
+        helper.checkPermission(this.request, constants.role.EDITOR);
+        var
+            topic = yield $getTopic(id),
+            reply_ids = yield warp.$query('select id from replies where topic_id=?', [id]);
+        yield topic.$destroy();
+        yield warp.$update('delete from replies where topic_id=?', [id]); 
+        yield warp.$update('update boards set topics = topics - 1 where id=?', [topic.board_id]); 
+        unindexDiscuss(topic);
+        unindexDiscussByIds(reply_ids);
+        this.body = {
+            id: id
+        };
     },
 
-    'POST /api/topics/:id/replies': function (req, res, next) {
-        if (utils.isForbidden(req, constants.ROLE_SUBSCRIBER)) {
-            return next(api.notAllowed('Permission denied.'));
-        }
-        var
-            topic_id = req.params.id,
-            content;
-        try {
-            content = utils.safeMd2html(utils.getRequiredParam('content', req));
-        } catch (e) {
-            return next(e);
-        }
-        createReply(topic_id, req.user.id, content, function (err, topic, reply) {
-            if (err) {
-                return next(err);
-            }
-            reply.name = 'Re:' + topic.name;
-            indexDiscuss(reply);
-            delete reply.name;
-            return res.send(reply);
-        });
+    'POST /api/topics/:id/replies': function* (id) {
+        /**
+         * Create a reply to a topic.
+         * 
+         * @param {string} id: The id of topic.
+         * @param {string} content: The content of reply.
+         * @return {object} The reply object.
+         */
+        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
+        var data = this.request.body;
+        json_schema.validate('createReply', data);
+        this.body = yield $createReply(this.request.user, id, data);
     }
 
 };

@@ -1,0 +1,11 @@
+-- update schema:
+
+alter table users change column locked_util locked_until bigint not null;
+
+alter table topics add column ref_type varchar(50) not null after board_id;
+
+alter table topics add column ref_id varchar(50) not null after ref_type;
+
+alter table categories add column tag varchar(100) not null after name;
+
+alter table wikis change column tags tag varchar(100) not null;

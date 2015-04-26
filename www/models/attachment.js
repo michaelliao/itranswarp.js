@@ -1,3 +1,5 @@
+'use strict';
+
 // attachment.js
 
 var base = require('./_base.js');

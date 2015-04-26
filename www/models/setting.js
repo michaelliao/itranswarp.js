@@ -1,3 +1,5 @@
+'use strict';
+
 // setting.js
 
 var base = require('./_base');

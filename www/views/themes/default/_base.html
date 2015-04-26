@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:itranswarp="http://www.itranswarp.com/" {{ __website__.xmlns|safe }}>
+<!--
+{% macro pagination(url, page) %}
+    {% if page.isEmpty %}
+        <ul class="uk-pagination">
+            <li><span>No items available</span></li>
+        </ul>
+    {% else %}
+        <ul class="uk-pagination">
+        {% for _p in page.list %}
+            {% if _p == '...' %}
+            <li class="uk-disabled"><span>...</span></li>
+            {% elseif _p == page.index %}
+            <li class="uk-active"><span>{{ _p }}</span></li>
+            {% else %}
+            <li><a href="{{ url.replace('PAGE', _p) }}">{{ _p }}</a></li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
+-->
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %} ??? {% endblock %} - {{ __website__.name }}</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta name="keywords" content="{{ __website__.keywords }}" />
+    <meta name="description" content="{{ __website__.description }}" />
+    <meta property="x-nav" content="{% block nav %}/{% endblock %}" />
+    <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
+    {% block meta %}<!-- meta here -->{% endblock %}
+    <!-- BEGIN CSS COMPRESS -->
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/highlight.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
+    <!-- END CSS COMPRESS -->
+    <!--[if lt IE 10]>
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css" />
+    <![endif]-->
+    {% if __production__ %}
+    <script src="/static/themes/{{ __theme__ }}/js/all.js"></script>
+    {% else %}
+    <!-- BEGIN JAVASCRIPT COMPRESS -->
+    <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/marked.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit/tooltip.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit/slideshow.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/uikit/htmleditor.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/theme.js"></script>
+    <!-- END JAVASCRIPT COMPRESS -->
+    {% endif %}
+    <script id="tplComment" type="text/plain">
+        <div class="uk-comment">
+            <div class="uk-comment-header" style="margin-bottom:0">
+                <a target="_blank" href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{ user.image_url }" width="50" height="50" alt=""></a>
+                <h4 class="uk-comment-title"><a target="_blank" href="/discuss/{ board_id }/{ id }">{ name }</a></h4>
+                <div class="uk-comment-meta"><a target="_blank" href="/user/{ user.id }">{ user.name }</a> created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
+            </div>
+            <div class="uk-comment-body x-content x-auto-content">
+                { content|safe }
+            </div>
+        </div>
+    </script>
+
+    <script id="tplCommentReply" type="text/plain">
+        <div class="uk-comment">
+            <div class="uk-comment-header" style="margin-bottom:0">
+                <a target="_blank" href="/user/{ user.id }"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{ user.image_url }" width="50" height="50" alt=""></a>
+                <div class="uk-comment-meta"><a target="_blank" href="/user/{ user.id }">{ user.name }</a></div>
+                <div class="uk-comment-meta">Created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
+            </div>
+            <div class="uk-comment-body x-content x-auto-content">
+                { content|safe }
+            </div>
+        </div>
+    </script>
+
+    <script id="tplCommentInfo" type="text/plain">
+        <li>
+            <div class="x-comment-info">
+                <hr>
+                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }"><i class="uk-icon-list-ul"></i> {{ _('View Full Discuss') }}</a>
+                &nbsp;
+                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }#reply"><i class="uk-icon-reply"></i> {{ _('Reply This Topic') }}</a>
+            </div>
+        </li>
+    </script>
+
+    <script id="tplCommentArea" type="text/plain">
+        <div class="x-display-if-signin">
+            <p><button id="comment-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i> Make a Comment</button></p>
+            <form id="comment-form" class="uk-form" style="display:none;">
+                <fieldset>
+                    <div class="uk-alert uk-alert-danger" style="display:none"></div>
+                    <div class="uk-form-row">
+                        <label>Title:</label>
+                    </div>
+                    <div class="uk-form-row">
+                        <input type="text" name="name" maxlength="100" style="width:100%">
+                    </div>
+                    <div class="uk-form-row">
+                        <label>Content:</label>
+                    </div>
+                    <div class="uk-form-row x-textarea">
+                    </div>
+                    <div class="uk-form-row">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Post</button>
+                        &nbsp;&nbsp;
+                        <button type="button" class="uk-button x-cancel"><i class="uk-icon-close"></i> Cancel</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </script>
+
+    <style id="x-doc-style">
+{% if __user__ %}
+        .x-display-if-not-signin { display: none; }
+{% else %}
+        .x-display-if-signin { display: none; }
+{% endif %}
+    </style>
+    <script>
+        var g_time = parseFloat('{{ __time__ }}');
+        var g_signins = {{ __signins__|json|safe }};
+//{% if __user__ %}
+        var g_user = {
+            id: '{{ __user__.id }}',
+            name: '{{ __user__.name|addslashes }}',
+            image_url: '{{ __user__.image_url }}'
+        };
+//{% else %}
+        var g_user = null;
+//{% endif %}
+    </script>
+{% set __sidebar_left__ = false %}
+{% set __sidebar_left_width__ = '316px' %}
+{% set __sidebar_left_padding__ = true %}
+{% set __sidebar_right__ = false %}
+{% set __sidebar_right_width__ = '316px' %}
+{% set __sidebar_right_padding__ = true %}
+
+{% set __offcanvas_left__ = false %}
+
+{% block head %}<!-- head  -->{% endblock %}
+<!-- BEGIN custom_header -->
+{{ __website__.custom_header|safe }}
+<!-- END custom_header -->
+</head>
+
+<body>
+    <div class="x-goto-top">
+        <div class="x-arrow"></div>
+        <div class="x-stick"></div>
+    </div>
+
+    <div id="header" class="uk-navbar uk-navbar-attached">
+        <div class="uk-container x-container">
+            <div class="uk-navbar uk-navbar-attached">
+                {% if __offcanvas_left__ %}
+                <ul class="uk-navbar-nav uk-visible-small">
+                    <li><a href="#0" onclick="UIkit.offcanvas.show('#x-offcanvas-left')"><i class="uk-icon-chevron-right"></i></a></li>
+                </ul>
+                {% endif %}
+                <a href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
+                <a href="/" class="uk-navbar-brand uk-hidden-large"><i class="uk-icon-home"></i></a>
+                <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
+                    {% for nav in __navigations__ %}
+                    <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% if __navigations__ && __navigations__.length %}
+                <ul class="uk-navbar-nav uk-visible-small">
+                    <li class="uk-parent" data-uk-dropdown>
+                        <a href="#0"><i class="uk-icon-navicon"></i></a>
+                        <div class="uk-dropdown uk-dropdown-navbar">
+                            <ul class="uk-nav uk-nav-navbar">
+                                {% for nav in __navigations__ %}
+                                <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+                {% endif %}
+
+<!--
+                <div class="uk-navbar-content x-hidden-tiny">
+                    <form id="form-search" class="uk-form uk-margin-remove uk-display-inline-block">
+                        <div class="uk-form-icon">
+                            <i class="uk-icon-search"></i>
+                            <input type="text" placeholder="Search">
+                        </div>
+                    </form>
+                </div>
+-->
+
+                <div class="uk-navbar-flip">
+                    <ul class="uk-navbar-nav">
+                        <li class="uk-parent x-display-if-signin" data-uk-dropdown>
+                            <a href="#0"><i class="uk-icon-user"></i><span class="x-hidden-tiny">&nbsp;</span><span class="x-user-name x-hidden-tiny">{% if __user__ %}{{ __user__.name }}{% endif %}</span></a>
+                            <div class="uk-dropdown uk-dropdown-navbar">
+                                <ul class="uk-nav uk-nav-navbar">
+                                    <li><a target="_blank" href="/me/profile"><i class="uk-icon-cogs"></i> {{ _('Profile') }}</a></li>
+                                    <li class="uk-nav-divider"></li>
+                                    <li><a href="/auth/signout"><i class="uk-icon-power-off"></i> {{ _('Sign Out') }}</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="x-display-if-not-signin uk-hidden-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i> {{ _('Sign In') }}</a></li>
+                        <li class="x-display-if-not-signin uk-visible-small"><a href="javascript:showSignin()"><i class="uk-icon-sign-in"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div><!-- // header -->
+
+    <div id="main">
+        <div class="x-placeholder-50"><!-- placeholder --></div>
+        <div class="x-placeholder"><!-- placeholder --></div>
+        <div class="uk-container x-container">
+            <div class="uk-grid">
+                <div class="uk-width-1-1">
+                    {% block body_before %}{{ __snippets__.body_top|safe }}{% endblock %}
+                </div>
+            </div>
+            <div class="uk-flex">
+            {% if __sidebar_left__ %}
+                <div class="uk-width-1-1 uk-margin-right uk-hidden-small x-sidebar-left {% if !__sidebar_left_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_left_width__ }} !important">
+                    <div class="uk-clearfix">
+                        {% block sidebar_left_top %}{{ __snippets__.sidebar_left_top|safe }}{% endblock %}
+                    </div>
+                    <div class="x-sidebar-left-content">
+                        {% block sidebar_left_content %}<h3>override block "sidebar_left_content"</h3>{% endblock %}
+                    </div>
+                    <div class="uk-clearfix">
+                        {% block sidebar_left_bottom %}{{ __snippets__.sidebar_left_bottom|safe }}{% endblock %}
+                    </div>
+                </div>
+            {% endif %}
+                <div class="uk-width-1-1 uk-flex-item-auto" style="flex-shrink:1000;{% if __sidebar_right__ %}padding-right:15px;{% endif %}">
+                    <div class="uk-clearfix">
+                        {% block content_top %}{{ __snippets__.content_top|safe }}{% endblock %}
+                    </div>
+                    <div class="x-content">
+                        {% block content %}<h3>override block "content"</h3>{% endblock %}
+                    </div>
+                    <div class="uk-clearfix">
+                        {% block content_bottom %}{{ __snippets__.content_bottom|safe }}{% endblock %}
+                    </div>
+                </div>
+            {% if __sidebar_right__ %}
+                <div class="uk-width-1-1 uk-margin-left uk-hidden-small x-sidebar-right {% if !__sidebar_right_padding__ %}x-sidebar-no-padding{% endif %}" style="width:{{ __sidebar_right_width__ }} !important">
+                    <div class="uk-clearfix">
+                        {% block sidebar_right_top %}<!-- __snippets__.sidebar_right_top -->{{ __snippets__.sidebar_right_top|safe }}{% endblock %}
+                    </div>
+                    <div class="x-sidebar-right-content">
+                        {% block sidebar_right_content %}<h3>override block "sidebar_right_content"</h3>{% endblock %}
+                    </div>
+                    <div class="uk-clearfix">
+                        {% block sidebar_right_bottom %}{{ __snippets__.sidebar_right_bottom|safe }}{% endblock %}
+                    </div>
+                </div>
+            {% endif %}
+            </div>
+
+            <div class="uk-grid">
+                <div class="uk-width-1-1">
+                    {% block body_after %}{{ __snippets__.body_bottom|safe }}{% endblock %}
+                </div>
+            </div>
+        </div>
+        <div class="x-push-to-bottom"></div>
+    </div>
+
+{% if __offcanvas_left__ %}
+    <div id="x-offcanvas-left" class="uk-offcanvas">
+        <div class="uk-offcanvas-bar">
+            <div class="uk-panel">
+                {% block offcanvas_left %}override block "offcanvas_left"{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+    <div id="footer">
+        <div class="uk-container x-container">
+            <hr>
+            <div class="uk-flex">
+                <div class="uk-width-1-1 uk-flex-item-auto">
+                    <p>
+                        <a href="/">{{ __website__.name }}</a>&copy;2015
+                        <br>
+                        Powered by <a href="http://js.itranswarp.com" target="_blank">iTranswarp.js</a>
+                    </p>
+                </div>
+                <div class="uk-width-small-1-2 uk-width-medium-1-3 x-hidden-tiny">
+                    <a href="/feed" target="_blank" class="uk-icon-button uk-icon-rss" data-uk-tooltip title="Subscribe the RSS"></a>
+                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
+                    <a href="https://twitter.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
+                    <a href="http://www.weibo.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
+                </div>
+                <div class="uk-width-medium-1-4 uk-hidden-small">
+                    <p>
+                        <a href="https://github.com/michaelliao/itranswarp.js/issues" target="_blank">Feedback</a>
+                        <br>
+                        <a href="https://github.com/michaelliao/itranswarp.js/blob/master/LICENSE" target="_blank">License</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-signin" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <div class="uk-modal-header">
+                <h2>{{ _('Please Sign In') }}</h2>
+            </div>
+            <p>You can sign in directly without register:</p>
+            {% for signin in __signins__ %}
+            <h3><a href="/auth/from/weibo"><i class="uk-icon-weibo"></i> 使用新浪微博登录</a></h3>
+            {% endfor %}
+            <p>You need authorize to allow connect to your social passport for the first time.</p>
+        </div>
+    </div>
+
+    <div id="oldBrowser">
+        <div class="uk-alert uk-alert-danger" data-uk-alert>
+            <a href="#0" class="uk-alert-close uk-close"></a>
+            <p>
+                WARNING: You are using an old browser that does not support HTML5.
+                Please choose a modern browser (<a href="http://www.google.com/chrome" target="_blank">Chrome</a> / <a href="http://www.mozilla.org/firefox/" target="_blank">Firefox</a> / <a href="http://www.apple.com/safari/" target="_blank">Sarafi</a>) to get a good experience.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

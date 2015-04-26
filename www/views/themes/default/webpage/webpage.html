@@ -1,0 +1,29 @@
+{% extends '../_base.html' %}
+
+{% block nav %}
+    /webpage/{{ webpage.alias }}"
+{% endblock %}
+
+{% block title %}{{ webpage.name }}{% endblock %}
+
+{% block head %}
+    {% set __sidebar_right__ = true %}
+
+<style>
+.x-webpage-visible {
+    display: block;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+    <h3>{{ webpage.name }}</h3>
+    <div class="x-page-content x-content">
+        {{ webpage.content|safe }}
+    </div>
+{% endblock %}
+
+{% block sidebar_right_content %}
+
+{% endblock %}

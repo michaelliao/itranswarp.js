@@ -1,15 +1,21 @@
-{% extends '../manage.html' %}
+{% extends '../_manage.html' %}
 
-{% block title %}
-{{ _('All Wikis') }}
-{% endblock %}
+{% block title %} {{ _('All Wikis') }} {% endblock %}
 
 {% block head %}
 <script>
 $(function() {
-    var wikis = {{ wikis|safe }};
-    var vmWikis = new Vue({
-        el: '#wikis',
+    getJSON('/api/wikis', function (err, data) {
+        if (err) {
+            return fatal(err);
+        }
+        initVM(data.wikis);
+    });
+});
+
+function initVM(wikis) {
+    var vm = new Vue({
+        el: '#vm',
         data: {
             wikis: wikis
         },
@@ -21,85 +27,76 @@ $(function() {
                         return i;
                     }
                 }
-                return (-1);
+                throw 'logic error';
             },
             listWiki: function(id) {
-                location.assign('list_wiki?id=' + id);
+                location.assign('wiki_tree?id=' + id);
             },
             deleteWiki: function(id) {
-                var index = this.find(id);
-                if (index!==(-1)) {
-                    var wikis = this.wikis;
-                    var w = wikis[index];
-                    showConfirm('Confirm Deletion', 'Wiki \"' + w.name + '\" will be deleted. Continue?', function(modal) {
-                        showError();
-                        modal.showLoading(true);
-                        postJSON('/api/wikis/' + w.id + '/delete', function(err, result) {
-                            modal.hide();
-                            if (err) {
-                                showError(err);
-                                return;
-                            }
-                            wikis.splice(index, 1);
-                        });
+                var w = this.wikis[this.find(id)];
+                if (confirm('Confirm Deletion: Wiki \"' + w.name + '\" will be deleted. Continue?')) {
+                    postJSON('/api/wikis/' + w.id + '/delete', function(err, result) {
+                        if (err) {
+                            return error(err);
+                        }
+                        refresh();
                     });
                 }
             }
         }
     });
-});
-
+    $('#loading').hide();
+    $('#vm').show();
+}
 </script>
 {% endblock %}
 
 {% block main %}
 
-<div id="wikis">
-
-<div class="span12">
-    <ul class="breadcrumb">
-        <li class="active">{{ _('All Wikis') }} (<span v-text="wikis.length"></span>)</li>
-    </ul>
-</div>
-
-<div class="span12">
-    <div class="btn-toolbar" style="text-align:right;">
-        <a href="create_wiki" class="btn btn-primary"><i class="icon-plus icon-white"></i> {{ _('New Wiki') }}</a>
+    <div id="error" class="uk-width-1-1">
     </div>
-</div>
 
-<div class="span12">
-    <div class="alert alert-error hide"></div>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th width="20%">{{ _('Cover') }}</th>
-                <th width="55%">{{ _('Name') }} / {{ _('Description') }}</th>
-                <th width="15%">{{ _('Created At') }}</th>
-                <th width="10%">&nbsp;</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-repeat="w: wikis">
-                <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
-                <td>
-                    <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
-                    <p v-text="w.description"></p>
-                </td>
-                <td><span v-text="w.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
-                <td>
-                    <a v-on="click: listWiki(w.id)" data-toggle="tooltip" title="List Wiki" href="#0" class="x-btn"><i class="icon-list"></i></a>
-                    <a v-on="click: deleteWiki(w.id)" data-toggle="tooltip" title="Delete wiki" href="#0" class="x-btn"><i class="icon-trash"></i></a>
-                </td>
-            </tr>
-            <tr v-if="wikis.length===0">
-                <td colspan="4">
-                    No wiki found.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+    </div>
 
-</div>
+    <div id="vm" class="uk-width-1-1">
+
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_wiki" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Wiki') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="20%">{{ _('Cover') }}</th>
+                    <th width="55%">{{ _('Name') }} / {{ _('Tag') }} / {{ _('Description') }}</th>
+                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="10%">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="w: wikis">
+                    <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
+                    <td>
+                        <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
+                        <p v-text="w.tag"></p>
+                        <p v-text="w.description"></p>
+                    </td>
+                    <td><span v-text="w.created_at.toDateTime()"></span></td>
+                    <td>
+                        <a v-on="click: listWiki(w.id)" data-toggle="tooltip" title="List Wiki" href="#0" class="x-btn"><i class="uk-icon-list"></i></a>
+                        <a v-on="click: deleteWiki(w.id)" data-toggle="tooltip" title="Delete wiki" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+                <tr v-if="wikis.length===0">
+                    <td colspan="4">
+                        No wiki found.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
 {% endblock %}

@@ -1,58 +1,45 @@
-{% extends '../base.html' %}
+{% extends '../_base.html' %}
 
-{% block meta %}
-    <meta property="x-nav" content="/discuss" />
-{% endblock %}
+{% block nav %} /discuss {% endblock %}
 
 {% block title %}{{ _('Discuss') }}{% endblock %}
 
-{% block main %}
+{% block head %}
+    {% set __sidebar_right__ = true %}
 
-    <ul class="breadcrumb">
-        <li class="active">{{ _('Discuss') }}</li>
-    </ul>
-
-    <h3>{{ _('Discuss') }}</h3>
-
-{% for group in boards %}
-
-    <table class="table table-bordered table-hover">
-    {% for b in group %}
-        <tr>
-            <td>
-                <p><a href="/discuss/{{ b.id }}"><strong>{{ b.name}}</strong></a></p>
-                <p class="muted"><small>{{ b.description }}</small></p>
-            </td>
-        </tr>
-    {% endfor %}
-    </table>
-
-{% endfor %}
+<style>
+.x-discuss-visible {
+    display: block;
+}
+</style>
 
 {% endblock %}
 
-{% block sidebar %}
-    <div class="x-sidebar-section">
-
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- lxf-250x250 -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:250px;height:250px"
-     data-ad-client="ca-pub-6727358730461554"
-     data-ad-slot="9529040712"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- lxf-250x250 -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:250px;height:250px"
-     data-ad-client="ca-pub-6727358730461554"
-     data-ad-slot="9529040712"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-
+{% block content %}
+    <div class="uk-alert">
+        {{ _('Discuss') }}
     </div>
+
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th>{{ _('Discuss') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for b in boards %}
+            <tr>
+                <td>
+                    <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ b.id }}">{{ b.name}}</a></div>
+                    <div>{{ b.description }}</div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+
+{% block sidebar_right_content %}
+
 {% endblock %}
