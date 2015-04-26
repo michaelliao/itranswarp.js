@@ -151,11 +151,11 @@ describe('#discuss', function () {
                 t = yield remote.$post(roles.SUBSCRIBER, '/api/boards/' + b.id + '/topics', {
                     name: 'topic-' + i,
                     content: 'topic-' + i + ':<script>alert(x)</script>',
-                    tags: 't' + i + ',T' + i
+                    tags: 's' + i
                 });
                 remote.shouldNoError(t);
                 t.name.should.equal('topic-' + i);
-                t.tags.should.equal('t' + i);
+                t.tags.should.equal('s' + i);
                 t.content.should.equal('<p>topic-' + i + ':&lt;script&gt;alert(x)&lt;/script&gt;</p>\n');
                 t.replies.should.equal(0);
             }
