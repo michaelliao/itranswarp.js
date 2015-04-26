@@ -29,14 +29,14 @@ describe('#wikis', function () {
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: 'Test Wiki   ',
                 description: '   blablabla\nhaha...  \n   ',
-                tags: ' aaa,\n BBB,  \t ccc,CcC',
+                tag: 'abc',
                 content: 'Long content...',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
             });
             remote.shouldNoError(r1);
             r1.name.should.equal('Test Wiki');
             r1.description.should.equal('blablabla\nhaha...');
-            r1.tags.should.equal('aaa,BBB,ccc');
+            r1.tag.should.equal('abc');
             r1.content.should.equal('Long content...');
             r1.cover_id.should.be.ok;
             r1.version.should.equal(0);
@@ -64,7 +64,7 @@ describe('#wikis', function () {
             r3.name.should.equal(r2.name);
             r3.content.should.equal(r2.content);
             // not updated:
-            r3.tags.should.equal(r1.tags);
+            r3.tag.should.equal(r1.tag);
             r3.description.should.equal(r1.description);
 
             // query all wikis:
@@ -82,7 +82,7 @@ describe('#wikis', function () {
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: 'Test Wiki   ',
                 description: '   blablabla\nhaha...  \n   ',
-                tags: ' aaa,\n BBB,  \t ccc,CcC',
+                tag: 'xyz',
                 content: '  Long content... ',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
             });
@@ -119,11 +119,11 @@ describe('#wikis', function () {
         it('create wiki and wikipage with wrong parameter by editor', function* () {
             var
                 i, r, params,
-                required = ['name', 'description', 'content', 'image'],
+                required = ['name', 'tag', 'description', 'content', 'image'],
                 prepared = {
                     name: 'Test Param',
                     description: 'blablabla...',
-                    tags: 'tag1,tag2,tag3',
+                    tag: 'tag1',
                     content: 'a long content...',
                     image: remote.readFileSync('res-image.jpg').toString('base64')
                 };
@@ -157,6 +157,7 @@ describe('#wikis', function () {
             // create wiki:
             var r = yield remote.$post(roles.CONTRIBUTER, '/api/wikis', {
                 name: ' To be delete...   ',
+                tag: 'java',
                 description: '   blablabla\nhaha...  \n   ',
                 content: '  Long long long content... ',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
@@ -168,6 +169,7 @@ describe('#wikis', function () {
             // create wiki:
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' To be delete...   ',
+                tag: 'java',
                 description: '   blablabla\nhaha...  \n   ',
                 content: '  Long long long content... ',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
@@ -189,6 +191,7 @@ describe('#wikis', function () {
             // create wiki:
             var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' Test For WikiPage   ',
+                tag: 'java',
                 description: '   blablabla\nhaha...  \n   ',
                 content: 'Long long long content... ',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
@@ -218,7 +221,7 @@ describe('#wikis', function () {
             p2.display_order.should.equal(p1.display_order);
             p2.name.should.equal(p1.name);
             p2.content.should.equal(p1.content);
-            p2.version.should.equal(1);
+            p2.version.should.equal(0);
             // update p1:
             var p3 = yield remote.$post(roles.EDITOR, '/api/wikis/wikipages/' + p1.id, {
                 name: 'Changed',
@@ -226,7 +229,7 @@ describe('#wikis', function () {
             });
             remote.shouldNoError(p3);
             p3.name.should.equal('Changed');
-            p3.content.should.equal('content changed');
+            p3.content.should.equal('content changed.');
             // query again:
             var p4 = yield remote.$post(roles.EDITOR, '/api/wikis/wikipages/' + p1.id);
             remote.shouldNoError(p4);
@@ -242,6 +245,7 @@ describe('#wikis', function () {
             // create wiki:
             var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' Tree   ',
+                tag: 'wikipedia',
                 description: '   blablabla\nhaha...  \n   ',
                 content: 'Long long long content... ',
                 image: remote.readFileSync('res-image.jpg').toString('base64')
