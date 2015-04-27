@@ -35,9 +35,9 @@ describe('#cache', function () {
         var key1 = keyPrefix + 'k1';
         var data = yield cache.$get(key1, 'DEFAULT-1');
         should(data==='DEFAULT-1').be.true;
-        // should not in cache:
+        // should in cache:
         var data2 = yield cache.$get(key1);
-        should(data2===null).be.true;
+        should(data==='DEFAULT-1').be.true;
     });
 
     it('get by function value', function* () {

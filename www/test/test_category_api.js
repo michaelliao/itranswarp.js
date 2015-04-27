@@ -24,11 +24,13 @@ describe('#categories', function () {
         it('create a new category by admin ok', function* () {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Test Category   ',
+                tag: 'java',
                 description: '  this is a test category...  '
             });
             remote.shouldNoError(r);
             r.display_order.should.equal(0);
             r.name.should.equal('Test Category');
+            r.tag.should.equal('java');
             r.description.should.equal('this is a test category...');
             r.version.should.equal(0);
             r.id.should.be.ok.and.have.lengthOf(50);
@@ -43,7 +45,8 @@ describe('#categories', function () {
             r2.version.should.equal(r.version);
             // create another:
             var r3 = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: 'Another Category '
+                name: 'Another Category ',
+                tag: 'java'
             });
             remote.shouldNoError(r3);
             r3.name.should.equal('Another Category');
@@ -56,14 +59,20 @@ describe('#categories', function () {
 
         it('create new category with wrong parameter by admin', function* () {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                tag: 'java',
                 description: '  no name parameter...  '
             });
             remote.shouldHasError(r, 'parameter:invalid', 'name');
+            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
+                name: '  no tag parameter...  '
+            });
+            remote.shouldHasError(r, 'parameter:invalid', 'tag');
         });
 
         it('create new category by editor', function* () {
             var r = yield remote.$post(roles.EDITOR, '/api/categories', {
                 name: 'by editor',
+                tag: 'java',
                 description: '  parameter...  '
             });
             remote.shouldHasError(r, 'permission:denied', 'permission');
@@ -72,28 +81,43 @@ describe('#categories', function () {
         it('update a category by admin', function* () {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Update     ',
+                tag: 'java',
                 description: '  '
             });
             remote.shouldNoError(r);
             r.name.should.equal('Before Update');
+            r.tag.should.equal('java');
             r.description.should.equal('');
             r.version.should.equal(0);
             var r2 = yield remote.$post(roles.ADMIN, '/api/categories/' + r.id, {
                 name: ' After Update    ',
+                tag: 'python',
                 description: '  added description...  \t  '
             });
             remote.shouldNoError(r2);
             r2.id.should.equal(r.id);
             r2.name.should.equal('After Update');
+            r2.tag.should.equal('python');
             r2.description.should.equal('added description...');
             r2.created_at.should.equal(r.created_at);
             r2.updated_at.should.greaterThan(r.updated_at);
             r2.version.should.equal(1);
+            // query to verify:
+            var r3 = yield remote.$get(roles.ADMIN, '/api/categories/' + r.id);
+            remote.shouldNoError(r3);
+            r3.id.should.equal(r.id);
+            r3.name.should.equal('After Update');
+            r3.tag.should.equal('python');
+            r3.description.should.equal('added description...');
+            r3.created_at.should.equal(r.created_at);
+            r3.updated_at.should.greaterThan(r.updated_at);
+            r3.version.should.equal(1);
         });
 
         it('update a category by editor', function* () {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Update    ',
+                tag: 'java',
                 description: '  '
             });
             remote.shouldNoError(r);
@@ -109,6 +133,7 @@ describe('#categories', function () {
             // create first:
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Delete  ',
+                tag: 'java',
                 description: '  '
             });
             remote.shouldNoError(r);

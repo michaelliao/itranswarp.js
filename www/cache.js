@@ -87,8 +87,8 @@ module.exports = {
         }
         console.log('[Cache] NOT hit: ' + key);
         if (defaultValueOrFn) {
+            lifetime = lifetime || DEFAULT_LIFETIME;
             if (typeof (defaultValueOrFn) === 'function') {
-                lifetime = lifetime || DEFAULT_LIFETIME;
                 if (defaultValueOrFn.constructor.name === 'GeneratorFunction') {
                     console.log('yield generator to fill cache...');
                     data = yield defaultValueOrFn();
