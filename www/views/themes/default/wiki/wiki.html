@@ -7,6 +7,7 @@
     <meta property="og:url" content="http://{{ __request__.host }}/wiki/{{ wiki.id }}{% if current.type == 'wikipage' %}/{{ current.id }}{% endif %}" />
     <meta property="og:title" content="{{ current.name }}" />
     <meta property="og:description" content="{{ wiki.description }}" />
+    <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/l" />
 {% endblock %}
 
 {% block title %}{{ current.name }}{% endblock %}
@@ -71,7 +72,7 @@ $(function () {
 
 {% block sidebar_left_content %}
     <ul class="uk-nav uk-nav-side">
-        <li class="uk-nav-header">Index</li>
+        <li class="uk-nav-header">{{ _('Index') }}</li>
     </ul>
     <ul class="uk-nav uk-nav-side">
         <li id="{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
@@ -86,7 +87,7 @@ $(function () {
 
 {% block offcanvas_left %}
     <ul class="uk-nav uk-nav-side">
-        <li class="uk-nav-header">Index</li>
+        <li class="uk-nav-header">{{ _('Index') }}</li>
     </ul>
     <ul class="uk-nav uk-nav-side">
         <li id="off-{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>

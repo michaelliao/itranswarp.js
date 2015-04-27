@@ -5,7 +5,6 @@
 {% block title %}{{ _('Discuss') }}{% endblock %}
 
 {% block meta %}
-    <meta property="x-nav" content="/discuss" />
     <meta property="og:type" content="webpage" />
     <meta property="og:url" content="http://{{ __request__.host }}/discuss/{{ board.id }}/{{ topic.id }}" />
     <meta property="og:title" content="{{ topic.name }}" />
@@ -14,7 +13,6 @@
 
 {% block head %}
     {% set __sidebar_right__ = true %}
-    {% set __sidebar_right_width__ = '216px' %}
 
 <style>
 .x-topic-visible {
