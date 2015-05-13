@@ -410,7 +410,7 @@
                 },
                 code: {
                     title  : 'code',
-                    label  : '<i class="uk-icon-code"></i>'
+                    label  : '<i class="uk-icon-code"></i> 插入代码'
                 },
                 blockquote : {
                     title  : 'Blockquote',
@@ -523,7 +523,7 @@
             addAction('bold', '**$1**');
             addAction('italic', '*$1*');
             addAction('strike', '~~$1~~');
-            addAction('code', '\n\n```\n// your code here\n$1\n```\n\n');
+            addAction('code', '\n\n```\n在此插入代码\n$1\n```\n\n');
             addAction('blockquote', '> $1', 'replaceLine');
             addAction('link', '[$1](http://)');
             // addAction('image', '![$1](http://)');
