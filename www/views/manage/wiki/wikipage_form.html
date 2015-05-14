@@ -19,6 +19,26 @@ $(function () {
     }
 });
 
+function processFile(file, callback) {
+    if (file.type!=='image/jpeg' && file.type!=='image/png') {
+        alert('File is not a valid image!');
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var
+            data = e.target.result;
+            index = data.indexOf(';base64,');
+        if ((index >= 0) && (index < 100)) {
+            callback({
+                image: data,
+                data: data.substring(index + 8)
+            });
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
 function initVM(wp) {
     var vm = new Vue({
         el: '#vm',
