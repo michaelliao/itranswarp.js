@@ -1,5 +1,64 @@
 // itranswarp.js
 
+function message(title, msg, isHtml, autoClose) {
+    if ($('#modal-message').length==0) {
+        $('body').append('<div id="modal-message" class="uk-modal"><div class="uk-modal-dialog">' +
+            '<button type="button" class="uk-modal-close uk-close"></button>' +
+            '<div class="uk-modal-header"></div>' +
+            '<p class="x-message">msg</p>' +
+            '</div></div>');
+    }
+    var $m = $('#modal-message');
+    $m.find('div.uk-modal-header').text(title || 'Message');
+    if (isHtml) {
+        $m.find('p.x-message').html(msg || '');
+    }
+    else {
+        $m.find('p.x-message').text(msg || '');
+    }
+    var modal = UIkit.modal('#modal-message');
+    modal.show();
+}
+
+function run_python3(tid, btn) {
+    var
+        $textarea = $('#' + tid),
+        $button = $(btn),
+        $i = $button.find('i');
+    $button.attr('disabled', 'disabled');
+    $i.addClass('uk-icon-spinner');
+    $i.addClass('uk-icon-spin');
+    $.post('http://local.liaoxuefeng.com:39093/run', $.param({
+        code: $textarea.val()
+    })).done(function (r) {
+        var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)') + '</pre></code>';
+        message(r.error || 'Result', output, true);
+    }).fail(function (r) {
+        message('错误', '无法连接到Python代码运行助手。请检查本机的设置。', true, true);
+    }).always(function () {
+        $i.removeClass('uk-icon-spinner');
+        $i.removeClass('uk-icon-spin');
+        $button.removeAttr('disabled');
+    });
+}
+
+$(function() {
+    var tid = 0;
+    $('textarea.x-python3').each(function () {
+        tid ++;
+        var
+            $t = $(this)
+            theId = 'python3-code-' + tid;
+        $t.addClass('uk-width-1-1');
+        $t.attr('id', theId);
+        $t.attr('rows', '10');
+        $t.css('resize', 'none');
+        $t.css('font-family', 'Consolas, monospace, serif');
+        $t.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
+        $t.after('<button type="button" onclick="run_python3(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px"><i class="uk-icon-play"></i> Run</button>');
+    });
+});
+
 function initCommentArea(ref_type, ref_id, tag) {
     console.log('auth success, display comment form...');
     $('#x-comment-area').html($('#tplCommentArea').html());
