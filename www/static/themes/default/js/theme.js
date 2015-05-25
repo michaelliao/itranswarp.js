@@ -22,19 +22,22 @@ function message(title, msg, isHtml, autoClose) {
 
 function run_python3(tid, btn) {
     var
-        $textarea = $('#' + tid),
+        $pre = $('#pre-' + tid),
+        $post = $('#post-' + tid),
+        $textarea = $('#textarea-' + tid),
         $button = $(btn),
-        $i = $button.find('i');
+        $i = $button.find('i'),
+        code = $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
     $button.attr('disabled', 'disabled');
     $i.addClass('uk-icon-spinner');
     $i.addClass('uk-icon-spin');
     $.post('http://local.liaoxuefeng.com:39093/run', $.param({
-        code: $textarea.val()
+        code: code
     })).done(function (r) {
         var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)') + '</pre></code>';
         message(r.error || 'Result', output, true);
     }).fail(function (r) {
-        message('错误', '无法连接到Python代码运行助手。请检查本机的设置。', true, true);
+        message('错误', '无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。', true, true);
     }).always(function () {
         $i.removeClass('uk-icon-spinner');
         $i.removeClass('uk-icon-spin');
@@ -42,20 +45,69 @@ function run_python3(tid, btn) {
     });
 }
 
+function adjustTextareaHeight(t) {
+    var
+        $t = $(t),
+        lines = $t.val().split('\n').length;
+    if (lines < 9) {
+        lines = 9;
+    }
+    $t.attr('rows', '' + (lines + 1));
+}
+
 $(function() {
     var tid = 0;
-    $('textarea.x-python3').each(function () {
+    var trimCode = function (code) {
+        var ch;
+        while (code.length > 0) {
+            ch = code[0];
+            if (ch === '\n' || ch === '\r') {
+                code = code.substring(1);
+            }
+            else {
+                break;
+            }
+        }
+        while (code.length > 0) {
+            ch = code[code.length-1];
+            if (ch === '\n' || ch === '\r') {
+                code = code.substring(0, code.length-1);
+            }
+            else {
+                break;
+            }
+        }
+        return code + '\n';
+    };
+    $('pre.x-python3').each(function () {
         tid ++;
         var
-            $t = $(this)
-            theId = 'python3-code-' + tid;
-        $t.addClass('uk-width-1-1');
-        $t.attr('id', theId);
-        $t.attr('rows', '10');
-        $t.css('resize', 'none');
-        $t.css('font-family', 'Consolas, monospace, serif');
-        $t.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
-        $t.after('<button type="button" onclick="run_python3(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px"><i class="uk-icon-play"></i> Run</button>');
+            theId = 'python3-code-' + tid,
+            $pre = $(this),
+            $post = null,
+            codes = $pre.text().split('----', 3);
+        $pre.attr('id', 'pre-' + theId);
+        $pre.css('font-size', '14px');
+        $pre.css('margin-bottom', '0');
+        $pre.css('border-bottom', 'none');
+        $pre.css('padding', '6px');
+        $pre.css('border-bottom-left-radius', '0');
+        $pre.css('border-bottom-right-radius', '0');
+        $pre.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
+        $pre.after('<button type="button" onclick="run_python3(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button>');
+        if (codes.length > 1) {
+            $pre.text(trimCode(codes[0]))
+            if (codes.length === 3) {
+                // add post:
+                $pre.after('<pre id="post-' + theId + '" style="font-size: 14px; margin-top: 0; border-top: 0; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;"></pre>');
+                $post = $('#post-' + theId);
+                $post.text(trimCode(codes[2]));
+            }
+        }
+        $pre.after('<textarea id="textarea-' + theId + '" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1" rows="10" style="resize: none; font-size: 14px; font-family: Consolas, monospace, serif; overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;' + ($post === null ? '' : 'border-bottom-left-radius: 0; border-bottom-right-radius: 0;') + '"></textarea>');
+        if (codes.length > 1) {
+            $('#textarea-' + theId).val(trimCode(codes[1]));
+        }
     });
 });
 
