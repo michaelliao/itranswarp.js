@@ -107,6 +107,7 @@ $(function() {
         $pre.after('<textarea id="textarea-' + theId + '" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1" rows="10" style="resize: none; font-size: 14px; font-family: Consolas, monospace, serif; overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;' + ($post === null ? '' : 'border-bottom-left-radius: 0; border-bottom-right-radius: 0;') + '"></textarea>');
         if (codes.length > 1) {
             $('#textarea-' + theId).val(trimCode(codes[1]));
+            adjustTextareaHeight($('#textarea-' + theId).get(0));
         }
     });
 });
