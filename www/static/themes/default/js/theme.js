@@ -34,7 +34,7 @@ function run_python3(tid, btn) {
     $.post('http://local.liaoxuefeng.com:39093/run', $.param({
         code: code
     })).done(function (r) {
-        var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)') + '</pre></code>';
+        var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></code>';
         message(r.error || 'Result', output, true);
     }).fail(function (r) {
         message('错误', '无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。', true, true);
