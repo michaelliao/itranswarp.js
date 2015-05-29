@@ -126,7 +126,7 @@ $(function () {
             <h4 class="uk-comment-title"><a href="/user/{{ r.user.id }}">{{ r.user.name }}</a></h4>
             <div class="uk-comment-meta">#{{ index }} Created at <span class="x-smartdate" date="{{ r.created_at }}">...</span></div>
         </div>
-        <div class="uk-comment-body uk-margin x-content">
+        <div class="uk-comment-body uk-margin">
             {% if r.deleted %}
             <div class="alert alert-error">{{ _('This reply was deleted') }}</div>
             {% else %}

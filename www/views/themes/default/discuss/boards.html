@@ -16,28 +16,29 @@
 {% endblock %}
 
 {% block content %}
-    <div class="uk-alert">
-        {{ _('Discuss') }}
+    <div class="x-discuss-content">
+        <div class="uk-alert">
+            {{ _('Discuss') }}
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th>{{ _('Discuss') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in boards %}
+                <tr>
+                    <td>
+                        <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ b.id }}">{{ b.name}}</a></div>
+                        <div>{{ b.description }}</div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
-
-    <table class="uk-table uk-table-hover">
-        <thead>
-            <tr>
-                <th>{{ _('Discuss') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for b in boards %}
-            <tr>
-                <td>
-                    <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ b.id }}">{{ b.name}}</a></div>
-                    <div>{{ b.description }}</div>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
 {% endblock %}
 
 {% block sidebar_right_content %}

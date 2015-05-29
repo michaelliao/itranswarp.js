@@ -60,7 +60,7 @@
                 <h4 class="uk-comment-title"><a target="_blank" href="/discuss/{ board_id }/{ id }">{ name }</a></h4>
                 <div class="uk-comment-meta"><a target="_blank" href="/user/{ user.id }">{ user.name }</a> created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
             </div>
-            <div class="uk-comment-body x-content x-auto-content">
+            <div class="uk-comment-body x-auto-content">
                 { content|safe }
             </div>
         </div>
@@ -73,7 +73,7 @@
                 <div class="uk-comment-meta"><a target="_blank" href="/user/{ user.id }">{ user.name }</a></div>
                 <div class="uk-comment-meta">Created at { created_at.toSmartDate() }, Last updated at { updated_at.toSmartDate() }</div>
             </div>
-            <div class="uk-comment-body x-content x-auto-content">
+            <div class="uk-comment-body x-auto-content">
                 { content|safe }
             </div>
         </div>
@@ -278,7 +278,7 @@
                         <div>
                             {% block content_top %}{{ __snippets__.content_top|safe }}{% endblock %}
                         </div>
-                        <div class="x-content">
+                        <div class="x-content" style="width:100%">
                             {% block content %}<h3>override block "content"</h3>{% endblock %}
                         </div>
                         <div>
