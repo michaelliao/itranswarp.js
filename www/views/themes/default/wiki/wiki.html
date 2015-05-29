@@ -14,8 +14,6 @@
 
 {% block head %}
     {% set __sidebar_left__ = true %}
-    {% set __sidebar_left_width__ = '260px' %}
-    {% set __sidebar_left_padding__ = false %}
     {% set __offcanvas_left__ = true %}
 <style>
 .x-wiki-visible {
@@ -74,7 +72,7 @@ $(function () {
     <ul class="uk-nav uk-nav-side">
         <li class="uk-nav-header">{{ _('Index') }}</li>
     </ul>
-    <ul class="uk-nav uk-nav-side">
+    <ul class="uk-nav uk-nav-side" style="margin-right:-15px;">
         <li id="{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
     {% for n in tree %}
         <li id="{{ n.id }}" style="margin-left:{{ n.depth + 1 }}em;">

@@ -38,29 +38,50 @@ body {
 
 @height-push-to-bottom: 130px;
 
+@media (min-width: @breakpoint-medium) {
+    .x-sidebar-left, .x-sidebar-right {
+        width: 316px;
+        box-sizing: border-box;
+        display: block;
+    }
+    .x-sidebar-left {
+        float: left;
+        padding-right: 15px;
+        border-right: 1px solid @grid-divider-border;
+    }
+    .x-sidebar-right {
+        float: right;
+        padding-left: 15px;
+        border-left: 1px solid @grid-divider-border;
+    }
+}
+
+// fix uk-grid as flex:
+
+.uk-grid {
+    display: block !important;
+}
+
+@media (max-width: @breakpoint-medium) {
+    .x-sidebar-left {
+        display: none !important;
+    }
+    .x-sidebar-right {
+        display: none !important;
+    }
+    .x-center {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
 #main {
     min-height: 100%;
     height: auto !important;
     margin: 0;
     //margin: 0 0 -@height-push-to-bottom 0;
-
-    .x-sidebar-left {
-        padding-right: 15px;
-        border-right: 1px solid @grid-divider-border;
-    }
-
-    .x-sidebar-left.x-sidebar-no-padding {
-        padding-right: 0;
-    }
-
-    .x-sidebar-right {
-        padding-left: 15px;
-        border-left: 1px solid @grid-divider-border;
-    }
-
-    .x-sidebar-right.x-sidebar-no-padding {
-        padding-left: 0;
-    }
 
     .x-push-to-bottom {
         clear: both;
