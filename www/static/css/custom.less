@@ -38,6 +38,21 @@ body {
 
 @height-push-to-bottom: 130px;
 
+@media (max-width: @breakpoint-medium) {
+    .x-sidebar-left {
+        display: none;
+    }
+    .x-sidebar-right {
+        display: none;
+    }
+    .x-center {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
 @media (min-width: @breakpoint-medium) {
     .x-sidebar-left, .x-sidebar-right {
         width: 316px;
@@ -60,21 +75,6 @@ body {
 
 .uk-grid {
     display: block !important;
-}
-
-@media (max-width: @breakpoint-medium) {
-    .x-sidebar-left {
-        display: none !important;
-    }
-    .x-sidebar-right {
-        display: none !important;
-    }
-    .x-center {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
 }
 
 #main {
