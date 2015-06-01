@@ -125,7 +125,7 @@ function* $processOAuthAuthentication(provider_name, authentication) {
             auth_provider: provider_name,
             auth_id: auth_id,
             auth_token: authentication.access_token,
-            expires_at: Date.now() + authentication.expires_in
+            expires_at: Date.now() + 1000 * authentication.expires_in
         };
         yield AuthUser.$create(auth_user);
         yield User.$create(user);
@@ -136,7 +136,7 @@ function* $processOAuthAuthentication(provider_name, authentication) {
     }
     // not first time to signin:
     auth_user.auth_token = authentication.access_token;
-    auth_user.expires_at = Date.now() + authentication.expires_in;
+    auth_user.expires_at = Date.now() + 1000 * authentication.expires_in;
     yield auth_user.$update(['auth_token', 'expires_at', 'updated_at', 'version']);
     // find user:
     user = yield User.$find(auth_user.user_id);
