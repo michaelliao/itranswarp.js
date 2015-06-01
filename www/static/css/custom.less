@@ -38,7 +38,9 @@ body {
 
 @height-push-to-bottom: 130px;
 
-@media (max-width: @breakpoint-medium) {
+@max-w: @breakpoint-medium - 1px;
+
+@media (max-width: @max-w) {
     .x-sidebar-left {
         display: none;
     }
