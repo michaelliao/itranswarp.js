@@ -38,9 +38,7 @@ body {
 
 @height-push-to-bottom: 130px;
 
-@max-w: @breakpoint-medium - 1px;
-
-@media (max-width: @max-w) {
+@media (max-width: @breakpoint-small-max) {
     .x-sidebar-left {
         display: none;
     }
@@ -111,7 +109,7 @@ body {
     height: @global-grid-gutter;
 }
 
-@media (max-width: @breakpoint-small) {
+@media (max-width: @breakpoint-mini-max) {
     .x-hidden-tiny {
         display: none !important;
     }
