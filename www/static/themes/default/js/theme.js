@@ -20,6 +20,26 @@ function message(title, msg, isHtml, autoClose) {
     modal.show();
 }
 
+function run_js(tid, btn) {
+    var
+        $pre = $('#pre-' + tid),
+        $post = $('#post-' + tid),
+        $textarea = $('#textarea-' + tid),
+        $button = $(btn),
+        $i = $button.find('i'),
+        code = $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
+    var fn = function () {
+        try {
+            eval('(function() {\n' + code + '\n})();');
+        }
+        catch (e) {
+            message('错误', '<p>JavaScript代码执行出错：</p><pre>' + String(e) + '</pre>', true, true);
+            console.log(e);
+        }
+    };
+    fn();
+}
+
 function run_python3(tid, btn) {
     var
         $pre = $('#pre-' + tid),
@@ -79,11 +99,11 @@ $(function() {
         }
         return code + '\n';
     };
-    $('pre.x-python3').each(function () {
+    var initPre = function (pre, fn_run) {
         tid ++;
         var
-            theId = 'python3-code-' + tid,
-            $pre = $(this),
+            theId = 'online-run-code-' + tid,
+            $pre = $(pre),
             $post = null,
             codes = $pre.text().split('----', 3);
         $pre.attr('id', 'pre-' + theId);
@@ -94,7 +114,7 @@ $(function() {
         $pre.css('border-bottom-left-radius', '0');
         $pre.css('border-bottom-right-radius', '0');
         $pre.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
-        $pre.after('<button type="button" onclick="run_python3(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button>');
+        $pre.after('<button type="button" onclick="' + fn_run + '(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button>');
         if (codes.length > 1) {
             $pre.text(trimCode(codes[0]))
             if (codes.length === 3) {
@@ -109,6 +129,13 @@ $(function() {
             $('#textarea-' + theId).val(trimCode(codes[1]));
             adjustTextareaHeight($('#textarea-' + theId).get(0));
         }
+
+    };
+    $('pre.x-javascript').each(function () {
+        initPre(this, 'run_js');
+    });
+    $('pre.x-python3').each(function () {
+        initPre(this, 'run_python3');
     });
 });
 
