@@ -72,7 +72,7 @@ var $getNavigations = function* () {
 };
 
 var
-    WRITE_VIEWS_BACK = 10,
+    WRITE_VIEWS_BACK = 100,
     THEME = config.theme,
     PRODUCTION = process.productionMode;
 
