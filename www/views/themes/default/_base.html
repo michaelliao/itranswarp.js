@@ -92,25 +92,25 @@
 
     <script id="tplCommentArea" type="text/plain">
         <div class="x-display-if-signin">
-            <p><button id="comment-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i> Make a Comment</button></p>
+            <p><button id="comment-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i>{{ _('Make a Comment') }}</button></p>
             <form id="comment-form" class="uk-form" style="display:none;">
                 <fieldset>
                     <div class="uk-alert uk-alert-danger" style="display:none"></div>
                     <div class="uk-form-row">
-                        <label>Title:</label>
+                        <label>{{ _('Title') }}:</label>
                     </div>
                     <div class="uk-form-row">
                         <input type="text" name="name" maxlength="100" style="width:100%">
                     </div>
                     <div class="uk-form-row">
-                        <label>Content:</label>
+                        <label>{{ _('Content') }}:</label>
                     </div>
                     <div class="uk-form-row x-textarea">
                     </div>
                     <div class="uk-form-row">
-                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Post</button>
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> {{ _('Post') }}</button>
                         &nbsp;&nbsp;
-                        <button type="button" class="uk-button x-cancel"><i class="uk-icon-close"></i> Cancel</button>
+                        <button type="button" class="uk-button x-cancel"><i class="uk-icon-close"></i> {{ _('Cancel') }}</button>
                     </div>
                 </fieldset>
             </form>
