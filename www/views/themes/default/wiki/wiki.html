@@ -100,7 +100,7 @@ $(function () {
 
 {% block content %}
     <h4>{{ current.name }}</h4>
-    <div class="x-wiki-info"><span>{{ current.reads }}次阅读</span></div>
+    <div class="x-wiki-info"><span>{{ _('Reads') }}: {{ current.views }}</span></div>
     <hr>
     <div class="x-wiki-content">
         {{ current.content|safe }}

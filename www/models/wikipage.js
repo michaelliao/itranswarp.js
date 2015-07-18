@@ -9,6 +9,7 @@ module.exports = function (warp) {
         base.column_id('wiki_id'),
         base.column_id('parent_id'),
         base.column_id('content_id'),
+        base.column_bigint('views'),
         base.column_varchar_100('name'),
         base.column_bigint('display_order')
     ], {

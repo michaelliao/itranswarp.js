@@ -10,6 +10,7 @@ module.exports = function (warp) {
         base.column_id('category_id', { index: true }),
         base.column_id('cover_id', { defaultValue: '' }),
         base.column_id('content_id'),
+        base.column_bigint('views'),
         base.column_varchar_100('user_name'),
         base.column_varchar_100('name'),
         base.column_varchar_1000('tags'),

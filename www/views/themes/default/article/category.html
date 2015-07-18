@@ -28,7 +28,7 @@
         </div>
         <a class="x-cover-small" href="/article/{{ a.id }}"><img src="/files/attachments/{{ a.cover_id }}/s" alt="{{ a.name }}" style="width:160px"></a>
         <div>
-            <p><a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.reads }}</p>
+            <p><a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.views }}</p>
             <p>{{ a.description }}</p>
             <p><a href="/article/{{ a.id }}" class="uk-button uk-button-primary">{{ _('Read more') }} »</a></p>
         </div>

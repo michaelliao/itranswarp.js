@@ -46,7 +46,7 @@ $(function () {
 
     <h3>{{ article.name }}</h3>
     <p><img src="/files/attachments/{{ article.cover_id }}/l" class="uk-responsive-width"></p>
-    <p><a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.reads }}</p>
+    <p><a href="/user/{{ article.user_id }}">{{ article.user_name|e }}</a> / <a href="/category/{{ article.category_id }}">{{ category.name|e }}</a> / <span class="x-smartdate" date="{{ article.publish_at }}">...</span> / {{ _('Reads') }}: {{ article.views }}</p>
     <div class="x-article-content">
         {{ article.content|safe }}
     </div>

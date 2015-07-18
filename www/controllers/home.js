@@ -72,6 +72,7 @@ var $getNavigations = function* () {
 };
 
 var
+    WRITE_VIEWS_BACK = 10,
     THEME = config.theme,
     PRODUCTION = process.productionMode;
 
@@ -84,13 +85,19 @@ function* $getModel(model) {
     return model;
 }
 
+function* $updateEntityViews(entity) {
+    console.log('Update views to: ' + entity.views);
+    yield cache.$set(entity.id, 0);
+    yield entity.$update(['views']);
+}
+
 function getView(view) {
     return 'themes/default/' + view;
 }
 
 function* getIndexModel() {
     var
-        i, hotArticles,
+        i, a, hotArticles,
         categories = yield categoryApi.$getCategories(),
         recentArticles = yield articleApi.$getRecentArticles(20),
         nums = yield cache.$counts(_.map(recentArticles, function (a) {
@@ -107,10 +114,11 @@ function* getIndexModel() {
             return '';
         };
     for (i = 0; i < recentArticles.length; i++) {
-        recentArticles[i].reads = nums[i];
+        a = recentArticles[i];
+        a.views = a.views + nums[i];
     }
     hotArticles = _.take(_.sortBy(recentArticles, function (a) {
-        return 0 - a.reads;
+        return 0 - a.views;
     }), 5);
     return {
         recentArticles: recentArticles,
@@ -127,6 +135,7 @@ module.exports = {
 
     'GET /category/:id': function* (id) {
         var
+            a,
             page = helper.getPage(this.request, 10),
             model = {
                 page: page,
@@ -138,7 +147,8 @@ module.exports = {
             })),
             i;
         for (i = 0; i < nums.length; i++) {
-            model.articles[i].reads = nums[i];
+            a = model.articles[i];
+            a.views = a.views + nums[i];
         }
         this.render(getView('article/category.html'), yield $getModel.apply(this, [model]));
     },
@@ -152,7 +162,10 @@ module.exports = {
                 article: article,
                 category: category
             };
-        article.reads = num;
+        article.views = article.views + num;
+        if (num > WRITE_VIEWS_BACK) {
+            yield $updateEntityViews(article);
+        }
         article.content = helper.md2html(article.content, true);
         this.render(getView('article/article.html'), yield $getModel.apply(this, [model]));
     },
@@ -180,10 +193,14 @@ module.exports = {
         var
             model,
             wiki = yield wikiApi.$getWiki(id, true),
+            num = yield cache.$incr(wiki.id),
             tree = yield wikiApi.$getWikiTree(wiki.id, true);
         wiki.type = 'wiki';
         wiki.content = helper.md2html(wiki.content, true);
-        wiki.reads = yield cache.$incr(wiki.id);
+        wiki.views = wiki.views + num;
+        if (num > WRITE_VIEWS_BACK) {
+            yield $updateEntityViews(wiki);
+        }
         model = {
             wiki: wiki,
             current: wiki,
@@ -194,15 +211,19 @@ module.exports = {
 
     'GET /wiki/:wid/:pid': function* (id, pid) {
         var
-            model, wiki, tree,
+            model, wiki, tree, num,
             wikipage = yield wikiApi.$getWikiPage(pid, true);
         if (wikipage.wiki_id !== id) {
             this.throw(404);
         }
+        num = yield cache.$incr(wikipage.id);
         wiki = yield wikiApi.$getWiki(id);
         tree = yield wikiApi.$getWikiTree(id, true);
         wikipage.type = 'wikipage';
-        wikipage.reads = yield cache.$incr(wikipage.id);
+        wikipage.views = wikipage.views + num;
+        if (num > WRITE_VIEWS_BACK) {
+            yield $updateEntityViews(wikipage);
+        }
         wikipage.content = helper.md2html(wikipage.content, true);
         model = {
             wiki: yield wikiApi.$getWiki(id),
