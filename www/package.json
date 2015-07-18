@@ -28,8 +28,8 @@
     "gm": "1.x"
   },
   "devDependencies": {
+    "co": "4.5.1",
     "async": "*",
-    "co": "4.x",
     "less": "1.x",
     "mocha": "2.x",
     "should": "3.x",
