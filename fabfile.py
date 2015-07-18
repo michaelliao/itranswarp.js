@@ -16,7 +16,7 @@ from fabric.api import *
 env.user = 'root'
 
 # linux hosts:
-env.hosts = ['www.liaoxuefeng.com', 'www.liaoxuefeng.com:23']
+# env.hosts = ['www.liaoxuefeng.com', 'www.liaoxuefeng.com:23']
 
 # linux mysql user and password:
 db_user = 'www'
