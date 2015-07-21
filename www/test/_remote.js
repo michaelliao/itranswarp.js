@@ -149,16 +149,16 @@ _.each(db, function (model, k) {
 _.each(emails, function (email, roleId) {
     var
         id = next_id(),
+        lid = next_id(),
         name = email.substring(0, email.indexOf('@')),
-        passwd = generatePassword(email),
+        passwd = crypto.createHash('sha1').update(lid + ':' + generatePassword(email)).digest('hex'),
         now = Date.now();
-    // password is hash again in database:
-    passwd = crypto.createHash('sha1').update(id + ':' + passwd).digest('hex');
+    init_sqls.push(util.format('insert into localusers (id, user_id, passwd) values (\'%s\', \'%s\', \'%s\')', lid, id, passwd));
     init_sqls.push(
         util.format(
-            'insert into users (id,     role,   name,   email,  passwd, verified, locked_until, image_url, created_at, updated_at, version) values (' +
-                               '\'%s\', %s,     \'%s\', \'%s\', \'%s\', %d,       %d,           \'%s\',    %d,         %d,         %d)',
-                               id,      roleId, name,   email,  passwd, 1,        0,            '/t.png',  now,        now,        0));
+            'insert into users (id,     role,   name,   email,  verified, locked_until, image_url, created_at, updated_at, version) values (' +
+                               '\'%s\', %s,     \'%s\', \'%s\', %d,       %d,           \'%s\',    %d,         %d,         %d)',
+                               id,      roleId, name,   email,  1,        0,            '/t.png',  now,        now,        0));
 });
 
 function* $initDatabase() {

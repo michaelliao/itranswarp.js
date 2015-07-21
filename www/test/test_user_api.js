@@ -25,9 +25,6 @@ describe('#user', function () {
             remote.shouldNoError(r2);
             r2.page.total.should.equal(4);
             r2.users.should.be.an.Array.and.have.length(4);
-            for (i=0; i<r2.users.length; i++) {
-                r2.users[i].passwd.should.equal('******');
-            }
             var uid = r2.users[0].id;
             // get user by contributor:
             var r3 = yield remote.$get(roles.CONTRIBUTOR, '/api/users/' + uid);
@@ -35,7 +32,6 @@ describe('#user', function () {
             // get user by editor:
             var r4 = yield remote.$get(roles.EDITOR, '/api/users/' + uid);
             remote.shouldNoError(r4);
-            r4.passwd.should.equal('******');
         });
 
         it('auth should ok', function* () {
@@ -45,13 +41,12 @@ describe('#user', function () {
             });
             remote.shouldNoError(r);
             r.email.should.equal('admin@itranswarp.com');
-            r.passwd.should.equal('******');
         });
 
         it('auth should failed for bad password', function* () {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
-                passwd: 'bad000000fffffffffffffffffffffffffffffff'
+                passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
             });
             remote.shouldHasError(r, 'auth:failed');
         });
@@ -59,7 +54,7 @@ describe('#user', function () {
         it('auth should failed for invalid password', function* () {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
-                passwd: 'bad000000fffffffffffffffffffffff' // 32-char
+                passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
             });
             remote.shouldHasError(r, 'parameter:invalid', 'passwd');
         });
@@ -67,7 +62,7 @@ describe('#user', function () {
         it('auth should failed for invalid email', function* () {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'notexist@itranswarp.com',
-                passwd: 'bad000000fffffffffffffffffffffffffffffff' // 32-char
+                passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
             });
             remote.shouldHasError(r, 'auth:failed', 'email');
         });
@@ -79,8 +74,8 @@ describe('#user', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'passwd');
         });
 
-        it('auth should forbidden because password is empty', function* () {
-            yield remote.warp.$update('update users set passwd=? where email=?', ['', 'contributor@itranswarp.com']);
+        it('auth should forbidden because password is not set', function* () {
+            yield remote.warp.$update('delete from localusers where user_id in (select id from users where email=?)', ['contributor@itranswarp.com']);
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'contributor@itranswarp.com',
                 passwd: remote.generatePassword('contributor@itranswarp.com')

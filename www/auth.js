@@ -28,12 +28,13 @@ var
 
 var
     User = db.user,
+    LocalUser = db.localuser,
     AuthUser = db.authuser;
 
 var
     COOKIE_NAME = config.session.cookie,
     COOKIE_SALT = config.session.salt,
-    COOKIE_EXPIRES = config.session.expires;
+    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000;
 
 // for safe base64 replacements:
 var
@@ -66,38 +67,49 @@ function _safe_b64decode(s) {
 
 // Generate a secure client session cookie by constructing string:
 // base64(provider:id:expires:sha1(provider:id:expires:passwd:salt)).
-function makeSessionCookie(provider, id, passwd, expires) {
+function makeSessionCookie(provider, theId, passwd, expires) {
     var
         now = Date.now(),
         min = now + 86400000, // 1 day
         max = now + 2592000000, // 30 days
         secure, sha1, str;
     if (!expires) {
-        expires = now + COOKIE_EXPIRES;
+        expires = now + COOKIE_EXPIRES_IN_MS;
     } else if (expires < min) {
         expires = min;
     } else if (expires > max) {
         expires = max;
     }
-    secure = [provider, id, passwd, String(expires), COOKIE_SALT].join(':');
+    secure = [provider, theId, passwd, String(expires), COOKIE_SALT].join(':');
     sha1 = crypto.createHash('sha1').update(secure).digest('hex');
-    str = [provider, id, expires, sha1].join(':');
+    str = [provider, theId, expires, sha1].join(':');
     console.log('make session cookie: ' + str);
+    console.log('session cookie expires at ' + new Date(expires).toLocaleString());
     return _safe_b64encode(str);
 }
 
-function* $findUserByProvider(provider, id) {
+function* $findUserAuthByProvider(provider, id) {
+    var au, lu, user, passwd;
     if (provider === constants.signin.LOCAL) {
-        return yield User.$find(id);
+        lu = yield LocalUser.$find(id);
+        if (lu === null) {
+            return null;
+        }
+        passwd = lu.passwd;
+        user = yield User.$find(lu.user_id);
     }
-    var au, user;
-    au = yield AuthUser.$find(id);
-    if (au === null) {
-        return null;
+    else {
+        au = yield AuthUser.$find(id);
+        if (au === null) {
+            return null;
+        }
+        passwd = au.auth_token;
+        user = yield User.$find(au.user_id);
     }
-    user = yield User.$find(au.user_id);
-    user.passwd = au.auth_token;
-    return user;
+    return {
+        user: user,
+        passwd: passwd
+    };
 }
 
 // parse header 'Authorization: Basic xxxx'
@@ -107,7 +119,7 @@ function* $parseAuthorization(auth) {
         return null;
     }
     var
-        u, p, user,
+        u, p, user, luser,
         up = new Buffer(auth.substring(6), 'base64').toString().split(':');
     if (up.length !== 2) {
         return null;
@@ -117,13 +129,20 @@ function* $parseAuthorization(auth) {
     if (!u || !p) {
         return null;
     }
+    // TODO: check sha1 regex?
     user = yield User.$find({
         where: 'email=?',
         params: [u]
     });
-    if (user && _verifyPassword(user.id, p, user.passwd)) {
-        console.log('binded user: ' + user.name);
-        return user;
+    if (user) {
+        luser = yield LocalUser.$find({
+            where: 'user_id=?',
+            params: [user.id]
+        });
+        if (luser && _verifyPassword(luser.id, p, luser.passwd)) {
+            console.log('binded user: ' + user.name);
+            return user;
+        }
     }
     console.log('invalid authorization header.');
     return null;
@@ -135,6 +154,7 @@ function* $parseSessionCookie(s) {
     var
         ss = _safe_b64decode(s).split(':'),
         user,
+        auth,
         theId, provider, expiresStr, expires, sha1, secure, expected;
     if (ss.length !== 4) {
         return null;
@@ -147,17 +167,17 @@ function* $parseSessionCookie(s) {
     if (isNaN(expires) || (expires < Date.now()) || !theId || !sha1) {
         return null;
     }
-    user = yield $findUserByProvider(provider, theId);
-    if (user === null) {
+    auth = yield $findUserAuthByProvider(provider, theId);
+    if (auth === null) {
         return null;
     }
     // check:
-    secure = [provider, theId, expiresStr, user.passwd, COOKIE_SALT].join(':');
+    secure = [provider, theId, expiresStr, auth.passwd, COOKIE_SALT].join(':');
     expected = crypto.createHash('sha1').update(secure).digest('hex');
     if (sha1 === expected) {
         return null;
     }
-    return user;
+    return auth.user;
 }
 
 // middle ware for bind user from session cookie:

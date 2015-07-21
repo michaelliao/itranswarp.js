@@ -17,10 +17,11 @@ var
 var
     User = db.user,
     AuthUser = db.authuser,
+    LocalUser = db.localuser,
     warp = db.warp,
     next_id = db.next_id;
 
-var LOCAL_SIGNIN_EXPIRES = 1000 * 3600 * 24 * 7; // 7 days
+var LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
 var LOCK_TIMES = {
     d: 86400000,
@@ -55,9 +56,6 @@ function* $getUsers(page) {
         limit: page.limit,
         order: 'created_at desc'
     });
-    _.each(users, function (u) {
-        u.passwd = '******';
-    });
     return users;
 }
 
@@ -74,7 +72,6 @@ function* $getUser(id) {
     if (user === null) {
         throw api.notFound('User');
     }
-    user.passwd = '******';
     return user;
 }
 
@@ -117,7 +114,6 @@ function* $processOAuthAuthentication(provider_name, authentication) {
             id: user_id,
             email: user_id + '@' + provider_name,
             name: authentication.name,
-            passwd: '',
             image_url: authentication.image_url || '/static/img/user.png'
         };
         auth_user = {
@@ -147,7 +143,6 @@ function* $processOAuthAuthentication(provider_name, authentication) {
             id: user_id,
             email: user_id + '@' + provider_name,
             name: authentication.name,
-            passwd: '',
             image_url: authentication.image_url || '/static/img/user.png'
         };
         yield User.$create(user);
@@ -201,6 +196,7 @@ module.exports = {
             email,
             passwd,
             user,
+            localuser,
             data = this.request.body;
         json_schema.validate('authenticate', data);
 
@@ -213,24 +209,27 @@ module.exports = {
         if (user.locked_until > Date.now()) {
             throw api.authFailed('locked', 'User is locked.');
         }
-        if (user.passwd === '') {
+        localuser = yield LocalUser.$find({
+            where: 'user_id=?',
+            params: [user.id]
+        });
+        if (localuser === null) {
             throw api.authFailed('passwd', 'Cannot signin local.')
         }
         // check password:
-        if (!auth.verifyPassword(user.id, passwd, user.passwd)) {
+        if (!auth.verifyPassword(localuser.id, passwd, localuser.passwd)) {
             throw api.authFailed('passwd', 'Bad password.');
         }
         // make session cookie:
         var
-            expires = Date.now() + LOCAL_SIGNIN_EXPIRES,
-            cookieStr = auth.makeSessionCookie(constants.signin.LOCAL, user.id, user.passwd, expires);
+            expires = Date.now() + LOCAL_SIGNIN_EXPIRES_IN_MS,
+            cookieStr = auth.makeSessionCookie(constants.signin.LOCAL, localuser.id, localuser.passwd, expires);
         this.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
             expires: new Date(expires)
         });
         console.log('set session cookie for user: ' + user.email);
-        user.passwd = '******';
         this.body = user;
     },
 

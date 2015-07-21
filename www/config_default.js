@@ -17,6 +17,8 @@ module.exports = {
         cookie: 'isession',
         // used to generate secure session cookie, can be set to any random string:
         salt: 'iTranswarp.js',
+        // signin expires in N seconds:
+        expires: 7 * 24 * 3600,
         // use https for management:
         httpsForManagement: false
     },
