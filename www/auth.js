@@ -80,11 +80,13 @@ function makeSessionCookie(provider, theId, passwd, expires) {
     } else if (expires > max) {
         expires = max;
     }
-    secure = [provider, theId, passwd, String(expires), COOKIE_SALT].join(':');
+    secure = [provider, theId, String(expires), passwd, COOKIE_SALT].join(':');
     sha1 = crypto.createHash('sha1').update(secure).digest('hex');
     str = [provider, theId, expires, sha1].join(':');
     console.log('make session cookie: ' + str);
     console.log('session cookie expires at ' + new Date(expires).toLocaleString());
+    console.log('>>> secure: ' + secure);
+    console.log('>>> sha1: ' + sha1);
     return _safe_b64encode(str);
 }
 
@@ -174,7 +176,10 @@ function* $parseSessionCookie(s) {
     // check:
     secure = [provider, theId, expiresStr, auth.passwd, COOKIE_SALT].join(':');
     expected = crypto.createHash('sha1').update(secure).digest('hex');
-    if (sha1 === expected) {
+    console.log('>>> secure: ' + secure);
+    console.log('>>> sha1: ' + sha1);
+    console.log('>>> expected: ' + expected);
+    if (sha1 !== expected) {
         return null;
     }
     return auth.user;
