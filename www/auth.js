@@ -182,6 +182,10 @@ function* $parseSessionCookie(s) {
     if (sha1 !== expected) {
         return null;
     }
+    if (auth.user.locked_until > Date.now()) {
+        console.log('User is locked: ' + auth.user.email);
+        return null;
+    }
     return auth.user;
 }
 

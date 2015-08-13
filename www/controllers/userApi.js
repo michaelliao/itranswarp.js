@@ -301,6 +301,11 @@ module.exports = {
         r = yield $processOAuthAuthentication(name, authentication);
         auth_user = r.auth_user;
         user = r.user;
+        if (user.locked_until > Date.now()) {
+            console.log('User is locked: ' + user.email);
+            this.body = '<html><body>User is locked.</body></html>';
+            return;
+        }
         // make session cookie:
         cookieStr = auth.makeSessionCookie(name, auth_user.id, auth_user.auth_token, auth_user.expires_at);
         this.cookies.set(config.session.cookie, cookieStr, {
