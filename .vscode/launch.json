@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/www/start.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}/www",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--nolazy",
+                "--use_strict"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "console": "internalConsole",
+            "sourceMaps": false,
+            "outDir": null
+        }
+    ]
+}
