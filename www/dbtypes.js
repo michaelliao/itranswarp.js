@@ -2,7 +2,7 @@
 
 const Sequelize = require('sequelize');
 
-const TYPES = ['STRING', 'INTEGER', 'BIGINT', 'TEXT', 'DOUBLE', 'DATEONLY', 'BOOLEAN'];
+const TYPES = ['STRING', 'INTEGER', 'BIGINT', 'TEXT', 'DOUBLE', 'DATEONLY', 'BOOLEAN', 'BLOB'];
 
 var exp = {
     ID: Sequelize.STRING(50)

@@ -1,21 +1,22 @@
-'use strict';
-
 // attachment.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Attachment', [
-        base.column_id('user_id'),
-        base.column_id('resource_id'),
-        base.column_bigint('size'),
-        base.column_bigint('width'),
-        base.column_bigint('height'),
-        base.column_varchar_100('mime'),
-        base.column_varchar_100('name'),
-        base.column_varchar_100('meta', { defaultValue: '' }),
-        base.column_varchar_1000('description')
-    ], {
-        table: 'attachments'
-    });
+module.exports = {
+    name: 'Attachment',
+    table: 'attachments',
+    fields:{
+        user_id: dbtypes.ID,
+        resource_id: dbtypes.ID,
+        size: dbtypes.BIGINT,
+        width: dbtypes.BIGINT,
+        height: dbtypes.BIGINT,
+        mime: dbtypes.STRING(100),
+        name: dbtypes.STRING(100),
+        meta: {
+            type: dbtypes.STRING(100),
+            defaultValue: ''
+        },
+        description: dbtypes.STRING(1000)
+    }
 };

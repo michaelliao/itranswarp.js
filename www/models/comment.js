@@ -1,18 +1,16 @@
-'use strict';
-
 // comment.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Comment', [
-        base.column_varchar_50('ref_type'),
-        base.column_id('ref_id'),
-        base.column_id('user_id'),
-        base.column_varchar_100('user_name'),
-        base.column_varchar_1000('user_image_url'),
-        base.column_varchar_1000('content')
-    ], {
-        table: 'comments'
-    });
+module.exports = {
+    name: 'Comment',
+    table: 'comments',
+    fields: {
+        ref_type: dbtypes.STRING(50),
+        ref_id: dbtypes.ID,
+        user_id: dbtypes.ID,
+        user_name: dbtypes.STRING(100),
+        user_image_url: dbtypes.STRING(100),
+        content: dbtypes.STRING(1000),
+    }
 };

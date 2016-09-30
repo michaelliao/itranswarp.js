@@ -1,5 +1,3 @@
-'use strict';
-
 // api:
 
 function APIError(err_code, err_data, err_message) {
@@ -9,28 +7,29 @@ function APIError(err_code, err_data, err_message) {
 }
 
 var api = {
-    authRequired: function () {
+    APIError: APIError,
+    authRequired: () => {
         return new APIError('auth:required', '', 'Please sign in.');
     },
-    authFailed: function (paramName, message) {
+    authFailed: (paramName, message) => {
         return new APIError('auth:failed', paramName || '', message || 'Invalid email or password.');
     },
-    invalidRequest: function (paramName, message) {
+    invalidRequest: (paramName, message) => {
         return new APIError('request:invalid', paramName, message || 'Invalid request: ' + paramName);
     },
-    invalidParam: function (paramName, message) {
+    invalidParam: (paramName, message) => {
         return new APIError('parameter:invalid', paramName, message || 'Invalid parameter: ' + paramName);
     },
-    notAllowed: function (err_message) {
+    notAllowed: (err_message) => {
         return new APIError('permission:denied', 'permission', err_message);
     },
-    notFound: function (err_data, err_message) {
+    notFound: (err_data, err_message) => {
         return new APIError('entity:notfound', err_data, err_message || (err_data + ' not found.'));
     },
-    conflictError: function (err_data, err_message) {
+    conflictError: (err_data, err_message) => {
         return new APIError('entity:conflict', err_data, err_message || (err_data + ' conflict.'));
     },
-    serverError: function (err_code, err_data, err_message) {
+    serverError: (err_code, err_data, err_message) => {
         if (err_code instanceof Error) {
             return new APIError('500', err_code.message, err_code.stack);
         }
@@ -39,10 +38,34 @@ var api = {
         }
         return new APIError(err_code, err_data, err_message);
     },
-    error: function (err_code, err_data, err_message) {
+    error: (err_code, err_data, err_message) => {
         return new APIError(err_code, err_data, err_message);
     },
-    APIError: APIError
+    restify: (pathPrefix) => {
+        pathPrefix = pathPrefix || '/api/';
+        return async (ctx, next) => {
+            if (ctx.request.path.startsWith(pathPrefix)) {
+                console.log(`Process API ${ctx.request.method} ${ctx.request.url}...`);
+                ctx.rest = (data) => {
+                    ctx.response.type = 'application/json';
+                    ctx.response.body = data;
+                }
+                try {
+                    await next();
+                } catch (e) {
+                    console.log('Process API error...');
+                    ctx.response.status = 400;
+                    ctx.response.type = 'application/json';
+                    ctx.response.body = {
+                        error: e.error || 'internal:unknown_error',
+                        message: e.message || ''
+                    };
+                }
+            } else {
+                await next();
+            }
+        };
+    }
 };
 
 module.exports = api;

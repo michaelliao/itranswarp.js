@@ -1,22 +1,33 @@
-'use strict';
-
 // article.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Article', [
-        base.column_id('user_id', { index: true }),
-        base.column_id('category_id', { index: true }),
-        base.column_id('cover_id', { defaultValue: '' }),
-        base.column_id('content_id'),
-        base.column_bigint('views'),
-        base.column_varchar_100('user_name'),
-        base.column_varchar_100('name'),
-        base.column_varchar_1000('tags'),
-        base.column_varchar_1000('description'),
-        base.column_bigint('publish_at', { index: true, defaultValue: Date.now })
-    ], {
-        table: 'articles'
-    });
+module.exports = {
+    name: 'Article',
+    table: 'articles',
+    fields: {
+        user_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        category_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        cover_id: {
+            type: dbtypes.ID,
+            defaultValue: ''
+        },
+        content_id: dbtypes.ID,
+        views: dbtypes.BIGINT,
+        user_name: dbtypes.STRING(100),
+        name: dbtypes.STRING(100),
+        tags: dbtypes.STRING(100),
+        description: dbtypes.STRING(1000),
+        publish_at: {
+            type: dbtypes.BIGINT,
+            index: true,
+            defaultValue: Date.now
+        }
+    }
 };

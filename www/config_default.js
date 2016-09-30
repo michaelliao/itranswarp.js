@@ -1,11 +1,9 @@
-'use strict';
-
 /*
  * This is the default configuration for iTranswarp.js.
  * 
- * DO NOT change it. Instead, make a copy and rename to:
- * "config_development.js" which is enabled in development environment.
- * "config_production.js" which is enabled in production environment.
+ * DO NOT change it. Instead, make a copy and put to:
+ * "/srv/itranswarp/config/override.js"
+ * 
  * Then edit settings you needed.
  */
 module.exports = {
@@ -16,31 +14,22 @@ module.exports = {
     session: {
         cookie: 'isession',
         // used to generate secure session cookie, can be set to any random string:
-        salt: 'iTranswarp.js',
+        salt: 'itranswarp.js',
         // signin expires in N seconds:
         expires: 7 * 24 * 3600,
         // use https for management:
         httpsForManagement: false
     },
     db: {
-        // host or ip address of mysql, e.g. '192.168.1.123':
-        host: 'localhost',
-        // port of mysql, default to 3306:
-        port: 3306,
-        // user to login to mysql, change to your mysql user:
-        user: 'www',
-        // password to login to mysql, change to your mysql password:
-        password: 'www',
-        // database used in mysql, default to 'itranswarp':
-        database: 'itranswarp',
-        // timeout before initial a connection to mysql, default to 3 seconds:
-        connectTimeout: 3000,
-        // maximum concurrent db connections:
-        connectionLimit: 20,
-        // acquire timeout:
-        acquireTimeout: 3000,
-        // waiting queue size:
-        queueLimit: 10
+        host: 'localhost', // mysql host or ip address
+        port: 3306, // mysql port (default to 3306)
+        username: 'www', // username to login to mysql
+        password: 'www', // password to login to mysql
+        database: 'itranswarp', // database name
+        // pool settings:
+        maxConnections: 20, // max = 20
+        minConnections: 1, // min = 1
+        maxIdleTime: 60000 // idle time = 60s
     },
     // NOT USED NOW:
     cdn: {
@@ -85,7 +74,5 @@ module.exports = {
         //     'app_secret': 'your-app-secret',
         //     'redirect_uri': 'http://your-redirect-uri/config/in/facebook'
         // }
-    },
-    // END:
-    END: 'END'
+    }
 };

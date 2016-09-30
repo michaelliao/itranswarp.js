@@ -1,11 +1,8 @@
-'use strict';
-
 // image operation.
 
 var
+    Promise = require('bluebird'),
     api = require('../api'),
-    fs = require('fs'),
-    thunkify = require('thunkify'),
     gm = require('gm').subClass({ imageMagick : true });
 
 function calcScaleSize(origin_width, origin_height, resize_width, resize_height, keepAspect) {
@@ -123,11 +120,11 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
 
 module.exports = {
 
-    $getImageInfo: thunkify(getImageInfo),
+    getImageInfo: Promise.promisify(getImageInfo),
 
-    $resizeKeepAspect: thunkify(resizeKeepAspect),
+    resizeKeepAspect: Promise.promisify(resizeKeepAspect),
 
-    $resizeAsCover: thunkify(resizeAsCover),
+    resizeAsCover: Promise.promisify(resizeAsCover),
 
     calcScaleSize: calcScaleSize
 

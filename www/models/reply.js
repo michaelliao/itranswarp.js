@@ -1,19 +1,35 @@
-'use strict';
-
 // reply.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Reply', [
-        base.column_id('topic_id', { index: true }),
-        base.column_id('user_id', { index: true }),
-        base.column_boolean('deleted', { defaultValue: false }),
-        base.column_bigint('upvotes', { defaultValue: 0}),
-        base.column_bigint('downvotes', { defaultValue: 0}),
-        base.column_bigint('score', { defaultValue: 0}),
-        base.column_text('content', { type: 'text' })
-    ], {
-        table: 'replies'
-    });
+module.exports = {
+    name: 'Reply',
+    table: 'replies',
+    fields: {
+        topic_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        user_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        deleted: {
+            type: dbtypes.BOOLEAN,
+            defaultValue: false
+        },
+        upvotes: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
+        downvotes: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
+        score: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
+        content: dbtypes.TEXT
+    }
 };

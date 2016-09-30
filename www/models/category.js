@@ -1,16 +1,16 @@
-'use strict';
-
 // category.js
+
+const dbtypes = require('../dbtypes');
 
 var base = require('./_base.js');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Category', [
-        base.column_varchar_100('name'),
-        base.column_varchar_100('tag'),
-        base.column_varchar_1000('description'),
-        base.column_bigint('display_order')
-    ], {
-        table: 'categories'
-    });
+module.exports = {
+    name: 'Category',
+    table: 'categories',
+    fields: {
+        name: dbtypes.STRING(100),
+        tag: dbtypes.STRING(100),
+        display_order: dbtypes.BIGINT,
+        description: dbtypes.STRING(1000)
+    }
 };

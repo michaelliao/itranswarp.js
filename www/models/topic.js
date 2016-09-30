@@ -1,24 +1,31 @@
-'use strict';
-
 // topic.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Topic', [
-        base.column_id('board_id', { index: true }),
-        base.column_varchar_50('ref_type'),
-        base.column_id('ref_id', { index: true }),
-        base.column_id('user_id', { index: true }),
-        base.column_bigint('replies'),
-        base.column_varchar_100('name'),
-        base.column_varchar_1000('tags'),
-        base.column_bigint('upvotes'),
-        base.column_bigint('downvotes'),
-        base.column_bigint('score'),
-        base.column_boolean('locked'),
-        base.column_text('content', { type: 'text' })
-    ], {
-        table: 'topics'
-    });
+module.exports = {
+    name: 'Topic',
+    table: 'topics',
+    fields: {
+        board_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        ref_type: dbtypes.STRING(50),
+        ref_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        user_id: {
+            type: dbtypes.ID,
+            index: true
+        },
+        replies: dbtypes.BIGINT,
+        upvotes: dbtypes.BIGINT,
+        downvotes: dbtypes.BIGINT,
+        score: dbtypes.BIGINT,
+        locked: dbtypes.BOOLEAN,
+        name: dbtypes.STRING(100),
+        tags: dbtypes.STRING(1000),
+        content: dbtypes.TEXT
+    }
 };

@@ -1,14 +1,15 @@
-'use strict';
-
 // localuser.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'LocalUser', [
-        base.column_id('user_id', { unique: true }),
-        base.column_varchar_100('passwd')
-    ], {
-        table: 'localusers'
-    });
+module.exports = {
+    name: 'LocalUser',
+    table: 'localusers',
+    fields: {
+        user_id: {
+            type: dbtypes.ID,
+            unique: true
+        },
+        passwd: dbtypes.STRING(100)
+    }
 };

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * the ID generator always generates 50-chars string:
  *
@@ -7,8 +5,9 @@
  * var the_id = next_id();
  */
 
-var util = require('util');
-var uuid = require('node-uuid');
+const
+    util = require('util'),
+    uuid = require('node-uuid');
 
 var i, paddings = [];
 
@@ -22,8 +21,8 @@ for (i = 1; i < 30; i++) {
  *   random uuid;
  *   server shard number (0 ~ 0xff, default to 0).
  */
-module.exports = function () {
+function next_id () {
     // generate uuid with timestamp:
     var id = util.format('%d%s000', Date.now(), uuid.v4().replace(/\-/g, ''));
     return paddings[50 - id.length] + id;
-};
+}

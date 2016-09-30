@@ -1,8 +1,6 @@
-'use strict';
-
 // article api
 
-var
+const
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
@@ -13,7 +11,7 @@ var
     search = require('../search/search'),
     json_schema = require('../json_schema');
 
-var
+const
     settingApi = require('./settingApi'),
     categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi');
@@ -51,9 +49,9 @@ function unindexArticle(r) {
     });
 }
 
-function* $getRecentArticles(max) {
+async function getRecentArticles(max) {
     var now = Date.now();
-    return yield Article.$findAll({
+    return await Article.findAll({
         where: 'publish_at<?',
         order: 'publish_at desc',
         params: [now],
@@ -181,7 +179,7 @@ var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 module.exports = {
 
-    $getRecentArticles: $getRecentArticles,
+    $getRecentArticles: getRecentArticles,
 
     $getArticlesByCategory: $getArticlesByCategory,
 

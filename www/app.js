@@ -1,85 +1,85 @@
-'use strict';
+// application:
 
-// app.js
-process.productionMode = (process.env.NODE_ENV === 'production');
+var isProduction = (process.env.NODE_ENV === 'production');
 
-var
+const
     _ = require('lodash'),
-    fs = require('fs'),
-    swig = require('swig'),
-    koa = require('koa'),
-    route = require('koa-route'),
+    fs = require('mz/fs'),
+    Koa = require('koa'),
     bodyParser = require('koa-bodyparser'),
+    templating = require('./templating'),
+    controller = require('./controller'),
     api = require('./api'),
     i18n = require('./i18n'),
     auth = require('./auth'),
     config = require('./config'),
     constants = require('./constants'),
-    api_console = require('./api_console'),
-    // global app:
-    app = koa();
+    db = require('./db'),
+    api_console = require('./api_console');
 
-var db = require('./db'),
-    User = db.user,
+var
     hostname = require('os').hostname(),
-    activeTheme = config.theme;
+    activeTheme = config.theme,
+    User = db.user;
 
-app.name = 'itranswarp';
-app.proxy = true;
+// global app:
+var app = new Koa();
 
-// set view template:
-var swigTemplatePath = __dirname + '/views/';
-swig.setDefaults({
-    cache: process.productionMode ? 'memory' : false
+// log request URL:
+app.use(async (ctx, next) => {
+    console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
+    var
+        start = Date.now(),
+        execTime;
+    try {
+        await next();
+    } catch (e) {
+        console.error('Error', e);
+    }
+    execTime = Date.now() - start;
+    ctx.response.set('X-Response-Time', `${execTime}ms`);
 });
+
+// static file support:
+if (!isProduction) {
+    let staticFiles = require('./static-files');
+    app.use(staticFiles('/static/', __dirname + '/static'));
+}
+
+// parse request body:
+app.use(bodyParser());
 
 // set i18n filter:
-swig.setFilter('i18n', function (input) {
-    return input;
-});
-
-// set min filter:
-swig.setFilter('min', function (input) {
-    if (input <= 60) {
-        return input + ' minutes';
-    }
-    var
-        h = parseInt(input / 60),
-        m = input % 60;
-    return h + ' hours ' + m + ' minutes';
-});
-
-// serve static files:
-function serveStatic() {
-    var root = __dirname;
-    app.use(function* (next) {
+var filters = {
+    i18n: function (input) {
+        return input;
+    },
+    min: function (input) {
+        if (input <= 60) {
+            return input + ' minutes';
+        }
         var
-            method = this.request.method,
-            path = this.request.path,
-            pos;
-        if (method === 'GET' && (path.indexOf('/static/') === 0 || path === '/favicon.ico')) {
-            console.log('>>> static path: ' + path);
-            pos = path.lastIndexOf('.');
-            if (pos !== (-1)) {
-                this.type = path.substring(pos);
-            }
-            this.body = fs.createReadStream(root + path);
-            return;
-        }
-        else {
-            yield next;
-        }
-    });
-}
+            h = parseInt(input / 60),
+            m = input % 60;
+        return h + ' hours ' + m + ' minutes';
+    }
+};
 
-if (process.productionMode) {
-    app.on('error', function (err) {
-        console.error(new Date().toISOString() + ' [Unhandled ERR] ', err);
-    });
-}
-else {
-    serveStatic();
-}
+// add nunjucks as view:
+app.use(templating('view', {
+    noCache: !isProduction,
+    watch: !isProduction,
+    filters: filters
+}));
+
+// rest support:
+app.use(api.restify());
+
+// add controller:
+app.use(controller());
+
+
+
 
 function logJSON(data) {
     if (data) {
@@ -103,9 +103,22 @@ var static_prefix = config.cdn.static_prefix;
 
 app.use(auth.$userIdentityParser);
 
-app.use(bodyParser());
+
+
+// add controller:
+app.use(controller());
+
+
+
+
+
+
 
 var isDevelopment = !process.productionMode;
+
+
+
+
 
 app.use(function* theMiddleware(next) {
     var
@@ -121,7 +134,7 @@ app.use(function* theMiddleware(next) {
     console.log('[%s] %s %s', new Date().toISOString(), method, path);
 
     if (prefix8 === '/manage/' && request.path !== '/manage/signin') {
-        if (! request.user || request.user.role > constants.role.CONTRIBUTOR) {
+        if (!request.user || request.user.role > constants.role.CONTRIBUTOR) {
             response.redirect('/manage/signin');
             return;
         }
@@ -195,71 +208,6 @@ app.use(function* theMiddleware(next) {
     }
 });
 
-function registerRoute(method, path, fn) {
-    if (method === 'GET') {
-        console.log('found route: GET %s', path);
-        app.use(route.get(path, fn));
-    }
-    else if (method === 'POST') {
-        console.log('found route: POST %s', path);
-        app.use(route.post(path, fn));
-    }
-}
-
-// scan all modules:
-
-function loadControllerFilenames() {
-    var
-        files = fs.readdirSync(__dirname + '/controllers'),
-        re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$"),
-        jss = _.filter(files, function (f) {
-            return re.test(f);
-        });
-    return _.map(jss, function (f) {
-        return f.substring(0, f.length - 3);
-    });
-}
-
-function loadControllers() {
-    var ctrls = {};
-    _.each(loadControllerFilenames(), function (filename) {
-        ctrls[filename] = require('./controllers/' + filename);
-    });
-    return ctrls;
-}
-
-var controllers = loadControllers();
-
-_.each(controllers, function (ctrl, fname) {
-    _.each(ctrl, function (fn, path) {
-        var ss, verb, route, docs;
-        ss = path.split(' ', 2);
-        if (ss.length !== 2) {
-            console.log('Not a route definition: ' + path);
-            return;
-        }
-        verb = ss[0];
-        route = ss[1];
-        if (verb === 'GET') {
-            console.log('found: GET ' + route + ' in ' + fname + '.js');
-            registerRoute('GET', route, fn);
-        } else if (verb === 'POST') {
-            console.log('found: POST ' + route + ' in ' + fname + '.js');
-            registerRoute('POST', route, fn);
-        } else {
-            console.log('error: Invalid verb: ' + verb);
-            return;
-        }
-        if (route.indexOf('/api/') === 0) {
-            docs = fn.toString().match(/[\w\W]*\/\*\*?([\d\D]*)\*?\*\/[\w\W]*/);
-            if (docs) {
-                api_console.processApiDoc(fname, verb, route, docs[1]);
-            } else {
-                console.log('WARNING: no api docs found for api: ' + route);
-            }
-        }
-    });
-});
-
 app.listen(2015);
-console.log('application start in %s mode at 2015...', (process.productionMode ? 'production' : 'development'));
+
+console.log(`application start in ${process.isProductionMode ? 'production' : 'development'} mode at 2015...`);

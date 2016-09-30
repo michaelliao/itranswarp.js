@@ -1,20 +1,27 @@
-'use strict';
-
 // user.js
 
-var constants = require('../constants');
+const dbtypes = require('../dbtypes');
 
-var base = require('./_base');
+const constants = require('../constants');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'User', [
-        base.column_bigint('role', { defaultValue: constants.role.SUBSCRIBER }),
-        base.column_varchar_100('name'),
-        base.column_varchar_100('email', { unique: true, validate: { isEmail: true, isLowercase: true }}),
-        base.column_boolean('verified'),
-        base.column_varchar_1000('image_url'),
-        base.column_bigint('locked_until')
-    ], {
-        table: 'users'
-    });
+module.exports = {
+    name: 'User',
+    table: 'users',
+    fields: {
+        role: {
+            type: dbtypes.BIGINT,
+            defaultValue: constants.role.SUBSCRIBER
+        },
+        locked_until: dbtypes.BIGINT,
+        email: {
+            type: dbtypes.STRING(100),
+            unique: true
+        },
+        verified: {
+            type: dbtypes.BOOLEAN,
+            defaultValue: false
+        },
+        name: dbtypes.STRING(100),
+        image_url: dbtypes.STRING(1000)
+    }
 };

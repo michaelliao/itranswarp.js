@@ -1,55 +1,36 @@
-'use strict';
-
-/**
-
-read config files:
+/*
+read config files from:
   * config_default.js
-  * config_production.js if in production mode and file exist
+  * /srv/itranswarp/config/override.js if file exist
 
-You should override some configurations in your own 'config_production.js', e.g.:
+You should override some configurations in /srv/itranswarp/config/override.js:
 
-    // config_production.js:
+    // override.js:
     exports = module.exports = {
         "db": {
             "host": "192.168.0.101", // a specific IP of mysql server
             "port": 3307 // a specific port of mysql server
         }
     }
+*/
 
-**/
-
-var
+const
+    overrideConfigPath = '/srv/itranswarp/config/override.js',
     _ = require('lodash'),
-    fs = require('fs'),
-    cfg = require('./config_default');
+    fs = require('fs');
 
-if (process.productionMode) {
-    if (fs.existsSync(__dirname + '/config_production.js')) {
-        console.log('loading config_production...');
-        var ovr = require('./config_production');
-        cfg = _.merge(cfg, ovr);
-    }
-    else {
-        console.warn('config_production.js not found!');
-        throw 'config_production.js not found when running in production mode!';
-    }
-}
-else {
-    if (fs.existsSync(__dirname + '/config_development.js')) {
-        console.log('loading config_development...');
-        var ovr = require('./config_development');
-        cfg = _.merge(cfg, ovr);
-    }
-    else {
-        console.warn('config_development.js not found!');
-    }
+var cfg = require('./config_default');
+
+if (fs.existsSync(overrideConfigPath)) {
+    console.log(`load ${overrideConfigPath}...`);
+    var ovr = require(overrideConfigPath);
+    cfg = _.merge(cfg, ovr);
 }
 
 cfg.version = '1.0';
 // replace by deployment:
 cfg.build = '$BUILD$';
 
-console.log('configuration loaded:');
-console.log(JSON.stringify(cfg, null, '  '));
+console.log('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
 
 module.exports = cfg;

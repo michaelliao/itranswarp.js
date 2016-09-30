@@ -1,15 +1,19 @@
-'use strict';
-
 // setting.js
 
-var base = require('./_base');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Setting', [
-        base.column_varchar_100('group'),
-        base.column_varchar_100('key', { unique: true }),
-        base.column_text('value', { type: 'text', defaultValue: '' })
-    ], {
-        table: 'settings'
-    });
+module.exports = {
+    name: 'Setting',
+    table: 'settings',
+    fields: {
+        group: dbtypes.STRING(100),
+        key: {
+            type: dbtypes.STRING(100),
+            unique: true
+        },
+        value: {
+            type: dbtypes.TEXT,
+            defaultValue: ''
+        }
+    }
 };

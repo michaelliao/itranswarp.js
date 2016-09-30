@@ -1,5 +1,3 @@
-'use strict';
-
 // define constants:
 
 module.exports = {
@@ -25,8 +23,5 @@ module.exports = {
     },
 
     // queue name:
-    QUEUE_SNS: 'queueSNS',
-
-    // END:
-    END: 'ended.'
+    QUEUE_SNS: 'queueSNS'
 };

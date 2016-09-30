@@ -1,14 +1,12 @@
-'use strict';
-
 // resource.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Resource', [
-        base.column_id('ref_id'),
-        base.column_blob('value')
-    ], {
-        table: 'resources'
-    });
+module.exports = {
+    name: 'Resource',
+    table: 'resources',
+    fields: {
+        ref_id: dbtypes.ID,
+        value: dbtypes.BLOB
+    }
 };

@@ -1,5 +1,3 @@
-'use strict';
-
 // generate schema:
 
 var

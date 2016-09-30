@@ -1,17 +1,18 @@
-'use strict';
-
 // authuser.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'AuthUser', [
-        base.column_id('user_id'),
-        base.column_varchar_50('auth_provider'),
-        base.column_varchar_100('auth_id', { unique: true }),
-        base.column_varchar_500('auth_token'),
-        base.column_bigint('expires_at')
-    ], {
-        table: 'authusers'
-    });
+module.exports = {
+    name: 'AuthUser',
+    table: 'authusers',
+    fields: {
+        user_id: dbtypes.ID,
+        auth_provider: dbtypes.STRING(50),
+        auth_id: {
+            type: dbtypes.STRING(100),
+            unique: true
+        },
+        auth_token: dbtypes.STRING(500),
+        expires_at: dbtypes.BIGINT
+    }
 };

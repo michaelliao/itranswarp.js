@@ -1,15 +1,13 @@
-'use strict';
-
 // navigation.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Navigation', [
-        base.column_varchar_100('name'),
-        base.column_varchar_1000('url'),
-        base.column_bigint('display_order')
-    ], {
-        table: 'navigations'
-    });
+module.exports = {
+    name: 'Navigation',
+    table: 'navigations',
+    fields: {
+        display_order: dbtypes.BIGINT,
+        name: dbtypes.STRING(100),
+        url: dbtypes.STRING(1000)
+    }
 };

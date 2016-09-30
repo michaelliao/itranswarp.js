@@ -1,18 +1,16 @@
-'use strict';
-
 // board.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'Board', [
-        base.column_bigint('topics'),
-        base.column_boolean('locked'),
-        base.column_varchar_100('tag'),
-        base.column_varchar_100('name'),
-        base.column_varchar_1000('description'),
-        base.column_bigint('display_order')
-    ], {
-        table: 'boards'
-    });
+module.exports = {
+    name: 'Board',
+    table: 'boards',
+    fields: {
+        topics: dbtypes.BIGINT,
+        locked: dbtypes.BOOLEAN,
+        display_order: dbtypes.BIGINT,
+        tag: dbtypes.STRING(100),
+        name: dbtypes.STRING(100),
+        description: dbtypes.STRING(1000)
+    }
 };

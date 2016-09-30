@@ -1,18 +1,16 @@
-'use strict';
-
 // wikipage.js
 
-var base = require('./_base.js');
+const dbtypes = require('../dbtypes');
 
-module.exports = function (warp) {
-    return base.defineModel(warp, 'WikiPage', [
-        base.column_id('wiki_id'),
-        base.column_id('parent_id'),
-        base.column_id('content_id'),
-        base.column_bigint('views'),
-        base.column_varchar_100('name'),
-        base.column_bigint('display_order')
-    ], {
-        table: 'wikipages'
-    });
+module.exports = {
+    name: 'WikiPage',
+    table: 'wikipages',
+    fields: {
+        wiki_id: dbtypes.ID,
+        parent_id: dbtypes.ID,
+        content_id: dbtypes.ID,
+        views: dbtypes.BIGINT,
+        display_order: dbtypes.BIGINT,
+        name: dbtypes.STRING(100)
+    }
 };

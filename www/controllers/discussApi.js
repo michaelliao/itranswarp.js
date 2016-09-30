@@ -114,7 +114,7 @@ function* $getTopic(id) {
     return topic;
 }
 
-var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(Topic.__selectAttributesArray, function (field) {
+var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(/*Topic.__selectAttributesArray*/[], function (field) {
     return field !== 'content';
 });
 
