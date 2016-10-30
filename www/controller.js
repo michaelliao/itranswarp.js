@@ -31,7 +31,7 @@ function addControllers(router, dir) {
     var files = fs.readdirSync(__dirname + '/' + dir);
     var js_files = files.filter((f) => {
         return f.endsWith('.js');
-    }, files);
+    });
 
     for (var f of js_files) {
         console.log(`process controller: ${f}...`);

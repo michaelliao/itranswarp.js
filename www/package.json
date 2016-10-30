@@ -1,7 +1,7 @@
 {
   "name": "itranswarp.js",
-  "description": "A full-stack website application.",
-  "version": "2.0.0",
+  "description": "A full-stack website application based on Nodejs.",
+  "version": "2.0.1",
   "private": true,
   "main": "start.js",
   "scripts": {
@@ -10,7 +10,8 @@
   "keywords": [
     "michaelliao",
     "itranswarp",
-    "liaoxuefeng"
+    "liaoxuefeng",
+    "Node.js"
   ],
   "author": "Michael Liao",
   "license": "Apache-2.0",
