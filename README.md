@@ -5,9 +5,9 @@ A nodejs powered website containing blog, wiki, discuss and search engine.
 
 ### Environment
 
-Nodejs: >= 0.12
+Nodejs: >= 6.x
 
-MySQL: 5.1 ~ 5.6
+MySQL: 5.1 ~ 5.7
 
 Memcache
 
