@@ -93,22 +93,3 @@ module.exports = {
         return generateForm(pre, editable, post);
     }
 };
-
-/*
-`
-<form id="practice-1" class="uk-form uk-form-stack" action="#0">
-    <pre class="x-javascript" id="pre-online-run-code-1" style="font-size: 14px; margin-bottom: 0px; border-bottom: none; padding: 6px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;">
-    // 请注释掉下面的语句:
-    </pre>
-    <textarea id="textarea-online-run-code-1" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1" rows="10" style="resize: none; font-size: 14px; font-family: Consolas, monospace, serif; overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;"></textarea><button type="button" onclick="run_js('online-run-code-1', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button></form>
-`
-
-`
-<form class="uk-form uk-form-stack" action="#0">
-<pre class="x-javascript" id="pre-online-run-code-1" style="font-size: 14px; margin-bottom: 0px; border-bottom: none; padding: 6px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;">// 请注释掉下面的语句:
-</pre>
-<textarea id="textarea-online-run-code-1" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1" rows="10" style="resize: none; font-size: 14px; font-family: Consolas, monospace, serif; overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;"></textarea>
-<button type="button" onclick="run_js('online-run-code-1', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button></form>
-`
-
-*/

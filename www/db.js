@@ -121,6 +121,7 @@ function defineModel(tableName, attributes) {
 }
 
 var exp = {
+    fn: sequelize.fn,
     nextId: nextId,
     sync: () => {
         // only allow create ddl in non-production environment:
@@ -135,16 +136,13 @@ var exp = {
 // scan models:
 var
     files = require('fs').readdirSync(__dirname + '/models'),
-    re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$"),
-    models = _.map(_.filter(files, (f) => {
-        return re.test(f);
-    }), (fname) => {
-        return fname.substring(0, fname.length - 3);
-    });
+    re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
 
 // add each model to exports:
-_.each(models, (modelName) => {
-    console.log('found model: ' + modelName);
+files.filter((f) => { return re.test(f); }).map((f) => {
+    return f.substring(0, f.length - 3);
+}).forEach((modelName) => {
+    console.log(`found model: ${modelName}`);
     var modelDefinition = require('./models/' + modelName);
     exp[modelDefinition.name] = defineModel(modelDefinition.table, modelDefinition.fields);
 });
