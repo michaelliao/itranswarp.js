@@ -49,18 +49,26 @@ function unindexArticle(r) {
     });
 }
 
+// get recent published articles:
 async function getRecentArticles(max) {
-    var now = Date.now();
+    // where publish_at < ? order by publish_at desc limit ?
     return await Article.findAll({
-        where: 'publish_at<?',
-        order: 'publish_at desc',
-        params: [now],
+        where: {
+            publish_at: {
+                $lt: Date.now()
+            }
+        },
+        order: ['publish_at', 'DESC'],
         offset: 0,
         limit: max
     });
 }
 
-function* $getAllArticles(page) {
+// get all articles (include unpublished):
+async function getAllArticles(page) {
+    var nums = await Article.findAll({
+        attributes: [[db.fn('COUNT', db.col('id')), 'num']]
+    });
     page.total = yield Article.$findNumber('count(id)');
     if (page.isEmpty) {
         return [];
@@ -132,7 +140,7 @@ function toRssDate(dt) {
 function* $getFeed(domain) {
     var
         i, text, article, url,
-        articles = yield $getRecentArticles(20),
+        articles = await getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
         website = yield settingApi.$getWebsiteSettings(),
         rss = [],
@@ -179,7 +187,7 @@ var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
 
 module.exports = {
 
-    $getRecentArticles: getRecentArticles,
+    getRecentArticles: getRecentArticles,
 
     $getArticlesByCategory: $getArticlesByCategory,
 
