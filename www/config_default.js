@@ -46,6 +46,9 @@ module.exports = {
         // retries when failed:
         retries: 3
     },
+    log: {
+        dir: '/tmp/'
+    },
     // NOT USED NOW:
     queue: {
         // host or ip address of redis:

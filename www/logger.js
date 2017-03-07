@@ -6,7 +6,9 @@
  * 
  * author: Michael Liao
  */
-const winston = require('winston');
+const
+    winston = require('winston'),
+    config = require('./config');
 
 var logger = new winston.Logger({
     transports: [
@@ -18,16 +20,20 @@ var logger = new winston.Logger({
         }),
         new winston.transports.File({
             name: 'info-file',
-            filename: __dirname + '/info.log',
+            filename: config.log.dir + '/itranswarp-info.log',
             level: 'info',
+            json: false,
+            timestamp: function () {
+                return new Date().toString();
+            }
         }),
         new winston.transports.File({
             name: 'error-file',
-            filename: __dirname + '/error.log',
+            filename: config.log.dir + '/itranswarp-error.log',
             level: 'error',
             json: false,
             timestamp: function () {
-                return new Date().toTimeString();
+                return new Date().toString();
             }
         })
     ]
