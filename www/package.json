@@ -44,7 +44,8 @@
   },
   "devDependencies": {
     "co": "4.5.1",
-    "async": "*",
+    "should": "11.2.*",
+    "sleep-promise": "2.0.0",
     "less": "1.x",
     "mocha": "3.1.0",
     "gulp-less": "*",

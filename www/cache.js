@@ -1,77 +1,46 @@
-'use strict';
-
-// init memcache:
-
-var
+/**
+ * Cache interface.
+ * 
+ * author: Michael Liao
+ */
+const
     _ = require('lodash'),
-    thunkify = require('thunkify'),
+    bluebird = require('bluebird'),
     Memcached = require('memcached'),
+    logger = require('./logger'),
     config = require('./config');
 
 // init memcached:
-console.log('init memcache...');
+logger.info('init memcache:\n' + JSON.stringify(config.cache, null, ' '));
 
-var
+const
     DEFAULT_LIFETIME = 86400, // 24h
     CACHE_PREFIX = config.cache.prefix,
     memcached = new Memcached(config.cache.host + ':' + config.cache.port, {
         'timeout': config.cache.timeout,
         'retries': config.cache.retries
-    }),
-    $m_incr = thunkify(function (key, inc, callback) {
-        memcached.incr(key, inc, callback);
-    }),
-    $m_get = thunkify(function (key, callback) {
-        memcached.get(key, callback);
-    }),
-    $m_set = thunkify(function (key, value, lifetime, callback) {
-        memcached.set(key, value, lifetime, callback);
-    }),
-    $m_del = thunkify(function (key, callback) {
-        memcached.del(key, callback);
-    }),
-    $m_getMulti = thunkify(function (keys, callback) {
-        memcached.getMulti(keys, callback);
     });
 
-module.exports = {
+var
+    _incr = bluebird.promisify(memcached.incr, { context: memcached }),
+    _get = bluebird.promisify(memcached.get, { context: memcached });
+    _set = bluebird.promisify(memcached.set, { context: memcached });
+    _del = bluebird.promisify(memcached.del, { context: memcached });
+    _getMulti = bluebird.promisify(memcached.getMulti, { context: memcached });
 
-    $incr: function* (key, initial) {
-        var
+module.exports = {
+    incr: async (key, initial=0) => {
+        let
             k = CACHE_PREFIX + key,
-            data = yield $m_incr(k, 1);
+            data = await _incr(k, 1);
         if (data === false) {
-            if (initial === undefined) {
-                initial = 0;
-            }
-            yield $m_set(k, initial + 1, DEFAULT_LIFETIME);
+            await _set(k, initial+1, DEFAULT_LIFETIME);
             data = initial + 1;
         }
         return data;
     },
 
-    $count: function* (key) {
-        var
-            k = CACHE_PREFIX + key,
-            num = yield $m_get(k);
-        return (num === false) ? 0 : num;
-    },
-
-    $counts: function* (keys) {
-        if (keys.length === 0) {
-            return [];
-        }
-        var
-            multiKeys = _.map(keys, function (key) {
-                return CACHE_PREFIX + key;
-            }),
-            data = yield $m_getMulti(multiKeys);
-        return _.map(multiKeys, function (key) {
-            return data[key] || 0;
-        });
-    },
-
-    $get: function* (key, defaultValueOrFn, lifetime) {
+    get: async (key, defaultValueOrFn, lifetime=DEFAULT_LIFETIME) => {
         /**
          * get value from cache by key. If key not exist:
          *   return default value if defaultValueOrFn is not a function,
@@ -80,31 +49,23 @@ module.exports = {
          */
         var
             k = CACHE_PREFIX + key,
-            data = yield $m_get(k);
+            data = await _get(k);
         if (data) {
-            // console.log('[cache] hit: ' + key);
             return data;
         }
-        console.log('[Cache] NOT hit: ' + key);
         if (defaultValueOrFn) {
-            lifetime = lifetime || DEFAULT_LIFETIME;
             if (typeof (defaultValueOrFn) === 'function') {
-                if (defaultValueOrFn.constructor.name === 'GeneratorFunction') {
-                    console.log('yield generator to fill cache...');
-                    data = yield defaultValueOrFn();
-                    console.log('yield generator ok.')
+                if (defaultValueOrFn.constructor.name === 'AsyncFunction') {
+                    data = await defaultValueOrFn();
                 }
                 else {
-                    console.log('call function to fill cache...');
                     data = defaultValueOrFn();
-                    console.log('call function ok.');
                 }
             }
             else {
                 data = defaultValueOrFn;
             }
-            yield $m_set(k, data, lifetime);
-            console.log('[cache] cache set for key: ' + key);
+            await _set(k, data, lifetime);
         }
         else {
             data = null;
@@ -112,27 +73,48 @@ module.exports = {
         return data;
     },
 
-    $gets: function* (keys) {
+    gets: async (keys) => {
         if (keys.length === 0) {
             return [];
         }
         var
-            multiKeys = _.map(keys, function (key) {
+            multiKeys = _.map(keys, (key) => {
                 return CACHE_PREFIX + key;
             }),
-            data = yield $m_getMulti(multiKeys);
-        return _.map(multiKeys, function (key) {
+            data = await _getMulti(multiKeys);
+        return _.map(multiKeys, (key) => {
             return data[key] || null;
         });
     },
 
-    $set: function* (key, value, lifetime) {
+    set: async (key, value, lifetime=DEFAULT_LIFETIME) => {
         var k = CACHE_PREFIX + key;
-        yield $m_set(k, value, lifetime || DEFAULT_LIFETIME);
+        await _set(k, value, lifetime);
     },
 
-    $remove: function* (key) {
+    remove: async (key) => {
         var k = CACHE_PREFIX + key;
-        yield $m_del(k);
+        await _del(k);
+    },
+
+    count: async (key) => {
+        var
+            k = CACHE_PREFIX + key,
+            num = await _get(k);
+        return (num === false) ? 0 : num;
+    },
+
+    counts: async (keys) => {
+        if (keys.length === 0) {
+            return [];
+        }
+        var
+            multiKeys = _.map(keys, (key) => {
+                return CACHE_PREFIX + key;
+            }),
+            data = await _getMulti(multiKeys);
+        return _.map(multiKeys, (key) => {
+            return data[key] || 0;
+        });
     }
 };

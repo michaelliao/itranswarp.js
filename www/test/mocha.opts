@@ -1,1 +1,1 @@
---harmony -u bdd --timeout 5000 --reporter landing
+-u bdd --timeout 5000 --reporter landing
