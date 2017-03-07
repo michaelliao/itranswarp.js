@@ -3,9 +3,9 @@
   "description": "A full-stack website application based on Nodejs.",
   "version": "2.0.1",
   "private": true,
-  "main": "start.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node --use_strict start.js"
+    "start": "node --use_strict app.js"
   },
   "keywords": [
     "michaelliao",
@@ -20,31 +20,27 @@
     "url": "https://github.com/michaelliao/itranswarp.js.git"
   },
   "dependencies": {
-    "babel-core": "6.13.2",
-    "babel-polyfill": "6.13.0",
-    "babel-preset-es2015-node6": "0.3.0",
-    "babel-preset-stage-3": "6.5.0",
+    "gm": "1.23.0",
+    "htmlparser2": "3.9.1",
+    "jjv": "1.0.2",
     "koa": "2.0.0",
     "koa-bodyparser": "3.2.0",
     "koa-router": "7.0.0",
-    "nunjucks": "2.5.2",
-    "sequelize": "3.24.1",
-    "mysql": "2.11.1",
-    "mime": "1.3.4",
-    "mz": "2.4.0",
     "lodash": "4.16.2",
-    "node-uuid": "1.4.7",
-    "request": "2.75.0",
     "marked": "0.3.6",
-    "htmlparser2": "3.9.1",
-    "oauth2-warp": "*",
-    "nodemailer": "2.6.4",
     "memcached": "2.2.2",
+    "mime": "1.3.4",
+    "mysql": "2.11.1",
+    "mz": "2.4.0",
+    "node-uuid": "1.4.7",
+    "nodemailer": "2.6.4",
+    "nunjucks": "2.5.2",
+    "oauth2-warp": "*",
     "redis": "2.6.2",
-    "jjv": "1.0.2",
-    "gm": "1.23.0",
-
-    "thunkify": "2.1.2"
+    "request": "2.75.0",
+    "sequelize": "3.24.1",
+    "thunkify": "2.1.2",
+    "winston": "2.3.1"
   },
   "devDependencies": {
     "co": "4.5.1",

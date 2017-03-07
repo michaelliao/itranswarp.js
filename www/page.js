@@ -1,8 +1,10 @@
-'use strict';
-
-// define Page object:
-
-function Page(index, size) {
+/**
+ * Page object.
+ * 
+ * @param {number} index starts from 1.
+ * @param {number} size default to 10.
+ */
+function Page(index, size=10) {
     this.index = (index < 1) ? 1 : index;
     this.size = ((size < 10) || (size > 100)) ? 10 : size;
     this.__total = 0;

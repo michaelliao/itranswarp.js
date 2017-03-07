@@ -1,8 +1,14 @@
+/**
+ * koa middleware to render view using Nunjucks.
+ * 
+ * author: Michael Liao
+ */
+
 const nunjucks = require('nunjucks');
 
 function createEnv(path, opts) {
     var
-        autoescape = opts.autoescape && true,
+        autoescape = opts.autoescape === undefined ? true : opts.autoescape,
         noCache = opts.noCache || false,
         watch = opts.watch || false,
         throwOnUndefined = opts.throwOnUndefined || false,
@@ -13,24 +19,23 @@ function createEnv(path, opts) {
             }), {
                 autoescape: autoescape,
                 throwOnUndefined: throwOnUndefined
-            });
+            }),
+        f;
     if (opts.filters) {
-        for (var f in opts.filters) {
+        for (f in opts.filters) {
             env.addFilter(f, opts.filters[f]);
         }
     }
     return env;
 }
 
-function templating(path, opts) {
-    var env = createEnv(path, opts);
+module.exports = (path, opts) => {
+    let env = createEnv(path, opts);
     return async (ctx, next) => {
         ctx.render = function (view, model) {
-            ctx.response.body = env.render(view, Object.assign({}, ctx.state || {}, model || {}));
             ctx.response.type = 'text/html';
+            ctx.response.body = env.render(view, Object.assign({}, ctx.state || {}, model || {}));
         };
         await next();
     };
-}
-
-module.exports = templating;
+};

@@ -69,7 +69,7 @@ async function getAllArticles(page) {
     var nums = await Article.findAll({
         attributes: [[db.fn('COUNT', db.col('id')), 'num']]
     });
-    page.total = yield Article.$findNumber('count(id)');
+    page.total = await Article.findNumber('count(id)');
     if (page.isEmpty) {
         return [];
     }
@@ -80,9 +80,9 @@ async function getAllArticles(page) {
     });
 }
 
-function* $getArticles(page) {
+async function getArticles(page) {
     var now = Date.now();
-    page.total = yield Article.$findNumber({
+    page.total = await Article.findNumber({
         select: 'count(id)',
         where: 'publish_at<?',
         params: [now]
@@ -97,9 +97,9 @@ function* $getArticles(page) {
     });
 }
 
-function* $getArticlesByCategory(categoryId, page) {
+async function getArticlesByCategory(categoryId, page) {
     var now = Date.now();
-    page.total = yield Article.$findNumber({
+    page.total = await Article.findNumber({
         select: 'count(id)',
         where: 'publish_at<? and category_id=?',
         params: [now, categoryId]
@@ -116,15 +116,15 @@ function* $getArticlesByCategory(categoryId, page) {
     });
 }
 
-function* $getArticle(id, includeContent) {
+async function getArticle(id, includeContent) {
     var
         text,
-        article = yield Article.$find(id);
+        article = await Article.findById(id);
     if (article === null) {
         throw api.notFound('Article');
     }
     if (includeContent) {
-        text = yield Text.$find(article.content_id);
+        text = await Text.findById(article.content_id);
         if (text === null) {
             throw api.notFound('Text');
         }
@@ -137,12 +137,12 @@ function toRssDate(dt) {
     return new Date(dt).toGMTString();
 }
 
-function* $getFeed(domain) {
+async function getFeed(domain) {
     var
         i, text, article, url,
         articles = await getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
-        website = yield settingApi.$getWebsiteSettings(),
+        website = await settingApi.getWebsiteSettings(),
         rss = [],
         rss_footer = '</channel></rss>';
     rss.push('<?xml version="1.0"?>\n');
@@ -162,7 +162,7 @@ function* $getFeed(domain) {
     else {
         for (i=0; i<articles.length; i++) {
             article = articles[i];
-            text = yield Text.$find(article.content_id);
+            text = await Text.findById(article.content_id);
             url = 'http://' + domain + '/article/' + article.id;
             rss.push('<item><title><![CDATA[');
             rss.push(article.name);
@@ -189,28 +189,28 @@ module.exports = {
 
     getRecentArticles: getRecentArticles,
 
-    $getArticlesByCategory: $getArticlesByCategory,
+    getArticlesByCategory: getArticlesByCategory,
 
-    $getAllArticles: $getAllArticles,
+    getAllArticles: getAllArticles,
 
-    $getArticles: $getArticles,
+    getArticles: getArticles,
 
-    $getArticle: $getArticle,
+    getArticle: getArticle,
 
-    'GET /feed': function* () {
+    'GET /feed': async function () {
         var
             rss,
             host = this.request.host,
-            gf = function* () {
-                return yield $getFeed(host);
+            gf = async function () {
+                return await getFeed(host);
             };
-        rss = yield cache.$get('cached_rss', gf);
+        rss = await cache.get('cached_rss', gf);
         this.set('Cache-Control', 'max-age: 3600');
         this.type = 'text/xml';
         this.body = rss;
     },
 
-    'GET /api/articles/:id': function* (id) {
+    'GET /api/articles/:id': async function (id) {
         /**
          * Get article.
          * 
@@ -220,7 +220,7 @@ module.exports = {
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
-        var article = yield $getArticle(id, true);
+        var article = await getArticle(id, true);
         if (article.publish_at > Date.now() && (this.request.user===null || this.request.user.role > constants.role.CONTRIBUTOR)) {
             throw api.notFound('Article');
         }
@@ -230,7 +230,7 @@ module.exports = {
         this.body = article;
     },
 
-    'GET /api/articles': function* () {
+    'GET /api/articles': async function (ctx, next) {
         /**
          * Get articles by page.
          * 
@@ -238,11 +238,11 @@ module.exports = {
          * @param {number} [page=1]: The page number, starts from 1.
          * @return {object} Article objects and page information.
          */
-        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
+        ctx.checkPermission(constants.role.CONTRIBUTOR);
         var
             page = helper.getPage(this.request),
-            articles = yield $getAllArticles(page);
-        this.body = {
+            articles = await getAllArticles(page);
+        ctx.body = {
             page: page,
             articles: articles
         };

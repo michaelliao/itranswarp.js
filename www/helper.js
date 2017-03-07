@@ -27,82 +27,6 @@ safeRenderer.link = function (href, title, text) {
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
 };
 
-var HTML2TEXT_TAGS = {
-    'applet': ' ',
-    'area': ' ',
-    'audio': '\n',
-    'base': ' ',
-    'basefont': '',
-    'br': '\n',
-    'button': ' ',
-    'canvas': ' ',
-    'cite': ' ',
-    'col': ' ',
-    'colgroup': ' ',
-    'datalist': ' ',
-    'dialog': ' ',
-    'embed': ' ',
-    'frame': '',
-    'frameset': '',
-    'head': '',
-    'hr': '\n',
-    'iframe': '',
-    'img': ' ',
-    'input': ' ',
-    'kbd': ' ',
-    'keygen': ' ',
-    'link': ' ',
-    'map': ' ',
-    'meta': ' ',
-    'meter': ' ',
-    'noframes': ' ',
-    'noscript': ' ',
-    'object': ' ',
-    'optgroup': ' ',
-    'option': ' ',
-    'output': ' ',
-    'param': ' ',
-    'progress': ' ',
-    'script': '\n',
-    'select': ' ',
-    'source': ' ',
-    'style': ' ',
-    'textarea': ' ',
-    'track': ' ',
-    'var': ' ',
-    'video': '\n',
-    'wbr': '\n'
-};
-
-function html2text(html) {
-    var
-        buffer = [],
-        saveTexts = [true],
-        saveCurrent = true,
-        parser = new htmlparser.Parser({
-            onopentag: function (tagname, attribs) {
-                if (saveCurrent) {
-                    saveCurrent = !HTML2TEXT_TAGS[tagname];
-                }
-                saveTexts.push(saveCurrent);
-            },
-            ontext: function (text) {
-                if (saveCurrent) {
-                    buffer.push(text);
-                }
-            },
-            onclosetag: function (tagname) {
-                saveTexts.pop();
-                saveCurrent = saveTexts[saveTexts.length - 1];
-            }
-        }, {
-            decodeEntities: true
-        });
-    parser.write(html);
-    parser.end();
-    return buffer.join('').replace(/\n/ig, ' ');
-}
-
 function* $md2html(md, cacheKey, isSafeInput) {
     if (cacheKey) {
         //
@@ -149,8 +73,6 @@ function formatTags(tags) {
 module.exports = {
 
     formatTags: formatTags,
-
-    html2text: html2text,
 
     md2html: md2html,
 

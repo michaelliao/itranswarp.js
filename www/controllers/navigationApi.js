@@ -1,8 +1,8 @@
-'use strict';
+/**
+ * navigation api.
+ */
 
-// navigation api
-
-var
+const
     _ = require('lodash'),
     db = require('../db'),
     api = require('../api'),
@@ -17,70 +17,70 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function* $getNavigation(id) {
-    var navigation = yield Navigation.$find(id);
+async function getNavigation(id) {
+    var navigation = await Navigation.findById(id);
     if (navigation === null) {
         throw api.notFound('Navigation');
     }
     return navigation;
 }
 
-function* $getNavigations() {
-    return yield Navigation.$findAll({
+async function getNavigations() {
+    return await Navigation.findAll({
         order: 'display_order'
     });
 }
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     var
         apiNames = ['categoryApi', 'articleApi', 'wikiApi', 'webpageApi', 'discussApi', 'attachmentApi', 'userApi', 'settingApi'],
         apis = _.filter(
             _.map(apiNames, function (name) {
                 return require('./' + name);
             }), function (api) {
-                return api.hasOwnProperty('$getNavigationMenus');
+                return api.hasOwnProperty('getNavigationMenus');
             }),
         menus = [],
         i;
     for (i = 0; i < apis.length; i ++) {
-        menus = menus.concat(yield apis[i].$getNavigationMenus());
+        menus = menus.concat(await apis[i].getNavigationMenus());
     }
     return menus;
 }
 
 module.exports = {
 
-    $getNavigation: $getNavigation,
+    getNavigation: getNavigation,
 
-    $getNavigations: $getNavigations,
+    getNavigations: getNavigations,
 
-    'GET /api/navigations/all/menus': function* () {
+    'GET /api/navigations/all/menus': async (ctx, next) => {
         /**
          * Get all navigation menus.
          * 
          * @name Get NavigationMenus
          * @return {object} Result like {"navigationMenus": [navigation array]}
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = {
-            navigationMenus: yield $getNavigationMenus()
-        };
+        ctx.state.checkPermission(constants.role.ADMIN);
+        ctx.rest({
+            navigationMenus: await getNavigationMenus()
+        });
     },
 
-    'GET /api/navigations': function* () {
+    'GET /api/navigations': async (ctx, next) => {
         /**
          * Get all navigations.
          * 
          * @name Get Navigations
          * @return {object} Result like {"navigations": [navigation array]}
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = {
-            navigations: yield $getNavigations()
-        };
+        ctx.state.checkPermission(constants.role.ADMIN);
+        ctx.rest({
+            navigations: await getNavigations()
+        });
     },
 
-    'POST /api/navigations': function* () {
+    'POST /api/navigations': async (ctx, next) => {
         /**
          * Create a navigation.
          * 
@@ -89,26 +89,26 @@ module.exports = {
          * @param {string} url: The URL of the navigation.
          * @return {object} The navigation object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
+        ctx.state.checkPermission(constants.role.ADMIN);
         var
             name,
             url,
             num,
-            data = this.request.body;
+            data = ctx.request.body;
         json_schema.validate('createNavigation', data);
         name = data.name.trim();
         url = data.url.trim();
 
-        num = yield Navigation.$findNumber('max(display_order)');
-        this.body = yield Navigation.$create({
+        num = await Navigation.findNumber('max(display_order)');
+        ctx.rest(await Navigation.create({
             name: name,
             url: url,
             display_order: (num === null) ? 0 : num + 1
-        });
-        yield cache.$remove(constants.cache.NAVIGATIONS);
+        }));
+        await cache.remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/all/sort': function* () {
+    'POST /api/navigations/all/sort': async (ctx, next) => {
         /**
          * Sort navigations.
          *
@@ -119,13 +119,13 @@ module.exports = {
         helper.checkPermission(this.request, constants.role.ADMIN);
         var data = this.request.body;
         json_schema.validate('sortNavigations', data);
-        this.body = {
-            navigations: yield helper.$sort(data.ids, yield $getNavigations())
-        };
-        yield cache.$remove(constants.cache.NAVIGATIONS);
+        ctx.rest({
+            navigations: await helper.$sort(data.ids, await getNavigations())
+        });
+        await cache.remove(constants.cache.NAVIGATIONS);
     },
 
-    'POST /api/navigations/:id/delete': function* (id) {
+    'POST /api/navigations/:id/delete': async (ctx, next) => {
         /**
          * Delete a navigation.
          *
@@ -133,12 +133,14 @@ module.exports = {
          * @param {string} id: The id of the navigation.
          * @return {object} The deleted navigation id like {"id":"123"}.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        var navigation = yield $getNavigation(id);
-        yield navigation.$destroy();
-        this.body = {
+        ctx.state.checkPermission(constants.role.ADMIN);
+        let
+            id = ctx.request.params.id,
+            navigation = await getNavigation(id);
+        await navigation.destroy();
+        ctx.rest({
             id: id
-        };
-        yield cache.$remove(constants.cache.NAVIGATIONS);
+        });
+        await cache.remove(constants.cache.NAVIGATIONS);
     }
 };

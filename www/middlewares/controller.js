@@ -1,9 +1,15 @@
-
-const fs = require('fs');
+/**
+ * koa middleware to auto-scan & import controllers under dir 'controllers'.
+ * 
+ * author: Michael Liao
+ */
+const
+    fs = require('fs'),
+    path = require('path'),
+    router = require('koa-router');
 
 // add url-route in /controllers:
-
-function addMapping(router, mapping) {
+function _addMapping(router, mapping) {
     for (var url in mapping) {
         if (url.startsWith('GET ')) {
             var path = url.substring(4);
@@ -27,20 +33,19 @@ function addMapping(router, mapping) {
     }
 }
 
-function addControllers(router, dir) {
-    fs.readdirSync(__dirname + '/' + dir).filter((f) => {
+function _addControllers(router, dir) {
+    let basedir = path.dirname(__dirname);
+    fs.readdirSync(basedir + '/' + dir).filter((f) => {
         return f.endsWith('.js');
     }).forEach((f) => {
-        console.log(`process controller: ${f}...`);
-        let mapping = require(__dirname + '/' + dir + '/' + f);
-        addMapping(router, mapping);
+        logger.info(`process controller: ${f}...`);
+        let mapping = require(basedir + '/' + dir + '/' + f);
+        _addMapping(router, mapping);
     });
 }
 
-module.exports = function (dir) {
-    let
-        controllers_dir = dir || 'controllers',
-        router = require('koa-router')();
-    addControllers(router, controllers_dir);
-    return router.routes();
+module.exports = function (dir='controllers') {
+    let rt = router();
+    _addControllers(rt, dir);
+    return rt.routes();
 };

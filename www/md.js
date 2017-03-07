@@ -1,15 +1,19 @@
 /**
  * Markdown parser.
+ * 
+ * author: Michael Liao
  */
 const
     fs = require('fs'),
-    marked = require('marked');
+    marked = require('marked'),
+    logger = require('./logger.js');
 
 // add plugins:
+var
+    headingPlugins = {},
+    codePlugins = {};
 
-var headingPlugins = {};
-var codePlugins = {};
-
+// load markdown plugins:
 fs.readdirSync(__dirname + '/plugins/markdown').filter((f) => {
     return f.endsWith('.js');
 }).map((f) => {
@@ -20,16 +24,16 @@ fs.readdirSync(__dirname + '/plugins/markdown').filter((f) => {
     } else if (p.type === 'code') {
         codePlugins[p.plugin] = p.render;
     } else {
-        console.warn('Invalid plugin type: ' + p.type);
+        logger.warn('Invalid plugin type: ' + p.type);
     }
     return true;
 });
 
-const pluginRenderer = new marked.Renderer();
-const ugcRenderer = new marked.Renderer();
+const
+    pluginRenderer = new marked.Renderer(),
+    ugcRenderer = new marked.Renderer();
 
 // for heading plugins:
-
 pluginRenderer.heading = function (text, level, raw) {
     // find syntax like 'XXX:xxxx':
     var n = raw.indexOf(':');
@@ -46,7 +50,6 @@ pluginRenderer.heading = function (text, level, raw) {
 };
 
 // for code plugins:
-
 pluginRenderer.code = function (code, lang) {
     // find lang in codePlugins:
     var render = codePlugins[lang];
@@ -56,8 +59,11 @@ pluginRenderer.code = function (code, lang) {
     return marked.Renderer.prototype.code.apply(this, arguments);
 }
 
-// for ugc:
+pluginRenderer.link = function (href, title, text) {
+    return '<a target="_blank" href="' + href + '">' + text + '</a>';
+};
 
+// for ugc:
 ugcRenderer.heading = function (text, level, raw) {
     return '<h' + level + '>' + text + '</h' + level + '>\n';
 };
@@ -68,8 +74,6 @@ ugcRenderer.link = function (href, title, text) {
     }
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
 };
-
-// export:
 
 function ugcMarkdownToHtml(mdText) {
     return marked(mdText, {
@@ -87,7 +91,86 @@ function systemMarkdownToHtml(mdText) {
     });
 }
 
+// html -> text:
+
+var HTML2TEXT_TAGS = {
+    'applet': ' ',
+    'area': ' ',
+    'audio': '\n',
+    'base': ' ',
+    'basefont': '',
+    'br': '\n',
+    'button': ' ',
+    'canvas': ' ',
+    'cite': ' ',
+    'col': ' ',
+    'colgroup': ' ',
+    'datalist': ' ',
+    'dialog': ' ',
+    'embed': ' ',
+    'frame': '',
+    'frameset': '',
+    'head': '',
+    'hr': '\n',
+    'iframe': '',
+    'img': ' ',
+    'input': ' ',
+    'kbd': ' ',
+    'keygen': ' ',
+    'link': ' ',
+    'map': ' ',
+    'meta': ' ',
+    'meter': ' ',
+    'noframes': ' ',
+    'noscript': ' ',
+    'object': ' ',
+    'optgroup': ' ',
+    'option': ' ',
+    'output': ' ',
+    'param': ' ',
+    'progress': ' ',
+    'script': '\n',
+    'select': ' ',
+    'source': ' ',
+    'style': ' ',
+    'textarea': ' ',
+    'track': ' ',
+    'var': ' ',
+    'video': '\n',
+    'wbr': '\n'
+};
+
+function htmlToText(html) {
+    var
+        buffer = [],
+        saveTexts = [true],
+        saveCurrent = true,
+        parser = new htmlparser.Parser({
+            onopentag: function (tagname, attribs) {
+                if (saveCurrent) {
+                    saveCurrent = !HTML2TEXT_TAGS[tagname];
+                }
+                saveTexts.push(saveCurrent);
+            },
+            ontext: function (text) {
+                if (saveCurrent) {
+                    buffer.push(text);
+                }
+            },
+            onclosetag: function (tagname) {
+                saveTexts.pop();
+                saveCurrent = saveTexts[saveTexts.length - 1];
+            }
+        }, {
+            decodeEntities: true
+        });
+    parser.write(html);
+    parser.end();
+    return buffer.join('').replace(/\n/ig, ' ');
+}
+
 module.exports = {
     ugcMarkdownToHtml: ugcMarkdownToHtml,
-    systemMarkdownToHtml: systemMarkdownToHtml
+    systemMarkdownToHtml: systemMarkdownToHtml,
+    htmlToText: htmlToText
 };

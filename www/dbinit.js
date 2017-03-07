@@ -1,6 +1,3 @@
-require('babel-core/register')({
-    presets: ['stage-3']
-});
 
 const db = require('./db.js');
 db.sync();

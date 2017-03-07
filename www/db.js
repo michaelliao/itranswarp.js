@@ -4,11 +4,12 @@ const
     _ = require('lodash'),
     util = require('util'),
     uuid = require('node-uuid'),
+    logger = require('./logger'),
     config = require('./config'),
     dbtypes = require('./dbtypes'),
     Sequelize = require('sequelize');
 
-console.log('init sequelize...');
+logger.info('init sequelize...');
 
 var i, paddings = [];
 
@@ -74,7 +75,7 @@ function defineModel(tableName, attributes) {
         type: dbtypes.BIGINT,
         allowNull: false
     };
-    console.log('model defined for table: ' + tableName + '\n' + JSON.stringify(attrs, function (k, v) {
+    logger.info('model defined for table: ' + tableName + '\n' + JSON.stringify(attrs, function (k, v) {
         if (k === 'type') {
             for (let key in Sequelize) {
                 if (key === 'ABSTRACT' || key === 'NUMBER') {
@@ -96,14 +97,14 @@ function defineModel(tableName, attributes) {
         }
         return v;
     }, '  '));
-    return sequelize.define(tableName, attrs, {
+    var model = sequelize.define(tableName, attrs, {
         tableName: tableName,
         timestamps: false,
         hooks: {
             beforeValidate: function (obj) {
                 let now = Date.now();
                 if (obj.isNewRecord) {
-                    console.log('will create entity...' + obj);
+                    logger.debug('will create entity: ' + obj);
                     if (!obj.id) {
                         obj.id = next_id();
                     }
@@ -111,13 +112,14 @@ function defineModel(tableName, attributes) {
                     obj.updated_at = now;
                     obj.version = 0;
                 } else {
-                    console.log('will update entity: ' + obj.id);
+                    logger.debug('will update entity: ' + obj.id);
                     obj.updated_at = now;
                     obj.version++;
                 }
             }
         }
     });
+    return model;
 }
 
 var exp = {
@@ -128,7 +130,7 @@ var exp = {
         if (process.env.NODE_ENV !== 'production') {
             sequelize.sync({ force: true });
         } else {
-            throw new Error('Cannot sync() when NODE_ENV is set to \'production\'.');
+            throw new Error('cannot call sync() when NODE_ENV is set to \'production\'.');
         }
     }
 };
@@ -142,7 +144,7 @@ var
 files.filter((f) => { return re.test(f); }).map((f) => {
     return f.substring(0, f.length - 3);
 }).forEach((modelName) => {
-    console.log(`found model: ${modelName}`);
+    logger.info(`found model: ${modelName}`);
     var modelDefinition = require('./models/' + modelName);
     exp[modelDefinition.name] = defineModel(modelDefinition.table, modelDefinition.fields);
 });

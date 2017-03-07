@@ -1,18 +1,23 @@
-// api:
-
+/**
+ * APIError object definition.
+ * 
+ * @param {string} err_code 
+ * @param {string} err_data 
+ * @param {string} err_message 
+ */
 function APIError(err_code, err_data, err_message) {
     this.error = err_code;
     this.data = err_data;
     this.message = err_message;
 }
 
-var api = {
+module.exports = {
     APIError: APIError,
     authRequired: () => {
         return new APIError('auth:required', '', 'Please sign in.');
     },
-    authFailed: (paramName, message) => {
-        return new APIError('auth:failed', paramName || '', message || 'Invalid email or password.');
+    authFailed: (paramName='', message='Invalid email or password.') => {
+        return new APIError('auth:failed', paramName, message);
     },
     invalidRequest: (paramName, message) => {
         return new APIError('request:invalid', paramName, message || 'Invalid request: ' + paramName);
@@ -40,32 +45,5 @@ var api = {
     },
     error: (err_code, err_data, err_message) => {
         return new APIError(err_code, err_data, err_message);
-    },
-    restify: (pathPrefix) => {
-        pathPrefix = pathPrefix || '/api/';
-        return async (ctx, next) => {
-            if (ctx.request.path.startsWith(pathPrefix)) {
-                console.log(`Process API ${ctx.request.method} ${ctx.request.url}...`);
-                ctx.rest = (data) => {
-                    ctx.response.type = 'application/json';
-                    ctx.response.body = data;
-                }
-                try {
-                    await next();
-                } catch (e) {
-                    console.log('Process API error...');
-                    ctx.response.status = 400;
-                    ctx.response.type = 'application/json';
-                    ctx.response.body = {
-                        error: e.error || 'internal:unknown_error',
-                        message: e.message || ''
-                    };
-                }
-            } else {
-                await next();
-            }
-        };
     }
 };
-
-module.exports = api;

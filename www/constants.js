@@ -1,4 +1,8 @@
-// define constants:
+/**
+ * Constants definition.
+ * 
+ * author: Michael Liao
+ */
 
 module.exports = {
     // user role:
@@ -23,5 +27,8 @@ module.exports = {
     },
 
     // queue name:
-    QUEUE_SNS: 'queueSNS'
+    queue: {
+        MAIL: 'queueMail',
+        SNS: 'queueSNS'
+    }
 };

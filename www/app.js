@@ -1,14 +1,17 @@
 // application:
 
-var isProduction = (process.env.NODE_ENV === 'production');
-
 const
+    isProduction = (process.env.NODE_ENV === 'production'),
+    HOSTNAME = require('os').hostname(),
     _ = require('lodash'),
     fs = require('mz/fs'),
     Koa = require('koa'),
     bodyParser = require('koa-bodyparser'),
-    templating = require('./templating'),
-    controller = require('./controller'),
+    templating = require('./middlewares/templating'),
+    controller = require('./middlewares/controller'),
+    authenticate = require('./middlewares/authenticate'),
+    restify = require('./middlewares/restify'),
+    logger = require('./logger.js'),
     api = require('./api'),
     i18n = require('./i18n'),
     auth = require('./auth'),
@@ -18,7 +21,7 @@ const
     api_console = require('./api_console');
 
 var
-    hostname = require('os').hostname(),
+    static_prefix = config.cdn.static_prefix,
     activeTheme = config.theme,
     User = db.user;
 
@@ -27,22 +30,23 @@ var app = new Koa();
 
 // log request URL:
 app.use(async (ctx, next) => {
-    console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
+    logger.info(`will process request: ${ctx.request.method} ${ctx.request.url}...`);
     var
         start = Date.now(),
         execTime;
     try {
         await next();
     } catch (e) {
-        console.error('Error', e);
+        logger.error('error process request.', e);
     }
     execTime = Date.now() - start;
     ctx.response.set('X-Response-Time', `${execTime}ms`);
+    ctx.response.set('X-Host', HOSTNAME);
 });
 
 // static file support:
-if (!isProduction) {
-    let staticFiles = require('./static-files');
+if (! isProduction) {
+    let staticFiles = require('./middlewares/static-files');
     app.use(staticFiles('/static/', __dirname + '/static'));
 }
 
@@ -73,37 +77,16 @@ app.use(templating('view', {
 }));
 
 // rest support:
-app.use(api.restify());
+app.use(restify());
+
+// parse user and bind to ctx.state.__user__:
+app.use(authenticate());
 
 // add controller:
 app.use(controller());
 
-
-
-
-function logJSON(data) {
-    if (data) {
-        console.log(JSON.stringify(data, function (key, value) {
-            if (key === 'image' && value) {
-                return value.substring(0, 20) + ' (' + value.length + ' bytes image data) ...';
-            }
-            return value;
-        }, '  '));
-    }
-    else {
-        console.log('(EMPTY)');
-    }
-}
-
 // load i18n:
-var i18nT = i18n.getI18NTranslators('./views/i18n');
-
-// middlewares:
-var static_prefix = config.cdn.static_prefix;
-
-app.use(auth.$userIdentityParser);
-
-
+var i18nT = i18n.getI18NTranslators('./views/i18n.json');
 
 // add controller:
 app.use(controller());

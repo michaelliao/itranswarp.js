@@ -1,8 +1,10 @@
-'use strict';
+/**
+ * management pages.
+ * 
+ * author: Michael Liao
+ */
 
-// manage.js
-
-var
+const
     _ = require('lodash'),
     fs = require('fs'),
     db = require('../db'),
@@ -35,58 +37,55 @@ var apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attach
 
 var KEY_WEBSITE = constants.cache.WEBSITE;
 
-function getId(request) {
-    var id = request.query.id;
+function _getId(ctx) {
+    var id = ctx.request.query.id;
     if (id && id.length === 50) {
         return id;
     }
     throw api.notFound('id');
 }
 
-function* $getModel(model) {
-    if (model === undefined) {
-        model = {};
-    }
-    model.__website__ = yield settingApi.$getWebsiteSettings();
+async function _getModel(model) {
+    model = model || {};
+    model.__website__ = await settingApi.getWebsiteSettings();
     return model;
 }
 
 module.exports = {
 
-    'GET /manage/signin': function* () {
-        /**
-         * Display authentication.
-         */
-        this.render('manage/signin.html', yield $getModel());
+    // authenticate page:
+    'GET /manage/signin': async (ctx, next) => {
+        ctx.render('manage/signin.html', await _getModel());
     },
 
-    'GET /manage/': function* () {
+    // redirect:
+    'GET /manage/': async (ctx, next) => {
         this.response.redirect('/manage/article/');
     },
 
     // overview ///////////////////////////////////////////////////////////////
 
-    'GET /manage/overview/(index)?': function* () {
+    'GET /manage/overview/(index)?': async (ctx, next) => {
         var page = helper.getPage(this.request);
-        this.body = '';
+        ctx.body = '';
     },
 
     // article ////////////////////////////////////////////////////////////////
 
-    'GET /manage/article/(article_list)?': function* () {
-        this.render('manage/article/article_list.html', yield $getModel({
+    'GET /manage/article/(article_list)?': async (ctx, next) => {
+        ctx.render('manage/article/article_list.html', await _getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
     },
 
-    'GET /manage/article/category_list': function* () {
-        this.render('manage/article/category_list.html', yield $getModel({
+    'GET /manage/article/category_list': async (ctx, next) => {
+        ctx.render('manage/article/category_list.html', await _getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
     },
 
-    'GET /manage/article/create_article': function* () {
-        this.render('manage/article/article_form.html', yield $getModel({
+    'GET /manage/article/create_article': async (ctx, next) => {
+        ctx.render('manage/article/article_form.html', await _getModel({
             form: {
                 name: 'Create Article',
                 action: '/api/articles',
@@ -95,9 +94,9 @@ module.exports = {
         }));
     },
 
-    'GET /manage/article/edit_article': function* () {
-        var id = getId(this.request);
-        this.render('manage/article/article_form.html', yield $getModel({
+    'GET /manage/article/edit_article': async (ctx, next) => {
+        let id = _getId(ctx);
+        ctx.render('manage/article/article_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Article',
@@ -107,8 +106,8 @@ module.exports = {
         }));
     },
 
-    'GET /manage/article/create_category': function* () {
-        this.render('manage/article/category_form.html', yield $getModel({
+    'GET /manage/article/create_category': async (ctx, next) => {
+        ctx.render('manage/article/category_form.html', await _getModel({
             form: {
                 name: 'Create Category',
                 action: '/api/categories',
@@ -117,9 +116,9 @@ module.exports = {
         }));
     },
 
-    'GET /manage/article/edit_category': function* () {
-        var id = getId(this.request);
-        this.render('manage/article/category_form.html', yield $getModel({
+    'GET /manage/article/edit_category': async (ctx, next) => {
+        let id = getId(ctx.request);
+        ctx.render('manage/article/category_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Category',
@@ -131,12 +130,12 @@ module.exports = {
 
     // webpage ////////////////////////////////////////////////////////////////
 
-    'GET /manage/webpage/(webpage_list)?': function* () {
-        this.render('manage/webpage/webpage_list.html', yield $getModel({}));
+    'GET /manage/webpage/(webpage_list)?': async (ctx, next) => {
+        ctx.render('manage/webpage/webpage_list.html', await _getModel({}));
     },
 
-    'GET /manage/webpage/create_webpage': function* () {
-        this.render('manage/webpage/webpage_form.html', yield $getModel({
+    'GET /manage/webpage/create_webpage': async (ctx, next) => {
+        ctx.render('manage/webpage/webpage_form.html', await _getModel({
             form: {
                 name: 'Create Web Page',
                 action: '/api/webpages',
@@ -145,9 +144,9 @@ module.exports = {
         }));
     },
 
-    'GET /manage/webpage/edit_webpage': function* () {
-        var id = getId(this.request);
-        this.render('manage/webpage/webpage_form.html', yield $getModel({
+    'GET /manage/webpage/edit_webpage': async (ctx, next) => {
+        let id = getId(ctx);
+        ctx.render('manage/webpage/webpage_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Web Page',
@@ -159,12 +158,12 @@ module.exports = {
 
     // wiki ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/wiki/(wiki_list)?': function* () {
-        this.render('manage/wiki/wiki_list.html', yield $getModel({}));
+    'GET /manage/wiki/(wiki_list)?': async (ctx, next) => {
+        ctx.render('manage/wiki/wiki_list.html', await _getModel({}));
     },
 
-    'GET /manage/wiki/create_wiki': function* () {
-        this.render('manage/wiki/wiki_form.html', yield $getModel({
+    'GET /manage/wiki/create_wiki': async (ctx, next) => {
+        ctx.render('manage/wiki/wiki_form.html', await _getModel({
             form: {
                 name: 'Create Wiki',
                 action: '/api/wikis',
@@ -173,9 +172,9 @@ module.exports = {
         }));
     },
 
-    'GET /manage/wiki/edit_wiki': function* () {
-        var id = getId(this.request);
-        this.render('manage/wiki/wiki_form.html', yield $getModel({
+    'GET /manage/wiki/edit_wiki': async (ctx, next) => {
+        let id = _getId(ctx);
+        ctx.render('manage/wiki/wiki_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Wiki',
@@ -185,18 +184,18 @@ module.exports = {
         }));
     },
 
-    'GET /manage/wiki/wiki_tree': function* () {
-        var id = getId(this.request);
-        this.render('manage/wiki/wiki_tree.html', yield $getModel({
+    'GET /manage/wiki/wiki_tree': async (ctx, next) => {
+        let id = _getId(ctx);
+        ctx.render('manage/wiki/wiki_tree.html', await _getModel({
             id: id
         }));
     },
 
-    'GET /manage/wiki/edit_wikipage': function* () {
-        var
-            id = getId(this.request),
-            wp = yield wikiApi.$getWikiPage(id);
-        this.render('manage/wiki/wikipage_form.html', yield $getModel({
+    'GET /manage/wiki/edit_wikipage': async (ctx, next) => {
+        let
+            id = _getId(ctx),
+            wp = await wikiApi.getWikiPage(id);
+        ctx.render('manage/wiki/wikipage_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Wiki Page',
@@ -208,12 +207,12 @@ module.exports = {
 
     // board //////////////////////////////////////////////////////////////////
 
-    'GET /manage/discuss/(board_list)?': function* () {
-        this.render('manage/discuss/board_list.html', yield $getModel({}));
+    'GET /manage/discuss/(board_list)?': async (ctx, next) => {
+        ctx.render('manage/discuss/board_list.html', await _getModel({}));
     },
 
-    'GET /manage/discuss/create_board': function* () {
-        this.render('manage/discuss/board_form.html', yield $getModel({
+    'GET /manage/discuss/create_board': async (ctx, next) => {
+        ctx.render('manage/discuss/board_form.html', await _getModel({
             form: {
                 name: 'Create Board',
                 action: '/api/boards',
@@ -222,9 +221,9 @@ module.exports = {
         }));
     },
 
-    'GET /manage/discuss/edit_board': function* () {
-        var id = getId(this.request);
-        this.render('manage/discuss/board_form.html', yield $getModel({
+    'GET /manage/discuss/edit_board': async (ctx, next) => {
+        var id = _getId(ctx);
+        ctx.render('manage/discuss/board_form.html', await _getModel({
             id: id,
             form: {
                 name: 'Edit Board',
@@ -234,30 +233,30 @@ module.exports = {
         }));
     },
 
-    'GET /manage/discuss/reply_list': function* () {
-        this.render('manage/discuss/reply_list.html', yield $getModel({
+    'GET /manage/discuss/reply_list': async (ctx, next) => {
+        ctx.render('manage/discuss/reply_list.html', await _getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
     },
 
-    'GET /manage/discuss/topic_list': function* () {
-        this.render('manage/discuss/topic_list.html', yield $getModel({
+    'GET /manage/discuss/topic_list': async (ctx, next) => {
+        ctx.render('manage/discuss/topic_list.html', await _getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
     },
 
     // attachment /////////////////////////////////////////////////////////////
 
-    'GET /manage/attachment/(attachment_list)?': function* () {
-        this.render('manage/attachment/attachment_list.html', yield $getModel({
+    'GET /manage/attachment/(attachment_list)?': async (ctx, next) => {
+        ctx.render('manage/attachment/attachment_list.html', await _getModel({
             pageIndex: helper.getPageNumber(this.request)
         }));
     },
 
     // user ///////////////////////////////////////////////////////////////////
 
-    'GET /manage/user/(user_list)?': function* () {
-        this.render('manage/user/user_list.html', yield $getModel({
+    'GET /manage/user/(user_list)?': async (ctx, next) => {
+        ctx.render('manage/user/user_list.html', await _getModel({
             currentTime: Date.now(),
             pageIndex: helper.getPageNumber(this.request)
         }));
@@ -265,12 +264,12 @@ module.exports = {
 
     // navigation /////////////////////////////////////////////////////////////
 
-    'GET /manage/navigation/(navigation_list)?': function* () {
-        this.render('manage/navigation/navigation_list.html', yield $getModel({}));
+    'GET /manage/navigation/(navigation_list)?': async (ctx, next) => {
+        ctx.render('manage/navigation/navigation_list.html', await _getModel({}));
     },
 
-    'GET /manage/navigation/create_navigation': function* () {
-        this.render('manage/navigation/navigation_form.html', yield $getModel({
+    'GET /manage/navigation/create_navigation': async (ctx, next) => {
+        ctx.render('manage/navigation/navigation_form.html', await getModel({
             form: {
                 name: 'Create Navigation',
                 action: '/api/navigations',
@@ -281,12 +280,13 @@ module.exports = {
 
     // setting ////////////////////////////////////////////////////////////////
 
-    'GET /manage/setting/': function* () {
-        this.response.redirect('/manage/setting/website');
+    'GET /manage/setting/': async (ctx, next) => {
+        ctx.response.redirect('/manage/setting/website');
     },
 
-    'GET /manage/setting/:g': function* (g) {
-        this.render('manage/setting/setting_form.html', yield $getModel({
+    'GET /manage/setting/:g': async (ctx, next) => {
+        let g = ctx.params.g;
+        ctx.render('manage/setting/setting_form.html', await getModel({
             tabs: [
                 {
                     key: 'website',

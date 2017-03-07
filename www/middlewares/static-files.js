@@ -1,12 +1,21 @@
-const path = require('path');
-const mime = require('mime');
-const fs = require('mz/fs');
+/**
+ * koa middleware to serve static staticFiles.
+ * 
+ * For development only.
+ * 
+ * author: Michael Liao
+ */
 
-function staticFiles(url, dir) {
+const
+    path = require('path'),
+    mime = require('mime'),
+    fs = require('mz/fs');
+
+module.exports = (prefix, dir) => {
     return async (ctx, next) => {
         let rpath = ctx.request.path;
-        if (rpath.startsWith(url)) {
-            let fp = path.join(dir, rpath.substring(url.length));
+        if (rpath.startsWith(prefix)) {
+            let fp = path.join(dir, rpath.substring(prefix.length));
             if (await fs.exists(fp)) {
                 ctx.response.type = mime.lookup(rpath);
                 ctx.response.body = await fs.readFile(fp);
@@ -18,5 +27,3 @@ function staticFiles(url, dir) {
         }
     };
 }
-
-module.exports = staticFiles;
