@@ -16,6 +16,10 @@
  *   }
  */
 
+const
+    logger = require('../logger'),
+    api_schema = require('../api_schema');
+
 function _logJSON(data) {
     if (data) {
         logger.debug(JSON.stringify(data, function (key, value) {
@@ -32,22 +36,25 @@ function _logJSON(data) {
 
 module.exports = function (pathPrefix = '/api/') {
     return async (ctx, next) => {
-        if (ctx.request.path.startsWith(pathPrefix)) {
-            logger.info(`process API ${ctx.request.method} ${ctx.request.url}...`);
+        let
+            request = ctx.request,
+            response = ctx.response;
+        if (request.path.startsWith(pathPrefix)) {
+            logger.info(`process API ${request.method} ${request.url}...`);
             ctx.validate = (schemaName) => {
-                // todo: validate schema:
+                api_schema.validate(schemaName, request.body);
             };
             ctx.rest = (data) => {
-                ctx.response.type = 'application/json';
-                ctx.response.body = data;
+                response.type = 'application/json';
+                response.body = data;
             }
             try {
                 await next();
             } catch (e) {
                 logger.warn('process API error.', e);
-                ctx.response.status = 400;
-                ctx.response.type = 'application/json';
-                ctx.response.body = {
+                response.status = 400;
+                response.type = 'application/json';
+                response.body = {
                     error: e.error || 'internal:unknown_error',
                     message: e.message || ''
                 };
