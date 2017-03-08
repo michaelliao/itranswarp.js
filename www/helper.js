@@ -27,7 +27,7 @@ safeRenderer.link = function (href, title, text) {
     return '<a target="_blank" rel="nofollow" href="' + href + '">' + text + '</a>';
 };
 
-function* $md2html(md, cacheKey, isSafeInput) {
+async function md2html(md, cacheKey, isSafeInput) {
     if (cacheKey) {
         //
     }

@@ -311,7 +311,7 @@ module.exports = {
         this.body = article;
     },
 
-    'POST /api/articles/:id': async (ctx, next) =>
+    'POST /api/articles/:id': async (ctx, next) => {
         /**
          * Update an exist article.
          * 
@@ -390,13 +390,13 @@ module.exports = {
             yield article.$update(props);
         }
         if (!article.content) {
-            text = yield Text.$find(article.content_id);
+            text = await Text.findById(article.content_id);
             article.content = text.value;
         }
         this.body = article;
     },
 
-    'POST /api/articles/:id/delete': async (ctx, next) =>
+    'POST /api/articles/:id/delete': async (ctx, next) => {
         /**
          * Delete an article.
          * 
@@ -413,7 +413,7 @@ module.exports = {
         if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
             throw api.notAllowed('Permission denied.');
         }
-        yield article.$destroy();
+        await article.destroy();
         yield warp.$update('delete from texts where ref_id=?', [id]);
         this.body = {
             id: id

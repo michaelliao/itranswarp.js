@@ -63,22 +63,22 @@ function unindexDiscussByIds(ids) {
     });
 }
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     return [{
         name: 'Discuss',
         url: '/discuss'
     }];
 }
 
-function* $getBoard(id) {
-    var board = yield Board.$find(id);
+async function getBoard(id) {
+    var board = await Board.findById(id);
     if (board === null) {
         throw api.notFound('Board');
     }
     return board;
 }
 
-function* $getBoardByTag(tag) {
+async function getBoardByTag(tag) {
     var
         boards = await getBoards(),
         filtered = _.filter(boards, function (b) {
@@ -90,13 +90,13 @@ function* $getBoardByTag(tag) {
     return filtered[0];
 }
 
-function* $getBoards() {
+async function getBoards() {
     return yield Board.$findAll({
         order: 'display_order'
     });
 }
 
-function* $lockBoard(id, locked) {
+async function lockBoard(id, locked) {
     var board = await getBoard(id);
     if (board.locked !== locked) {
         board.locked = locked;
@@ -105,8 +105,8 @@ function* $lockBoard(id, locked) {
     return board;
 }
 
-function* $getTopic(id) {
-    var topic = yield Topic.$find(id);
+async function getTopic(id) {
+    var topic = await Topic.findById(id);
     if (topic === null) {
         throw api.notFound('Topic');
     }
@@ -117,7 +117,7 @@ var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(/*Topic.__selectAttributesArray*/[],
     return field !== 'content';
 });
 
-function* $getAllTopics(page) {
+async function getAllTopics(page) {
     page.total = yield Topic.$findNumber({
         select: 'count(id)'
     });
@@ -132,7 +132,7 @@ function* $getAllTopics(page) {
     });
 }
 
-function* $getTopics(board_id, page) {
+async function getTopics(board_id, page) {
     page.total = yield Topic.$findNumber({
         select: 'count(id)',
         where: 'board_id=?',
@@ -151,7 +151,7 @@ function* $getTopics(board_id, page) {
     });
 }
 
-function* $getTopicsByRef(ref_id, page) {
+async function getTopicsByRef(ref_id, page) {
     page.total = yield Topic.$findNumber({
         select: 'count(id)',
         where: 'ref_id=?',
@@ -169,7 +169,7 @@ function* $getTopicsByRef(ref_id, page) {
     });
 }
 
-function* $getAllReplies(page) {
+async function getAllReplies(page) {
     page.total = yield Reply.$findNumber({
         select: 'count(id)'
     });
@@ -183,7 +183,7 @@ function* $getAllReplies(page) {
     });
 }
 
-function* $getReplies(topic_id, page) {
+async function getReplies(topic_id, page) {
     var num = yield Reply.$findNumber({
         select: 'count(id)',
         where: 'topic_id=?',
@@ -203,7 +203,7 @@ function* $getReplies(topic_id, page) {
     });
 }
 
-function* $getFirstReplies(topic_id, num) {
+async function getFirstReplies(topic_id, num) {
     return yield Reply.$findAll({
         where: 'topic_id=?',
         params: [topic_id],
@@ -212,7 +212,7 @@ function* $getFirstReplies(topic_id, num) {
     });
 }
 
-function* $getReplyPageIndex(topic, reply_id) {
+async function getReplyPageIndex(topic, reply_id) {
     var
         num = yield Reply.$findNumber({
             select: 'count(id)',
@@ -222,7 +222,7 @@ function* $getReplyPageIndex(topic, reply_id) {
     return Math.floor((num + 1) / 20) + 1;
 }
 
-function* $createReply(user, topic_id, data) {
+async function createReply(user, topic_id, data) {
     var
         reply,
         topic = await getTopic(topic_id);
@@ -244,7 +244,7 @@ function* $createReply(user, topic_id, data) {
     return reply;
 }
 
-function* $createTopic(user, board_id, ref_type, ref_id, data) {
+async function createTopic(user, board_id, ref_type, ref_id, data) {
     var
         board = await getBoard(board_id),
         topic = yield Topic.$create({
@@ -264,7 +264,7 @@ function* $createTopic(user, board_id, ref_type, ref_id, data) {
     return topic;
 }
 
-function* $loadTopicsByRefWithCache(ref_id, page) {
+async function loadTopicsByRefWithCache(ref_id, page) {
     if (page.index === 1) {
         var key = 'REF-TOPICS-' + ref_id;
         return yield cache.$get(key, function* () {
@@ -274,7 +274,7 @@ function* $loadTopicsByRefWithCache(ref_id, page) {
     return await loadTopicsByRef(ref_id, page);
 }
 
-function* $loadTopicsByRef(ref_id, page) {
+async function loadTopicsByRef(ref_id, page) {
     var
         i,
         topics = await getTopicsByRef(ref_id, page);
@@ -285,7 +285,7 @@ function* $loadTopicsByRef(ref_id, page) {
     return topics;
 }
 
-function* $bindReplies(topic) {
+async function bindReplies(topic) {
     var key = 'REPLIES-' + topic.id + '_' + topic.version;
     topic.replies = yield cache.$get(key, function* () {
         var replies = await getFirstReplies(topic.id, 10);

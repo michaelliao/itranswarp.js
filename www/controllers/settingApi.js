@@ -158,7 +158,7 @@ async function getSettings(group) {
 }
 
 async function getSetting(key, defaultValue) {
-    var setting = yield Setting.$find({
+    var setting = await Setting.findById({
         where: '`key`=?',
         params: [key]
     });
@@ -198,7 +198,7 @@ async function setSettings(group, settings) {
     }
 }
 
-function* $getSettingsByDefaults(name, defaults) {
+async function getSettingsByDefaults(name, defaults) {
     var
         settings = await getSettings(name),
         key,
@@ -215,24 +215,24 @@ var
     KEY_WEBSITE = constants.cache.WEBSITE,
     KEY_SNIPPETS = constants.cache.SNIPPETS;
 
-function* $getWebsiteSettings() {
+async function getWebsiteSettings() {
     return yield cache.$get(KEY_WEBSITE, function* () {
         return await getSettingsByDefaults('website', defaultSettingValues.website);
     });
 }
 
-function* $setWebsiteSettings(settings) {
+async function setWebsiteSettings(settings) {
     await setSettings('website', settings);
     yield cache.$remove(KEY_WEBSITE);
 }
 
-function* $getSnippets() {
+async function getSnippets() {
     return yield cache.$get(KEY_SNIPPETS, function* () {
         return await getSettingsByDefaults('snippets', defaultSettingValues.snippets);
     });
 }
 
-function* $setSnippets(settings) {
+async function setSnippets(settings) {
     await setSettings('snippets', settings);
     yield cache.$remove(KEY_SNIPPETS);
 }

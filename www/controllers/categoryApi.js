@@ -18,21 +18,21 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function* $getCategories() {
+async function getCategories() {
     return yield Category.$findAll({
         order: 'display_order'
     });
 }
 
-function* $getCategory(id) {
-    var category = yield Category.$find(id);
+async function getCategory(id) {
+    var category = await Category.findById(id);
     if (category === null) {
         throw api.notFound('Category');
     }
     return category;
 }
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     var categories = await getCategories();
     return _.map(categories, function (cat) {
         return {
@@ -62,7 +62,7 @@ module.exports = {
         };
     },
 
-    'GET /api/categories/:id': async (ctx, next) =>
+    'GET /api/categories/:id': async (ctx, next) => {
         /**
          * Get categories by id.
          * 
@@ -112,7 +112,7 @@ module.exports = {
         };
     },
 
-    'POST /api/categories/:id': async (ctx, next) =>
+    'POST /api/categories/:id': async (ctx, next) => {
         /**
          * Update a category.
          * 
@@ -149,7 +149,7 @@ module.exports = {
         this.body = category;
     },
 
-    'POST /api/categories/:id/delete': async (ctx, next) =>
+    'POST /api/categories/:id/delete': async (ctx, next) => {
         /**
          * Delete a category by its id.
          * 
@@ -168,7 +168,7 @@ module.exports = {
         if (num > 0) {
             throw api.conflictError('Category', 'Cannot delete category for there are some articles reference it.');
         }
-        yield category.$destroy();
+        await category.destroy();
         this.body = {
             id: id
         };

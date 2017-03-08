@@ -16,8 +16,8 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function* $checkAliasAvailable(alias) {
-    var p = yield Webpage.$find({
+async function checkAliasAvailable(alias) {
+    var p = await Webpage.findById({
         where: 'alias=?',
         params: [alias]
     });
@@ -26,30 +26,30 @@ function* $checkAliasAvailable(alias) {
     }
 }
 
-function* $getWebpages() {
+async function getWebpages() {
     return yield Webpage.$findAll({
         order: 'alias'
     });
 }
 
-function* $getWebpage(id, includeContent) {
+async function getWebpage(id, includeContent) {
     var
         text,
-        p = yield Webpage.$find(id);
+        p = await Webpage.findById(id);
     if (p === null) {
         throw api.notFound('Webpage');
     }
     if (includeContent) {
-        text = yield Text.$find(p.content_id);
+        text = await Text.findById(p.content_id);
         p.content = text.value;
     }
     return p;
 }
 
-function* $getWebpageByAlias(alias, includeContent) {
+async function getWebpageByAlias(alias, includeContent) {
     var
         text,
-        p = yield Webpage.$find({
+        p = await Webpage.findById({
             where: 'alias=?',
             params: [alias]
         });
@@ -57,13 +57,13 @@ function* $getWebpageByAlias(alias, includeContent) {
         throw api.notFound('Webpage');
     }
     if (includeContent) {
-        text = yield Text.$find(p.content_id);
+        text = await Text.findById(p.content_id);
         p.content = text.value;
     }
     return p;
 }
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     var ps = await getWebpages();
     return _.map(ps, function (p) {
         return {
@@ -83,7 +83,7 @@ module.exports = {
 
     $getWebpageByAlias: $getWebpageByAlias,
 
-    'GET /api/webpages/:id': async (ctx, next) =>
+    'GET /api/webpages/:id': async (ctx, next) => {
         /**
          * Get webpage by id.
          * 
@@ -149,7 +149,7 @@ module.exports = {
         this.body = webpage;
     },
 
-    'POST /api/webpages/:id': async (ctx, next) =>
+    'POST /api/webpages/:id': async (ctx, next) => {
         /**
          * Update webpage by id.
          * 
@@ -209,13 +209,13 @@ module.exports = {
             webpage.content = data.content;
         }
         else {
-            text = yield Text.$find(webpage.content_id);
+            text = await Text.findById(webpage.content_id);
             webpage.content = text.value;
         }
         this.body = webpage;
     },
 
-    'POST /api/webpages/:id/delete': async (ctx, next) =>
+    'POST /api/webpages/:id/delete': async (ctx, next) => {
         /**
          * Delete a webpage by its id.
          * 
@@ -225,7 +225,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         var webpage = await getWebpage(id);
-        yield webpage.$destroy();
+        await webpage.destroy();
         // delete all texts:
         warp.$update('delete from texts where ref_id=?', [id]);
         this.body = {

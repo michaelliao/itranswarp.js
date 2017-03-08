@@ -45,7 +45,7 @@ _.each(config.oauth2, function (cfg, name) {
     console.log('Init OAuth2: ' + name + ', redirect_uri = ' + provider.redirect_uri);
 });
 
-function* $getUsers(page) {
+async function getUsers(page) {
     page.total = yield User.$findNumber('count(id)');
     if (page.isEmpty) {
         return [];
@@ -58,27 +58,27 @@ function* $getUsers(page) {
     return users;
 }
 
-function* $getUserByEmail(email) {
-    return yield User.$find({
+async function getUserByEmail(email) {
+    return await User.findById({
         where: 'email=?',
         params: [email],
         limit: 1
     });
 }
 
-function* $getUser(id) {
-    var user = yield User.$find(id);
+async function getUser(id) {
+    var user = await User.findById(id);
     if (user === null) {
         throw api.notFound('User');
     }
     return user;
 }
 
-function* $bindUsers(entities, propName) {
+async function bindUsers(entities, propName) {
     var i, entity, u, prop = propName || 'user_id';
     for (i=0; i<entities.length; i++) {
         entity = entities[i];
-        entity.user = yield User.$find({
+        entity.user = await User.findById({
             select: ['id', 'name', 'image_url'],
             where: 'id=?',
             params: [entity[prop]]
@@ -86,7 +86,7 @@ function* $bindUsers(entities, propName) {
     }
 }
 
-function* $lockUser(id, lockTime) {
+async function lockUser(id, lockTime) {
     var user = await getUser(id);
     if (user.role <= constants.role.ADMIN) {
         throw api.notAllowed('Cannot lock admin user.');
@@ -96,13 +96,13 @@ function* $lockUser(id, lockTime) {
     return lockTime;
 }
 
-function* $processOAuthAuthentication(provider_name, authentication) {
+async function processOAuthAuthentication(provider_name, authentication) {
     var
         auth_id = provider_name + ':' + authentication.auth_id,
         auth_user,
         user,
         user_id;
-    auth_user = yield AuthUser.$find({
+    auth_user = await AuthUser.findById({
         where: 'auth_id=?',
         params: [auth_id]
     });
@@ -134,7 +134,7 @@ function* $processOAuthAuthentication(provider_name, authentication) {
     auth_user.expires_at = Date.now() + 1000 * Math.min(604800, authentication.expires_in);
     yield auth_user.$update(['auth_token', 'expires_at', 'updated_at', 'version']);
     // find user:
-    user = yield User.$find(auth_user.user_id);
+    user = await User.findById(auth_user.user_id);
     if (user === null) {
         console.log('Logic error: user not found!');
         user_id = auth_user.user_id;
@@ -208,7 +208,7 @@ module.exports = {
         if (user.locked_until > Date.now()) {
             throw api.authFailed('locked', 'User is locked.');
         }
-        localuser = yield LocalUser.$find({
+        localuser = await LocalUser.findById({
             where: 'user_id=?',
             params: [user.id]
         });

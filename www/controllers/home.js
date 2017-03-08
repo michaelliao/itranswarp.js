@@ -83,7 +83,7 @@ async function getModel(model) {
     return model;
 }
 
-function* $updateEntityViews(entity) {
+async function updateEntityViews(entity) {
     console.log('Update views to: ' + entity.views);
     yield cache.$set(entity.id, 0);
     yield entity.$update(['views']);

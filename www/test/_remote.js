@@ -161,7 +161,7 @@ _.each(emails, function (email, roleId) {
                                id,      roleId, name,   email,  1,        0,            '/t.png',  now,        now,        0));
 });
 
-function* $initDatabase() {
+async function initDatabase() {
     console.log('setup: init database first...');
     var i, sql;
     for (i=0; i<init_sqls.length; i++) {
@@ -171,15 +171,15 @@ function* $initDatabase() {
     }
 }
 
-function* $get(role, path, params) {
+async function get(role, path, params) {
     return await http('GET', role, path, params);
 }
 
-function* $post(role, path, params) {
+async function post(role, path, params) {
     return await http('POST', role, path, params);
 }
 
-function* $upload(role, path, params) {
+async function upload(role, path, params) {
     return await http('UPLOAD', role, path, params);
 }
 

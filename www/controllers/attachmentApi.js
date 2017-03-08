@@ -18,15 +18,15 @@ var
     warp = db.warp,
     next_id = db.next_id;
 
-function* $getAttachment(id) {
-    var atta = yield Attachment.$find(id);
+async function getAttachment(id) {
+    var atta = await Attachment.findById(id);
     if (atta === null) {
         throw api.notFound('Attachment');
     }
     return atta;
 }
 
-function* $getAttachments(page) {
+async function getAttachments(page) {
     page.total = yield Attachment.$findNumber('count(id)');
     if (page.isEmpty) {
         return [];
@@ -39,7 +39,7 @@ function* $getAttachments(page) {
 }
 
 // create function(callback) with Attachment object returned in callback:
-function* $createAttachment(user_id, name, description, buffer, mime, expectedImage) {
+async function createAttachment(user_id, name, description, buffer, mime, expectedImage) {
     var
         att_id = next_id(),
         res_id = next_id(),
@@ -144,7 +144,7 @@ module.exports = {
 
     'GET /files/attachments/:id/:size': downloadAttachment,
 
-    'GET /api/attachments/:id': async (ctx, next) =>
+    'GET /api/attachments/:id': async (ctx, next) => {
         /**
          * Get attachment.
          * 
@@ -173,7 +173,7 @@ module.exports = {
         };
     },
 
-    'POST /api/attachments/:id/delete': async (ctx, next) =>
+    'POST /api/attachments/:id/delete': async (ctx, next) => {
         /**
          * Delete an attachment by its id.
          * 
@@ -190,7 +190,7 @@ module.exports = {
             throw api.notAllowed('Permission denied.');
         }
         // delete:
-        yield atta.$destroy();
+        await atta.destroy();
         // delete all resources:
         yield warp.$update('delete from resources where ref_id=?', [id]);
         this.body = {

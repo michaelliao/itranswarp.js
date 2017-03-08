@@ -46,21 +46,21 @@ function unindexWiki(r) {
     });
 }
 
-function* $getWikis() {
+async function getWikis() {
     return yield Wiki.$findAll({
         order: 'name asc'
     });
 }
 
-function* $getWiki(id, includeContent) {
+async function getWiki(id, includeContent) {
     var
         text,
-        wiki = yield Wiki.$find(id);
+        wiki = await Wiki.findById(id);
     if (wiki === null) {
         throw api.notFound('Wiki');
     }
     if (includeContent) {
-        text = yield Text.$find(wiki.content_id);
+        text = await Text.findById(wiki.content_id);
         if (text === null) {
             throw api.notFound('Text');
         }
@@ -69,15 +69,15 @@ function* $getWiki(id, includeContent) {
     return wiki;
 }
 
-function* $getWikiPage(id, includeContent) {
+async function getWikiPage(id, includeContent) {
     var
         text,
-        wp = yield WikiPage.$find(id);
+        wp = await WikiPage.findById(id);
     if (wp === null) {
         throw api.notFound('Wiki');
     }
     if (includeContent) {
-        text = yield Text.$find(wp.content_id);
+        text = await Text.findById(wp.content_id);
         if (text === null) {
             throw api.notFound('Text');
         }
@@ -119,7 +119,7 @@ function flatten(arr, depth, children) {
     });
 }
 
-function* $getWikiPages(wiki_id, returnAsDict) {
+async function getWikiPages(wiki_id, returnAsDict) {
     var
         proot,
         pdict = {},
@@ -140,7 +140,7 @@ function* $getWikiPages(wiki_id, returnAsDict) {
     return proot.children;
 }
 
-function* $getWikiTree(id, isFlatten) {
+async function getWikiTree(id, isFlatten) {
     var
         arr,
         wiki = await getWiki(id),
@@ -156,7 +156,7 @@ function* $getWikiTree(id, isFlatten) {
     return wiki;
 }
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     var ws = await getWikis();
     return _.map(ws, function (w) {
         return {
@@ -327,7 +327,7 @@ module.exports = {
             yield wiki.$update(props);
         }
         if (!wiki.content) {
-            text = yield Text.$find(wiki.content_id);
+            text = await Text.findById(wiki.content_id);
             wiki.content = text.value;
         }
         this.body = wiki;
@@ -428,7 +428,7 @@ module.exports = {
             yield wikipage.$update(props);
         }
         if (!wikipage.content) {
-            text = yield Text.$find(wikipage.content_id);
+            text = await Text.findById(wikipage.content_id);
             wikipage.content = text.value;
         }
 
@@ -558,7 +558,7 @@ module.exports = {
         if (num > 0) {
             throw api.conflictError('WikiPage', 'Cannot delete a non-empty wiki pages.');
         }
-        yield wikipage.$destroy();
+        await wikipage.destroy();
         // delete all texts:
         yield warp.$update('delete from texts where ref_id=?', [id]);
 
@@ -590,7 +590,7 @@ module.exports = {
             throw api.conflictError('Wiki', 'Wiki is not empty.');
         }
 
-        yield wiki.$destroy();
+        await wiki.destroy();
 
         // delete all texts:
         yield warp.$update('delete from texts where ref_id=?', [id]);
