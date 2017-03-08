@@ -1,10 +1,13 @@
-'use strict';
+/**
+ * Validate JSON using schema.
+ * 
+ * author: Michael Liao
+ */
 
-// json schema.js
-
-var
+const
     _ = require('lodash'),
     api = require('./api'),
+    logger = require('./logger'),
     constants = require('./constants'),
     jjv = require('jjv'),
     env = jjv();
@@ -13,9 +16,9 @@ env.defaultOptions.useDefault = true;
 env.defaultOptions.removeAdditional = true;
 
 var code2Message = {
-    required: '参数不能为空',
-    email: '无效的电子邮件',
-    pattern: '格式无效',
+    required: 'Parameter is required',
+    email: 'Invalid email',
+    pattern: 'Invalid format',
     minLength: '不满足最少字符',
     maxLength: '超过了允许最大字符',
     minimum: '超出了最小允许范围',
@@ -26,21 +29,21 @@ var code2Message = {
 
 function translateMessage(field, invalids) {
     if (invalids.length === 0) {
-        return '无效的值：' + field;
+        return 'Invalid value of field: ' + field;
     }
     var msg = code2Message[invalids[0]];
     if (msg) {
-        return field + msg;
+        return msg;
     }
-    return '无效的值' + field;
+    return 'Invalid value of field: ' + field;
 }
 
-var createApiError = function (errors) {
+function createApiError(errors) {
     if (!errors.validation) {
         return api.invalidRequest('json', 'Invalid JSON request.');
     }
     var err = null;
-    console.log('>>> ' + JSON.stringify(errors.validation));
+    logger.debug('>>> ' + JSON.stringify(errors.validation));
     _.each(errors.validation, function (v, k) {
         if (err === null) {
             err = api.invalidParam(k, translateMessage(k, Object.getOwnPropertyNames(v)));
@@ -56,7 +59,7 @@ var createApiError = function (errors) {
 
 // common patterns:
 
-var PROPERTY = {
+const PROPERTY = {
 
     ID: {
         type: 'string',
@@ -181,7 +184,7 @@ var PROPERTY = {
     }
 };
 
-var schemas = {
+const schemas = {
     authenticate: {
         type: 'object',
         properties: {
@@ -425,7 +428,7 @@ _.each(schemas, function (v, k) {
 });
 
 module.exports = {
-    validate: function (schemaName, data) {
+    validate: (schemaName, data) => {
         var errors = env.validate(schemaName, data);
         if (errors !== null) {
             throw createApiError(errors);

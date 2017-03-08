@@ -48,6 +48,7 @@
     "sleep-promise": "2.0.0",
     "less": "1.x",
     "mocha": "3.1.0",
+    "chai": "3.5.0",
     "gulp-less": "*",
     "gulp-jslint": "*",
     "gulp-uglify": "*",

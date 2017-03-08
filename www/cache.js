@@ -101,7 +101,7 @@ module.exports = {
         var
             k = CACHE_PREFIX + key,
             num = await _get(k);
-        return (num === false) ? 0 : num;
+        return num ? num : 0;
     },
 
     counts: async (keys) => {

@@ -4,7 +4,7 @@
 var
     _ = require('lodash'),
     fs = require('fs'),
-    should = require('should'),
+    expect = require('chai').expect,
     image = require('../image');
 
 describe('#image', function () {
@@ -78,21 +78,21 @@ describe('#image', function () {
                 resized = arr[7];
             var r = image.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
             //console.log(ori_w + 'x' + ori_h + ' > ' + res_w + 'x' + res_h + ' ===> ' + r.width + 'x' + r.height);
-            should(r).be.ok;
-            r.width.should.equal(expected_w);
-            r.height.should.equal(expected_h);
+            expect(r).to.be.ok;
+            expect(r.width).to.equal(expected_w);
+            expect(r.height).to.equal(expected_h);
             if (resized===false) {
-                r.resized.should.not.be.ok;
+                expect(r.resized).to.not.be.ok;
             }
         });
     });
 
     it('get image size ok', async () => {
         var info = await image.getImageInfo(fs.readFileSync('./test/res-image.jpg'));
-        should(info).be.ok;
-        info.format.should.equal('jpeg');
-        info.width.should.equal(1280);
-        info.height.should.equal(720);
+        expect(info).to.be.ok;
+        expect(info.format).to.equal('jpeg');
+        expect(info.width).to.equal(1280);
+        expect(info.height).to.equal(720);
     });
 
     it('get image size with bad format', async () => {
@@ -100,8 +100,8 @@ describe('#image', function () {
             await image.getImageInfo(fs.readFileSync('./test/res-bad-image.jpg'));
         }
         catch (e) {
-            should(e.error).be.ok;
-            e.error.should.equal('parameter:invalid');
+            expect(e.error).to.be.ok;
+            expect(e.error).to.equal('parameter:invalid');
         }
     });
 
@@ -110,10 +110,10 @@ describe('#image', function () {
         var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 480, 270);
         // check resized image:
         var resizedInfo = await image.getImageInfo(resizedData);
-        should(resizedInfo).be.ok;
-        resizedInfo.format.should.equal('jpeg');
-        resizedInfo.width.should.equal(480);
-        resizedInfo.height.should.equal(270);
+        expect(resizedInfo).to.be.ok;
+        expect(resizedInfo.format).to.equal('jpeg');
+        expect(resizedInfo.width).to.equal(480);
+        expect(resizedInfo.height).to.equal(270);
     });
 
     it('resize large', async () => {
@@ -121,10 +121,10 @@ describe('#image', function () {
         var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
         // check resized image:
         var resizedInfo = await image.getImageInfo(resizedData);
-        should(resizedInfo).be.ok;
-        resizedInfo.format.should.equal('jpeg');
-        resizedInfo.width.should.equal(1920);
-        resizedInfo.height.should.equal(1080);
+        expect(resizedInfo).to.be.ok;
+        expect(resizedInfo.format).to.equal('jpeg');
+        expect(resizedInfo.width).to.equal(1920);
+        expect(resizedInfo.height).to.equal(1080);
     });
 
 });
