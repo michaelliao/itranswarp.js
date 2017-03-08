@@ -41,6 +41,9 @@ var sequelize = new Sequelize(
             maxConnections: config.db.maxConnections,
             minConnections: config.db.minConnections,
             maxIdleTime: config.db.maxIdleTime
+        },
+        logging: (t) => {
+            logger.info('SQL: ' + t);
         }
     });
 
