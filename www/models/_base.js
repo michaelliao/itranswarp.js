@@ -2,7 +2,7 @@
 
 var
     _ = require('lodash'),
-    next_id = require('./_id');
+    nextId = require('./_id');
 
 /**
  * automatically add following fields as well as hooks to each model:
@@ -23,7 +23,7 @@ function defineModel(warp, name, cols, opts) {
         name: 'id',
         type: 'varchar(50)',
         primaryKey: true,
-        defaultValue: next_id
+        defaultValue: nextId
     });
     // add created_at, updated_at and version:
     columns.push({
@@ -46,7 +46,7 @@ function defineModel(warp, name, cols, opts) {
             fnBeforeCreate(obj);
         }
         if (!obj.id) {
-            obj.id = next_id();
+            obj.id = nextId();
         }
         obj.created_at = obj.updated_at = Date.now();
     };

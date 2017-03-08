@@ -106,7 +106,7 @@ function defineModel(tableName, attributes) {
                 if (obj.isNewRecord) {
                     logger.debug('will create entity: ' + obj);
                     if (!obj.id) {
-                        obj.id = next_id();
+                        obj.id = nextId();
                     }
                     obj.created_at = now;
                     obj.updated_at = now;
@@ -123,7 +123,6 @@ function defineModel(tableName, attributes) {
 }
 
 var exp = {
-    fn: sequelize.fn,
     nextId: nextId,
     sync: () => {
         // only allow create ddl in non-production environment:

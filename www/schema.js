@@ -11,7 +11,7 @@ var
 var keys = _.filter(_.map(db, function (value, key) {
     return key;
 }), function (key) {
-    return key !== 'warp' && key !== 'next_id';
+    return key !== 'warp' && key !== 'nextId';
 });
 
 function log(s) {
@@ -34,8 +34,8 @@ function generateDDL(email, password) {
 
     output = output + log('-- create administrator:\n-- Email: ' + email + '\n-- Password: ' + new Array(password.length + 1).join('*'));
 
-    id = db.next_id();
-    lid = db.next_id();
+    id = db.nextId();
+    lid = db.nextId();
     passwd = crypto.createHash('sha1').update(lid + ':' + crypto.createHash('sha1').update(email + ':' + password).digest('hex')).digest('hex');
 
     sql_init_admin_user = 'insert into users (id, role, name, email, verified, image_url, locked_until, created_at, updated_at, version) values (\'' + id + '\', 0, \'Admin\', \'' + email + '\', 1, \'/static/img/user.png\', 0, 1394002009000, 1394002009000, 0);\n\n' +
