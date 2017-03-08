@@ -142,12 +142,12 @@ describe('#wikis', function () {
             });
             remote.shouldHasError(r1, 'parameter:invalid', 'parent_id');
             var r2 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
-                parent_id: remote.next_id(),
+                parent_id: remote.nextId(),
                 content: 'wiki page...'
             });
             remote.shouldHasError(r2, 'parameter:invalid', 'name');
             var r3 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
-                parent_id: remote.next_id(),
+                parent_id: remote.nextId(),
                 name: 'WP'
             });
             remote.shouldHasError(r3, 'parameter:invalid', 'content');

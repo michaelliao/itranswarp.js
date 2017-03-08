@@ -16,7 +16,7 @@ var
     Attachment = db.attachment,
     Resource = db.resource,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 async function getAttachment(id) {
     var atta = await Attachment.findById(id);
@@ -41,8 +41,8 @@ async function getAttachments(page) {
 // create function(callback) with Attachment object returned in callback:
 async function createAttachment(user_id, name, description, buffer, mime, expectedImage) {
     var
-        att_id = next_id(),
-        res_id = next_id(),
+        att_id = nextId(),
+        res_id = nextId(),
         imageInfo = null;
     try {
         imageInfo = await image.getImageInfo(buffer);

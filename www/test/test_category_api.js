@@ -148,17 +148,17 @@ describe('#categories', function () {
         });
 
         it('delete a non-exist category by editor', function* () {
-            var r = yield remote.$post(roles.EDITOR, '/api/categories/' + remote.next_id() + '/delete');
+            var r = yield remote.$post(roles.EDITOR, '/api/categories/' + remote.nextId() + '/delete');
             remote.shouldHasError(r, 'permission:denied', 'permission');
         });
 
         it('delete a non-exist category by admin', function* () {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories/' + remote.next_id() + '/delete');
+            var r = yield remote.$post(roles.ADMIN, '/api/categories/' + remote.nextId() + '/delete');
             remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
 
         it('get non-exist category', function* () {
-            var r = yield remote.$get(roles.GUEST, '/api/categories/' + remote.next_id());
+            var r = yield remote.$get(roles.GUEST, '/api/categories/' + remote.nextId());
             remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
     });

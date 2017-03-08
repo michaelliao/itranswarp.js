@@ -16,7 +16,7 @@ var
     Category = db.category,
     Text = db.text,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 async function getCategories() {
     return yield Category.$findAll({

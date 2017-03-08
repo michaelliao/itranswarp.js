@@ -24,7 +24,7 @@ var
 
 var
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 var base_url = 'http://local.itranswarp.com:2015';
 
@@ -148,8 +148,8 @@ _.each(db, function (model, k) {
 
 _.each(emails, function (email, roleId) {
     var
-        id = next_id(),
-        lid = next_id(),
+        id = nextId(),
+        lid = nextId(),
         name = email.substring(0, email.indexOf('@')),
         passwd = crypto.createHash('sha1').update(lid + ':' + generatePassword(email)).digest('hex'),
         now = Date.now();
@@ -208,7 +208,7 @@ function download(path, callback) {
 
 module.exports = {
 
-    next_id: next_id,
+    nextId: nextId,
 
     base_url: base_url,
 

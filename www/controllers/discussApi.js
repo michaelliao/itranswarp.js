@@ -17,7 +17,7 @@ var
     Topic = db.topic,
     Reply = db.reply,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 function indexDiscuss(r) {
     var doc = {

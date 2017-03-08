@@ -12,7 +12,7 @@ const
 var
     Setting = db.setting,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 const
     RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;

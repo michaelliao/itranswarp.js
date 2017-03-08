@@ -1,9 +1,11 @@
-'use strict';
-
-// wiki api
-
-var
+/**
+ * Wiki api.
+ * 
+ * author: Michael Liao
+ */
+const
     _ = require('lodash'),
+    sequelize = require('sequelize'),
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
@@ -19,8 +21,7 @@ var
     Wiki = db.wiki,
     WikiPage = db.wikipage,
     Text = db.text,
-    warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 function indexWiki(r) {
     process.nextTick(function () {
@@ -47,12 +48,12 @@ function unindexWiki(r) {
 }
 
 async function getWikis() {
-    return yield Wiki.$findAll({
-        order: 'name asc'
+    return await Wiki.findAll({
+        order: 'name'
     });
 }
 
-async function getWiki(id, includeContent) {
+async function getWiki(id, includeContent=false) {
     var
         text,
         wiki = await Wiki.findById(id);
@@ -69,7 +70,7 @@ async function getWiki(id, includeContent) {
     return wiki;
 }
 
-async function getWikiPage(id, includeContent) {
+async function getWikiPage(id, includeContent=false) {
     var
         text,
         wp = await WikiPage.findById(id);
@@ -119,7 +120,7 @@ function flatten(arr, depth, children) {
     });
 }
 
-async function getWikiPages(wiki_id, returnAsDict) {
+async function getWikiPages(wiki_id, returnAsDict=false) {
     var
         proot,
         pdict = {},
@@ -140,7 +141,7 @@ async function getWikiPages(wiki_id, returnAsDict) {
     return proot.children;
 }
 
-async function getWikiTree(id, isFlatten) {
+async function getWikiTree(id, isFlatten=false) {
     var
         arr,
         wiki = await getWiki(id),
@@ -168,17 +169,17 @@ async function getNavigationMenus() {
 
 module.exports = {
 
-    $getNavigationMenus: $getNavigationMenus,
+    getNavigationMenus: getNavigationMenus,
 
-    $getWikiTree: $getWikiTree,
+    getWikiTree: getWikiTree,
 
-    $getWiki: $getWiki,
+    getWiki: getWiki,
 
-    $getWikis: $getWikis,
+    getWikis: getWikis,
 
-    $getWikiPage: $getWikiPage,
+    getWikiPage: getWikiPage,
 
-    'GET /api/wikis/:id': async (ctx, next) =>
+    'GET /api/wikis/:id': async (ctx, next) => {
         /**
          * Get wiki by id.
          * 
@@ -188,11 +189,13 @@ module.exports = {
          * @return {object} Wiki object.
          * @error {entity:notfound} Wiki was not found by id.
          */
-        var wiki = await getWiki(id, true);
-        if (this.request.query.format === 'html') {
+        var
+            id = ctx.request.params.id,
+            wiki = await getWiki(id, true);
+        if (ctx.request.query.format === 'html') {
             wiki.content = helper.md2html(wiki.content, true);
         }
-        this.body = wiki;
+        ctx.rest(wiki);
     },
 
     'GET /api/wikis': async (ctx, next) => {
@@ -231,8 +234,8 @@ module.exports = {
             data = this.request.body;
         ctx.validate('createWiki', data);
 
-        wiki_id = next_id();
-        content_id = next_id();
+        wiki_id = nextId();
+        content_id = nextId();
 
         // create image:
         attachment = yield attachmentApi.$createAttachment(
@@ -362,8 +365,8 @@ module.exports = {
             await getWikiPage(data.parent_id);
         }
 
-        wp_id = next_id(),
-        content_id = next_id();
+        wp_id = nextId(),
+        content_id = nextId();
 
         // count:
         num = yield warp.$queryNumber(

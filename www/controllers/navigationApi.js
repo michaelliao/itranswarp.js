@@ -14,7 +14,7 @@ const
 var
     Navigation = db.navigation,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 async function getNavigation(id) {
     var navigation = await Navigation.findById(id);

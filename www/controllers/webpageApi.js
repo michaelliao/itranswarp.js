@@ -14,7 +14,7 @@ var
     Webpage = db.webpage,
     Text = db.text,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 async function checkAliasAvailable(alias) {
     var p = await Webpage.findById({
@@ -129,8 +129,8 @@ module.exports = {
         data.name = data.name.trim();
         data.tags = helper.formatTags(data.tags);
         await checkAliasAvailable(data.alias);
-        content_id = next_id();
-        webpage_id = next_id();
+        content_id = nextId();
+        webpage_id = nextId();
         text = yield Text.$create({
             id: content_id,
             ref_id: webpage_id,
@@ -189,7 +189,7 @@ module.exports = {
             props.push('draft');
         }
         if (data.content) {
-            content_id = next_id();
+            content_id = nextId();
             webpage.content_id = content_id;
             props.push('content_id');
             // update content

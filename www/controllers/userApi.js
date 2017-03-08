@@ -18,7 +18,7 @@ var
     AuthUser = db.authuser,
     LocalUser = db.localuser,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 var LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
@@ -108,7 +108,7 @@ async function processOAuthAuthentication(provider_name, authentication) {
     });
     if (auth_user === null) {
         // first time to signin:
-        user_id = next_id();
+        user_id = nextId();
         user = {
             id: user_id,
             email: user_id + '@' + provider_name,

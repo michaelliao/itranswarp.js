@@ -21,7 +21,7 @@ var
     Category = db.category,
     Text = db.text,
     warp = db.warp,
-    next_id = db.next_id;
+    nextId = db.nextId;
 
 function indexArticle(r) {
     process.nextTick(function () {
@@ -283,8 +283,8 @@ module.exports = {
             null,
             true);
 
-        content_id = next_id();
-        article_id = next_id();
+        content_id = nextId();
+        article_id = nextId();
 
         text = yield Text.$create({
             id: content_id,

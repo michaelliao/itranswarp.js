@@ -202,7 +202,7 @@ describe('#articles', function () {
                 params = {
                     name: 'Test Params',
                     description: 'blablabla...',
-                    category_id: remote.next_id(),
+                    category_id: remote.nextId(),
                     tags: 'tag1,tag2,tag3',
                     content: 'a long content...',
                     image: remote.readFileSync('res-image.jpg').toString('base64')
