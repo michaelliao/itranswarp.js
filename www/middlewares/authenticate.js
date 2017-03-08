@@ -8,7 +8,6 @@ const
     crypto = require('crypto'),
     logger = require('../logger'),
     config = require('../config'),
-    constants = require('../constants'),
     api = require('../api'),
     db = require('../db'),
     COOKIE_NAME = config.session.cookie,
@@ -105,12 +104,5 @@ module.exports = async (ctx, next) => {
             throw api.notAllowed('Do not have permission.');
         }
     };
-    // check if login required for management:
-    if (path.substring(0, 8) === '/manage/' && path !== '/manage/signin') {
-        if (!ctx.state.__user__ || ctx.state.__user__.role > constants.role.CONTRIBUTOR) {
-            response.redirect('/manage/signin');
-            return;
-        }
-    }
     await next();
 };
