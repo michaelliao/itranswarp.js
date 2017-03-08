@@ -99,7 +99,7 @@ module.exports = async (ctx, next) => {
             created_at: user.created_at
         };
     }
-    ctx.state.checkPermission = (expectedRole) => {
+    ctx.checkPermission = (expectedRole) => {
         if (ctx.state.__user__ === null || (ctx.state.__user__.role > expectedRole)) {
             logger.warn('check permission failed: expected = ' + expectedRole + ', actual = ' + (ctx.state.__user__ ? ctx.state.__user__.role : 'null'));
             throw api.notAllowed('Do not have permission.');
