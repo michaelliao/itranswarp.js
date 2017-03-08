@@ -33,6 +33,30 @@ describe('#schema', function () {
         expect(data).to.not.have.property('extra');
     });
 
+    it('data is undefined', function () {
+        expect(() => {
+            schema.validate('authenticate', undefined);
+        }).to.throw(api.APIError);
+    });
+
+    it('data is null', function () {
+        expect(() => {
+            schema.validate('authenticate', null);
+        }).to.throw(api.APIError);
+    });
+
+    it('data is function', function () {
+        expect(() => {
+            schema.validate('authenticate', function () {});
+        }).to.throw(api.APIError);
+    });
+
+    it('data is str', function () {
+        expect(() => {
+            schema.validate('authenticate', '');
+        }).to.throw(api.APIError);
+    });
+
     it('parameter missing', function () {
         expect(() => {
             schema.validate('authenticate', {
