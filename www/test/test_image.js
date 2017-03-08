@@ -1,14 +1,13 @@
-'use strict';
-
-// test images:
-
+/**
+ * Test image.js
+ */
 var
     _ = require('lodash'),
     fs = require('fs'),
     should = require('should'),
-    images = require('../controllers/_images');
+    image = require('../image');
 
-describe('#images', function () {
+describe('#image', function () {
 
     it('calcScaleSize', function () {
         var image_sizes = [
@@ -77,7 +76,7 @@ describe('#images', function () {
                 expected_w = arr[5],
                 expected_h = arr[6],
                 resized = arr[7];
-            var r = images.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
+            var r = image.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
             //console.log(ori_w + 'x' + ori_h + ' > ' + res_w + 'x' + res_h + ' ===> ' + r.width + 'x' + r.height);
             should(r).be.ok;
             r.width.should.equal(expected_w);
@@ -88,17 +87,17 @@ describe('#images', function () {
         });
     });
 
-    it('get image size ok', function* () {
-        var info = yield images.$getImageInfo(fs.readFileSync('./test/res-image.jpg'));
+    it('get image size ok', async () => {
+        var info = await image.getImageInfo(fs.readFileSync('./test/res-image.jpg'));
         should(info).be.ok;
         info.format.should.equal('jpeg');
         info.width.should.equal(1280);
         info.height.should.equal(720);
     });
 
-    it('get image size with bad format', function* () {
+    it('get image size with bad format', async () => {
         try {
-            yield images.$getImageInfo(fs.readFileSync('./test/res-bad-image.jpg'));
+            await image.getImageInfo(fs.readFileSync('./test/res-bad-image.jpg'));
         }
         catch (e) {
             should(e.error).be.ok;
@@ -106,22 +105,22 @@ describe('#images', function () {
         }
     });
 
-    it('resize small', function* () {
+    it('resize small', async () => {
         var imgData = fs.readFileSync('./test/res-image.jpg');
-        var resizedData = yield images.$resizeKeepAspect(imgData, 1280, 720, 480, 270);
+        var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 480, 270);
         // check resized image:
-        var resizedInfo = yield images.$getImageInfo(resizedData);
+        var resizedInfo = await image.getImageInfo(resizedData);
         should(resizedInfo).be.ok;
         resizedInfo.format.should.equal('jpeg');
         resizedInfo.width.should.equal(480);
         resizedInfo.height.should.equal(270);
     });
 
-    it('resize large', function* () {
+    it('resize large', async () => {
         var imgData = fs.readFileSync('./test/res-image.jpg');
-        var resizedData = yield images.$resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
+        var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
         // check resized image:
-        var resizedInfo = yield images.$getImageInfo(resizedData);
+        var resizedInfo = await image.getImageInfo(resizedData);
         should(resizedInfo).be.ok;
         resizedInfo.format.should.equal('jpeg');
         resizedInfo.width.should.equal(1920);

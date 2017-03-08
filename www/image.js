@@ -1,8 +1,13 @@
-// image operation.
+/**
+ * image operation.
+ * 
+ * author: Michael Liao
+ */
 
-var
-    Promise = require('bluebird'),
-    api = require('../api'),
+const
+    bluebird = require('bluebird'),
+    api = require('./api'),
+    logger = require('./logger'),
     gm = require('gm').subClass({ imageMagick : true });
 
 function calcScaleSize(origin_width, origin_height, resize_width, resize_height, keepAspect) {
@@ -11,7 +16,7 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
     }
 
     if (resize_width <= 0 && resize_height <= 0) {
-        throw {"name": "Parameter error!"};
+        throw new Error('invalid parameter: ' + resize_width + ', ' + resize_height);
     }
     if (keepAspect === undefined) {
         keepAspect = true;
@@ -68,13 +73,13 @@ function getImageInfo(buffer, callback) {
  */
 function resizeKeepAspect(buffer, origin_width, origin_height, resize_width, resize_height, callback) {
     if (origin_width * resize_height === origin_height * resize_width && origin_width <= resize_width) {
-        console.log('no need to resize!');
+        logger.debug('no need to resize!');
         return callback(null, buffer);
     }
     var
         img = gm(buffer),
         r = calcScaleSize(origin_width, origin_height, resize_width, resize_height, true);
-    console.log('resized to ' + r.width + 'x' + r.height);
+    logger.info('resized to ' + r.width + 'x' + r.height);
     img = img.resize(r.width, r.height);
     return img.toBuffer(callback);
 }
@@ -85,7 +90,7 @@ function resizeKeepAspect(buffer, origin_width, origin_height, resize_width, res
  */
 function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize_height, callback) {
     if (origin_width * resize_height === origin_height * resize_width && origin_width <= resize_width) {
-        console.log('no need to resize!');
+        logger.debug('no need to resize!');
         return callback(null, buffer);
     }
     var
@@ -94,14 +99,14 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
         scale_height;
     if (resize_width * origin_height === origin_width * resize_height) {
         // fit!
-        console.log('resizeAsCover: fit!');
+        logger.debug('resizeAsCover: fit!');
         img = img.resize(resize_width, resize_height);
         return img.toBuffer(callback);
     }
     if (resize_width * origin_height > origin_width * resize_height) {
         // cut off top and bottom:
         scale_width = resize_width;
-        console.log('resizeAsCover: resize to: ' + scale_width + ' x ?');
+        logger.debug('resizeAsCover: resize to: ' + scale_width + ' x ?');
         img = img.resize(scale_width, null);
         // crop:
         scale_height = scale_width * origin_height / origin_width;
@@ -110,7 +115,7 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
     }
     // cut off left and right:
     scale_height = resize_height;
-    console.log('resizeAsCover: resize to: ? x ' + scale_height);
+    logger.debug('resizeAsCover: resize to: ? x ' + scale_height);
     img = img.resize(null, scale_height);
     // crop:
     scale_width = scale_height * origin_width / origin_height;
@@ -120,11 +125,11 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
 
 module.exports = {
 
-    getImageInfo: Promise.promisify(getImageInfo),
+    getImageInfo: bluebird.promisify(getImageInfo),
 
-    resizeKeepAspect: Promise.promisify(resizeKeepAspect),
+    resizeKeepAspect: bluebird.promisify(resizeKeepAspect),
 
-    resizeAsCover: Promise.promisify(resizeAsCover),
+    resizeAsCover: bluebird.promisify(resizeAsCover),
 
     calcScaleSize: calcScaleSize
 
