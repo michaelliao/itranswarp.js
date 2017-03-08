@@ -101,13 +101,6 @@ module.exports = {
         });
     },
 
-    checkPermission: function (request, expectedRole) {
-        if (!request.user || (request.user.role > expectedRole)) {
-            console.log('check permission failed: expected = ' + expectedRole + ', actual = ' + (request.user ? request.user.role : 'null'));
-            throw api.notAllowed('Do not have permission.');
-        }
-    },
-
     getPageNumber: function (request) {
         var index = string2Integer(request.query.page || '1');
         if (index === null || index < 1) {

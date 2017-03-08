@@ -10,7 +10,6 @@ var
     helper = require('../helper'),
     search = require('../search/search'),
     constants = require('../constants'),
-    json_schema = require('../json_schema'),
     userApi = require('./userApi');
 
 var
@@ -81,7 +80,7 @@ function* $getBoard(id) {
 
 function* $getBoardByTag(tag) {
     var
-        boards = yield $getBoards(),
+        boards = await getBoards(),
         filtered = _.filter(boards, function (b) {
             return b.tag === tag;
         });
@@ -98,7 +97,7 @@ function* $getBoards() {
 }
 
 function* $lockBoard(id, locked) {
-    var board = yield $getBoard(id);
+    var board = await getBoard(id);
     if (board.locked !== locked) {
         board.locked = locked;
         yield board.$update(['locked', 'updated_at', 'version']);
@@ -226,7 +225,7 @@ function* $getReplyPageIndex(topic, reply_id) {
 function* $createReply(user, topic_id, data) {
     var
         reply,
-        topic = yield $getTopic(topic_id);
+        topic = await getTopic(topic_id);
     if (topic.locked) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
@@ -247,7 +246,7 @@ function* $createReply(user, topic_id, data) {
 
 function* $createTopic(user, board_id, ref_type, ref_id, data) {
     var
-        board = yield $getBoard(board_id),
+        board = await getBoard(board_id),
         topic = yield Topic.$create({
             board_id: board_id,
             user_id: user.id,
@@ -269,19 +268,19 @@ function* $loadTopicsByRefWithCache(ref_id, page) {
     if (page.index === 1) {
         var key = 'REF-TOPICS-' + ref_id;
         return yield cache.$get(key, function* () {
-            return yield $loadTopicsByRef(ref_id, page); 
+            return await loadTopicsByRef(ref_id, page); 
         });
     }
-    return yield $loadTopicsByRef(ref_id, page);
+    return await loadTopicsByRef(ref_id, page);
 }
 
 function* $loadTopicsByRef(ref_id, page) {
     var
         i,
-        topics = yield $getTopicsByRef(ref_id, page);
+        topics = await getTopicsByRef(ref_id, page);
     yield userApi.$bindUsers(topics);
     for (i=0; i<topics.length; i++) {
-        yield $bindReplies(topics[i]);
+        await bindReplies(topics[i]);
     }
     return topics;
 }
@@ -289,7 +288,7 @@ function* $loadTopicsByRef(ref_id, page) {
 function* $bindReplies(topic) {
     var key = 'REPLIES-' + topic.id + '_' + topic.version;
     topic.replies = yield cache.$get(key, function* () {
-        var replies = yield $getFirstReplies(topic.id, 10);
+        var replies = await getFirstReplies(topic.id, 10);
         yield userApi.$bindUsers(replies);
         return replies;
     });
@@ -319,30 +318,30 @@ module.exports = {
 
     $getReplyPageIndex: $getReplyPageIndex,
 
-    'GET /api/ref/:id/topics': function* (id) {
+    'GET /api/ref/:id/topics': async (ctx, next) => {
         /**
          * Get topics by ref id
          */
         var
             page = helper.getPage(this.request, 10),
-            topics = yield $loadTopicsByRefWithCache(id, page);
+            topics = await loadTopicsByRefWithCache(id, page);
         this.body = {
             page: page,
             topics: topics
         };
     },
 
-    'GET /api/boards': function* () {
+    'GET /api/boards': async (ctx, next) => {
         /**
          * Get all boards.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         this.body = {
-            boards: yield $getBoards()
+            boards: await getBoards()
         };
     },
 
-    'POST /api/boards': function* () {
+    'POST /api/boards': async (ctx, next) => {
         /**
          * Create new board.
          * 
@@ -351,11 +350,11 @@ module.exports = {
          * @param {string} description - The description of the board.
          * @return {object} Board object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         var
             num,
             data = this.request.body;
-        json_schema.validate('createBoard', data);
+        ctx.validate('createBoard', data);
 
         num = yield Board.$findNumber('max(display_order)');
         this.body = yield Board.$create({
@@ -366,12 +365,12 @@ module.exports = {
         });
     },
 
-    'GET /api/boards/:id': function* (id) {
-        helper.checkPermission(this.request, constants.role.EDITOR);
-        this.body = yield $getBoard(id);
+    'GET /api/boards/:id': async (ctx, next) => {
+        ctx.checkPermission(constants.role.EDITOR);
+        this.body = await getBoard(id);
     },
 
-    'POST /api/boards/:id': function* (id) {
+    'POST /api/boards/:id': async (ctx, next) => {
         /**
          * Update a board.
          * 
@@ -381,15 +380,15 @@ module.exports = {
          * @param {string} [description] - The new description of the board.
          * @return {object} Board object that was updated.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
 
         var
             board,
             props = [],
             data = this.request.body;
-        json_schema.validate('updateBoard', data);
+        ctx.validate('updateBoard', data);
 
-        board = yield $getBoard(id);
+        board = await getBoard(id);
         if (data.name) {
             board.name = data.name.trim();
             props.push('name');
@@ -410,7 +409,7 @@ module.exports = {
         this.body = board;
     },
 
-    'POST /api/boards/:id/lock': function* (id) {
+    'POST /api/boards/:id/lock': async (ctx, next) => {
         /**
          * Lock the board by its id.
          * 
@@ -418,11 +417,11 @@ module.exports = {
          * @param {string} id - The id of the board.
          * @return {object} Board object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = yield $lockBoard(id, true);
+        ctx.checkPermission(constants.role.ADMIN);
+        this.body = await lockBoard(id, true);
     },
 
-    'POST /api/boards/:id/unlock': function* (id) {
+    'POST /api/boards/:id/unlock': async (ctx, next) => {
         /**
          * Unlock the board by its id.
          * 
@@ -430,11 +429,11 @@ module.exports = {
          * @param {string} id - The id of the board.
          * @return {object} Board object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = yield $lockBoard(id, false);
+        ctx.checkPermission(constants.role.ADMIN);
+        this.body = await lockBoard(id, false);
     },
 
-    'POST /api/boards/all/sort': function* () {
+    'POST /api/boards/all/sort': async (ctx, next) => {
         /**
          * Sort boards.
          *
@@ -442,16 +441,14 @@ module.exports = {
          * @param {array} id: The ids of boards.
          * @return {object} The sort result like { "sort": true }.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('sortBoards');
         var
-            board, boards,
-            i, pos, ids,
-            data = this.request.body;
-        json_schema.validate('sortBoards', data);
-
-        ids = data.ids;
-        boards = yield Board.$findAll();
+            board,
+            i, pos,
+            data = this.request.body,
+            ids = data.ids,
+            boards = await Board.findAll();
         if (ids.length !== boards.length) {
             throw api.invalidParam('ids', 'Invalid id list.');
         }
@@ -464,28 +461,26 @@ module.exports = {
             board.display_order = pos;
         }
         for (i=0; i<boards.length; i++) {
-            yield boards[i].$update(['display_order', 'updated_at', 'version']);
+            await boards[i].save({ fields: ['display_order', 'updated_at', 'version'] });
         }
-        this.body = {
-            boards: yield $getBoards()
-        };
+        ctx.rest({ boards: await getBoards() });
     },
 
-    'GET /api/boards/:id/topics': function* (board_id) {
+    'GET /api/boards/:id/topics': async (ctx, next) => {
         /**
          * Get topics by page.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             page = helper.getPage(this.request),
-            topics = yield $getTopics(board_id, page);
-        this.body = {
+            topics = await getTopics(board_id, page);
+        ctx.rest({
             page: page,
             topics: topics
-        };
+        });
     },
 
-    'POST /api/boards/:id/topics': function* (board_id) {
+    'POST /api/boards/:id/topics': async (ctx, next) => {
         /**
          * Post a new topic.
          *
@@ -495,46 +490,45 @@ module.exports = {
          * @param {string} content: The content of topic.
          * @return {object} The topic object.
          */
-        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-        var
-            topic,
+        ctx.checkPermission(constants.role.SUBSCRIBER);
+        ctx.validate('createTopic');
+        let
             data = this.request.body;
-        json_schema.validate('createTopic', data);
-        topic = yield $createTopic(this.request.user, board_id, '', '', data);
-        this.body = topic;
+            topic = await createTopic(ctx.request.user, board_id, '', '', data);
+        ctx.rest(topic);
     },
 
-    'GET /api/topics': function* () {
+    'GET /api/topics': async (ctx, next) => {
         /**
          * Get all topics.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
-            page = helper.getPage(this.request),
-            topics = yield $getAllTopics(page);
-        yield userApi.$bindUsers(topics);
-        this.body = {
+            page = helper.getPage(ctx.request),
+            topics = await getAllTopics(page);
+        await userApi.bindUsers(topics);
+        ctx.rest({
             page: page,
             topics: topics
-        };
+        });
     },
 
-    'GET /api/replies': function* () {
+    'GET /api/replies': async (ctx, next) => {
         /**
          * Get all replies by page.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             page = helper.getPage(this.request),
-            replies = yield $getAllReplies(page);
-        yield userApi.$bindUsers(replies);
-        this.body = {
+            replies = await getAllReplies(page);
+        await userApi.bindUsers(replies);
+        ctx.rest({
             page: page,
             replies: replies
-        };
+        });
     },
 
-    'POST /api/replies/:id/delete': function* (id) {
+    'POST /api/replies/:id/delete': async (ctx, next) => {
         /**
          * Delete a reply by its id. NOTE delete a reply only mark it is deleted.
          * 
@@ -542,20 +536,20 @@ module.exports = {
          * @param {string} id - The id of the reply.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
-        var reply = yield Reply.$find(id);
+        ctx.checkPermission(constants.role.EDITOR);
+        let
+            id = ctx.request.params.id,
+            reply = await Reply.findById(id);
         if (reply === null) {
             throw api.notFound('Reply');
         }
         reply.deleted = true;
-        yield reply.$update(['deleted', 'updated_at', 'version']);
+        await reply.$update(['deleted', 'updated_at', 'version']);
         unindexDiscuss(reply);
-        this.body = {
-            id: id
-        };
+        ctx.rest({ 'id': id });
     },
 
-    'POST /api/topics/:id/delete': function* (id) {
+    'POST /api/topics/:id/delete': async (ctx, next) => {
         /**
          * Delete a topic by its id.
          * 
@@ -563,21 +557,20 @@ module.exports = {
          * @param {string} id - The id of the topic.
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
-        var
-            topic = yield $getTopic(id),
-            reply_ids = yield warp.$query('select id from replies where topic_id=?', [id]);
-        yield topic.$destroy();
-        yield warp.$update('delete from replies where topic_id=?', [id]); 
-        yield warp.$update('update boards set topics = topics - 1 where id=?', [topic.board_id]); 
+        ctx.checkPermission(constants.role.EDITOR);
+        let
+            id = ctx.request.params.id,
+            topic = await getTopic(id),
+            reply_ids = await warp.$query('select id from replies where topic_id=?', [id]);
+        await topic.destroy();
+        await Reply.$update('delete from replies where topic_id=?', [id]);
+        await Board.$update('update boards set topics = topics - 1 where id=?', [topic.board_id]);
         unindexDiscuss(topic);
         unindexDiscussByIds(reply_ids);
-        this.body = {
-            id: id
-        };
+        ctx.rest({ 'id': id });
     },
 
-    'POST /api/topics/:id/replies': function* (id) {
+    'POST /api/topics/:id/replies': async (ctx, next) => {
         /**
          * Create a reply to a topic.
          * 
@@ -585,10 +578,9 @@ module.exports = {
          * @param {string} content: The content of reply.
          * @return {object} The reply object.
          */
-        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-        var data = this.request.body;
-        json_schema.validate('createReply', data);
-        this.body = yield $createReply(this.request.user, id, data);
+        ctx.checkPermission(constants.role.SUBSCRIBER);
+        ctx.validate('createReply');
+        var data = ctx.request.body;
+        ctx.rest(await createReply(ctx.state.__user__, id, data));
     }
-
 };

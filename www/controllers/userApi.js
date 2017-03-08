@@ -11,7 +11,6 @@ var
     auth = require('../auth'),
     helper = require('../helper'),
     config = require('../config'),
-    json_schema = require('../json_schema'),
     constants = require('../constants');
 
 var
@@ -88,7 +87,7 @@ function* $bindUsers(entities, propName) {
 }
 
 function* $lockUser(id, lockTime) {
-    var user = yield $getUser(id);
+    var user = await getUser(id);
     if (user.role <= constants.role.ADMIN) {
         throw api.notAllowed('Cannot lock admin user.');
     }
@@ -169,23 +168,23 @@ module.exports = {
 
     $bindUsers: $bindUsers,
 
-    'GET /api/users/:id': function* (id) {
-        helper.checkPermission(this.request, constants.role.EDITOR);
-        this.body = yield $getUser(id);
+    'GET /api/users/:id': async (ctx, next) =>
+        ctx.checkPermission(constants.role.EDITOR);
+        this.body = await getUser(id);
     },
 
-    'GET /api/users': function* () {
-        helper.checkPermission(this.request, constants.role.EDITOR);
+    'GET /api/users': async (ctx, next) => {
+        ctx.checkPermission(constants.role.EDITOR);
         var
             page = helper.getPage(this.request),
-            users = yield $getUsers(page);
+            users = await getUsers(page);
         this.body = {
             page: page,
             users: users
         };
     },
 
-    'POST /api/authenticate': function* () {
+    'POST /api/authenticate': async (ctx, next) => {
         /**
          * Authenticate user by email and password, for local user only.
          * 
@@ -198,11 +197,11 @@ module.exports = {
             user,
             localuser,
             data = this.request.body;
-        json_schema.validate('authenticate', data);
+        ctx.validate('authenticate', data);
 
         email = data.email,
         passwd = data.passwd;
-        user = yield $getUserByEmail(email);
+        user = await getUserByEmail(email);
         if (user === null) {
             throw api.authFailed('email', 'Email not found.');
         }
@@ -233,7 +232,7 @@ module.exports = {
         this.body = user;
     },
 
-    'GET /auth/signout': function* () {
+    'GET /auth/signout': async (ctx, next) => {
         this.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
@@ -244,7 +243,7 @@ module.exports = {
         this.response.redirect(redirect);
     },
 
-    'GET /auth/from/:name': function* (name) {
+    'GET /auth/from/:name': async (ctx, next) =>
         var provider, redirect, redirect_uri, jscallback, r;
         provider = oauth2_providers[name];
         if (!provider) {
@@ -271,7 +270,7 @@ module.exports = {
         this.response.redirect(r);
     },
 
-    'GET /auth/callback/:name': function* (name) {
+    'GET /auth/callback/:name': async (ctx, next) =>
         var provider, redirect, redirect_uri, code, jscallback, authentication, r, auth_user, user, cookieStr;
         provider = oauth2_providers[name];
         if (!provider) {
@@ -298,7 +297,7 @@ module.exports = {
             return;
         }
         console.log('OAuth2 callback ok: ' + JSON.stringify(authentication));
-        r = yield $processOAuthAuthentication(name, authentication);
+        r = await processOAuthAuthentication(name, authentication);
         auth_user = r.auth_user;
         user = r.user;
         if (user.locked_until > Date.now()) {
@@ -328,13 +327,13 @@ module.exports = {
         }
     },
 
-    'POST /api/users/:id/lock': function* (id) {
+    'POST /api/users/:id/lock': async (ctx, next) =>
         var locked_until = this.request.body.locked_until;
         if (!helper.isInteger(locked_until) || (locked_until < 0)) {
             throw api.invalidParam('locked_until', 'locked_until must be an integer as a timestamp.');
         }
-        helper.checkPermission(this.request, constants.role.EDITOR);
-        yield $lockUser(id, locked_until);
+        ctx.checkPermission(constants.role.EDITOR);
+        await lockUser(id, locked_until);
         this.body = {
             locked_until: locked_until
         };

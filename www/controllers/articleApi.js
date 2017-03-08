@@ -8,8 +8,7 @@ const
     images = require('./_images'),
     helper = require('../helper'),
     constants = require('../constants'),
-    search = require('../search/search'),
-    json_schema = require('../json_schema');
+    search = require('../search/search');
 
 const
     settingApi = require('./settingApi'),
@@ -248,7 +247,7 @@ module.exports = {
         };
     },
 
-    'POST /api/articles': function* () {
+    'POST /api/articles': async (ctx, next) => {
         /**
          * Create a new article.
          * 
@@ -264,7 +263,8 @@ module.exports = {
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('createArticle');
         var
             text,
             article,
@@ -272,7 +272,6 @@ module.exports = {
             article_id,
             content_id,
             data = this.request.body;
-        json_schema.validate('createArticle', data);
         // check category id:
         yield categoryApi.$getCategory(data.category_id);
 
@@ -312,7 +311,7 @@ module.exports = {
         this.body = article;
     },
 
-    'POST /api/articles/:id': function* (id) {
+    'POST /api/articles/:id': async (ctx, next) =>
         /**
          * Update an exist article.
          * 
@@ -329,7 +328,8 @@ module.exports = {
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('updateArticle');
         var
             user = this.request.user,
             article,
@@ -337,9 +337,8 @@ module.exports = {
             text,
             attachment,
             data = this.request.body;
-        json_schema.validate('updateArticle', data);
 
-        article = yield $getArticle(id);
+        article = await getArticle(id);
         if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
             throw api.notAllowed('Permission denied.');
         }
@@ -397,7 +396,7 @@ module.exports = {
         this.body = article;
     },
 
-    'POST /api/articles/:id/delete': function* (id) {
+    'POST /api/articles/:id/delete': async (ctx, next) =>
         /**
          * Delete an article.
          * 
@@ -407,10 +406,10 @@ module.exports = {
          * @error {resource:notfound} Article not found by id.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             user = this.request.user,
-            article = yield $getArticle(id);
+            article = await getArticle(id);
         if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
             throw api.notAllowed('Permission denied.');
         }

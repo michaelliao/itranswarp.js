@@ -9,8 +9,7 @@ var
     helper = require('../helper'),
     images = require('./_images'),
     search = require('../search/search'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    constants = require('../constants');
 
 var
     attachmentApi = require('./attachmentApi');
@@ -144,8 +143,8 @@ function* $getWikiPages(wiki_id, returnAsDict) {
 function* $getWikiTree(id, isFlatten) {
     var
         arr,
-        wiki = yield $getWiki(id),
-        children = yield $getWikiPages(id);
+        wiki = await getWiki(id),
+        children = await getWikiPages(id);
     if (isFlatten) {
         arr = [];
         flatten(arr, 0, children);
@@ -158,7 +157,7 @@ function* $getWikiTree(id, isFlatten) {
 }
 
 function* $getNavigationMenus() {
-    var ws = yield $getWikis();
+    var ws = await getWikis();
     return _.map(ws, function (w) {
         return {
             name: w.name,
@@ -179,7 +178,7 @@ module.exports = {
 
     $getWikiPage: $getWikiPage,
 
-    'GET /api/wikis/:id': function* (id) {
+    'GET /api/wikis/:id': async (ctx, next) =>
         /**
          * Get wiki by id.
          * 
@@ -189,14 +188,14 @@ module.exports = {
          * @return {object} Wiki object.
          * @error {entity:notfound} Wiki was not found by id.
          */
-        var wiki = yield $getWiki(id, true);
+        var wiki = await getWiki(id, true);
         if (this.request.query.format === 'html') {
             wiki.content = helper.md2html(wiki.content, true);
         }
         this.body = wiki;
     },
 
-    'GET /api/wikis': function* () {
+    'GET /api/wikis': async (ctx, next) => {
         /**
          * Get all wikis.
          * 
@@ -204,11 +203,11 @@ module.exports = {
          * @return {object} Wikis object.
          */
         this.body = {
-            wikis: yield $getWikis()
+            wikis: await getWikis()
         };
     },
 
-    'POST /api/wikis': function* () {
+    'POST /api/wikis': async (ctx, next) => {
         /**
          * Create a new wiki.
          * 
@@ -222,7 +221,7 @@ module.exports = {
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             wiki,
             text,
@@ -230,7 +229,7 @@ module.exports = {
             content_id,
             attachment,
             data = this.request.body;
-        json_schema.validate('createWiki', data);
+        ctx.validate('createWiki', data);
 
         wiki_id = next_id();
         content_id = next_id();
@@ -264,7 +263,7 @@ module.exports = {
         this.body = wiki;
     },
 
-    'POST /api/wikis/:id': function* (id) {
+    'POST /api/wikis/:id': async (ctx, next) =>
         /**
          * Update a wiki.
          * 
@@ -277,7 +276,7 @@ module.exports = {
          * @param {string} [image]: Base64 encoded string as cover image.
          * @return {object} The updated wiki object.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             wiki,
             text,
@@ -286,9 +285,9 @@ module.exports = {
             attachment,
             props = [],
             data = this.request.body;
-        json_schema.validate('updateWiki', data);
+        ctx.validate('updateWiki', data);
 
-        wiki = yield $getWiki(id);
+        wiki = await getWiki(id);
         if (data.name) {
             wiki.name = data.name.trim();
             props.push('name');
@@ -334,7 +333,7 @@ module.exports = {
         this.body = wiki;
     },
 
-    'POST /api/wikis/:id/wikipages': function* (wiki_id) {
+    'POST /api/wikis/:id/wikipages': async (ctx, next) =>
         /**
          * Create a new wiki page.
          * 
@@ -347,20 +346,20 @@ module.exports = {
          * @error {parameter:invalid} If some parameter is invalid.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             wiki,
             wikipage,
             text,
             num, wp_id, content_id,
             data = this.request.body;
-        json_schema.validate('createWikiPage', data);
+        ctx.validate('createWikiPage', data);
 
         // check wiki id:
-        yield $getWiki(wiki_id);
+        await getWiki(wiki_id);
         // check parent id:
         if (data.parent_id) {
-            yield $getWikiPage(data.parent_id);
+            await getWikiPage(data.parent_id);
         }
 
         wp_id = next_id(),
@@ -391,7 +390,7 @@ module.exports = {
         this.body = wikipage;
     },
 
-    'POST /api/wikis/wikipages/:id': function* (id) {
+    'POST /api/wikis/wikipages/:id': async (ctx, next) =>
         /**
          * Update a wiki page.
          * 
@@ -401,15 +400,15 @@ module.exports = {
          * @param {string} [content]: The content of the wiki page.
          * @return {object} The updated wiki object.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
             wikipage,
             text,
             props = [],
             data = this.request.body;
-        json_schema.validate('updateWikiPage', data);
+        ctx.validate('updateWikiPage', data);
 
-        wikipage = yield $getWikiPage(id);
+        wikipage = await getWikiPage(id);
         if (data.name) {
             wikipage.name = data.name.trim();
             props.push('name');
@@ -437,7 +436,7 @@ module.exports = {
         this.body = wikipage;
     },
 
-    'GET /api/wikis/wikipages/:id': function* (id) {
+    'GET /api/wikis/wikipages/:id': async (ctx, next) =>
         /**
          * Get wiki page by id.
          * 
@@ -447,14 +446,14 @@ module.exports = {
          * @return {object} WikiPage object.
          * @error {resource:notfound} WikiPage was not found by id.
          */
-        var wp = yield $getWikiPage(id, true);
+        var wp = await getWikiPage(id, true);
         if (this.request.query.format === 'html') {
             wp.content = helper.md2html(wp.content, true);
         }
         this.body = wp;
     },
 
-    'GET /api/wikis/:id/wikipages': function* (id) {
+    'GET /api/wikis/:id/wikipages': async (ctx, next) =>
         /**
          * Get wiki pages as a tree list.
          * 
@@ -462,10 +461,10 @@ module.exports = {
          * @param {string} id - The id of the wiki.
          * @return {object} The full tree object.
          */
-        this.body = yield $getWikiTree(id);
+        this.body = await getWikiTree(id);
     },
 
-    'POST /api/wikis/wikipages/:id/move': function* (id) {
+    'POST /api/wikis/wikipages/:id/move': async (ctx, next) =>
         /**
          * Move a wikipage to another node.
          * 
@@ -475,7 +474,7 @@ module.exports = {
          * @param {int} index: The index of the moved page.
          * @return {object} The moved wiki object.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
 
         var
             index, p, parent_id, i, L,
@@ -484,12 +483,12 @@ module.exports = {
             parentPage,
             allPages,
             data = this.request.body;
-        json_schema.validate('moveWikiPage', data);
+        ctx.validate('moveWikiPage', data);
 
         index = data.index;
         parent_id = data.parent_id;
 
-        movingPage = yield $getWikiPage(id);
+        movingPage = await getWikiPage(id);
 
         if (movingPage.parent_id === parent_id && movingPage.display_order === index) {
             console.log('>> No need to update.');
@@ -497,15 +496,15 @@ module.exports = {
             return;
         }
 
-        wiki = yield $getWiki(movingPage.wiki_id);
+        wiki = await getWiki(movingPage.wiki_id);
 
-        parentPage = parent_id === '' ? null : yield $getWikiPage(parent_id);
+        parentPage = parent_id === '' ? null : await getWikiPage(parent_id);
         if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
             throw api.invalidParam('parent_id');
         }
 
         // check to prevent recursive:
-        allPages = yield $getWikiPages(wiki.id, true);
+        allPages = await getWikiPages(wiki.id, true);
         if (parentPage !== null) {
             p = parentPage;
             while (p.parent_id !== '') {
@@ -540,7 +539,7 @@ module.exports = {
         this.body = movingPage;
     },
 
-    'POST /api/wikis/wikipages/:id/delete': function* (id) {
+    'POST /api/wikis/wikipages/:id/delete': async (ctx, next) =>
         /**
          * Delete a wikipage if it has no child wikipage.
          *
@@ -548,9 +547,9 @@ module.exports = {
          * @param {string} id - The id of the wikipage.
          * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
-            wikipage = yield $getWikiPage(id),
+            wikipage = await getWikiPage(id),
             num = yield WikiPage.$findNumber({
                 select: 'count(id)',
                 where: 'parent_id=?',
@@ -570,7 +569,7 @@ module.exports = {
         };
     },
 
-    'POST /api/wikis/:id/delete': function* (id) {
+    'POST /api/wikis/:id/delete': async (ctx, next) =>
         /**
          * Delete a wiki by its id.
          * 
@@ -579,9 +578,9 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          * @error {resource:notfound} If resource not found by id.
          */
-        helper.checkPermission(this.request, constants.role.EDITOR);
+        ctx.checkPermission(constants.role.EDITOR);
         var
-            wiki = yield $getWiki(id),
+            wiki = await getWiki(id),
             num = yield WikiPage.$findNumber({
                 select: 'count(id)',
                 where: 'wiki_id=?',

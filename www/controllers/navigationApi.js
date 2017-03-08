@@ -9,8 +9,7 @@ const
     cache = require('../cache'),
     helper = require('../helper'),
     config = require('../config'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    constants = require('../constants');
 
 var
     Navigation = db.navigation,
@@ -61,7 +60,7 @@ module.exports = {
          * @name Get NavigationMenus
          * @return {object} Result like {"navigationMenus": [navigation array]}
          */
-        ctx.state.checkPermission(constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         ctx.rest({
             navigationMenus: await getNavigationMenus()
         });
@@ -74,7 +73,7 @@ module.exports = {
          * @name Get Navigations
          * @return {object} Result like {"navigations": [navigation array]}
          */
-        ctx.state.checkPermission(constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         ctx.rest({
             navigations: await getNavigations()
         });
@@ -89,13 +88,13 @@ module.exports = {
          * @param {string} url: The URL of the navigation.
          * @return {object} The navigation object.
          */
-        ctx.state.checkPermission(constants.role.ADMIN);
-        var
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('createNavigation');
+        let
             name,
             url,
             num,
             data = ctx.request.body;
-        json_schema.validate('createNavigation', data);
         name = data.name.trim();
         url = data.url.trim();
 
@@ -116,9 +115,9 @@ module.exports = {
          * @param {array} id: The ids of the navigation.
          * @return {object} The sort result like {"sort":true}.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        var data = this.request.body;
-        json_schema.validate('sortNavigations', data);
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('sortNavigations');
+        let data = this.request.body;
         ctx.rest({
             navigations: await helper.$sort(data.ids, await getNavigations())
         });
@@ -133,7 +132,7 @@ module.exports = {
          * @param {string} id: The id of the navigation.
          * @return {object} The deleted navigation id like {"id":"123"}.
          */
-        ctx.state.checkPermission(constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         let
             id = ctx.request.params.id,
             navigation = await getNavigation(id);

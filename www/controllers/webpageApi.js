@@ -2,13 +2,12 @@
 
 // static webpage api
 
-var
+const
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    constants = require('../constants');
 
 var
     User = db.user,
@@ -65,7 +64,7 @@ function* $getWebpageByAlias(alias, includeContent) {
 }
 
 function* $getNavigationMenus() {
-    var ps = yield $getWebpages();
+    var ps = await getWebpages();
     return _.map(ps, function (p) {
         return {
             name: p.name,
@@ -84,7 +83,7 @@ module.exports = {
 
     $getWebpageByAlias: $getWebpageByAlias,
 
-    'GET /api/webpages/:id': function* (id) {
+    'GET /api/webpages/:id': async (ctx, next) =>
         /**
          * Get webpage by id.
          * 
@@ -92,10 +91,10 @@ module.exports = {
          * @param {string} id - The id of the Webpage.
          * @return {object} Webpage object.
          */
-        this.body = yield $getWebpage(id, true);
+        this.body = await getWebpage(id, true);
     },
 
-    'GET /api/webpages': function* () {
+    'GET /api/webpages': async (ctx, next) => {
         /**
          * Get all Webpages object (but no content value).
          * 
@@ -103,11 +102,11 @@ module.exports = {
          * @return {object} Result as {"webpages": [{webpage}, {webpage}...]}
          */
         this.body = {
-            webpages: yield $getWebpages()
+            webpages: await getWebpages()
         };
     },
 
-    'POST /api/webpages': function* () {
+    'POST /api/webpages': async (ctx, next) => {
         /**
          * Create a new webpage.
          * 
@@ -119,17 +118,17 @@ module.exports = {
          * @param {string} [tags]: The tags of the webpage, seperated by ','.
          * @return {object} The created webpage object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         var
             content_id,
             webpage_id,
             text,
             webpage,
             data = this.request.body;
-        json_schema.validate('createWebpage', data);
+        ctx.validate('createWebpage', data);
         data.name = data.name.trim();
         data.tags = helper.formatTags(data.tags);
-        yield $checkAliasAvailable(data.alias);
+        await checkAliasAvailable(data.alias);
         content_id = next_id();
         webpage_id = next_id();
         text = yield Text.$create({
@@ -150,7 +149,7 @@ module.exports = {
         this.body = webpage;
     },
 
-    'POST /api/webpages/:id': function* (id) {
+    'POST /api/webpages/:id': async (ctx, next) =>
         /**
          * Update webpage by id.
          * 
@@ -163,17 +162,17 @@ module.exports = {
          * @param {string} [tags]: The tags of the webpage, seperated by ','.
          * @return {object} Updated webpage object.
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
+        ctx.checkPermission(constants.role.ADMIN);
         var
             content_id = null,
             webpage,
             text,
             props = [],
             data = this.request.body;
-        json_schema.validate('updateWebpage', data);
-        webpage = yield $getWebpage(id);
+        ctx.validate('updateWebpage', data);
+        webpage = await getWebpage(id);
         if (data.alias && data.alias!==webpage.alias) {
-            yield $checkAliasAvailable(data.alias);
+            await checkAliasAvailable(data.alias);
             webpage.alias = data.alias;
             props.push('alias');
         }
@@ -216,7 +215,7 @@ module.exports = {
         this.body = webpage;
     },
 
-    'POST /api/webpages/:id/delete': function* (id) {
+    'POST /api/webpages/:id/delete': async (ctx, next) =>
         /**
          * Delete a webpage by its id.
          * 
@@ -224,8 +223,8 @@ module.exports = {
          * @param {string} id - The id of the webpage.
          * @return {object} Results contains id of the webpage, e.g. {"id": "12345"}
          */
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        var webpage = yield $getWebpage(id);
+        ctx.checkPermission(constants.role.ADMIN);
+        var webpage = await getWebpage(id);
         yield webpage.$destroy();
         // delete all texts:
         warp.$update('delete from texts where ref_id=?', [id]);

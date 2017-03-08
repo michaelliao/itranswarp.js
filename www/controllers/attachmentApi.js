@@ -9,8 +9,7 @@ var
     db = require('../db'),
     helper = require('../helper'),
     constants = require('../constants'),
-    images = require('./_images'),
-    json_schema = require('../json_schema');
+    image = require('../image');
 
 var
     User = db.user,
@@ -46,7 +45,7 @@ function* $createAttachment(user_id, name, description, buffer, mime, expectedIm
         res_id = next_id(),
         imageInfo = null;
     try {
-        imageInfo = yield images.$getImageInfo(buffer);
+        imageInfo = await image.getImageInfo(buffer);
     }
     catch (e) {
         // not an image
@@ -82,22 +81,23 @@ function* $createAttachment(user_id, name, description, buffer, mime, expectedIm
     });
 }
 
-function* $downloadDefaultAttachment(id) {
-    yield $downloadAttachment.apply(this, [id, '0']);
-}
-
-function* $downloadAttachment(id, size) {
+async function downloadAttachment(ctx, next) {
+    let
+        id = ctx.request.params.id,
+        size = ctx.request.params.size || '0';
     if ('0sml'.indexOf(size) === (-1)) {
-        this.status = 404;
+        ctx.response.status = 404;
         return;
     }
     var
-        atta = yield $getAttachment(id),
+        atta = await getAttachment(id),
         mime = atta.mime,
-        resource = yield Resource.$find(atta.resource_id),
+        resource = await Resource.findById(atta.resource_id),
         data, origin_width, origin_height, target_width, resize;
     if (resource === null) {
-        throw api.notFound('Resource');
+        logger.error('could not find resource by id: ' + atta.resource_id);
+        ctx.response.status = 500;
+        return;
     }
     data = resource.value;
     if (size !== '0') {
@@ -125,11 +125,11 @@ function* $downloadAttachment(id, size) {
             }
         }
         if (resize) {
-            data = yield images.$resizeKeepAspect(data, origin_width, origin_height, target_width, 0);
+            data = await image.resizeKeepAspect(data, origin_width, origin_height, target_width, 0);
         }
     }
-    this.response.type = resize ? 'image/jpeg' : mime;
-    this.body = data;
+    ctx.response.type = resize ? 'image/jpeg' : mime;
+    ctx.response.body = data;
 }
 
 module.exports = {
@@ -140,11 +140,11 @@ module.exports = {
 
     $createAttachment: $createAttachment,
 
-    'GET /files/attachments/:id': $downloadDefaultAttachment,
+    'GET /files/attachments/:id': downloadAttachment,
 
-    'GET /files/attachments/:id/:size': $downloadAttachment,
+    'GET /files/attachments/:id/:size': downloadAttachment,
 
-    'GET /api/attachments/:id': function* (id) {
+    'GET /api/attachments/:id': async (ctx, next) =>
         /**
          * Get attachment.
          * 
@@ -153,10 +153,10 @@ module.exports = {
          * @return {object} Attachment object.
          * @error {resource:notfound} Attachment was not found by id.
          */
-        this.body = yield $getAttachment(id);
+        this.body = await getAttachment(id);
     },
 
-    'GET /api/attachments': function* () {
+    'GET /api/attachments': async (ctx, next) => {
         /**
          * Get attachments by page.
          * 
@@ -166,14 +166,14 @@ module.exports = {
          */
         var
             page = helper.getPage(this.request),
-            attachments = yield $getAttachments(page);
+            attachments = await getAttachments(page);
         this.body = {
             page: page,
             attachments: attachments
         };
     },
 
-    'POST /api/attachments/:id/delete': function* (id) {
+    'POST /api/attachments/:id/delete': async (ctx, next) =>
         /**
          * Delete an attachment by its id.
          * 
@@ -183,9 +183,9 @@ module.exports = {
          * @error {resource:notfound} Attachment was not found by id.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
+        ctx.checkPermission(constants.role.CONTRIBUTOR);
         var
-            atta = yield $getAttachment(id);
+            atta = await getAttachment(id);
         if (this.request.user.role !== constants.role.ADMIN && this.request.user.id !== atta.user_id) {
             throw api.notAllowed('Permission denied.');
         }
@@ -198,7 +198,7 @@ module.exports = {
         };
     },
 
-    'POST /api/attachments': function* () {
+    'POST /api/attachments': async (ctx, next) => {
         /**
          * Create a new attachment.
          * 
@@ -210,13 +210,13 @@ module.exports = {
          * @return {object} The created attachment object.
          * @error {permission:denied} If current user has no permission.
          */
-        helper.checkPermission(this.request, constants.role.CONTRIBUTOR);
+        ctx.checkPermission(constants.role.CONTRIBUTOR);
+        ctx.validate('createAttachment');
         var
             buffer,
             data = this.request.body;
-        json_schema.validate('createAttachment', data);
         buffer = new Buffer(data.data, 'base64');
-        this.body = yield $createAttachment(
+        this.body = await createAttachment(
             this.request.user.id,
             data.name.trim(),
             data.description.trim(),

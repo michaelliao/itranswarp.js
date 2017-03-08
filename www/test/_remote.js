@@ -2,10 +2,10 @@
 
 // api test fixture which expose the following functions:
 // 
-// yield $sql(sql, params) - execute sql with parameters.
-// yield $get(role, path, params)
-// yield $post(role, path, params)
-// yield $download(path, params)
+// await sql(sql, params) - execute sql with parameters.
+// await get(role, path, params)
+// await post(role, path, params)
+// await download(path, params)
 
 var config = require('../config');
 
@@ -172,15 +172,15 @@ function* $initDatabase() {
 }
 
 function* $get(role, path, params) {
-    return yield $http('GET', role, path, params);
+    return await http('GET', role, path, params);
 }
 
 function* $post(role, path, params) {
-    return yield $http('POST', role, path, params);
+    return await http('POST', role, path, params);
 }
 
 function* $upload(role, path, params) {
-    return yield $http('UPLOAD', role, path, params);
+    return await http('UPLOAD', role, path, params);
 }
 
 function download(path, callback) {
@@ -220,7 +220,7 @@ module.exports = {
 
     setup: function (done) {
         co(function* () {
-            yield $initDatabase();
+            await initDatabase();
         }).then(function (result) {
             done();
         }, function (err) {

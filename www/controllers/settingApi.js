@@ -1,20 +1,21 @@
-'use strict';
-
-// setting api
-
-var
+/**
+ * Setting API.
+ */
+const
     _ = require('lodash'),
     db = require('../db'),
     api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    constants = require('../constants');
 
 var
     Setting = db.setting,
     warp = db.warp,
     next_id = db.next_id;
+
+const
+    RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
 
 // default settings:
 var defaultSettingDefinitions = {
@@ -130,17 +131,16 @@ var defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v, k
     return r;
 }, {});
 
-console.log('default settings:');
-console.log(JSON.stringify(defaultSettingValues, null, '    '));
+logger.info('default settings:\n' + JSON.stringify(defaultSettingValues, null, '  '));
 
-function* $getNavigationMenus() {
+async function getNavigationMenus() {
     return [{
         name: 'Custom',
         url: 'http://'
     }];
 }
 
-function* $getSettings(group) {
+async function getSettings(group) {
     // get settings by group, return object with key - value,
     // prefix of key has been removed:
     // 'group1:key1' ==> 'key1'
@@ -157,7 +157,7 @@ function* $getSettings(group) {
     return obj;
 }
 
-function* $getSetting(key, defaultValue) {
+async function getSetting(key, defaultValue) {
     var setting = yield Setting.$find({
         where: '`key`=?',
         params: [key]
@@ -168,9 +168,7 @@ function* $getSetting(key, defaultValue) {
     return setting.value;
 }
 
-var RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
-
-function* $setSetting(key, value) {
+async function setSetting(key, value) {
     var
         m = key.match(RE_KEY),
         group;
@@ -186,12 +184,12 @@ function* $setSetting(key, value) {
     });
 }
 
-function* $setSettings(group, settings) {
-    yield warp.$update('delete from settings where `group`=?', [group]);
+async function setSettings(group, settings) {
+    await warp.$update('delete from settings where `group`=?', [group]);
     var key;
     for (key in settings) {
         if (settings.hasOwnProperty(key)) {
-            yield Setting.$create({
+            await Setting.create({
                 group: group,
                 key: group + ':' + key,
                 value: settings[key]
@@ -202,7 +200,7 @@ function* $setSettings(group, settings) {
 
 function* $getSettingsByDefaults(name, defaults) {
     var
-        settings = yield $getSettings(name),
+        settings = await getSettings(name),
         key,
         s = {};
     for (key in defaults) {
@@ -219,23 +217,23 @@ var
 
 function* $getWebsiteSettings() {
     return yield cache.$get(KEY_WEBSITE, function* () {
-        return yield $getSettingsByDefaults('website', defaultSettingValues.website);
+        return await getSettingsByDefaults('website', defaultSettingValues.website);
     });
 }
 
 function* $setWebsiteSettings(settings) {
-    yield $setSettings('website', settings);
+    await setSettings('website', settings);
     yield cache.$remove(KEY_WEBSITE);
 }
 
 function* $getSnippets() {
     return yield cache.$get(KEY_SNIPPETS, function* () {
-        return yield $getSettingsByDefaults('snippets', defaultSettingValues.snippets);
+        return await getSettingsByDefaults('snippets', defaultSettingValues.snippets);
     });
 }
 
 function* $setSnippets(settings) {
-    yield $setSettings('snippets', settings);
+    await setSettings('snippets', settings);
     yield cache.$remove(KEY_SNIPPETS);
 }
 
@@ -257,34 +255,34 @@ module.exports = {
 
     $getSnippets: $getSnippets,
 
-    'GET /api/settings/definitions': function* () {
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = defaultSettingDefinitions;
+    'GET /api/settings/definitions': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.rest(defaultSettingDefinitions);
     },
 
-    'GET /api/settings/website': function* () {
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = yield $getWebsiteSettings();
+    'GET /api/settings/website': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.rest(await getWebsiteSettings());
     },
 
-    'POST /api/settings/website': function* () {
-        helper.checkPermission(this.request, constants.role.ADMIN);
+    'POST /api/settings/website': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.validateSchema('updateWebsiteSettings');
         var data = this.request.body;
-        json_schema.validate('updateWebsiteSettings', data);
-        yield $setWebsiteSettings(data);
-        this.body = yield $getWebsiteSettings();
+        await setWebsiteSettings(data);
+        ctx.rest(await getWebsiteSettings());
     },
 
-    'GET /api/settings/snippets': function* () {
-        helper.checkPermission(this.request, constants.role.ADMIN);
-        this.body = yield $getSnippets();
+    'GET /api/settings/snippets': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.rest(await getSnippets());
     },
 
-    'POST /api/settings/snippets': function* () {
-        helper.checkPermission(this.request, constants.role.ADMIN);
+    'POST /api/settings/snippets': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
         var data = this.request.body;
-        json_schema.validate('updateSnippets', data);
-        yield $setSnippets(data);
-        this.body = yield $getSnippets();
+        ctx.validate('updateSnippets', data);
+        await setSnippets(data);
+        ctx.rest(await getSnippets());
     }
 };

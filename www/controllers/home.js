@@ -1,7 +1,8 @@
-'use strict';
-
-// home.js
-
+/**
+ * UI controller.
+ * 
+ * author: Michael Liao
+ */
 var
     _ = require('lodash'),
     api = require('../api'),
@@ -11,8 +12,7 @@ var
     cache = require('../cache'),
     helper = require('../helper'),
     constants = require('../constants'),
-    searchEngine = require('../search/search').engine,
-    json_schema = require('../json_schema');
+    searchEngine = require('../search/search').engine;
 
 var
     User = db.user,
@@ -65,20 +65,18 @@ var
         return r;
     }, {});
 
-var isSyncComments = config.session.syncComments;
-
-var $getNavigations = function* () {
-    return yield cache.$get(constants.cache.NAVIGATIONS, navigationApi.$getNavigations);
-};
-
 var
     WRITE_VIEWS_BACK = 100,
     THEME = config.theme,
     PRODUCTION = process.productionMode;
 
-function* $getModel(model) {
+async function getNavigations() {
+    return await cache.get(constants.cache.NAVIGATIONS, navigationApi.getNavigations);
+};
+
+async function getModel(model) {
     model.__production__ = PRODUCTION;
-    model.__navigations__ = yield $getNavigations();
+    model.__navigations__ = await getNavigations();
     model.__website__ = yield settingApi.$getWebsiteSettings();
     model.__snippets__ = yield settingApi.$getSnippets();
     model.__signins__ = signins;
@@ -128,12 +126,12 @@ function* getIndexModel() {
 
 module.exports = {
 
-    'GET /': function* () {
+    'GET /': async (ctx, next) => {
         var model = yield cache.$get('INDEX-MODEL', getIndexModel);
-        this.render(getView('index.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('index.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /category/:id': function* (id) {
+    'GET /category/:id': async (ctx, next) =>
         var
             a,
             page = helper.getPage(this.request, 10),
@@ -150,10 +148,10 @@ module.exports = {
             a = model.articles[i];
             a.views = a.views + nums[i];
         }
-        this.render(getView('article/category.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('article/category.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /article/:id': function* (id) {
+    'GET /article/:id': async (ctx, next) =>
         var
             article = yield articleApi.$getArticle(id, true),
             num = yield cache.$incr(id),
@@ -164,13 +162,13 @@ module.exports = {
             };
         article.views = article.views + num;
         if (num > WRITE_VIEWS_BACK) {
-            yield $updateEntityViews(article);
+            await updateEntityViews(article);
         }
         article.content = helper.md2html(article.content, true);
-        this.render(getView('article/article.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('article/article.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /webpage/:alias': function* (alias) {
+    'GET /webpage/:alias': async (ctx, next) =>
         var
             webpage = yield webpageApi.$getWebpageByAlias(alias, true),
             model;
@@ -181,15 +179,15 @@ module.exports = {
         model = {
             webpage: webpage
         };
-        this.render(getView('webpage/webpage.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('webpage/webpage.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /wikipage/:id': function* (id) {
+    'GET /wikipage/:id': async (ctx, next) =>
         var wp = yield wikiApi.$getWikiPage(id);
         this.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
     },
 
-    'GET /wiki/:id': function* (id) {
+    'GET /wiki/:id': async (ctx, next) =>
         var
             model,
             wiki = yield wikiApi.$getWiki(id, true),
@@ -199,17 +197,17 @@ module.exports = {
         wiki.content = helper.md2html(wiki.content, true);
         wiki.views = wiki.views + num;
         if (num > WRITE_VIEWS_BACK) {
-            yield $updateEntityViews(wiki);
+            await updateEntityViews(wiki);
         }
         model = {
             wiki: wiki,
             current: wiki,
             tree: tree.children
         };
-        this.render(getView('wiki/wiki.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('wiki/wiki.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /wiki/:wid/:pid': function* (id, pid) {
+    'GET /wiki/:wid/:pid': async (ctx, next) =>
         var
             model, wiki, tree, num,
             wikipage = yield wikiApi.$getWikiPage(pid, true);
@@ -222,7 +220,7 @@ module.exports = {
         wikipage.type = 'wikipage';
         wikipage.views = wikipage.views + num;
         if (num > WRITE_VIEWS_BACK) {
-            yield $updateEntityViews(wikipage);
+            await updateEntityViews(wikipage);
         }
         wikipage.content = helper.md2html(wikipage.content, true);
         model = {
@@ -230,46 +228,48 @@ module.exports = {
             current: wikipage,
             tree: tree.children
         };
-        this.render(getView('wiki/wiki.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('wiki/wiki.html'), await getModel.apply(this, [model]));
     },
 
-    'POST /api/comments/:ref_type/:ref_id': function* (ref_type, ref_id) {
-        helper.checkPermission(this.request, constants.role.SUBSCRIBER);
-        var
+    'POST /api/comments/:ref_type/:ref_id': async (ctx, next) => {
+        ctx.checkPermission(constants.role.SUBSCRIBER);
+        ctx.validate('createComment');
+        let
+            ref_type = ctx.request.params.ref_type,
+            ref_id = ctx.request.params.ref_id,
             board,
-            user = this.request.user,
-            data = this.request.body;
-        json_schema.validate('createComment', data);
+            user = ctx.state.__user__,
+            data = ctx.request.body;
         if (!data.content.trim()) {
             throw api.invalidParam('content', 'Empty input.');
         }
         if (ref_type === 'article') {
-            yield articleApi.$getArticle(ref_id);
+            await articleApi.getArticle(ref_id);
         }
         else if (ref_type === 'wiki') {
-            yield wikiApi.$getWiki(ref_id);
+            await wikiApi.getWiki(ref_id);
         }
         else if (ref_type === 'wikipage') {
-            yield wikiApi.$getWikiPage(ref_id);
+            await wikiApi.getWikiPage(ref_id);
         }
         else {
-            this.throw(404);
+            throw api.invalidParam('ref_type', 'Invalid type.');
         }
-        board = yield discussApi.$getBoardByTag(data.tag);
-        this.body = yield discussApi.$createTopic(user, board.id, ref_type, ref_id, data);
+        board = await discussApi.getBoardByTag(data.tag);
+        ctx.rest(await discussApi.createTopic(user, board.id, ref_type, ref_id, data));
     },
 
-    'GET /discuss': function* () {
+    'GET /discuss': async (ctx, next) => {
         var
             model,
             boards = yield discussApi.$getBoards();
         model = {
             boards: boards
         };
-        this.render(getView('discuss/boards.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('discuss/boards.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /discuss/:id': function* (id) {
+    'GET /discuss/:id': async (ctx, next) =>
         var
             page = helper.getPage(this.request, 10),
             board = yield discussApi.$getBoard(id),
@@ -281,10 +281,10 @@ module.exports = {
             board: board,
             topics: topics
         };
-        this.render(getView('discuss/board.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('discuss/board.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /discuss/:bid/:tid': function* (bid, tid) {
+    'GET /discuss/:bid/:tid': async (ctx, next) =>
         var
             topic = yield discussApi.$getTopic(tid),
             page,
@@ -307,10 +307,10 @@ module.exports = {
             topic: topic,
             replies: replies
         };
-        this.render(getView('discuss/topic.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('discuss/topic.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /discuss/:bid/topics/create': function* (bid) {
+    'GET /discuss/:bid/topics/create': async (ctx, next) =>
         if (this.request.user === null) {
             this.response.redirect('/auth/signin');
             return;
@@ -320,26 +320,26 @@ module.exports = {
             model = {
                 board: board
             };
-        this.render(getView('discuss/topic_form.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('discuss/topic_form.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /discuss/topic/:tid/find/:rid': function* (tid, rid) {
+    'GET /discuss/topic/:tid/find/:rid': async (ctx, next) =>
         var
             topic = yield discussApi.$getTopic(tid),
             p = yield discussApi.$getReplyPageIndex(tid, rid);
         this.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
     },
 
-    'GET /user/:id': function* (id) {
+    'GET /user/:id': async (ctx, next) =>
         var
             user = yield userApi.$getUser(id),
             model = {
                 user: user
             };
-        this.render(getView('user/profile.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('user/profile.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /me/profile': function* (id) {
+    'GET /me/profile': async (ctx, next) =>
         var
             user = this.request.user,
             model = {
@@ -349,10 +349,10 @@ module.exports = {
             this.response.redirect('/auth/signin');
             return;
         }
-        this.render(getView('user/profile.html'), yield $getModel.apply(this, [model]));
+        this.render(getView('user/profile.html'), await getModel.apply(this, [model]));
     },
 
-    'GET /auth/signin': function* (id) {
+    'GET /auth/signin': async (ctx, next) =>
         var
             referer = this.request.get('referer') || '/',
             user = this.request.user;
@@ -360,10 +360,10 @@ module.exports = {
         if (user !== null) {
             
         }
-        this.render(getView('signin.html'), yield $getModel.apply(this, [{}]));
+        this.render(getView('signin.html'), await getModel.apply(this, [{}]));
     },
 
-    'GET /search': function* () {
+    'GET /search': async (ctx, next) => {
         this.body = 'blank';
         // var
         //     page,
