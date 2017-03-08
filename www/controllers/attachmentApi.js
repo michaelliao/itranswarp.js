@@ -1,12 +1,14 @@
-'use strict';
-
-// attachment api
-
-var
+/**
+ * Attachment API.
+ * 
+ * author: Michael Liao
+ */
+const
     fs = require('fs'),
     mime = require('mime'),
     api = require('../api'),
     db = require('../db'),
+    logger = require('../logger'),
     helper = require('../helper'),
     constants = require('../constants'),
     image = require('../image');
@@ -15,7 +17,6 @@ var
     User = db.user,
     Attachment = db.attachment,
     Resource = db.resource,
-    warp = db.warp,
     nextId = db.nextId;
 
 async function getAttachment(id) {
@@ -27,18 +28,17 @@ async function getAttachment(id) {
 }
 
 async function getAttachments(page) {
-    page.total = yield Attachment.$findNumber('count(id)');
+    page.total = await Attachment.count();
     if (page.isEmpty) {
         return [];
     }
-    return yield Attachment.$findAll({
+    return await Attachment.findAll({
+        order: 'created_at DESC',
         offset: page.offset,
-        limit: page.limit,
-        order: 'created_at desc'
+        limit: page.limit
     });
 }
 
-// create function(callback) with Attachment object returned in callback:
 async function createAttachment(user_id, name, description, buffer, mime, expectedImage) {
     var
         att_id = nextId(),
@@ -49,7 +49,7 @@ async function createAttachment(user_id, name, description, buffer, mime, expect
     }
     catch (e) {
         // not an image
-        console.log('attachment data is not an image.');
+        logger.warn('attachment data is not an image.');
     }
     if (imageInfo !== null) {
         if (['png', 'jpeg', 'gif'].indexOf(imageInfo.format) !== (-1)) {
@@ -62,12 +62,12 @@ async function createAttachment(user_id, name, description, buffer, mime, expect
     if (imageInfo === null && expectedImage) {
         throw api.invalidParam('image');
     }
-    yield Resource.$create({
+    await Resource.create({
         id: res_id,
         ref_id: att_id,
         value: buffer
     });
-    return yield Attachment.$create({
+    return await Attachment.create({
         id: att_id,
         resource_id: res_id,
         user_id: user_id,
@@ -134,11 +134,11 @@ async function downloadAttachment(ctx, next) {
 
 module.exports = {
 
-    $getAttachment: $getAttachment,
+    getAttachment: getAttachment,
 
-    $getAttachments: $getAttachments,
+    getAttachments: getAttachments,
 
-    $createAttachment: $createAttachment,
+    createAttachment: createAttachment,
 
     'GET /files/attachments/:id': downloadAttachment,
 
@@ -153,7 +153,7 @@ module.exports = {
          * @return {object} Attachment object.
          * @error {resource:notfound} Attachment was not found by id.
          */
-        this.body = await getAttachment(id);
+        ctx.rest(await getAttachment(id));
     },
 
     'GET /api/attachments': async (ctx, next) => {
@@ -167,10 +167,10 @@ module.exports = {
         var
             page = helper.getPage(this.request),
             attachments = await getAttachments(page);
-        this.body = {
+        ctx.rest({
             page: page,
             attachments: attachments
-        };
+        });
     },
 
     'POST /api/attachments/:id/delete': async (ctx, next) => {
@@ -186,16 +186,18 @@ module.exports = {
         ctx.checkPermission(constants.role.CONTRIBUTOR);
         var
             atta = await getAttachment(id);
-        if (this.request.user.role !== constants.role.ADMIN && this.request.user.id !== atta.user_id) {
+        if (ctx.state.__user__.role !== constants.role.ADMIN && ctx.state.__user__.id !== atta.user_id) {
             throw api.notAllowed('Permission denied.');
         }
         // delete:
         await atta.destroy();
         // delete all resources:
-        yield warp.$update('delete from resources where ref_id=?', [id]);
-        this.body = {
-            id: id
-        };
+        await Resource.destroy({
+            where: {
+                'ref_id': id
+            }
+        });
+        ctx.rest({ 'id': id });
     },
 
     'POST /api/attachments': async (ctx, next) => {
@@ -213,16 +215,15 @@ module.exports = {
         ctx.checkPermission(constants.role.CONTRIBUTOR);
         ctx.validate('createAttachment');
         var
-            buffer,
-            data = this.request.body;
-        buffer = new Buffer(data.data, 'base64');
-        this.body = await createAttachment(
-            this.request.user.id,
+            data = ctx.request.body,
+            buffer = new Buffer(data.data, 'base64');
+        ctx.rest(await createAttachment(
+            ctx.state.__user__.id,
             data.name.trim(),
             data.description.trim(),
             buffer,
             data.mime || 'application/octet-stream',
             false
-        );
+        ));
     }
 };

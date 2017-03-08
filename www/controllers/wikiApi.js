@@ -205,9 +205,9 @@ module.exports = {
          * @name Get Wikis
          * @return {object} Wikis object.
          */
-        this.body = {
+        ctx.rest({
             wikis: await getWikis()
-        };
+        });
     },
 
     'POST /api/wikis': async (ctx, next) => {
@@ -225,20 +225,17 @@ module.exports = {
          * @error {permission:denied} If current user has no permission.
          */
         ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('createWiki');
         var
             wiki,
             text,
-            wiki_id,
-            content_id,
+            wiki_id = nextId(),
+            content_id = nextId(),
             attachment,
-            data = this.request.body;
-        ctx.validate('createWiki', data);
-
-        wiki_id = nextId();
-        content_id = nextId();
+            data = ctx.request.body;
 
         // create image:
-        attachment = yield attachmentApi.$createAttachment(
+        attachment = await attachmentApi.createAttachment(
             this.request.user.id,
             data.name.trim(),
             data.description.trim(),
@@ -247,14 +244,14 @@ module.exports = {
             true);
 
         // create text:
-        text = yield Text.$create({
+        text = await Text.create({
             id: content_id,
             ref_id: wiki_id,
             value: data.content
         });
 
         // create wiki:
-        wiki = yield Wiki.$create({
+        wiki = await Wiki.create({
             id: wiki_id,
             content_id: content_id,
             cover_id: attachment.id,
@@ -263,10 +260,10 @@ module.exports = {
             tag: data.tag.trim()
         });
         wiki.content = data.content;
-        this.body = wiki;
+        ctx.rest(wiki);
     },
 
-    'POST /api/wikis/:id': async (ctx, next) =>
+    'POST /api/wikis/:id': async (ctx, next) => {
         /**
          * Update a wiki.
          * 
@@ -280,63 +277,55 @@ module.exports = {
          * @return {object} The updated wiki object.
          */
         ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('updateWiki');
         var
-            wiki,
+            id = ctx.request.params.id,
+            wiki = await getWiki(id),
             text,
             wiki_id,
             content_id,
             attachment,
-            props = [],
-            data = this.request.body;
-        ctx.validate('updateWiki', data);
-
-        wiki = await getWiki(id);
+            props = {},
+            data = ctx.request.body;
         if (data.name) {
-            wiki.name = data.name.trim();
-            props.push('name');
+            props.name = data.name.trim();
         }
         if (data.description) {
-            wiki.description = data.description.trim();
-            props.push('description');
+            props.description = data.description.trim();
         }
         if (data.tag) {
-            wiki.tag = data.tag.trim();
-            props.push('tag');
+            props.tag = data.tag.trim();
         }
         if (data.image) {
             // create image:
-            attachment = yield attachmentApi.$createAttachment(
-                this.request.user.id,
+            attachment = await attachmentApi.createAttachment(
+                ctx.state.__user__.id,
                 wiki.name,
                 wiki.description,
                 new Buffer(data.image, 'base64'),
                 null,
                 true);
-            wiki.cover_id = attachment.id;
-            props.push('cover_id');
+            props.cover_id = attachment.id;
         }
         if (data.content) {
-            text = yield Text.$create({
+            text = await Text.create({
                 ref_id: wiki.id,
                 value: data.content
             });
-            wiki.content_id = text.id;
+            props.content_id = text.id;
             wiki.content = data.content;
-            props.push('content_id');
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            yield wiki.$update(props);
+        if (Object.getOwnPropertyNames(props).length > 0) {
+            await wiki.update(props);
         }
         if (!wiki.content) {
             text = await Text.findById(wiki.content_id);
             wiki.content = text.value;
         }
-        this.body = wiki;
+        ctx.rest(wiki);
     },
 
-    'POST /api/wikis/:id/wikipages': async (ctx, next) =>
+    'POST /api/wikis/:id/wikipages': async (ctx, next) => {
         /**
          * Create a new wiki page.
          * 
@@ -350,13 +339,16 @@ module.exports = {
          * @error {permission:denied} If current user has no permission.
          */
         ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('createWikiPage');
         var
+            wiki_id = ctx.request.params.id,
+            wp_id = nextId(),
+            content_id = nextId(),
             wiki,
             wikipage,
             text,
-            num, wp_id, content_id,
+            num,
             data = this.request.body;
-        ctx.validate('createWikiPage', data);
 
         // check wiki id:
         await getWiki(wiki_id);
@@ -365,21 +357,20 @@ module.exports = {
             await getWikiPage(data.parent_id);
         }
 
-        wp_id = nextId(),
-        content_id = nextId();
-
         // count:
-        num = yield warp.$queryNumber(
-            'select max(display_order) from wikipages where wiki_id=? and parent_id=?',
-            [wiki_id, data.parent_id]
-        );
-        text = yield Text.$create({
+        num = await WikiPage.max('display_order', {
+            where: {
+                'wiki_id': wiki_id,
+                'parent_id': data.parent_id
+            }
+        });
+        text = await Text.create({
             id: content_id,
             ref_id: wp_id,
             value: data.content
         });
         // create wiki page:
-        wikipage = yield WikiPage.$create({
+        wikipage = await WikiPage.create({
             id: wp_id,
             wiki_id: wiki_id,
             content_id: content_id,
@@ -387,13 +378,12 @@ module.exports = {
             name: data.name.trim(),
             display_order: ((num === null) ? 0 : num + 1)
         });
-
         wikipage.content = data.content;
         indexWiki(wikipage);
-        this.body = wikipage;
+        ctx(wikipage);
     },
 
-    'POST /api/wikis/wikipages/:id': async (ctx, next) =>
+    'POST /api/wikis/wikipages/:id': async (ctx, next) => {
         /**
          * Update a wiki page.
          * 
@@ -404,42 +394,36 @@ module.exports = {
          * @return {object} The updated wiki object.
          */
         ctx.checkPermission(constants.role.EDITOR);
+        ctx.validate('updateWikiPage');
         var
-            wikipage,
+            id = ctx.request.params.id,
+            wikipage = await getWikiPage(id),
             text,
-            props = [],
-            data = this.request.body;
-        ctx.validate('updateWikiPage', data);
-
-        wikipage = await getWikiPage(id);
+            props = {},
+            data = ctx.request.body;
         if (data.name) {
-            wikipage.name = data.name.trim();
-            props.push('name');
+            props.name = data.name.trim();
         }
         if (data.content) {
-            text = yield Text.$create({
+            text = await Text.create({
                 ref_id: wikipage.id,
                 value: data.content
             });
-            wikipage.content_id = text.id;
+            props.content_id = text.id;
             wikipage.content = data.content;
-            props.push('content_id');
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            yield wikipage.$update(props);
+        if (Object.getOwnPropertyNames(props).length > 0) {
+            await wikipage.update(props);
         }
         if (!wikipage.content) {
             text = await Text.findById(wikipage.content_id);
             wikipage.content = text.value;
         }
-
         indexWiki(wikipage);
-        this.body = wikipage;
+        ctx.rest(wikipage);
     },
 
-    'GET /api/wikis/wikipages/:id': async (ctx, next) =>
+    'GET /api/wikis/wikipages/:id': async (ctx, next) => {
         /**
          * Get wiki page by id.
          * 
@@ -450,13 +434,13 @@ module.exports = {
          * @error {resource:notfound} WikiPage was not found by id.
          */
         var wp = await getWikiPage(id, true);
-        if (this.request.query.format === 'html') {
+        if (ctx.request.query.format === 'html') {
             wp.content = helper.md2html(wp.content, true);
         }
-        this.body = wp;
+        ctx.rest(wp);
     },
 
-    'GET /api/wikis/:id/wikipages': async (ctx, next) =>
+    'GET /api/wikis/:id/wikipages': async (ctx, next) => {
         /**
          * Get wiki pages as a tree list.
          * 
@@ -464,10 +448,10 @@ module.exports = {
          * @param {string} id - The id of the wiki.
          * @return {object} The full tree object.
          */
-        this.body = await getWikiTree(id);
+        ctx.rest(await getWikiTree(id));
     },
 
-    'POST /api/wikis/wikipages/:id/move': async (ctx, next) =>
+    'POST /api/wikis/wikipages/:id/move': async (ctx, next) => {
         /**
          * Move a wikipage to another node.
          * 
@@ -478,24 +462,19 @@ module.exports = {
          * @return {object} The moved wiki object.
          */
         ctx.checkPermission(constants.role.EDITOR);
-
+        ctx.validate('moveWikiPage');
         var
-            index, p, parent_id, i, L,
+            index = data.index,
+            p, i, L,
             wiki,
-            movingPage,
+            movingPage = await getWikiPage(id),
             parentPage,
             allPages,
-            data = this.request.body;
-        ctx.validate('moveWikiPage', data);
-
-        index = data.index;
-        parent_id = data.parent_id;
-
-        movingPage = await getWikiPage(id);
-
+            data = ctx.request.body,
+            parent_id = data.parent_id;
         if (movingPage.parent_id === parent_id && movingPage.display_order === index) {
-            console.log('>> No need to update.');
-            this.body = movingPage;
+            logger.info('>> No need to update.');
+            ctx.rest(movingPage);
             return;
         }
 
@@ -534,15 +513,23 @@ module.exports = {
         L.splice(index, 0, movingPage);
         // update display order and movingPage:
         for (i=0; i<L.length; i++) {
-            yield warp.$update('update wikipages set display_order=? where id=?', [i, L[i].id]);
+            await WikiPage.update({
+                'display_order': i
+             }, {
+                 where: {
+                    'id': L[i].id
+                }
+            });
         }
         movingPage.display_order = index; // <-- already updated, but need to pass to result
         movingPage.parent_id = parent_id;
-        yield movingPage.$update(['parent_id', 'updated_at', 'version']);
-        this.body = movingPage;
+        await movingPage.save({
+            fields: ['parent_id', 'updated_at', 'version']
+        });
+        ctx.rest(movingPage);
     },
 
-    'POST /api/wikis/wikipages/:id/delete': async (ctx, next) =>
+    'POST /api/wikis/wikipages/:id/delete': async (ctx, next) => {
         /**
          * Delete a wikipage if it has no child wikipage.
          *
@@ -553,26 +540,28 @@ module.exports = {
         ctx.checkPermission(constants.role.EDITOR);
         var
             wikipage = await getWikiPage(id),
-            num = yield WikiPage.$findNumber({
-                select: 'count(id)',
-                where: 'parent_id=?',
-                params: [id]
+            num = await WikiPage.count({
+                where: {
+                    'parent_id': id
+                }
             });
         if (num > 0) {
             throw api.conflictError('WikiPage', 'Cannot delete a non-empty wiki pages.');
         }
         await wikipage.destroy();
         // delete all texts:
-        yield warp.$update('delete from texts where ref_id=?', [id]);
-
+        await Text.destroy({
+            where: {
+                'ref_id': id
+            }
+        });
         unindexWiki(wikipage);
-
-        this.body = {
+        ctx.rest({
             id: id
-        };
+        });
     },
 
-    'POST /api/wikis/:id/delete': async (ctx, next) =>
+    'POST /api/wikis/:id/delete': async (ctx, next) => {
         /**
          * Delete a wiki by its id.
          * 
@@ -584,24 +573,23 @@ module.exports = {
         ctx.checkPermission(constants.role.EDITOR);
         var
             wiki = await getWiki(id),
-            num = yield WikiPage.$findNumber({
-                select: 'count(id)',
-                where: 'wiki_id=?',
-                params: [id]
+            num = await WikiPage.count({
+                where: {
+                    'wiki_id': id
+                }
             });
         if (num > 0) {
             throw api.conflictError('Wiki', 'Wiki is not empty.');
         }
-
         await wiki.destroy();
 
         // delete all texts:
-        yield warp.$update('delete from texts where ref_id=?', [id]);
-
+        await Text.destroy({
+            where: {
+                'ref_id': id
+            }
+        });
         unindexWiki(wiki);
-
-        this.body = {
-            id: id
-        };
+        ctx.rest({ id: id });
     }
 };
