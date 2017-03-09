@@ -83,7 +83,7 @@ describe('#helper', function () {
         expect(helper.getPageIndex(createMockRequest('page='))).to.equal(1);
     });
 
-    it('#getPageSize', () => {
+    it('#getPage', () => {
         var page;
         page = helper.getPage(createMockRequest(''));
         expect(page.index).to.equal(1);
@@ -116,6 +116,5 @@ describe('#helper', function () {
         page = helper.getPage(createMockRequest('page=&size=10'));
         expect(page.index).to.equal(1);
         expect(page.size).to.equal(10);
-
     });
 });
