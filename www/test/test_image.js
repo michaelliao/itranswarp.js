@@ -1,5 +1,7 @@
 /**
  * Test image.js
+ * 
+ * ImageMagick MUST be installed first.
  */
 var
     _ = require('lodash'),

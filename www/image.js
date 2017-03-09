@@ -1,6 +1,8 @@
 /**
  * image operation.
  * 
+ * ImageMagick MUST be installed first.
+ * 
  * author: Michael Liao
  */
 
