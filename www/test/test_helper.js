@@ -1,26 +1,47 @@
-'use strict';
-
-// test utils:
-
-var
+/**
+ * Test helper.js
+ */
+const
     fs = require('fs'),
-    should = require('should'),
+    querystring = require('querystring'),
+    expect = require('chai').expect,
     helper = require('../helper'),
     Page = require('../page');
 
-describe('#utils', function () {
+function createMockRequest(query='') {
+    var
+        qs = querystring.parse(query),
+        k, v,
+        req = {
+            query: {
+            }
+        };
+    for (k in qs) {
+        req.query[k] = qs[k];
+    }
+    return req;
+}
+
+describe('#helper', function () {
 
     it('#formatTags', function () {
-        var tags = {
-            '   '             : '',
-            '   ,  '          : '',
-            ' A,B  ,C  , '    : 'A,B,C',
-            ',,A;B;C ,  '     : 'A,B,C',
-            ' Abc, abc, A B'  : 'Abc,A B',
-            '  R&D, R & D  '  : 'R&D,R & D',
-            'a-b-c d-e-f,'    : 'a-b-c d-e-f'
+        var params, tags = [
+            // input             , output
+            [null                , ''],
+            [undefined           , ''],
+            [''                  , ''],
+            ['   '               , ''],
+            ['   ,  '            , ''],
+            [' A,B  ,C  , '      , 'A,B,C'],
+            [',,A;B;C ,  '       , 'A,B,C'],
+            [' Abc, abc, A B'    , 'Abc,A B'],
+            ['  R&D, R & D  '    , 'R&D,R & D'],
+            ['  ABC, def, ha ha ', 'ABC,def,ha ha'],
+            ['a-b-c d-e-f,'      , 'a-b-c d-e-f']
+        ];
+        for (params of tags) {
+            expect(helper.formatTags(params[0])).to.equal(params[1]);
         }
-        helper.formatTags('  ABC, def, ha ha ').should.equal('ABC,def,ha ha');
     });
 
     it('#page', function () {
@@ -44,21 +65,57 @@ describe('#utils', function () {
                 offset = data[4];
             var page = new Page(pageIndex, itemsPerPage);
             page.total = totalItems;
-            page.pages.should.equal(totalPages);
-            page.offset.should.equal(offset);
+            expect(page.pages).to.equal(totalPages);
+            expect(page.offset).to.equal(offset);
         }
     });
 
-    it('#html2text', function () {
-        var i, html, r = [
-            '     heading 3     this is line1     this is line2          this is line3     this is input & checkbox.          footer       ',
-            '     <script>     Hi!     we are sorry...          OK.',
-            '     Test     Download from http://www.example.com/abc/xyz/100(100 MB).              item 1         item 2               大家好！          skip me                    this is line3     this is input          END       ',
-            '现在，你已经学会了修改文件，然后把修改提交到Git版本库，现在，再练习一次，修改readme.txt文件如下： Git is a distributed version control system. Git is free software distributed under the GPL. 然后尝试提交： $ git add readme.txt $ git commit -m \"append GPL\" [master 3628164] append GPL 1 file changed, 1 insertion(+), 1 deletion(-) 像这样，你不断对文件进行修改，然后不断提交修改到版本库里，就好比玩RPG游戏时，每通过一关就会自动把游戏状态存盘，如果某一关没过去，你还可以选择读取前一关的状态。有些时候，在打Boss之前，你会手动存盘，以便万一打Boss失败了，可以从最近的地方重新开始。Git也是一样，每当你觉得文件修改到一定程度的时候，就可以“保存一个快照”，这个快照在Git中被称为commit。一旦你把文件改乱了，或者误删了文件，还可以从最近的一个commit恢复，然后继续工作，而不是把几个月的工作成果全部丢失。 现在，我们回顾一下readme.txt文件一共有几个版本被提交到Git仓库里了： 版本1：wrote a readme file Git is a version control system. Git is free software. 版本2：add distributed Git is a distributed version control system. Git is free software. 版本3：append GPL Git is a distributed version control system. Git is free software distributed under the GPL. 当然了，在实际工作中，我们脑子里怎么可能记得一个几千行的文件每次都改了什么内容，不然要版本控制系统干什么。版本控制系统肯定有某个命令可以告诉我们历史记录，在Git中，我们用git log命令查看： '
-        ];
-        for (i = 0; i < 4; i++) {
-            html = fs.readFileSync('./test/res-html-' + i + '.html', {encoding: 'UTF-8'});
-            helper.html2text(html).should.equal(r[i]);
-        }
+    it('#getPageIndex', () => {
+        expect(helper.getPageIndex(createMockRequest(''))).to.equal(1);
+        expect(helper.getPageIndex(createMockRequest('page=1'))).to.equal(1);
+        expect(helper.getPageIndex(createMockRequest('page=2'))).to.equal(2);
+        expect(helper.getPageIndex(createMockRequest('page=9'))).to.equal(9);
+        expect(helper.getPageIndex(createMockRequest('page=100'))).to.equal(100);
+        // invalid format:
+        expect(helper.getPageIndex(createMockRequest('page=-1'))).to.equal(1);
+        expect(helper.getPageIndex(createMockRequest('page=-2'))).to.equal(1);
+        expect(helper.getPageIndex(createMockRequest('page=123s'))).to.equal(1);
+        expect(helper.getPageIndex(createMockRequest('page='))).to.equal(1);
+    });
+
+    it('#getPageSize', () => {
+        var page;
+        page = helper.getPage(createMockRequest(''));
+        expect(page.index).to.equal(1);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2&size='));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2&size=20'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(20);
+        // out of range:
+        page = helper.getPage(createMockRequest('page=2&size=200'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2&size=9'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2&size=x'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2&size=20x'));
+        expect(page.index).to.equal(2);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=2x&size=10'));
+        expect(page.index).to.equal(1);
+        expect(page.size).to.equal(10);
+        page = helper.getPage(createMockRequest('page=&size=10'));
+        expect(page.index).to.equal(1);
+        expect(page.size).to.equal(10);
+
     });
 });
