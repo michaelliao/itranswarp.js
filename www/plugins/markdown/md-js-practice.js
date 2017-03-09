@@ -27,7 +27,7 @@
  * </form>
  */
 
-const uuid = require('node-uuid');
+const uuid = require('uuid/v4');
 
 const
     TEXT_AREA_STYLE_1 = ' border-top-left-radius: 0; border-top-right-radius: 0;',
@@ -59,7 +59,7 @@ function encodePre(code) {
 }
 
 function generateForm(prefixCode, editableCode, postfixCode) {
-    var id = 'f-' + uuid.v4();
+    var id = 'f-' + uuid();
     var s = JS;
     s += `<form id="${id}" class="uk-form uk-form-stack" action="#0">`;
     if (prefixCode) {
