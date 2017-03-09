@@ -6,6 +6,7 @@
 const
     fs = require('fs'),
     marked = require('marked'),
+    htmlparser = require('htmlparser2'),
     logger = require('./logger.js');
 
 // add plugins:
@@ -160,13 +161,14 @@ function htmlToText(html) {
             onclosetag: function (tagname) {
                 saveTexts.pop();
                 saveCurrent = saveTexts[saveTexts.length - 1];
+                buffer.push('\n');
             }
         }, {
             decodeEntities: true
         });
     parser.write(html);
     parser.end();
-    return buffer.join('').replace(/\n/ig, ' ');
+    return buffer.join('').replace(/\n\n/ig, '\n');
 }
 
 module.exports = {
