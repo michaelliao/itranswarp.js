@@ -1,14 +1,13 @@
 /**
  * logger support. Usage:
  * 
- * const logger = require('./logger.js');
+ * const logger = require('./logger');
  * logger.info('blablabla...');
  * 
  * author: Michael Liao
  */
 const
     winston = require('winston'),
-    config = require('./config'),
     logger = new winston.Logger({
         transports: [
             new winston.transports.Console({
@@ -19,7 +18,7 @@ const
             }),
             new winston.transports.File({
                 name: 'info-file',
-                filename: config.log.dir + '/itranswarp-info.log',
+                filename: '/tmp/itranswarp-info.log',
                 level: 'info',
                 json: false,
                 timestamp: function () {
@@ -28,7 +27,7 @@ const
             }),
             new winston.transports.File({
                 name: 'error-file',
-                filename: config.log.dir + '/itranswarp-error.log',
+                filename: '/tmp/itranswarp-error.log',
                 level: 'error',
                 json: false,
                 timestamp: function () {
