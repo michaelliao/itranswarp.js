@@ -29,8 +29,9 @@
 
 const uuid = require('node-uuid');
 
-const TEXT_AREA_STYLE_1 = ' border-top-left-radius: 0; border-top-right-radius: 0;';
-const TEXT_AREA_STYLE_2 = ' border-bottom-left-radius: 0; border-bottom-right-radius: 0;';
+const
+    TEXT_AREA_STYLE_1 = ' border-top-left-radius: 0; border-top-right-radius: 0;',
+    TEXT_AREA_STYLE_2 = ' border-bottom-left-radius: 0; border-bottom-right-radius: 0;';
 
 const JS = `<script>
 if (!window.execJsPractice) {

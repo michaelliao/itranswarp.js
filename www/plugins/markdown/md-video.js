@@ -3,19 +3,29 @@
  * 
  * Markdown syntax:
  * 
- * ### video:/path/to/mp4
+ * ### video: /path/to/example.mp4, /backup/example.mp4
  * 
  * HTML output:
  * 
  * <video width="100%" controls>
- *   <source src="/path/to/mp4">
+ *   <source src="/path/to/example.mp4">
+ *   <source src="/backup/example.mp4">
  * </video>
  */
+
+const SPLIT = /,/;
 
 module.exports = {
     type: 'heading',
     plugin: 'video',
     render: function (text) {
-        return '<video width="100%" controls><source src="' + text + '"></video>\n';
+        var sources = text.split(SPLIT).map((s) => {
+            return s && s.trim();
+        }).filter((s) => {
+            return s && s.trim();
+        }).map((s) => {
+            return '<source src="' + s + '">';
+        }).join('');
+        return '<video width="100%" controls>' + sources + '</video>\n';
     }
 };
