@@ -219,7 +219,7 @@ module.exports = {
     },
 
     setup: function (done) {
-        co(function* () {
+        co(async () => {
             await initDatabase();
         }).then(function (result) {
             done();

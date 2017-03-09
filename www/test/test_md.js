@@ -48,7 +48,7 @@ describe('#md', () => {
         expect(md.htmlToText('<p>not well-formed</div>')).to.equal('not well-formed\n');
     });
 
-    it('#html2text complex', function () {
+    it('#html2text complex', () => {
         var i, html, txt, r = [
             '\n heading 3\n this is line1\n this is line2\n \n this is line3\n this is input\n & checkbox.\n \n footer\n \n',
             '\n <script>\n Hi!\n we are sorry...\n \n OK.\n',

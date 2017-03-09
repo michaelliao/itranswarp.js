@@ -22,9 +22,9 @@ function createMockRequest(query='') {
     return req;
 }
 
-describe('#helper', function () {
+describe('#helper', () => {
 
-    it('#formatTags', function () {
+    it('#formatTags', () => {
         var params, tags = [
             // input             , output
             [null                , ''],
@@ -44,7 +44,7 @@ describe('#helper', function () {
         }
     });
 
-    it('#page', function () {
+    it('#page', () => {
         var pages = [
             // index, per, total, pages, offset:
             [  1,     20,  81,    5,     0],

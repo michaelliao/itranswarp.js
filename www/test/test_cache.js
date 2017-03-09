@@ -19,7 +19,7 @@ function toKeys(keys) {
     });
 }
 
-describe('#cache', function () {
+describe('#cache', () => {
 
     it('get cache but missing', async () => {
         var keys = toKeys(['aa', 'bb', 'cc']);
@@ -42,7 +42,7 @@ describe('#cache', function () {
 
     it('get by function value', async () => {
         var key1 = keyPrefix + 'f1';
-        var data = await cache.get(key1, function () {
+        var data = await cache.get(key1, () => {
             return ['F1', null, { 't': 999 }];
         });
         expect(data).to.be.instanceof(Array).and.have.lengthOf(3);

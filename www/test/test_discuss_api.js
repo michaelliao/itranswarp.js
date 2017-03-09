@@ -13,25 +13,25 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#discuss', function () {
+describe('#discuss', () => {
 
     before(remote.setup);
 
-    describe('#discuss-api', function () {
+    describe('#discuss-api', () => {
 
-        it('should get boards failed for no permission', function* () {
+        it('should get boards failed for no permission', async () => {
             var r = yield remote.$get(roles.CONTRIBUTER, '/api/boards');
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('should get empty boards', function* () {
+        it('should get empty boards', async () => {
             var r = yield remote.$get(roles.EDITOR, '/api/boards');
             remote.shouldNoError(r);
             should(r.boards).be.ok;
             r.boards.should.be.an.Array.and.have.length(0);
         });
 
-        it('create board failed for no permission', function* () {
+        it('create board failed for no permission', async () => {
             var r = yield remote.$post(roles.EDITOR, '/api/boards', {
                 name: 'Try create board...',
                 description: 'blablabla...',
@@ -40,7 +40,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('create board failed for invalid parameter', function* () {
+        it('create board failed for invalid parameter', async () => {
             var r1 = yield remote.$post(roles.ADMIN, '/api/boards', {
                 // tag: missing
                 name: 'Try create board...',
@@ -55,7 +55,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r2, 'parameter:invalid', 'name');
         });
 
-        it('create board ok then update it', function* () {
+        it('create board ok then update it', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'js',
                 name: 'JavaScript HOWTO',
@@ -95,7 +95,7 @@ describe('#discuss', function () {
             r4.version.should.equal(1);
         });
 
-        it('create topic failed for no permission', function* () {
+        it('create topic failed for no permission', async () => {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',
@@ -112,7 +112,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('create topic failed for invalid parameters', function* () {
+        it('create topic failed for invalid parameters', async () => {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',
@@ -134,7 +134,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r2, 'parameter:invalid', 'content');
         });
 
-        it('create topic ok and delete topic', function* () {
+        it('create topic ok and delete topic', async () => {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',
@@ -188,7 +188,7 @@ describe('#discuss', function () {
             p2.topics[0].name.should.equal('topic-1');
         });
 
-        it('create reply failed for no permission and invalid parameters', function* () {
+        it('create reply failed for no permission and invalid parameters', async () => {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',
@@ -216,7 +216,7 @@ describe('#discuss', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'content');
         });
 
-        it('create reply ok and delete reply', function* () {
+        it('create reply ok and delete reply', async () => {
             // prepare board:
             var b = yield remote.$post(roles.ADMIN, '/api/boards', {
                 tag: 'test',

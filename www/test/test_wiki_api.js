@@ -11,20 +11,20 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#wikis', function () {
+describe('#wikis', () => {
 
     before(remote.setup);
 
-    describe('#wiki-api', function () {
+    describe('#wiki-api', () => {
 
-        it('should get empty wikis', function* () {
+        it('should get empty wikis', async () => {
             var r = yield remote.$get(roles.GUEST, '/api/wikis');
             remote.shouldNoError(r);
             should(r.wikis).be.ok;
             r.wikis.should.be.an.Array.and.have.length(0);
         });
 
-        it('create and update wiki by editor', function* () {
+        it('create and update wiki by editor', async () => {
             // create wiki:
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: 'Test Wiki   ',
@@ -77,7 +77,7 @@ describe('#wikis', function () {
             w.name.should.equal(r3.name);
         });
 
-        it('create wiki then change cover by editor', function* () {
+        it('create wiki then change cover by editor', async () => {
             // create wiki:
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: 'Test Wiki   ',
@@ -116,7 +116,7 @@ describe('#wikis', function () {
             remote.shouldHasError(r3, 'parameter:invalid', 'image');
         });
 
-        it('create wiki and wikipage with wrong parameter by editor', function* () {
+        it('create wiki and wikipage with wrong parameter by editor', async () => {
             var
                 i, r, params,
                 required = ['name', 'tag', 'description', 'content', 'image'],
@@ -153,7 +153,7 @@ describe('#wikis', function () {
             remote.shouldHasError(r3, 'parameter:invalid', 'content');
         });
 
-        it('create by contributor failed', function* () {
+        it('create by contributor failed', async () => {
             // create wiki:
             var r = yield remote.$post(roles.CONTRIBUTER, '/api/wikis', {
                 name: ' To be delete...   ',
@@ -165,7 +165,7 @@ describe('#wikis', function () {
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('create and delete wiki by editor', function* () {
+        it('create and delete wiki by editor', async () => {
             // create wiki:
             var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' To be delete...   ',
@@ -187,7 +187,7 @@ describe('#wikis', function () {
             remote.shouldHasError(r3, 'entity:notfound', 'Wiki');
         });
 
-        it('create wiki page, update and delete it', function* () {
+        it('create wiki page, update and delete it', async () => {
             // create wiki:
             var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' Test For WikiPage   ',
@@ -241,7 +241,7 @@ describe('#wikis', function () {
             p4.version.should.equal(1);
         });
 
-        it('create wiki tree, move and try delete wiki', function* () {
+        it('create wiki tree, move and try delete wiki', async () => {
             // create wiki:
             var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
                 name: ' Tree   ',

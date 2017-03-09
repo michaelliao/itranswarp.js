@@ -8,18 +8,18 @@ var
     remote = require('./_remote'),
     settingApi = require('../controllers/settingApi');
 
-describe('#settings', function () {
+describe('#settings', () => {
 
     before(remote.setup);
 
-    describe('#settingApi', function () {
+    describe('#settingApi', () => {
 
-        it('should get empty setting', function* () {
+        it('should get empty setting', async () => {
             var r = yield settingApi.$getSetting('group:key');
             should(r===null).be.ok;
         });
 
-        it('should get default setting value', function* () {
+        it('should get default setting value', async () => {
             var r = yield settingApi.$getSetting('group:key', 'the-DEFAULT');
             should(r==='the-DEFAULT').be.ok;
 
@@ -27,7 +27,7 @@ describe('#settings', function () {
             should(r2==='').be.ok;
         });
 
-        it('set setting with invalid key', function* () {
+        it('set setting with invalid key', async () => {
             try {
                 yield settingApi.$setSetting('g1---k1', 'VALUE-001');
                 throw 'failed';
@@ -39,14 +39,14 @@ describe('#settings', function () {
             }
         });
 
-        it('set and get a setting', function* () {
+        it('set and get a setting', async () => {
             yield settingApi.$setSetting('g1:k1', 'VALUE-001');
             var r = yield settingApi.$getSetting('g1:k1', 'default');
             should(r).be.ok;
             r.should.equal('VALUE-001');
         });
 
-        it('set and get settings', function* () {
+        it('set and get settings', async () => {
             var i, r;
             for (i=0; i<9; i++) {
                 yield settingApi.$setSetting('web:key_' + i, 'VALUE--' + i);
@@ -65,7 +65,7 @@ describe('#settings', function () {
             should(r.key_9===undefined).be.ok;
         });
 
-        it('set settings', function* () {
+        it('set settings', async () => {
             var s = {
                 s1: '1+1',
                 s2: '2+2',

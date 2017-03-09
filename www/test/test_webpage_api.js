@@ -9,19 +9,19 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#webpages', function () {
+describe('#webpages', () => {
 
     before(remote.setup);
 
-    describe('#api', function () {
+    describe('#api', () => {
 
-        it('should get empty webpages', function* () {
+        it('should get empty webpages', async () => {
             var r = yield remote.$get(roles.GUEST, '/api/webpages');
             remote.shouldNoError(r);
             r.webpages.should.be.an.Array.and.have.length(0);
         });
 
-        it('create webpage failed by editor', function* () {
+        it('create webpage failed by editor', async () => {
             var r = yield remote.$post(roles.EDITOR, '/api/webpages', {
                 alias: 'by-editor',
                 name: 'by editor',
@@ -30,7 +30,7 @@ describe('#webpages', function () {
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('create duplicate webpages by admin', function* () {
+        it('create duplicate webpages by admin', async () => {
             // create webpage:
             var r = yield remote.$post(roles.ADMIN, '/api/webpages', {
                 alias: 'duplicate',
@@ -52,7 +52,7 @@ describe('#webpages', function () {
             remote.shouldHasError(r2, 'parameter:invalid', 'alias');
         });
 
-        it('create and update webpage by admin', function* () {
+        it('create and update webpage by admin', async () => {
             // create webpage:
             var r = yield remote.$post(roles.ADMIN, '/api/webpages', {
                 alias: 'test',
@@ -87,7 +87,7 @@ describe('#webpages', function () {
             r4.content.should.equal(r3.content);
         });
 
-        it('create and update alias but duplicate by admin', function* () {
+        it('create and update alias but duplicate by admin', async () => {
             // create webpage:
             var r1 = yield remote.$post(roles.ADMIN, '/api/webpages', {
                 alias: 'abc',
@@ -108,7 +108,7 @@ describe('#webpages', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'alias');
         });
 
-        it('create webpage with wrong parameter by admin', function* () {
+        it('create webpage with wrong parameter by admin', async () => {
             var r1 = yield remote.$post(roles.ADMIN, '/api/webpages', {
                 name: 'Test',
                 alias: 'alias-x',

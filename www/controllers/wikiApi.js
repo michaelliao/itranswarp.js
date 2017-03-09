@@ -23,7 +23,7 @@ var
     nextId = db.nextId;
 
 function indexWiki(r) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.index({
             type: 'wiki',
             id: r.id,
@@ -39,7 +39,7 @@ function indexWiki(r) {
 }
 
 function unindexWiki(r) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.unindex({
             id: r.id
         });

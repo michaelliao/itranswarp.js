@@ -11,7 +11,7 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#articles', function () {
+describe('#articles', () => {
 
     var category = null;
     var category2 = null;
@@ -19,7 +19,7 @@ describe('#articles', function () {
     before(remote.setup);
 
     before(function (done) {
-        co(function* () {
+        co(async () => {
             category = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: 'Article Category',
                 tag: 'cat1'
@@ -38,21 +38,21 @@ describe('#articles', function () {
         });
     });
 
-    describe('#api', function () {
+    describe('#api', () => {
 
-        it('should get empty articles', function* () {
+        it('should get empty articles', async () => {
             var r = yield remote.$get(roles.CONTRIBUTOR, '/api/articles');
             remote.shouldNoError(r);
             r.page.total.should.equal(0);
             r.articles.should.be.an.Array.and.have.length(0);
         });
 
-        it('get articles failed for no permission', function* () {
+        it('get articles failed for no permission', async () => {
             var r = yield remote.$get(roles.SUBSCRIBER, '/api/articles');
             remote.shouldHasError(r, 'permission:denied');
         });
 
-        it('create article by contributor failed', function* () {
+        it('create article by contributor failed', async () => {
             // create article:
             var r1 = yield remote.$post(roles.CONTRIBUTOR, '/api/articles', {
                 category_id: category.id,
@@ -65,7 +65,7 @@ describe('#articles', function () {
             remote.shouldHasError(r1, 'permission:denied');
         });
 
-        it('create by admin and update, delete by editor failed', function* () {
+        it('create by admin and update, delete by editor failed', async () => {
             // create article:
             var r1 = yield remote.$post(roles.ADMIN, '/api/articles', {
                 category_id: category.id,
@@ -96,7 +96,7 @@ describe('#articles', function () {
             remote.shouldHasError(r3, 'permission:denied');
         });
 
-        it('create and update article by editor', function* () {
+        it('create and update article by editor', async () => {
             // create article:
             var r1 = yield remote.$post(roles.EDITOR, '/api/articles', {
                 category_id: category.id,
@@ -146,7 +146,7 @@ describe('#articles', function () {
             r3.description.should.equal(r1.description);
         });
 
-        it('create article then change cover', function* () {
+        it('create article then change cover', async () => {
             // create article:
             var r1 = yield remote.$post(roles.EDITOR, '/api/articles', {
                 category_id: category.id,
@@ -176,7 +176,7 @@ describe('#articles', function () {
             parseInt(dl.headers['content-length'], 10).should.approximately(39368, 10000);
         });
 
-        it('create article with wrong parameter by editor', function* () {
+        it('create article with wrong parameter by editor', async () => {
             var
                 i, r, params,
                 required = ['name', 'description', 'category_id', 'content', 'image'],
@@ -196,7 +196,7 @@ describe('#articles', function () {
             }
         });
 
-        it('create article with invalid category_id', function* () {
+        it('create article with invalid category_id', async () => {
             var
                 r,
                 params = {
@@ -211,7 +211,7 @@ describe('#articles', function () {
             remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
 
-        it('create article with invalid image', function* () {
+        it('create article with invalid image', async () => {
             var
                 r,
                 params = {
@@ -226,7 +226,7 @@ describe('#articles', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'image');
         });
 
-        it('create and delete article by editor', function* () {
+        it('create and delete article by editor', async () => {
             // create article:
             var r1 = yield remote.$post(roles.EDITOR, '/api/articles', {
                 category_id: category.id,

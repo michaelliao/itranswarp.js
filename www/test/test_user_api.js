@@ -9,13 +9,13 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#user', function () {
+describe('#user', () => {
 
     before(remote.setup);
 
-    describe('#api', function () {
+    describe('#api', () => {
 
-        it('get users by editor and contributor', function* () {
+        it('get users by editor and contributor', async () => {
             var i;
             // get users by contributor:
             var r1 = yield remote.$get(roles.CONTRIBUTOR, '/api/users');
@@ -34,7 +34,7 @@ describe('#user', function () {
             remote.shouldNoError(r4);
         });
 
-        it('auth should ok', function* () {
+        it('auth should ok', async () => {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: remote.generatePassword('admin@itranswarp.com')
@@ -43,7 +43,7 @@ describe('#user', function () {
             r.email.should.equal('admin@itranswarp.com');
         });
 
-        it('auth should failed for bad password', function* () {
+        it('auth should failed for bad password', async () => {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
@@ -51,7 +51,7 @@ describe('#user', function () {
             remote.shouldHasError(r, 'auth:failed');
         });
 
-        it('auth should failed for invalid password', function* () {
+        it('auth should failed for invalid password', async () => {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com',
                 passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
@@ -59,7 +59,7 @@ describe('#user', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'passwd');
         });
 
-        it('auth should failed for invalid email', function* () {
+        it('auth should failed for invalid email', async () => {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'notexist@itranswarp.com',
                 passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
@@ -67,14 +67,14 @@ describe('#user', function () {
             remote.shouldHasError(r, 'auth:failed', 'email');
         });
 
-        it('auth missing param', function* () {
+        it('auth missing param', async () => {
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'admin@itranswarp.com'
             });
             remote.shouldHasError(r, 'parameter:invalid', 'passwd');
         });
 
-        it('auth should forbidden because password is not set', function* () {
+        it('auth should forbidden because password is not set', async () => {
             yield remote.warp.$update('delete from localusers where user_id in (select id from users where email=?)', ['contributor@itranswarp.com']);
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'contributor@itranswarp.com',
@@ -83,7 +83,7 @@ describe('#user', function () {
             remote.shouldHasError(r, 'auth:failed', 'passwd');
         });
 
-        it('auth should locked', function* () {
+        it('auth should locked', async () => {
             yield remote.warp.$update('update users set locked_until=? where email=?', [Date.now() + 3600000, 'editor@itranswarp.com']);
             var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
                 email: 'editor@itranswarp.com',

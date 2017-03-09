@@ -10,11 +10,11 @@ var
     attachmentApi = require('../controllers/attachmentApi'),
     roles = constants.role;
 
-describe('#attachment', function () {
+describe('#attachment', () => {
 
     //before(remote.setup);
 
-    describe('#api', function () {
+    describe('#api', () => {
 
         it('should get empty attachment', async () => {
             var page = helper.getPage(ctx.request);
@@ -25,7 +25,7 @@ describe('#attachment', function () {
             atts.page.total.should.equal(0);
         });
 
-        // it('create attachment failed by subscriber', function* () {
+        // it('create attachment failed by subscriber', async () => {
         //     // create attachment:
         //     var r = yield remote.$post(roles.SUBSCRIBER, '/api/attachments', {
         //         name: 'Test Image   ',
@@ -35,7 +35,7 @@ describe('#attachment', function () {
         //     remote.shouldHasError(r, 'permission:denied');
         // });
 
-        // it('upload image by contributor', function* () {
+        // it('upload image by contributor', async () => {
         //     var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
         //         name: 'Test Image   ',
         //         description: '   bla bla bla...  \n   ',
@@ -95,7 +95,7 @@ describe('#attachment', function () {
         //     parseInt(ds.headers['content-length'], 10).should.approximately(25269, 1000);
         // });
 
-        // it('upload text as text/plain', function* () {
+        // it('upload text as text/plain', async () => {
         //     // create attachment:
         //     var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
         //         name: ' Text   ',
@@ -109,7 +109,7 @@ describe('#attachment', function () {
         //     r.mime.should.equal('text/plain');
         // });
 
-        // it('upload image but said text/plain', function* () {
+        // it('upload image but said text/plain', async () => {
         //     // create attachment:
         //     var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
         //         name: ' Fake Text   ',
@@ -123,7 +123,7 @@ describe('#attachment', function () {
         //     r.mime.should.equal('image/jpeg');
         // });
 
-        // it('upload text file by contributor then delete it', function* () {
+        // it('upload text file by contributor then delete it', async () => {
         //     // create attachment:
         //     var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {
         //         name: ' Text To Delete   ',

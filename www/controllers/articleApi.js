@@ -23,7 +23,7 @@ var
     nextId = db.nextId;
 
 function indexArticle(r) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.index({
             type: 'article',
             id: r.id,
@@ -40,7 +40,7 @@ function indexArticle(r) {
 }
 
 function unindexArticle(r) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.unindex({
             id: r.id
         });
@@ -199,11 +199,11 @@ module.exports = {
 
     getArticle: getArticle,
 
-    'GET /feed': async function () {
+    'GET /feed': async () => {
         var
             rss,
             host = this.request.host,
-            gf = async function () {
+            gf = async () => {
                 return await getFeed(host);
             };
         rss = await cache.get('cached_rss', gf);

@@ -7,9 +7,9 @@ var
     expect = require('chai').expect,
     image = require('../image');
 
-describe('#image', function () {
+describe('#image', () => {
 
-    it('calcScaleSize', function () {
+    it('calcScaleSize', () => {
         var image_sizes = [
             // [ori_w, ori_h, res_w, res_h, keepAspect, expected_w, expected_h, resized]
             // square:

@@ -34,13 +34,13 @@ function indexDiscuss(r) {
         url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
         upvotes: 0
     };
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.index(doc);
     });
 }
 
 function unindexDiscuss(r) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         search.engine.unindex({
             id: r.id
         });
@@ -48,10 +48,10 @@ function unindexDiscuss(r) {
 }
 
 function unindexDiscussByIds(ids) {
-    process.nextTick(function () {
+    process.nextTick(() => {
         var
             arr = ids,
-            fn = function () {
+            fn = () => {
                 if (arr.length > 0) {
                     if (arr.length > 10) {
                         search.engine.unindex(arr.splice(arr.length - 10, 10));

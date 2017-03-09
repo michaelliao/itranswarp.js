@@ -8,20 +8,20 @@ var
     constants = require('../constants'),
     roles = constants.role;
 
-describe('#categories', function () {
+describe('#categories', () => {
 
     before(remote.setup);
 
-    describe('#api', function () {
+    describe('#api', () => {
 
-        it('should get empty categories', function* () {
+        it('should get empty categories', async () => {
             var r = yield remote.$get(roles.GUEST, '/api/categories');
             remote.shouldNoError(r);
             should(r.categories).be.ok;
             r.categories.should.be.an.Array.and.have.length(0);
         });
 
-        it('create a new category by admin ok', function* () {
+        it('create a new category by admin ok', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Test Category   ',
                 tag: 'java',
@@ -57,7 +57,7 @@ describe('#categories', function () {
             rs.categories.should.be.an.Array.and.have.lengthOf(2);
         });
 
-        it('create new category with wrong parameter by admin', function* () {
+        it('create new category with wrong parameter by admin', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 tag: 'java',
                 description: '  no name parameter...  '
@@ -69,7 +69,7 @@ describe('#categories', function () {
             remote.shouldHasError(r, 'parameter:invalid', 'tag');
         });
 
-        it('create new category by editor', function* () {
+        it('create new category by editor', async () => {
             var r = yield remote.$post(roles.EDITOR, '/api/categories', {
                 name: 'by editor',
                 tag: 'java',
@@ -78,7 +78,7 @@ describe('#categories', function () {
             remote.shouldHasError(r, 'permission:denied', 'permission');
         });
 
-        it('update a category by admin', function* () {
+        it('update a category by admin', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Update     ',
                 tag: 'java',
@@ -114,7 +114,7 @@ describe('#categories', function () {
             r3.version.should.equal(1);
         });
 
-        it('update a category by editor', function* () {
+        it('update a category by editor', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Update    ',
                 tag: 'java',
@@ -129,7 +129,7 @@ describe('#categories', function () {
             remote.shouldHasError(r2, 'permission:denied', 'permission');
         });
 
-        it('delete a category by admin', function* () {
+        it('delete a category by admin', async () => {
             // create first:
             var r = yield remote.$post(roles.ADMIN, '/api/categories', {
                 name: ' Before Delete  ',
@@ -147,17 +147,17 @@ describe('#categories', function () {
             remote.shouldHasError(r3, 'entity:notfound', 'Category');
         });
 
-        it('delete a non-exist category by editor', function* () {
+        it('delete a non-exist category by editor', async () => {
             var r = yield remote.$post(roles.EDITOR, '/api/categories/' + remote.nextId() + '/delete');
             remote.shouldHasError(r, 'permission:denied', 'permission');
         });
 
-        it('delete a non-exist category by admin', function* () {
+        it('delete a non-exist category by admin', async () => {
             var r = yield remote.$post(roles.ADMIN, '/api/categories/' + remote.nextId() + '/delete');
             remote.shouldHasError(r, 'entity:notfound', 'Category');
         });
 
-        it('get non-exist category', function* () {
+        it('get non-exist category', async () => {
             var r = yield remote.$get(roles.GUEST, '/api/categories/' + remote.nextId());
             remote.shouldHasError(r, 'entity:notfound', 'Category');
         });

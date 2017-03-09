@@ -29,7 +29,7 @@ function createSearchEngine(cfg) {
                 options = undefined;
             }
             if (callback) {
-                process.nextTick(function () {
+                process.nextTick(() => {
                     callback(null, buildSearchUrl(q))
                 });
                 return;
