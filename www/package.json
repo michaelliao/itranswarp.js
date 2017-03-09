@@ -3,9 +3,9 @@
   "description": "A full-stack website application based on Nodejs.",
   "version": "2.0.1",
   "private": true,
-  "main": "app.js",
+  "main": "start.js",
   "scripts": {
-    "start": "node --use_strict app.js"
+    "start": "node --use_strict start.js"
   },
   "keywords": [
     "michaelliao",

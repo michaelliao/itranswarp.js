@@ -17,12 +17,13 @@ You should override some configurations in /srv/itranswarp/config/override.js:
 const
     overrideConfigPath = '/srv/itranswarp/config/override.js',
     _ = require('lodash'),
-    fs = require('fs');
+    fs = require('fs'),
+    logger = require('./logger');
 
 var cfg = require('./config_default');
 
 if (fs.existsSync(overrideConfigPath)) {
-    console.log(`load ${overrideConfigPath}...`);
+    logger.info(`load ${overrideConfigPath}...`);
     var ovr = require(overrideConfigPath);
     cfg = _.merge(cfg, ovr);
 }
@@ -31,6 +32,6 @@ cfg.version = '1.0';
 // replace by deployment:
 cfg.build = '$BUILD$';
 
-console.log('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
+logger.debug('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
 
 module.exports = cfg;
