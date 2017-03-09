@@ -12,6 +12,8 @@ describe('#md', () => {
         expect(md.ugcMarkdownToHtml('# Hello<')).to.equal('<h1>Hello&lt;</h1>\n');
         expect(md.ugcMarkdownToHtml('* A\n* B\n* C')).to.equal('<ul>\n<li>A</li>\n<li>B</li>\n<li>C</li>\n</ul>\n');
         expect(md.ugcMarkdownToHtml('Hello, <HTML>!')).to.equal('<p>Hello, &lt;HTML&gt;!</p>\n');
+        expect(md.ugcMarkdownToHtml('[hello](http://test.com/)')).to.equal('<p><a target="_blank" rel="nofollow" href="http://test.com/">hello</a></p>\n');
+        expect(md.ugcMarkdownToHtml('[hello](test)')).to.equal('<p><a target="_blank" rel="nofollow" href="http://test">hello</a></p>\n');
         expect(md.ugcMarkdownToHtml('<a href="/" onclick="alert()">Index</a>')).to.equal('<p>&lt;a href=&quot;/&quot; onclick=&quot;alert()&quot;&gt;Index&lt;/a&gt;</p>\n');
         expect(md.ugcMarkdownToHtml('<script>alert()</script>')).to.equal('<p>&lt;script&gt;alert()&lt;/script&gt;</p>\n');
         expect(md.ugcMarkdownToHtml('<iframe src="http://host/"></iframe>')).to.equal('<p>&lt;iframe src=&quot;http://host/&quot;&gt;&lt;/iframe&gt;</p>\n');
@@ -19,6 +21,8 @@ describe('#md', () => {
 
     it('#systemMarkdownToHtml', () => {
         expect(md.systemMarkdownToHtml('# Hello 你好')).to.equal('<h1><a name="#Hello-E4-BD-A0-E5-A5-BD"></a>Hello 你好</h1>\n');
+        expect(md.systemMarkdownToHtml('[hello](http://test.com/)')).to.equal('<p><a target="_blank" href="http://test.com/">hello</a></p>\n');
+        expect(md.systemMarkdownToHtml('[hello](test)')).to.equal('<p><a target="_blank" href="test">hello</a></p>\n');
         expect(md.systemMarkdownToHtml('<script>alert("OK!")</script>')).to.equal('<script>alert("OK!")</script>');
         expect(md.systemMarkdownToHtml('```\nNormal\nCODE\n```')).to.equal('<pre><code>Normal\nCODE\n</code></pre>');
         expect(md.systemMarkdownToHtml('<iframe src="http://host/"></iframe>')).to.equal('<iframe src="http://host/"></iframe>');
