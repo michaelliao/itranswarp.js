@@ -168,7 +168,7 @@ function htmlToText(html) {
         });
     parser.write(html);
     parser.end();
-    return buffer.join('').replace(/\n\n/ig, '\n');
+    return buffer.join('').replace(/\n+/ig, '\n').replace(/ +/ig, ' ');
 }
 
 module.exports = {
