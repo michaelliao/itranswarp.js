@@ -7,10 +7,12 @@ var
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
+    md = require('../md'),
     auth = require('../auth'),
     config = require('../config'),
     cache = require('../cache'),
     helper = require('../helper'),
+    logger = require('../logger'),
     constants = require('../constants'),
     searchEngine = require('../search/search').engine;
 
@@ -77,28 +79,28 @@ async function getNavigations() {
 async function getModel(model) {
     model.__production__ = PRODUCTION;
     model.__navigations__ = await getNavigations();
-    model.__website__ = yield settingApi.$getWebsiteSettings();
-    model.__snippets__ = yield settingApi.$getSnippets();
+    model.__website__ = await settingApi.getWebsiteSettings();
+    model.__snippets__ = await settingApi.getSnippets();
     model.__signins__ = signins;
     return model;
 }
 
 async function updateEntityViews(entity) {
     console.log('Update views to: ' + entity.views);
-    yield cache.$set(entity.id, 0);
-    yield entity.$update(['views']);
+    await cache.set(entity.id, 0);
+    await entity.update(['views']);
 }
 
 function getView(view) {
     return 'themes/default/' + view;
 }
 
-function* getIndexModel() {
+async function getIndexModel() {
     var
         i, a, hotArticles,
-        categories = yield categoryApi.$getCategories(),
-        recentArticles = yield articleApi.$getRecentArticles(20),
-        nums = yield cache.$counts(_.map(recentArticles, function (a) {
+        categories = await categoryApi.getCategories(),
+        recentArticles = await articleApi.getRecentArticles(20),
+        nums = await cache.counts(_.map(recentArticles, function (a) {
             return a.id;
         })),
         getCategoryName = function (cid) {
@@ -127,20 +129,20 @@ function* getIndexModel() {
 module.exports = {
 
     'GET /': async (ctx, next) => {
-        var model = yield cache.$get('INDEX-MODEL', getIndexModel);
-        this.render(getView('index.html'), await getModel.apply(this, [model]));
+        var model = await cache.get('INDEX-MODEL', getIndexModel);
+        ctx.render('index.html', await getModel(model));
     },
 
-    'GET /category/:id': async (ctx, next) =>
+    'GET /category/:id': async (ctx, next) => {
         var
             a,
             page = helper.getPage(this.request, 10),
             model = {
                 page: page,
-                category: yield categoryApi.$getCategory(id),
-                articles: yield articleApi.$getArticlesByCategory(id, page)
+                category: await categoryApi.getCategory(id),
+                articles: await articleApi.getArticlesByCategory(id, page)
             },
-            nums = yield cache.$counts(_.map(model.articles, function (a) {
+            nums = await cache.counts(_.map(model.articles, function (a) {
                 return a.id;
             })),
             i;
@@ -148,14 +150,14 @@ module.exports = {
             a = model.articles[i];
             a.views = a.views + nums[i];
         }
-        this.render(getView('article/category.html'), await getModel.apply(this, [model]));
+        ctx.render('article/category.html', await getModel(model));
     },
 
-    'GET /article/:id': async (ctx, next) =>
+    'GET /article/:id': async (ctx, next) => {
         var
-            article = yield articleApi.$getArticle(id, true),
-            num = yield cache.$incr(id),
-            category = yield categoryApi.$getCategory(article.category_id),
+            article = await articleApi.getArticle(id, true),
+            num = await cache.incr(id),
+            category = await categoryApi.getCategory(article.category_id),
             model = {
                 article: article,
                 category: category
@@ -164,37 +166,38 @@ module.exports = {
         if (num > WRITE_VIEWS_BACK) {
             await updateEntityViews(article);
         }
-        article.content = helper.md2html(article.content, true);
-        this.render(getView('article/article.html'), await getModel.apply(this, [model]));
+        article.content = md.systemMarkdownToHtml(article.content);
+        this.render(getView('article/article.html'), await getModel(model));
     },
 
-    'GET /webpage/:alias': async (ctx, next) =>
+    'GET /webpage/:alias': async (ctx, next) => {
         var
-            webpage = yield webpageApi.$getWebpageByAlias(alias, true),
+            webpage = await webpageApi.getWebpageByAlias(alias, true),
             model;
         if (webpage.draft) {
-            this.throw(404);
+            ctx.response.status = 404;
+            return;
         }
-        webpage.content = helper.md2html(webpage.content, true);
+        webpage.content = md.systemMarkdownToHtml(webpage.content);
         model = {
             webpage: webpage
         };
-        this.render(getView('webpage/webpage.html'), await getModel.apply(this, [model]));
+        ctx.render('webpage/webpage.html', await getModel(model));
     },
 
-    'GET /wikipage/:id': async (ctx, next) =>
-        var wp = yield wikiApi.$getWikiPage(id);
-        this.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
+    'GET /wikipage/:id': async (ctx, next) => {
+        var wp = await wikiApi.getWikiPage(id);
+        ctx.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
     },
 
-    'GET /wiki/:id': async (ctx, next) =>
+    'GET /wiki/:id': async (ctx, next) => {
         var
             model,
-            wiki = yield wikiApi.$getWiki(id, true),
-            num = yield cache.$incr(wiki.id),
-            tree = yield wikiApi.$getWikiTree(wiki.id, true);
+            wiki = await wikiApi.getWiki(id, true),
+            num = await cache.incr(wiki.id),
+            tree = await wikiApi.getWikiTree(wiki.id, true);
         wiki.type = 'wiki';
-        wiki.content = helper.md2html(wiki.content, true);
+        wiki.content = md.systemMarkdownToHtml(wiki.content, true);
         wiki.views = wiki.views + num;
         if (num > WRITE_VIEWS_BACK) {
             await updateEntityViews(wiki);
@@ -204,19 +207,19 @@ module.exports = {
             current: wiki,
             tree: tree.children
         };
-        this.render(getView('wiki/wiki.html'), await getModel.apply(this, [model]));
+        ctx.render('wiki/wiki.html', await getModel(model));
     },
 
-    'GET /wiki/:wid/:pid': async (ctx, next) =>
+    'GET /wiki/:wid/:pid': async (ctx, next) => {
         var
             model, wiki, tree, num,
-            wikipage = yield wikiApi.$getWikiPage(pid, true);
+            wikipage = await wikiApi.getWikiPage(pid, true);
         if (wikipage.wiki_id !== id) {
             this.throw(404);
         }
-        num = yield cache.$incr(wikipage.id);
-        wiki = yield wikiApi.$getWiki(id);
-        tree = yield wikiApi.$getWikiTree(id, true);
+        num = await cache.incr(wikipage.id);
+        wiki = await wikiApi.getWiki(id);
+        tree = await wikiApi.getWikiTree(id, true);
         wikipage.type = 'wikipage';
         wikipage.views = wikipage.views + num;
         if (num > WRITE_VIEWS_BACK) {
@@ -224,11 +227,11 @@ module.exports = {
         }
         wikipage.content = helper.md2html(wikipage.content, true);
         model = {
-            wiki: yield wikiApi.$getWiki(id),
+            wiki: await wikiApi.getWiki(id),
             current: wikipage,
             tree: tree.children
         };
-        this.render(getView('wiki/wiki.html'), await getModel.apply(this, [model]));
+        ctx.render('wiki/wiki.html', await getModel(model));
     },
 
     'POST /api/comments/:ref_type/:ref_id': async (ctx, next) => {
@@ -262,109 +265,110 @@ module.exports = {
     'GET /discuss': async (ctx, next) => {
         var
             model,
-            boards = yield discussApi.$getBoards();
+            boards = await discussApi.getBoards();
         model = {
             boards: boards
         };
-        this.render(getView('discuss/boards.html'), await getModel.apply(this, [model]));
+        ctx.render('discuss/boards.html', await getModel(model));
     },
 
-    'GET /discuss/:id': async (ctx, next) =>
+    'GET /discuss/:id': async (ctx, next) => {
         var
-            page = helper.getPage(this.request, 10),
-            board = yield discussApi.$getBoard(id),
-            topics = yield discussApi.$getTopics(id, page),
+            page = helper.getPage(ctx.request),
+            board = await discussApi.getBoard(id),
+            topics = await discussApi.getTopics(id, page),
             model;
-        yield userApi.$bindUsers(topics);
+        await userApi.bindUsers(topics);
         model = {
             page: page,
             board: board,
             topics: topics
         };
-        this.render(getView('discuss/board.html'), await getModel.apply(this, [model]));
+        ctx.render('discuss/board.html', await getModel(model));
     },
 
-    'GET /discuss/:bid/:tid': async (ctx, next) =>
+    'GET /discuss/:bid/:tid': async (ctx, next) => {
         var
-            topic = yield discussApi.$getTopic(tid),
+            topic = await discussApi.getTopic(tid),
             page,
             board,
             replies,
             model;
         if (topic.board_id !== bid) {
-            this.throw(404);
+            ctx.response.status = 404;
+            return;
         }
-        page = helper.getPage(this.request, 10);
-        board = yield discussApi.$getBoard(bid);
-        replies = yield discussApi.$getReplies(tid, page);
+        page = helper.getPage(ctx.request);
+        board = await discussApi.getBoard(bid);
+        replies = await discussApi.getReplies(tid, page);
         if (page.index === 1) {
             replies.unshift(topic);
         }
-        yield userApi.$bindUsers(replies);
+        await userApi.bindUsers(replies);
         model = {
             page: page,
             board: board,
             topic: topic,
             replies: replies
         };
-        this.render(getView('discuss/topic.html'), await getModel.apply(this, [model]));
+        this.render('discuss/topic.html', await getModel(model));
     },
 
-    'GET /discuss/:bid/topics/create': async (ctx, next) =>
-        if (this.request.user === null) {
-            this.response.redirect('/auth/signin');
+    'GET /discuss/:bid/topics/create': async (ctx, next) => {
+        if (ctx.state.__user__ === null) {
+            ctx.response.redirect('/auth/signin');
             return;
         }
         var
-            board = yield discussApi.$getBoard(bid),
+            board = await discussApi.getBoard(bid),
             model = {
                 board: board
             };
-        this.render(getView('discuss/topic_form.html'), await getModel.apply(this, [model]));
+        ctx.render('discuss/topic_form.html', await getModel(model));
     },
 
-    'GET /discuss/topic/:tid/find/:rid': async (ctx, next) =>
+    'GET /discuss/topic/:tid/find/:rid': async (ctx, next) => {
         var
-            topic = yield discussApi.$getTopic(tid),
-            p = yield discussApi.$getReplyPageIndex(tid, rid);
-        this.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
+            topic = await discussApi.getTopic(tid),
+            p = await discussApi.getReplyPageIndex(tid, rid);
+        ctx.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
     },
 
-    'GET /user/:id': async (ctx, next) =>
+    'GET /user/:id': async (ctx, next) => {
         var
-            user = yield userApi.$getUser(id),
+            user = await userApi.getUser(id),
             model = {
                 user: user
             };
-        this.render(getView('user/profile.html'), await getModel.apply(this, [model]));
+        ctx.render('user/profile.html', await getModel(model));
     },
 
-    'GET /me/profile': async (ctx, next) =>
+    'GET /me/profile': async (ctx, next) => {
         var
             user = this.request.user,
             model = {
                 user: user
             };
         if (user === null) {
-            this.response.redirect('/auth/signin');
+            ctx.response.redirect('/auth/signin');
             return;
         }
-        this.render(getView('user/profile.html'), await getModel.apply(this, [model]));
+        ctx.render('user/profile.html', await getModel(model));
     },
 
-    'GET /auth/signin': async (ctx, next) =>
+    'GET /auth/signin': async (ctx, next) => {
         var
-            referer = this.request.get('referer') || '/',
-            user = this.request.user;
-        console.log('Referer: ' + referer);
+            referer = ctx.request.get('referer') || '/',
+            user = ctx.state.__user__;
+        logger.info('Referer: ' + referer);
         if (user !== null) {
             
         }
-        this.render(getView('signin.html'), await getModel.apply(this, [{}]));
+        ctx.render('signin.html', await getModel({}));
     },
 
     'GET /search': async (ctx, next) => {
-        this.body = 'blank';
+        ctx.response.body = 'blank';
         // var
         //     page,
         //     q = req.query.q || '',

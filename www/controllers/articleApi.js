@@ -5,7 +5,6 @@ const
     api = require('../api'),
     db = require('../db'),
     cache = require('../cache'),
-    images = require('./_images'),
     helper = require('../helper'),
     constants = require('../constants'),
     search = require('../search/search');
@@ -72,10 +71,10 @@ async function getAllArticles(page) {
     if (page.isEmpty) {
         return [];
     }
-    return yield Article.$findAll({
+    return await Article.findAll({
         offset: page.offset,
         limit: page.limit,
-        order: 'publish_at desc'
+        order: 'publish_at DESC'
     });
 }
 
@@ -89,10 +88,10 @@ async function getArticles(page) {
     if (page.isEmpty) {
         return [];
     }
-    return yield Article.$findAll({
+    return await Article.findAll({
         offset: page.offset,
         limit: page.limit,
-        order: 'publish_at desc'
+        order: 'publish_at DESC'
     });
 }
 
@@ -106,10 +105,14 @@ async function getArticlesByCategory(categoryId, page) {
     if (page.isEmpty) {
         return [];
     }
-    return yield Article.$findAll({
-        order: 'publish_at desc',
-        where: 'publish_at<? and category_id=?',
-        params: [now, categoryId],
+    return await Article.findAll({
+        where: {
+            'publish_at': {
+                $lt: now
+            },
+            'category_id': categoryId
+        },
+        order: 'publish_at DESC',
         offset: page.offset,
         limit: page.limit
     });
@@ -273,10 +276,10 @@ module.exports = {
             content_id,
             data = this.request.body;
         // check category id:
-        yield categoryApi.$getCategory(data.category_id);
+        await categoryApi.getCategory(data.category_id);
 
-        attachment = yield attachmentApi.$createAttachment(
-            this.request.user.id,
+        attachment = await attachmentApi.createAttachment(
+            ctx.state.__user__.id,
             data.name.trim(),
             data.description.trim(),
             new Buffer(data.image, 'base64'),
@@ -286,13 +289,13 @@ module.exports = {
         content_id = nextId();
         article_id = nextId();
 
-        text = yield Text.$create({
+        text = await Text.create({
             id: content_id,
             ref_id: article_id,
             value: data.content
         });
 
-        article = yield Article.$create({
+        article = await Article.create({
             id: article_id,
             user_id: this.request.user.id,
             user_name: this.request.user.name,
@@ -331,69 +334,60 @@ module.exports = {
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateArticle');
         var
-            user = this.request.user,
+            user = ctx.state.__user__,
             article,
-            props = [],
+            props = {},
             text,
             attachment,
-            data = this.request.body;
+            data = ctx.request.body;
 
         article = await getArticle(id);
         if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
             throw api.notAllowed('Permission denied.');
         }
         if (data.category_id) {
-            yield categoryApi.$getCategory(data.category_id);
-            article.category_id = data.category_id;
-            props.push('category_id');
+            await categoryApi.getCategory(data.category_id);
+            props.category_id = data.category_id;
         }
         if (data.name) {
-            article.name = data.name.trim();
-            props.push('name');
+            props.name = data.name.trim();
         }
         if (data.description) {
-            article.description = data.description.trim();
-            props.push('description');
+            props.description = data.description.trim();
         }
         if (data.tags) {
-            article.tags = helper.formatTags(data.tags);
-            props.push('tags');
+            props.tags = helper.formatTags(data.tags);
         }
         if (data.publish_at !== undefined) {
-            article.publish_at = data.publish_at;
-            props.push('publish_at');
+            props.publish_at = data.publish_at;
         }
         if (data.image) {
             // check image:
-            attachment = yield attachmentApi.$createAttachment(
+            attachment = await attachmentApi.createAttachment(
                 user.id,
                 article.name,
                 article.description,
                 new Buffer(data.image, 'base64'),
                 null,
                 true);
-            article.cover_id = attachment.id;
-            props.push('cover_id');
+            props.cover_id = attachment.id;
         }
         if (data.content) {
             text = await Text.create({
                 ref_id: article.id,
                 value: data.content
             });
-            article.content_id = text.id;
+            props.content_id = text.id;
             article.content = data.content;
-            props.push('content_id');
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            yield article.$update(props);
+        if (Object.getOwnPropertyNames(props).length > 0) {
+            await article.update(props);
         }
         if (!article.content) {
             text = await Text.findById(article.content_id);
             article.content = text.value;
         }
-        this.body = article;
+        ctx.rest(article);
     },
 
     'POST /api/articles/:id/delete': async (ctx, next) => {
@@ -414,9 +408,11 @@ module.exports = {
             throw api.notAllowed('Permission denied.');
         }
         await article.destroy();
-        yield warp.$update('delete from texts where ref_id=?', [id]);
-        this.body = {
-            id: id
-        };
+        await Text.destroy({
+            where: {
+                'ref_id': id
+            }
+        });
+        ctx.rest({ 'id': id });
     }
 };

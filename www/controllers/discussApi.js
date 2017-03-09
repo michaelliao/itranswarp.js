@@ -5,9 +5,11 @@
 var
     _ = require('lodash'),
     db = require('../db'),
+    md = require('../md'),
     api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
+    logger = require('../logger'),
     search = require('../search/search'),
     constants = require('../constants'),
     userApi = require('./userApi');
@@ -91,7 +93,7 @@ async function getBoardByTag(tag) {
 }
 
 async function getBoards() {
-    return yield Board.$findAll({
+    return await Board.findAll({
         order: 'display_order'
     });
 }
@@ -100,7 +102,7 @@ async function lockBoard(id, locked) {
     var board = await getBoard(id);
     if (board.locked !== locked) {
         board.locked = locked;
-        yield board.$update(['locked', 'updated_at', 'version']);
+        await board.save();
     }
     return board;
 }
@@ -113,90 +115,89 @@ async function getTopic(id) {
     return topic;
 }
 
-var TOPIC_FIELDS_EXCLUDE_CONTENT = _.filter(/*Topic.__selectAttributesArray*/[], function (field) {
-    return field !== 'content';
-});
-
 async function getAllTopics(page) {
-    page.total = yield Topic.$findNumber({
-        select: 'count(id)'
-    });
+    page.total = await Topic.count();
     if (page.isEmpty) {
         return [];
     }
-    return yield Topic.$findAll({
-        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
-        order: 'id desc',
+    return await Topic.findAll({
+        attributes: {
+            exclude: ['content']
+        },
+        order: 'id DESC',
         offset: page.offset,
         limit: page.limit
     });
 }
 
 async function getTopics(board_id, page) {
-    page.total = yield Topic.$findNumber({
-        select: 'count(id)',
-        where: 'board_id=?',
-        params: [board_id]
+    page.total = await Topic.count({
+        where: {
+            'board_id': board_id
+        }
     });
     if (page.isEmpty) {
         return [];
     }
-    return yield Topic.$findAll({
-        select: TOPIC_FIELDS_EXCLUDE_CONTENT,
-        where: 'board_id=?',
-        params: [board_id],
-        order: 'updated_at desc',
+    return await Topic.findAll({
+        attributes: {
+            exclude: ['content']
+        },
+        where: {
+            'board_id': board_id
+        },
+        order: 'updated_at DESC',
         offset: page.offset,
         limit: page.limit
     });
 }
 
 async function getTopicsByRef(ref_id, page) {
-    page.total = yield Topic.$findNumber({
-        select: 'count(id)',
-        where: 'ref_id=?',
-        params: [ref_id]
+    page.total = await Topic.count({
+        where: {
+            'ref_id': ref_id
+        }
     });
     if (page.isEmpty) {
         return [];
     }
-    return yield Topic.$findAll({
-        where: 'ref_id=?',
-        params: [ref_id],
-        order: 'updated_at desc',
+    return await Topic.findAll({
+        where: {
+            'ref_id': ref_id
+        },
+        order: 'updated_at DESC',
         offset: page.offset,
         limit: page.limit
     });
 }
 
 async function getAllReplies(page) {
-    page.total = yield Reply.$findNumber({
-        select: 'count(id)'
-    });
+    page.total = await Reply.count();
     if (page.isEmpty) {
         return [];
     }
-    return yield Reply.$findAll({
-        order: 'id desc',
+    return await Reply.findAll({
+        order: 'id DESC',
         offset: page.offset,
         limit: page.limit
     });
 }
 
 async function getReplies(topic_id, page) {
-    var num = yield Reply.$findNumber({
-        select: 'count(id)',
-        where: 'topic_id=?',
-        params: [topic_id]
+    var num = await Reply.count({
+        where: {
+            'topic_id': topic_id
+        }
     });
     // items = 1 topic + N replies:
     page.total = num + 1;
     if (num === 0) {
         return [];
     }
-    return yield Reply.$findAll({
-        where: 'topic_id=?',
-        params: [topic_id],
+    return await Reply.findAll({
+        where: {
+            'topic_id': topic_id
+        },
         order: 'id',
         offset: (page.index === 1) ? 0 : (page.offset - 1),
         limit: (page.index === 1) ? (page.limit - 1) : page.limit
@@ -204,20 +205,23 @@ async function getReplies(topic_id, page) {
 }
 
 async function getFirstReplies(topic_id, num) {
-    return yield Reply.$findAll({
-        where: 'topic_id=?',
-        params: [topic_id],
+    return await Reply.findAll({
+        where: {
+            'topic_id': topic_id
+        },
         order: 'id',
         limit: num
     });
 }
 
 async function getReplyPageIndex(topic, reply_id) {
-    var
-        num = yield Reply.$findNumber({
-            select: 'count(id)',
-            where: 'topic_id=? and id < ?',
-            params: [topic.id, reply_id]
+    var num = await Reply.count({
+            where: {
+                'topic_id': topic.id,
+                'id': {
+                    $lt: reply_id
+                }
+            }
         });
     return Math.floor((num + 1) / 20) + 1;
 }
@@ -229,17 +233,18 @@ async function createReply(user, topic_id, data) {
     if (topic.locked) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
-    reply = yield Reply.$create({
+    reply = await Reply.create({
         topic_id: topic_id,
         user_id: user.id,
-        content: helper.md2html(data.content)
+        content: md.ugcMarkdownToHtml(data.content)
     });
-    yield warp.$update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), topic_id]);
+    // FIXME:
+    await Topic.update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), topic_id]);
     reply.name = 'Re:' + topic.name;
     indexDiscuss(reply);
     delete reply.name;
     if (topic.ref_id) {
-        yield cache.$remove('REF-TOPICS-' + topic.ref_id);
+        await cache.remove('REF-TOPICS-' + topic.ref_id);
     }
     return reply;
 }
@@ -247,19 +252,20 @@ async function createReply(user, topic_id, data) {
 async function createTopic(user, board_id, ref_type, ref_id, data) {
     var
         board = await getBoard(board_id),
-        topic = yield Topic.$create({
+        topic = await Topic.create({
             board_id: board_id,
             user_id: user.id,
             ref_type: ref_type,
             ref_id: ref_id,
             name: data.name.trim(),
             tags: (data.tags || '').trim(),
-            content: helper.md2html(data.content)
+            content: md.ugcMarkdownToHtml(data.content)
         });
-    yield warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
+    // FIXME:
+    await warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
     indexDiscuss(topic);
     if (ref_id) {
-        yield cache.$remove('REF-TOPICS-' + ref_id);
+        await cache.remove('REF-TOPICS-' + ref_id);
     }
     return topic;
 }
@@ -267,7 +273,7 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
 async function loadTopicsByRefWithCache(ref_id, page) {
     if (page.index === 1) {
         var key = 'REF-TOPICS-' + ref_id;
-        return yield cache.$get(key, function* () {
+        return await cache.get(key, async () => {
             return await loadTopicsByRef(ref_id, page); 
         });
     }
@@ -278,7 +284,7 @@ async function loadTopicsByRef(ref_id, page) {
     var
         i,
         topics = await getTopicsByRef(ref_id, page);
-    yield userApi.$bindUsers(topics);
+    await userApi.bindUsers(topics);
     for (i=0; i<topics.length; i++) {
         await bindReplies(topics[i]);
     }
@@ -287,48 +293,48 @@ async function loadTopicsByRef(ref_id, page) {
 
 async function bindReplies(topic) {
     var key = 'REPLIES-' + topic.id + '_' + topic.version;
-    topic.replies = yield cache.$get(key, function* () {
+    topic.replies = await cache.get(key, async () => {
         var replies = await getFirstReplies(topic.id, 10);
-        yield userApi.$bindUsers(replies);
+        await userApi.bindUsers(replies);
         return replies;
     });
 }
 
 module.exports = {
 
-    $getNavigationMenus: $getNavigationMenus,
+    getNavigationMenus: getNavigationMenus,
 
-    $createTopic: $createTopic,
+    createTopic: createTopic,
 
-    $getBoard: $getBoard,
+    getBoard: getBoard,
 
-    $getBoardByTag: $getBoardByTag,
+    getBoardByTag: getBoardByTag,
 
-    $getBoards: $getBoards,
+    getBoards: getBoards,
 
-    $getTopic: $getTopic,
+    getTopic: getTopic,
 
-    $getTopics: $getTopics,
+    getTopics: getTopics,
 
-    $getTopicsByRef: $getTopicsByRef,
+    getTopicsByRef: getTopicsByRef,
 
-    $getReplies: $getReplies,
+    getReplies: getReplies,
 
-    $getFirstReplies: $getFirstReplies,
+    getFirstReplies: getFirstReplies,
 
-    $getReplyPageIndex: $getReplyPageIndex,
+    getReplyPageIndex: getReplyPageIndex,
 
     'GET /api/ref/:id/topics': async (ctx, next) => {
         /**
          * Get topics by ref id
          */
         var
-            page = helper.getPage(this.request, 10),
+            page = helper.getPage(ctx.request, 10),
             topics = await loadTopicsByRefWithCache(id, page);
-        this.body = {
+        ctx.rest({
             page: page,
             topics: topics
-        };
+        });
     },
 
     'GET /api/boards': async (ctx, next) => {
@@ -336,9 +342,9 @@ module.exports = {
          * Get all boards.
          */
         ctx.checkPermission(constants.role.EDITOR);
-        this.body = {
+        ctx.rest({
             boards: await getBoards()
-        };
+        });
     },
 
     'POST /api/boards': async (ctx, next) => {
@@ -351,23 +357,24 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('createBoard');
         var
-            num,
-            data = this.request.body;
-        ctx.validate('createBoard', data);
+            num, board,
+            data = ctx.request.body;
 
-        num = yield Board.$findNumber('max(display_order)');
-        this.body = yield Board.$create({
+        num = await Board.max('display_order');
+        board = await Board.create({
             name: data.name.trim(),
             tag: data.tag.trim(),
             description: data.description.trim(),
             display_order: ((num === null) ? 0 : num + 1)
         });
+        ctx.rest(board);
     },
 
     'GET /api/boards/:id': async (ctx, next) => {
         ctx.checkPermission(constants.role.EDITOR);
-        this.body = await getBoard(id);
+        ctx.rest(await getBoard(id));
     },
 
     'POST /api/boards/:id': async (ctx, next) => {
@@ -381,14 +388,12 @@ module.exports = {
          * @return {object} Board object that was updated.
          */
         ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('updateBoard');
 
         var
-            board,
             props = [],
-            data = this.request.body;
-        ctx.validate('updateBoard', data);
-
-        board = await getBoard(id);
+            data = ctx.request.body,
+            board = await getBoard(id);
         if (data.name) {
             board.name = data.name.trim();
             props.push('name');
@@ -404,9 +409,10 @@ module.exports = {
         if (props.length > 0) {
             props.push('updated_at');
             props.push('version');
-            yield board.$update(props);
+            // FIXME:
+            await board.$update(props);
         }
-        this.body = board;
+        ctx.rest(board);
     },
 
     'POST /api/boards/:id/lock': async (ctx, next) => {
@@ -418,7 +424,7 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        this.body = await lockBoard(id, true);
+        ctx.rest(await lockBoard(id, true));
     },
 
     'POST /api/boards/:id/unlock': async (ctx, next) => {
@@ -430,7 +436,7 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        this.body = await lockBoard(id, false);
+        ctx.rest(await lockBoard(id, false));
     },
 
     'POST /api/boards/all/sort': async (ctx, next) => {
@@ -446,7 +452,7 @@ module.exports = {
         var
             board,
             i, pos,
-            data = this.request.body,
+            data = ctx.request.body,
             ids = data.ids,
             boards = await Board.findAll();
         if (ids.length !== boards.length) {
@@ -472,7 +478,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         var
-            page = helper.getPage(this.request),
+            page = helper.getPage(ctx.request),
             topics = await getTopics(board_id, page);
         ctx.rest({
             page: page,
@@ -493,7 +499,7 @@ module.exports = {
         ctx.checkPermission(constants.role.SUBSCRIBER);
         ctx.validate('createTopic');
         let
-            data = this.request.body;
+            data = ctx.request.body;
             topic = await createTopic(ctx.request.user, board_id, '', '', data);
         ctx.rest(topic);
     },
@@ -519,7 +525,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         var
-            page = helper.getPage(this.request),
+            page = helper.getPage(ctx.request),
             replies = await getAllReplies(page);
         await userApi.bindUsers(replies);
         ctx.rest({

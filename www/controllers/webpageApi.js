@@ -7,6 +7,7 @@ const
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
+    logger = require('../logger'),
     constants = require('../constants');
 
 var
@@ -27,7 +28,7 @@ async function checkAliasAvailable(alias) {
 }
 
 async function getWebpages() {
-    return yield Webpage.$findAll({
+    return await Webpage.findAll({
         order: 'alias'
     });
 }
@@ -75,13 +76,13 @@ async function getNavigationMenus() {
 
 module.exports = {
 
-    $getNavigationMenus: $getNavigationMenus,
+    getNavigationMenus: getNavigationMenus,
 
-    $getWebpage: $getWebpage,
+    getWebpage: getWebpage,
 
-    $getWebpages: $getWebpages,
+    getWebpages: getWebpages,
 
-    $getWebpageByAlias: $getWebpageByAlias,
+    getWebpageByAlias: getWebpageByAlias,
 
     'GET /api/webpages/:id': async (ctx, next) => {
         /**
@@ -91,7 +92,7 @@ module.exports = {
          * @param {string} id - The id of the Webpage.
          * @return {object} Webpage object.
          */
-        this.body = await getWebpage(id, true);
+        ctx.rest(await getWebpage(id, true));
     },
 
     'GET /api/webpages': async (ctx, next) => {
@@ -101,9 +102,9 @@ module.exports = {
          * @name Get Webpages
          * @return {object} Result as {"webpages": [{webpage}, {webpage}...]}
          */
-        this.body = {
+        ctx.rest({
             webpages: await getWebpages()
-        };
+        });
     },
 
     'POST /api/webpages': async (ctx, next) => {
@@ -119,24 +120,22 @@ module.exports = {
          * @return {object} The created webpage object.
          */
         ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('createWebpage');
         var
-            content_id,
-            webpage_id,
+            content_id = nextId(),
+            webpage_id = nextId(),
             text,
             webpage,
-            data = this.request.body;
-        ctx.validate('createWebpage', data);
+            data = ctx.request.body;
         data.name = data.name.trim();
         data.tags = helper.formatTags(data.tags);
         await checkAliasAvailable(data.alias);
-        content_id = nextId();
-        webpage_id = nextId();
-        text = yield Text.$create({
+        text = await Text.create({
             id: content_id,
             ref_id: webpage_id,
             value: data.content
         });
-        webpage = yield Webpage.$create({
+        webpage = await Webpage.create({
             id: webpage_id,
             alias: data.alias,
             content_id: content_id,
@@ -146,7 +145,7 @@ module.exports = {
         });
         // attach content:
         webpage.content = data.content;
-        this.body = webpage;
+        ctx.rest(webpage);
     },
 
     'POST /api/webpages/:id': async (ctx, next) => {
@@ -163,14 +162,13 @@ module.exports = {
          * @return {object} Updated webpage object.
          */
         ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('updateWebpage');
         var
             content_id = null,
-            webpage,
             text,
             props = [],
-            data = this.request.body;
-        ctx.validate('updateWebpage', data);
-        webpage = await getWebpage(id);
+            data = ctx.request.body,
+            webpage = await getWebpage(id);
         if (data.alias && data.alias!==webpage.alias) {
             await checkAliasAvailable(data.alias);
             webpage.alias = data.alias;
@@ -193,7 +191,7 @@ module.exports = {
             webpage.content_id = content_id;
             props.push('content_id');
             // update content
-            yield Text.$create({
+            await Text.create({
                 id: content_id,
                 ref_id: id,
                 value: data.content
@@ -202,7 +200,7 @@ module.exports = {
         if (props.length > 0) {
             props.push('updated_at');
             props.push('version');
-            yield webpage.$update(props);
+            await webpage.update(props);
         }
         // attach content:
         if (content_id) {
@@ -227,9 +225,11 @@ module.exports = {
         var webpage = await getWebpage(id);
         await webpage.destroy();
         // delete all texts:
-        warp.$update('delete from texts where ref_id=?', [id]);
-        this.body = {
-            id: id
-        };
+        Text.destroy({
+            where: {
+                'ref_id': id
+            }
+        });
+        ctx.rest({ 'id': id });
     }
 };

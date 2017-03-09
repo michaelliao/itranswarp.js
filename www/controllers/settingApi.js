@@ -7,6 +7,7 @@ const
     api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
+    logger = require('../logger'),
     constants = require('../constants');
 
 var
@@ -145,9 +146,10 @@ async function getSettings(group) {
     // prefix of key has been removed:
     // 'group1:key1' ==> 'key1'
     var
-        settings = yield Setting.$findAll({
-            where: '`group`=?',
-            params: [group]
+        settings = await Setting.findAll({
+            where: {
+                'group': group
+            }
         }),
         obj = {},
         n = group.length + 1;
@@ -158,9 +160,10 @@ async function getSettings(group) {
 }
 
 async function getSetting(key, defaultValue) {
-    var setting = await Setting.findById({
-        where: '`key`=?',
-        params: [key]
+    var setting = await Setting.findOne({
+        where: {
+            'key': key
+        }
     });
     if (setting === null) {
         return defaultValue === undefined ? null : defaultValue;
@@ -176,8 +179,12 @@ async function setSetting(key, value) {
         throw api.invalidParam('key');
     }
     group = m[1];
-    yield warp.$update('delete from settings where `key`=?', [key]);
-    yield Setting.$create({
+    await Setting.destroy({
+        where: {
+            'key': key
+        }
+    });
+    await Setting.create({
         group: group,
         key: key,
         value: value
@@ -185,7 +192,11 @@ async function setSetting(key, value) {
 }
 
 async function setSettings(group, settings) {
-    await warp.$update('delete from settings where `group`=?', [group]);
+    await Setting.destroy({
+        where: {
+            'group': group
+        }
+    });
     var key;
     for (key in settings) {
         if (settings.hasOwnProperty(key)) {
@@ -216,44 +227,44 @@ var
     KEY_SNIPPETS = constants.cache.SNIPPETS;
 
 async function getWebsiteSettings() {
-    return yield cache.$get(KEY_WEBSITE, function* () {
+    return await cache.get(KEY_WEBSITE, async () => {
         return await getSettingsByDefaults('website', defaultSettingValues.website);
     });
 }
 
 async function setWebsiteSettings(settings) {
     await setSettings('website', settings);
-    yield cache.$remove(KEY_WEBSITE);
+    await cache.remove(KEY_WEBSITE);
 }
 
 async function getSnippets() {
-    return yield cache.$get(KEY_SNIPPETS, function* () {
+    return await cache.get(KEY_SNIPPETS, async () => {
         return await getSettingsByDefaults('snippets', defaultSettingValues.snippets);
     });
 }
 
 async function setSnippets(settings) {
     await setSettings('snippets', settings);
-    yield cache.$remove(KEY_SNIPPETS);
+    await cache.remove(KEY_SNIPPETS);
 }
 
 module.exports = {
 
-    $getNavigationMenus: $getNavigationMenus,
+    getNavigationMenus: getNavigationMenus,
 
-    $getSettings: $getSettings,
+    getSettings: getSettings,
 
-    $getSetting: $getSetting,
+    getSetting: getSetting,
 
-    $setSetting: $setSetting,
+    setSetting: setSetting,
 
-    $setSettings: $setSettings,
+    setSettings: setSettings,
 
-    $getSettingsByDefaults: $getSettingsByDefaults,
+    getSettingsByDefaults: getSettingsByDefaults,
 
-    $getWebsiteSettings: $getWebsiteSettings,
+    getWebsiteSettings: getWebsiteSettings,
 
-    $getSnippets: $getSnippets,
+    getSnippets: getSnippets,
 
     'GET /api/settings/definitions': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
@@ -268,7 +279,7 @@ module.exports = {
     'POST /api/settings/website': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validateSchema('updateWebsiteSettings');
-        var data = this.request.body;
+        var data = ctx.request.body;
         await setWebsiteSettings(data);
         ctx.rest(await getWebsiteSettings());
     },
@@ -280,8 +291,8 @@ module.exports = {
 
     'POST /api/settings/snippets': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
-        var data = this.request.body;
-        ctx.validate('updateSnippets', data);
+        ctx.validate('updateSnippets');
+        var data = ctx.request.body;
         await setSnippets(data);
         ctx.rest(await getSnippets());
     }

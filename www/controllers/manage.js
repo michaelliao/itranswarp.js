@@ -11,8 +11,8 @@ const
     api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
-    constants = require('../constants'),
-    json_schema = require('../json_schema');
+    logger = require('../logger'),
+    constants = require('../constants');
 
 var
     User = db.user,

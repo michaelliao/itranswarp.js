@@ -8,6 +8,7 @@ const
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
+    logger = require('../logger'),
     constants = require('../constants');
 
 var
@@ -19,7 +20,7 @@ var
     nextId = db.nextId;
 
 async function getCategories() {
-    return yield Category.$findAll({
+    return await Category.findAll({
         order: 'display_order'
     });
 }
@@ -44,11 +45,11 @@ async function getNavigationMenus() {
 
 module.exports = {
 
-    $getCategories: $getCategories,
+    getCategories: getCategories,
 
-    $getCategory: $getCategory,
+    getCategory: getCategory,
 
-    $getNavigationMenus: $getNavigationMenus,
+    getNavigationMenus: getNavigationMenus,
 
     'GET /api/categories': async (ctx, next) => {
         /**
@@ -57,9 +58,9 @@ module.exports = {
          * @name Get Categories
          * @return {object} Result as {"categories": [{category1}, {category2}...]}
          */
-        this.body = {
+        ctx.rest({
             categories: await getCategories()
-        };
+        });
     },
 
     'GET /api/categories/:id': async (ctx, next) => {
@@ -70,7 +71,7 @@ module.exports = {
          * @param {string} id: The id of the category.
          * @return {object} Category object.
          */
-        this.body = await getCategory(id);
+        ctx.rest(await getCategory(id));
     },
 
     'POST /api/categories': async (ctx, next) => {
@@ -85,15 +86,16 @@ module.exports = {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('createCategory');
         var
-            num,
-            data = this.request.body;
-        num = yield Category.$findNumber('max(display_order)');
-        this.body = yield Category.$create({
+            num, cat,
+            data = ctx.request.body;
+        num = await Category.max('display_order');
+        cat = await Category.create({
             name: data.name.trim(),
             tag: data.tag.trim(),
             description: data.description.trim(),
             display_order: (num === null) ? 0 : num + 1
         });
+        ctx.rest(cat);
     },
 
     'POST /api/categories/all/sort': async (ctx, next) => {
@@ -106,9 +108,10 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('sortCategories');
-        var data = this.request.body;
+        var data = ctx.request.body;
+        // FIXME:
         this.body = {
-            categories: yield helper.$sort(data.ids, await getCategories())
+            categories: await helper.$sort(data.ids, await getCategories())
         };
     },
 
@@ -127,26 +130,19 @@ module.exports = {
         var
             props = [],
             category,
-            data = this.request.body;
+            data = ctx.request.body;
         category = await getCategory(id);
         if (data.name) {
             category.name = data.name.trim();
-            props.push('name');
         }
         if (data.tag) {
             category.tag = data.tag.trim();
-            props.push('tag');
         }
         if (data.description) {
             category.description = data.description.trim();
-            props.push('description');
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            yield category.$update(props);
-        }
-        this.body = category;
+        await category.save();
+        ctx.rest(category);
     },
 
     'POST /api/categories/:id/delete': async (ctx, next) => {
@@ -160,7 +156,7 @@ module.exports = {
         ctx.checkPermission(constants.role.ADMIN);
         var
             category = await getCategory(id),
-            num = yield Article.$findNumber({
+            num = await Article.$findNumber({
                 select: 'count(id)',
                 where: 'category_id=?',
                 params: [id]
@@ -169,8 +165,6 @@ module.exports = {
             throw api.conflictError('Category', 'Cannot delete category for there are some articles reference it.');
         }
         await category.destroy();
-        this.body = {
-            id: id
-        };
+        ctx.rest({ 'id': id });
     }
 };

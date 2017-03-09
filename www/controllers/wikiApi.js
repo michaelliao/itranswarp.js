@@ -9,7 +9,6 @@ const
     api = require('../api'),
     db = require('../db'),
     helper = require('../helper'),
-    images = require('./_images'),
     search = require('../search/search'),
     constants = require('../constants');
 
@@ -124,9 +123,10 @@ async function getWikiPages(wiki_id, returnAsDict=false) {
     var
         proot,
         pdict = {},
-        pages = yield WikiPage.$findAll({
-            where: 'wiki_id=?',
-            params: [wiki_id]
+        pages = await WikiPage.findAll({
+            where: {
+                'wiki_id': wiki_id
+            }
         });
     _.each(pages, function (p) {
         pdict[p.id] = p;
