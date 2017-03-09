@@ -8,7 +8,7 @@ var
     sleep = require('sleep-promise'),
     cache = require('../cache');
 
-var keyPrefix = require('node-uuid').v4().replace(/\-/g, '');
+var keyPrefix = require('uuid/v4')().replace(/\-/g, '');
 
 function toKeys(keys) {
     if (typeof(keys)==='string') {

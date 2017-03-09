@@ -7,7 +7,7 @@
 
 const
     util = require('util'),
-    uuid = require('node-uuid');
+    uuid = require('uuid/v4');
 
 var i, paddings = [];
 
@@ -23,6 +23,6 @@ for (i = 1; i < 30; i++) {
  */
 function nextId () {
     // generate uuid with timestamp:
-    var id = util.format('%d%s000', Date.now(), uuid.v4().replace(/\-/g, ''));
+    var id = util.format('%d%s000', Date.now(), uuid().replace(/\-/g, ''));
     return paddings[50 - id.length] + id;
 }

@@ -3,7 +3,7 @@
 var
     _ = require('lodash'),
     crypto = require('crypto'),
-    uuid = require('node-uuid'),
+    uuid = require('uuid/v4'),
     request = require('request');
 
 var
@@ -17,7 +17,7 @@ function encode(s) {
 }
 
 function nonce() {
-    return uuid.v4();
+    return uuid();
 }
 
 function filter(f) {
