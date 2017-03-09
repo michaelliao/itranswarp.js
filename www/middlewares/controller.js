@@ -6,7 +6,8 @@
 const
     fs = require('fs'),
     path = require('path'),
-    router = require('koa-router');
+    router = require('koa-router'),
+    logger = require('../logger');
 
 // add url-route in /controllers:
 function _addMapping(router, mapping) {

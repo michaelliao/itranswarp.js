@@ -376,7 +376,7 @@ module.exports = {
             props.push('cover_id');
         }
         if (data.content) {
-            text = yield Text.$create({
+            text = await Text.create({
                 ref_id: article.id,
                 value: data.content
             });

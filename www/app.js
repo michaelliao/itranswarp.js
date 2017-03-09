@@ -79,10 +79,10 @@ app.use(templating('view', {
 app.use(restify());
 
 // parse user and bind to ctx.state.__user__:
-app.use(authenticate());
+app.use(authenticate);
 
 // load i18n:
-const i18nT = i18n.getI18NTranslators('./views/i18n.json');
+const i18nT = i18n.getI18NTranslators('./views/i18n');
 
 // add global state for MVC:
 app.use(async (ctx, next) => {
@@ -111,6 +111,4 @@ app.use(async (ctx, next) => {
 // add controller:
 app.use(controller());
 
-app.listen(2015);
-
-logger.info(`application start in ${process.isProductionMode ? 'production' : 'development'} mode at 2015...`);
+module.exports = app;
