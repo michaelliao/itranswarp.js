@@ -11,6 +11,8 @@ const
 
 logger.info('init sequelize...');
 
+const ID_LENGTH = 50;
+
 const paddings = (() => {
     var i, _paddings = [];
     for (i = 1; i < 30; i++) {
@@ -28,7 +30,7 @@ const paddings = (() => {
 function nextId() {
     // generate uuid with timestamp:
     var id = util.format('%d%s000', Date.now(), uuid().replace(/\-/g, ''));
-    return paddings[50 - id.length] + id;
+    return paddings[ID_LENGTH - id.length] + id;
 }
 
 const SHOW_SQL = config.db.showSql || false;
@@ -129,6 +131,7 @@ function defineModel(modelName, tableName, attributes) {
 }
 
 var exp = {
+    ID_LENGTH: ID_LENGTH,
     sequelize: sequelize,
     nextId: nextId,
     sync: async (showSql=false) => {
