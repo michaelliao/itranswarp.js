@@ -39,6 +39,7 @@ app.use(async (ctx, next) => {
     } catch (e) {
         logger.error('error process request.', e);
     }
+    logger.info(`Response: ${ctx.response.status}`);
     execTime = Date.now() - start;
     ctx.response.set('X-Response-Time', `${execTime}ms`);
     ctx.response.set('X-Host', HOSTNAME);
