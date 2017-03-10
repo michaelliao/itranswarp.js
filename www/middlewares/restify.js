@@ -47,7 +47,7 @@ module.exports = function (pathPrefix = '/api/') {
             ctx.rest = (data) => {
                 response.type = 'application/json';
                 response.body = data;
-            }
+            };
             try {
                 await next();
             } catch (e) {

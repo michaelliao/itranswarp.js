@@ -15,13 +15,19 @@ const
     COOKIE_EXPIRES_IN_MS = config.session.expires * 1000;
 
 var
-    User = db.user,
-    LocalUser = db.localuser,
-    AuthUser = db.authuser;
+    User = db.User,
+    LocalUser = db.LocalUser,
+    AuthUser = db.AuthUser;
+
+function _verifyPassword(id, passwd, expectedHash) {
+    logger.info(`local id: ${id}, password: ${passwd}.`);
+    let actualHash = crypto.createHash('sha1').update(id + ':' + passwd).digest('hex');
+    return actualHash === expectedHash;
+}
 
 // parse header 'Authorization: Basic xxxx'
 async function _parseAuthorization(auth) {
-    logger.debug('try parse header: Authorization: ' + auth);
+    logger.info('try parse header: Authorization: ' + auth);
     if ((auth.length < 6) || (auth.substring(0, 6) !== 'Basic ')) {
         return null;
     }
@@ -37,11 +43,15 @@ async function _parseAuthorization(auth) {
         return null;
     }
     user = await User.findOne({
-        where: { 'email': u }
+        where: {
+            'email': u
+        }
     });
     if (user) {
         luser = await LocalUser.findOne({
-            where: { 'user_id': user.id }
+            where: {
+                'user_id': user.id
+            }
         });
         if (luser && _verifyPassword(luser.id, p, luser.passwd)) {
             logger.debug('binded user: ' + user.name);
@@ -56,11 +66,11 @@ module.exports = async (ctx, next) => {
     ctx.state.__user__ = null;
     let
         auth,
-        user,
+        user = null,
         request = ctx.request,
         response = ctx.response,
         path = request.path,
-        cookie = request.cookies.get(COOKIE_NAME);
+        cookie = ctx.cookies.get(COOKIE_NAME);
     if (cookie) {
         logger.info('try to parse session cookie...');
         user = await parseSessionCookie(cookie);
@@ -74,6 +84,8 @@ module.exports = async (ctx, next) => {
                 expires: new Date(0)
             });
         }
+    } else {
+        logger.info('cookie not found.');
     }
     if (user === null) {
         auth = request.get('authorization');

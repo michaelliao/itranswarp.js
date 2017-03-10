@@ -6,6 +6,7 @@ const
     _ = require('lodash'),
     fs = require('mz/fs'),
     Koa = require('koa'),
+    Cookies = require('cookies'),
     bodyParser = require('koa-bodyparser'),
     templating = require('./middlewares/templating'),
     controller = require('./middlewares/controller'),
@@ -75,11 +76,11 @@ app.use(templating('view', {
     filters: filters
 }));
 
-// rest support:
-app.use(restify());
-
 // parse user and bind to ctx.state.__user__:
 app.use(authenticate);
+
+// rest support:
+app.use(restify());
 
 // load i18n:
 const i18nT = i18n.getI18NTranslators('./views/i18n');
@@ -106,6 +107,7 @@ app.use(async (ctx, next) => {
         ctx.state.__theme__ = activeTheme;
         ctx.state.__request__ = request;
     }
+    await next();
 });
 
 // add controller:
