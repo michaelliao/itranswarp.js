@@ -56,6 +56,7 @@ module.exports = function (pathPrefix = '/api/') {
                 response.type = 'application/json';
                 response.body = {
                     error: e.error || 'internal:unknown_error',
+                    data: e.data || null,
                     message: e.message || ''
                 };
             }
