@@ -6,7 +6,11 @@ module.exports = {
     name: 'Text',
     table: 'texts',
     fields: {
-        ref_id: dbtypes.ID,
-        value: dbtypes.TEXT
+        ref_id: {
+            type: dbtypes.ID
+        },
+        value: {
+            type: dbtypes.TEXT
+        }
     }
 };

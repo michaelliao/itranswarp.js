@@ -6,11 +6,24 @@ module.exports = {
     name: 'Wiki',
     table: 'wikis',
     fields: {
-        cover_id: dbtypes.ID,
-        content_id: dbtypes.ID,
-        views: dbtypes.BIGINT,
-        name: dbtypes.STRING(100),
-        tag: dbtypes.STRING(100),
-        description: dbtypes.STRING(1000),
+        cover_id: {
+            type: dbtypes.ID
+        },
+        content_id: {
+            type: dbtypes.ID
+        },
+        views: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        },
+        tag: {
+            type: dbtypes.STRING(100)
+        },
+        description: {
+            type: dbtypes.STRING(1000)
+        }
     }
 };

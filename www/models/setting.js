@@ -6,14 +6,18 @@ module.exports = {
     name: 'Setting',
     table: 'settings',
     fields: {
-        group: dbtypes.STRING(100),
+        group: {
+            type: dbtypes.STRING(100)
+        },
         key: {
             type: dbtypes.STRING(100),
-            unique: true
+            unique: 'uni_key'
         },
         value: {
             type: dbtypes.TEXT,
-            defaultValue: ''
+            defaultValue: () => {
+                return '';
+            }
         }
     }
 };

@@ -10,7 +10,9 @@ module.exports = {
             type: dbtypes.ID,
             index: true
         },
-        ref_type: dbtypes.STRING(50),
+        ref_type: {
+            type: dbtypes.STRING(50)
+        },
         ref_id: {
             type: dbtypes.ID,
             index: true
@@ -19,13 +21,29 @@ module.exports = {
             type: dbtypes.ID,
             index: true
         },
-        replies: dbtypes.BIGINT,
-        upvotes: dbtypes.BIGINT,
-        downvotes: dbtypes.BIGINT,
-        score: dbtypes.BIGINT,
-        locked: dbtypes.BOOLEAN,
-        name: dbtypes.STRING(100),
-        tags: dbtypes.STRING(1000),
-        content: dbtypes.TEXT
+        replies: {
+            type: dbtypes.BIGINT
+        },
+        upvotes: {
+            type: dbtypes.BIGINT
+        },
+        downvotes: {
+            type: dbtypes.BIGINT
+        },
+        score: {
+            type: dbtypes.BIGINT
+        },
+        locked: {
+            type: dbtypes.BOOLEAN
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        },
+        tags: {
+            type: dbtypes.STRING(1000)
+        },
+        content: {
+            type: dbtypes.TEXT
+        }
     }
 };

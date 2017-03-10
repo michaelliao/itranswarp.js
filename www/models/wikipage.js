@@ -6,11 +6,24 @@ module.exports = {
     name: 'WikiPage',
     table: 'wikipages',
     fields: {
-        wiki_id: dbtypes.ID,
-        parent_id: dbtypes.ID,
-        content_id: dbtypes.ID,
-        views: dbtypes.BIGINT,
-        display_order: dbtypes.BIGINT,
-        name: dbtypes.STRING(100)
+        wiki_id: {
+            type: dbtypes.ID
+        },
+        parent_id: {
+            type: dbtypes.ID
+        },
+        content_id: {
+            type: dbtypes.ID
+        },
+        views: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
+        display_order: {
+            type: dbtypes.BIGINT
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        }
     }
 };

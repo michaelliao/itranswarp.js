@@ -6,8 +6,14 @@ module.exports = {
     name: 'Navigation',
     table: 'navigations',
     fields: {
-        display_order: dbtypes.BIGINT,
-        name: dbtypes.STRING(100),
-        url: dbtypes.STRING(1000)
+        display_order: {
+            type: dbtypes.BIGINT
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        },
+        url: {
+            type: dbtypes.STRING(1000)
+        }
     }
 };

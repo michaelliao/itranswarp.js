@@ -11,7 +11,7 @@ module.exports = {
     fields: {
         value: {
             type: dbtypes.STRING(100),
-            unique: true
+            unique: 'uni_rnd_value'
         },
         expires_time: {
             type: dbtypes.BIGINT,

@@ -6,17 +6,33 @@ module.exports = {
     name: 'Attachment',
     table: 'attachments',
     fields:{
-        user_id: dbtypes.ID,
-        resource_id: dbtypes.ID,
-        size: dbtypes.BIGINT,
-        width: dbtypes.BIGINT,
-        height: dbtypes.BIGINT,
-        mime: dbtypes.STRING(100),
-        name: dbtypes.STRING(100),
+        user_id: {
+            type: dbtypes.ID
+        },
+        resource_id: {
+            type: dbtypes.ID
+        },
+        size: {
+            type: dbtypes.BIGINT
+        },
+        width: {
+            type: dbtypes.BIGINT
+        },
+        height: {
+            type: dbtypes.BIGINT
+        },
+        mime: {
+            type: dbtypes.STRING(100)
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        },
         meta: {
             type: dbtypes.STRING(100),
             defaultValue: ''
         },
-        description: dbtypes.STRING(1000)
+        description: {
+            type: dbtypes.STRING(1000)
+        }
     }
 };

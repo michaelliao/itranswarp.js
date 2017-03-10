@@ -8,11 +8,20 @@ module.exports = {
     fields: {
         alias: {
             type: dbtypes.STRING(100),
-            unique: true
+            unique: 'uni_alias'
         },
-        content_id: dbtypes.ID,
-        draft: dbtypes.BOOLEAN,
-        name: dbtypes.STRING(100),
-        tags: dbtypes.STRING(1000)
+        content_id: {
+            type: dbtypes.ID
+        },
+        draft: {
+            type: dbtypes.BOOLEAN,
+            defaultValue: false
+        },
+        name: {
+            type: dbtypes.STRING(100)
+        },
+        tags: {
+            type: dbtypes.STRING(1000)
+        }
     }
 };

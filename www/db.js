@@ -11,11 +11,13 @@ const
 
 logger.info('init sequelize...');
 
-var i, paddings = [];
-
-for (i = 1; i < 30; i++) {
-    paddings.push(new Array(i).join('0'));
-}
+const paddings = (() => {
+    var i, _paddings = [];
+    for (i = 1; i < 30; i++) {
+        _paddings.push(new Array(i).join('0'));
+    }
+    return _paddings;
+})();
 
 /**
  * a id-generate function that generate 50-chars id string with:
@@ -29,7 +31,7 @@ function nextId() {
     return paddings[50 - id.length] + id;
 }
 
-var sequelize = new Sequelize(
+const sequelize = new Sequelize(
     config.db.database,
     config.db.username,
     config.db.password,
@@ -42,29 +44,24 @@ var sequelize = new Sequelize(
             minConnections: config.db.minConnections,
             maxIdleTime: config.db.maxIdleTime
         },
-        logging: (t) => {
+        logging: function (t) {
             logger.info('SQL: ' + t);
         }
     });
 
-function defineModel(tableName, attributes) {
+function defineModel(modelName, tableName, attributes) {
     var attrs = {
         id: {
             type: dbtypes.ID,
+            allowNull: false,
             primaryKey: true
         }
     };
     for (let key in attributes) {
-        let value = attributes[key];
-        if (typeof value === 'object' && value['type']) {
-            value.allowNull = value.allowNull || false;
-            attrs[key] = value;
-        } else {
-            attrs[key] = {
-                type: value,
-                allowNull: false
-            };
-        }
+        // set default allowNull = false:
+        let opt = attributes[key];
+        opt.allowNull = opt.allowNull || false;
+        attrs[key] = opt;
     }
     attrs.created_at = {
         type: dbtypes.BIGINT,
@@ -78,7 +75,8 @@ function defineModel(tableName, attributes) {
         type: dbtypes.BIGINT,
         allowNull: false
     };
-    logger.info('model defined for table: ' + tableName + '\n' + JSON.stringify(attrs, function (k, v) {
+    logger.info(`model ${modelName} defined for table: ${tableName}.`);
+    logger.debug('model defined for table: ' + tableName + '\n' + JSON.stringify(attrs, function (k, v) {
         if (k === 'type') {
             for (let key in Sequelize) {
                 if (key === 'ABSTRACT' || key === 'NUMBER') {
@@ -126,11 +124,17 @@ function defineModel(tableName, attributes) {
 }
 
 var exp = {
+    sequelize: sequelize,
     nextId: nextId,
     sync: () => {
         // only allow create ddl in non-production environment:
         if (process.env.NODE_ENV !== 'production') {
-            sequelize.sync({ force: true });
+            sequelize.sync({
+                force: true,
+                logging: (t) => {
+                    logger.info(t);
+                }
+            });
         } else {
             throw new Error('cannot call sync() when NODE_ENV is set to \'production\'.');
         }
@@ -146,9 +150,8 @@ var
 files.filter((f) => { return re.test(f); }).map((f) => {
     return f.substring(0, f.length - 3);
 }).forEach((modelName) => {
-    logger.info(`found model: ${modelName}`);
     var modelDefinition = require('./models/' + modelName);
-    exp[modelDefinition.name] = defineModel(modelDefinition.table, modelDefinition.fields);
+    exp[modelDefinition.name] = defineModel(modelDefinition.name, modelDefinition.table, modelDefinition.fields);
 });
 
 module.exports = exp;

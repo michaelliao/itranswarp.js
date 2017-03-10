@@ -8,8 +8,10 @@ module.exports = {
     fields: {
         user_id: {
             type: dbtypes.ID,
-            unique: true
+            unique: 'uni_user_id'
         },
-        passwd: dbtypes.STRING(100)
+        passwd: {
+            type: dbtypes.STRING(100)
+        }
     }
 };

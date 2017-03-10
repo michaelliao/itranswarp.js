@@ -1,8 +1,9 @@
 // user.js
 
-const dbtypes = require('../dbtypes');
-
-const constants = require('../constants');
+const
+    dbtypes = require('../dbtypes'),
+    constants = require('../constants'),
+    SUBSCRIBER = constants.role.SUBSCRIBER;
 
 module.exports = {
     name: 'User',
@@ -10,18 +11,27 @@ module.exports = {
     fields: {
         role: {
             type: dbtypes.BIGINT,
-            defaultValue: constants.role.SUBSCRIBER
+            defaultValue: () => {
+                return SUBSCRIBER;
+            }
         },
-        locked_until: dbtypes.BIGINT,
+        locked_until: {
+            type: dbtypes.BIGINT,
+            defaultValue: 0
+        },
         email: {
             type: dbtypes.STRING(100),
-            unique: true
+            unique: 'uni_email'
         },
         verified: {
             type: dbtypes.BOOLEAN,
             defaultValue: false
         },
-        name: dbtypes.STRING(100),
-        image_url: dbtypes.STRING(1000)
+        name: {
+            type: dbtypes.STRING(100)
+        },
+        image_url: {
+            type: dbtypes.STRING(1000)
+        }
     }
 };

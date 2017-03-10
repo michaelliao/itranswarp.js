@@ -30,6 +30,8 @@ module.exports = {
             type: dbtypes.BIGINT,
             defaultValue: 0
         },
-        content: dbtypes.TEXT
+        content: {
+            type: dbtypes.TEXT
+        }
     }
 };

@@ -6,7 +6,11 @@ module.exports = {
     name: 'Resource',
     table: 'resources',
     fields: {
-        ref_id: dbtypes.ID,
-        value: dbtypes.BLOB
+        ref_id: {
+            type: dbtypes.ID
+        },
+        value: {
+            type: dbtypes.BLOB
+        }
     }
 };
