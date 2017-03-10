@@ -1,14 +1,12 @@
-'use strict';
-
-// test setting api:
-
+/**
+ * Test db.js
+ */
 const
-    dbsetup = require('./_dbsetup'),
+    dbsetup = require('./_dbsetup'), // <-- MUST be first import
     _ = require('lodash'),
     db = require('../db'),
     sleep = require('sleep-promise'),
     expect = require('chai').expect;
-
 
 describe('#db-test', () => {
 
