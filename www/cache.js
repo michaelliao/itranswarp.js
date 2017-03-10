@@ -23,9 +23,9 @@ const
 
 var
     _incr = bluebird.promisify(memcached.incr, { context: memcached }),
-    _get = bluebird.promisify(memcached.get, { context: memcached });
-    _set = bluebird.promisify(memcached.set, { context: memcached });
-    _del = bluebird.promisify(memcached.del, { context: memcached });
+    _get = bluebird.promisify(memcached.get, { context: memcached }),
+    _set = bluebird.promisify(memcached.set, { context: memcached }),
+    _del = bluebird.promisify(memcached.del, { context: memcached }),
     _getMulti = bluebird.promisify(memcached.getMulti, { context: memcached });
 
 module.exports = {
