@@ -1,6 +1,8 @@
-'use strict';
-
-// static webpage api
+/**
+ * Webpage API.
+ * 
+ * author: Michael Liao
+ */
 
 const
     _ = require('lodash'),
@@ -17,9 +19,10 @@ var
     nextId = db.nextId;
 
 async function checkAliasAvailable(alias) {
-    var p = await Webpage.findById({
-        where: 'alias=?',
-        params: [alias]
+    var p = await Webpage.findOne({
+        where: {
+            'alias': alias
+        }
     });
     if (p !== null) {
         throw api.invalidParam('alias', 'duplicate alias');
@@ -32,18 +35,21 @@ async function getWebpages() {
     });
 }
 
-async function getWebpage(id, includeContent) {
-    var
-        text,
-        p = await Webpage.findById(id);
+async function getWebpage(id) {
+    var p = await Webpage.findById(id);
     if (p === null) {
         throw api.notFound('Webpage');
     }
-    if (includeContent) {
-        text = await Text.findById(p.content_id);
-        p.content = text.value;
-    }
     return p;
+}
+
+async function getWebpageWithContent(id) {
+    var
+        p = await getWebpage(id),
+        text = await Text.findById(p.content_id),
+        r = p.toJSON();
+    r.content = text.value;
+    return r;
 }
 
 async function getWebpageByAlias(alias, includeContent) {
@@ -91,7 +97,8 @@ module.exports = {
          * @param {string} id - The id of the Webpage.
          * @return {object} Webpage object.
          */
-        ctx.rest(await getWebpage(id, true));
+        let id = ctx.params.id;
+        ctx.rest(await getWebpageWithContent(id));
     },
 
     'GET /api/webpages': async (ctx, next) => {
@@ -117,7 +124,7 @@ module.exports = {
 
     'POST /api/webpages': async (ctx, next) => {
         /**
-         * Create a new webpage.
+         * Create a new webpage. Body:
          * 
          * @name Create Webage
          * @param {string} name: The name of the webpage.
@@ -127,9 +134,10 @@ module.exports = {
          * @param {string} [tags]: The tags of the webpage, seperated by ','.
          * @return {object} The created webpage object.
          */
-        ctx.checkPermission(constants.role.ADMIN);
+        ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createWebpage');
         var
+            r,
             content_id = nextId(),
             webpage_id = nextId(),
             text,
@@ -152,8 +160,9 @@ module.exports = {
             draft: data.draft
         });
         // attach content:
-        webpage.content = data.content;
-        ctx.rest(webpage);
+        r = webpage.toJSON();
+        r.content = data.content;
+        ctx.rest(r);
     },
 
     'POST /api/webpages/:id': async (ctx, next) => {
@@ -169,35 +178,31 @@ module.exports = {
          * @param {string} [tags]: The tags of the webpage, seperated by ','.
          * @return {object} Updated webpage object.
          */
-        ctx.checkPermission(constants.role.ADMIN);
+        ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateWebpage');
         var
+            r,
+            id = ctx.params.id,
             content_id = null,
             text,
-            props = [],
             data = ctx.request.body,
             webpage = await getWebpage(id);
-        if (data.alias && data.alias!==webpage.alias) {
+        if (data.alias && data.alias !== webpage.alias) {
             await checkAliasAvailable(data.alias);
             webpage.alias = data.alias;
-            props.push('alias');
         }
         if (data.name) {
             webpage.name = data.name.trim();
-            props.push('name');
         }
         if (data.tags) {
             webpage.tags = helper.formatTags(data.tags);
-            props.push('tags');
         }
         if (data.draft!==undefined) {
             webpage.draft = data.draft;
-            props.push('draft');
         }
         if (data.content) {
             content_id = nextId();
             webpage.content_id = content_id;
-            props.push('content_id');
             // update content
             await Text.create({
                 id: content_id,
@@ -205,20 +210,17 @@ module.exports = {
                 value: data.content
             });
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            await webpage.update(props);
-        }
+        await webpage.save();
         // attach content:
+        r = webpage.toJSON();
         if (content_id) {
-            webpage.content = data.content;
+            r.content = data.content;
         }
         else {
             text = await Text.findById(webpage.content_id);
-            webpage.content = text.value;
+            r.content = text.value;
         }
-        this.body = webpage;
+        ctx.rest(r);
     },
 
     'POST /api/webpages/:id/delete': async (ctx, next) => {
@@ -229,11 +231,13 @@ module.exports = {
          * @param {string} id - The id of the webpage.
          * @return {object} Results contains id of the webpage, e.g. {"id": "12345"}
          */
-        ctx.checkPermission(constants.role.ADMIN);
-        var webpage = await getWebpage(id);
+        ctx.checkPermission(constants.role.EDITOR);
+        var
+            id = ctx.params.id,
+            webpage = await getWebpage(id);
         await webpage.destroy();
         // delete all texts:
-        Text.destroy({
+        await Text.destroy({
             where: {
                 'ref_id': id
             }
