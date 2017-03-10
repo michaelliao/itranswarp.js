@@ -1,22 +1,24 @@
 /**
  * Test attachment api.
  */
-var
+const
     _ = require('lodash'),
-    should = require('should'),
-    remote = require('./_remote'),
+    expect = require('chai').expect,
+    request = require('supertest'),
+    app = require('../app'),
     helper = require('../helper'),
     constants = require('../constants'),
-    attachmentApi = require('../controllers/attachmentApi'),
-    roles = constants.role;
+    attachmentApi = require('../controllers/attachmentApi');
 
-describe('#attachment', () => {
+describe('#attachment-api', () => {
 
-    //before(remote.setup);
+    let server = app.listen(19099);
 
-    describe('#api', () => {
+    describe('#attachment-apis', () => {
 
         it('should get empty attachment', async () => {
+            await request(server)
+                .get('/api/attachments');
             var page = helper.getPage(ctx.request);
             var atts = await attachmentApi.getAttachments();
              remote.$get(roles.GUEST, '/api/attachments');

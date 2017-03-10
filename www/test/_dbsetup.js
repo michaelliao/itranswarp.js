@@ -16,10 +16,19 @@ config.db.database = TEST_DB;
 
 /**
  * will drop all tables in db.
+ * 
+ * Export global variable: $ALL
  */
 async function dbsetup() {
     var db = require('../db');
     await db.sync();
+    global.$ALL = {
+        where: {
+            created_at: {
+                $gte: 0
+            }
+        }
+    };
     return db;
 }
 

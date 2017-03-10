@@ -199,20 +199,21 @@ module.exports = {
 
     getArticle: getArticle,
 
-    'GET /feed': async () => {
+    'GET /feed': async (ctx, next) => {
         var
             rss,
-            host = this.request.host,
+            host = ctx.request.host,
+            response = ctx.response,
             gf = async () => {
                 return await getFeed(host);
             };
         rss = await cache.get('cached_rss', gf);
-        this.set('Cache-Control', 'max-age: 3600');
-        this.type = 'text/xml';
-        this.body = rss;
+        response.set('Cache-Control', 'max-age: 3600');
+        response.type = 'text/xml';
+        response.body = rss;
     },
 
-    'GET /api/articles/:id': async function (id) {
+    'GET /api/articles/:id': async function (ctx, next) {
         /**
          * Get article.
          * 
@@ -222,14 +223,16 @@ module.exports = {
          * @return {object} Article object.
          * @error {resource:notfound} Article was not found by id.
          */
-        var article = await getArticle(id, true);
+        let
+            id = ctx.request.params.id,
+            article = await getArticle(id, true);
         if (article.publish_at > Date.now() && (this.request.user===null || this.request.user.role > constants.role.CONTRIBUTOR)) {
             throw api.notFound('Article');
         }
-        if (this.request.query.format === 'html') {
+        if (ctx.request.query.format === 'html') {
             article.content = helper.md2html(article.content, true);
         }
-        this.body = article;
+        ctx.rest(article);
     },
 
     'GET /api/articles': async function (ctx, next) {
@@ -244,10 +247,10 @@ module.exports = {
         var
             page = helper.getPage(this.request),
             articles = await getAllArticles(page);
-        ctx.body = {
+        ctx.rest({
             page: page,
             articles: articles
-        };
+        });
     },
 
     'POST /api/articles': async (ctx, next) => {
@@ -272,8 +275,8 @@ module.exports = {
             text,
             article,
             attachment,
-            article_id,
-            content_id,
+            article_id = nextId(),
+            content_id = nextId(),
             data = this.request.body;
         // check category id:
         await categoryApi.getCategory(data.category_id);
@@ -285,9 +288,6 @@ module.exports = {
             new Buffer(data.image, 'base64'),
             null,
             true);
-
-        content_id = nextId();
-        article_id = nextId();
 
         text = await Text.create({
             id: content_id,

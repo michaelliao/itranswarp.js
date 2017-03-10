@@ -11,10 +11,9 @@ const
     constants = require('../constants');
 
 var
-    User = db.user,
-    Webpage = db.webpage,
-    Text = db.text,
-    warp = db.warp,
+    User = db.User,
+    Webpage = db.Webpage,
+    Text = db.Text,
     nextId = db.nextId;
 
 async function checkAliasAvailable(alias) {
@@ -99,11 +98,20 @@ module.exports = {
         /**
          * Get all Webpages object (but no content value).
          * 
-         * @name Get Webpages
+         * @name Get all webpages.
          * @return {object} Result as {"webpages": [{webpage}, {webpage}...]}
          */
+        let
+            webpages = await getWebpages(),
+            user = ctx.state.__user__;
+        // remove draft webpages for non-editor:
+        if (user !== null && user.role > constants.role.EDITOR) {
+            webpages = webpages.filter((wp) => {
+                return ! wp.draft;
+            });
+        }
         ctx.rest({
-            webpages: await getWebpages()
+            webpages: webpages
         });
     },
 
