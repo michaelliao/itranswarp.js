@@ -27,7 +27,9 @@ rl.question(prompt.join('\n'), function (answer) {
         config.db.password = answer;
         config.db.maxConnections = 1;
         config.db.maxIdleTime = 1000;
-        require('./db').sync();
+        (async () => {
+            await require('./db').sync(true);
+        })();
     } else {
         console.log('skipped.')
     }

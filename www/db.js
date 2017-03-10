@@ -31,6 +31,8 @@ function nextId() {
     return paddings[50 - id.length] + id;
 }
 
+const SHOW_SQL = config.db.showSql || false;
+
 const sequelize = new Sequelize(
     config.db.database,
     config.db.username,
@@ -45,7 +47,9 @@ const sequelize = new Sequelize(
             maxIdleTime: config.db.maxIdleTime
         },
         logging: function (t) {
-            logger.info('SQL: ' + t);
+            if (SHOW_SQL) {
+                logger.info('SQL: ' + t);
+            }
         }
     });
 
@@ -105,18 +109,19 @@ function defineModel(modelName, tableName, attributes) {
             beforeValidate: function (obj) {
                 let now = Date.now();
                 if (obj.isNewRecord) {
-                    logger.debug('will create entity: ' + obj);
+                    logger.info('will create entity: ' + obj);
                     if (!obj.id) {
                         obj.id = nextId();
                     }
                     obj.created_at = now;
                     obj.updated_at = now;
                     obj.version = 0;
-                } else {
-                    logger.debug('will update entity: ' + obj.id);
-                    obj.updated_at = now;
-                    obj.version++;
                 }
+            },
+            beforeUpdate: function (obj) {
+                logger.info('will update entity: ' + obj.id);
+                obj.updated_at = Date.now();
+                obj.version ++;
             }
         }
     });
@@ -126,13 +131,15 @@ function defineModel(modelName, tableName, attributes) {
 var exp = {
     sequelize: sequelize,
     nextId: nextId,
-    sync: () => {
+    sync: async (showSql=false) => {
         // only allow create ddl in non-production environment:
         if (process.env.NODE_ENV !== 'production') {
-            sequelize.sync({
+            await sequelize.sync({
                 force: true,
                 logging: (t) => {
-                    logger.info(t);
+                    if (showSql) {
+                        logger.info(t);
+                    }
                 }
             });
         } else {
@@ -153,5 +160,7 @@ files.filter((f) => { return re.test(f); }).map((f) => {
     var modelDefinition = require('./models/' + modelName);
     exp[modelDefinition.name] = defineModel(modelDefinition.name, modelDefinition.table, modelDefinition.fields);
 });
+
+logger.info('db exports: ' + Object.getOwnPropertyNames(exp).join(', '));
 
 module.exports = exp;

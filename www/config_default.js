@@ -26,6 +26,7 @@ module.exports = {
         username: 'www', // username to login to mysql
         password: 'www', // password to login to mysql
         database: 'itranswarp', // database name
+        showSql: true,
         // pool settings:
         maxConnections: 20, // max = 20
         minConnections: 1, // min = 1
