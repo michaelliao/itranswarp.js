@@ -14,8 +14,13 @@ config.db.username = 'root';
 config.db.password = ROOT_PASSWORD;
 config.db.database = TEST_DB;
 
-module.exports = async function dbsetup() {
+/**
+ * will drop all tables in db.
+ */
+async function dbsetup() {
     var db = require('../db');
     await db.sync();
     return db;
 }
+
+module.exports = dbsetup;
