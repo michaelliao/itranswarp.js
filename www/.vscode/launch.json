@@ -8,7 +8,7 @@
             "program": "${workspaceRoot}/start.js",
             "cwd": "${workspaceRoot}",
             "runtimeArgs": [
-                "--nolazy", "--use_strict"
+                "--nolazy"
             ],
             "env": {
                 "NODE_ENV": "development"
