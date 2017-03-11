@@ -13,12 +13,10 @@ const
     logger = require('../logger'),
     helper = require('../helper'),
     constants = require('../constants'),
-    image = require('../image');
-
-var
-    User = db.user,
-    Attachment = db.attachment,
-    Resource = db.resource,
+    image = require('../image'),
+    User = db.User,
+    Attachment = db.Attachment,
+    Resource = db.Resource,
     nextId = db.nextId;
 
 async function getAttachment(id) {
@@ -146,6 +144,24 @@ module.exports = {
 
     'GET /files/attachments/:id/:size': downloadAttachment,
 
+    'GET /api/attachments': async (ctx, next) => {
+        /**
+         * Get attachments by page.
+         * 
+         * @name Get Attachments
+         * @param {number} [page=1]: The page number, starts from 1.
+         * @return {object} Attachment objects and page information.
+         */
+        ctx.checkPermission(constants.role.CONTRIBUTOR);
+        var
+            page = helper.getPage(ctx.request),
+            attachments = await getAttachments(page);
+        ctx.rest({
+            page: page,
+            attachments: attachments
+        });
+    },
+
     'GET /api/attachments/:id': async (ctx, next) => {
         /**
          * Get attachment.
@@ -155,24 +171,8 @@ module.exports = {
          * @return {object} Attachment object.
          * @error {resource:notfound} Attachment was not found by id.
          */
+        ctx.checkPermission(constants.role.CONTRIBUTOR);
         ctx.rest(await getAttachment(id));
-    },
-
-    'GET /api/attachments': async (ctx, next) => {
-        /**
-         * Get attachments by page.
-         * 
-         * @name Get Attachments
-         * @param {number} [page=1]: The page number, starts from 1.
-         * @return {object} Attachment objects and page information.
-         */
-        var
-            page = helper.getPage(this.request),
-            attachments = await getAttachments(page);
-        ctx.rest({
-            page: page,
-            attachments: attachments
-        });
     },
 
     'POST /api/attachments/:id/delete': async (ctx, next) => {

@@ -1,43 +1,99 @@
 'use strict';
 
 /**
- * Test attachment api.
+ * Test Attachment.
  */
 const
-    _ = require('lodash'),
-    expect = require('chai').expect,
+    appsetup = require('./_appsetup'), // <-- MUST be import first!
+    appclose = require('./_appclose'),
+    fs = require('fs'),
     request = require('supertest'),
-    app = require('../app'),
+    expect = require('chai').expect,
+    db = require('../db'),
+    Attachment = db.Attachment,
+    logger = require('../logger'),
     helper = require('../helper'),
-    constants = require('../constants'),
     attachmentApi = require('../controllers/attachmentApi');
 
 describe('#attachment-api', () => {
 
-    let server = app.listen(19099);
+    before(appsetup);
+
+    after(appclose);
 
     describe('#attachment-apis', () => {
 
-        it('should get empty attachment', async () => {
-            await request(server)
-                .get('/api/attachments');
-            var page = helper.getPage(ctx.request);
-            var atts = await attachmentApi.getAttachments();
-             remote.$get(roles.GUEST, '/api/attachments');
-            should(atts).be.ok;
-            atts.attachments.should.be.an.Array.and.have.length(0);
-            atts.page.total.should.equal(0);
+        before(async ()=> {
+            logger.info('delete all attachments...');
+            await Attachment.destroy($ALL);
         });
 
-        // it('create attachment failed by subscriber', async () => {
-        //     // create attachment:
-        //     var r = yield remote.$post(roles.SUBSCRIBER, '/api/attachments', {
-        //         name: 'Test Image   ',
-        //         description: '   bla bla bla...  \n   ',
-        //         data: remote.readFileSync('res-image.jpg').toString('base64')
-        //     });
-        //     remote.shouldHasError(r, 'permission:denied');
-        // });
+        it('no permission to get attachments', async () => {
+            var response;
+            // subscriber:
+            response = await request($SERVER)
+                .get('/api/attachments')
+                .set('Authorization', auth($SUBS))
+                .expect(400);
+            expect(response.body.error).to.equal('permission:denied');
+        });
+
+        it('should get empty attachments by contributor', async () => {
+            var response;
+            // subscriber:
+            response = await request($SERVER)
+                .get('/api/attachments')
+                .set('Authorization', auth($CONTRIB))
+                .expect(200);
+            expect(response.body.page).to.a('object');
+            expect(response.body.page.total).to.equal(0);
+            expect(response.body.page.index).to.equal(1);
+            expect(response.body.attachments).to.a('array').and.have.lengthOf(0);
+        });
+
+        it('create attachment failed by subscriber', async () => {
+            // create attachment:
+            var response;
+            // subscriber:
+            response = await request($SERVER)
+                .post('/api/attachments')
+                .set('Authorization', auth($SUBS))
+                .send({
+                    name: 'Test image',
+                    description: 'test',
+                    data: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
+                })
+                .expect(400);
+            expect(response.body.error).to.equal('permission:denied');
+        });
+
+        it('create attachment ok by contributor and get', async () => {
+            // create attachment:
+            var response;
+            // subscriber:
+            response = await request($SERVER)
+                .post('/api/attachments')
+                .set('Authorization', auth($CONTRIB))
+                .send({
+                    name: 'Test image',
+                    description: 'just test',
+                    data: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
+                })
+                .expect(200);
+            expect(response.body.name).to.equal('Test image');
+            expect(response.body.description).to.equal('just test');
+            expect(response.body.mime).to.equal('image/jpeg');
+            expect(response.body.width).to.equal(1280);
+            expect(response.body.height).to.equal(720);
+            expect(response.body.size).to.equal(346158);
+            // get by subscriber:
+            let id = response.body.id;
+            response = await request($SERVER)
+                .get('/api/attachments/' + id)
+                .set('Authorization', auth($SUBS))
+                .expect(400);
+            expect(response.body.error).to.equal('permission:denied');
+        });
 
         // it('upload image by contributor', async () => {
         //     var r = yield remote.$post(roles.CONTRIBUTOR, '/api/attachments', {

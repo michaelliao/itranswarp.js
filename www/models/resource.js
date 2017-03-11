@@ -12,7 +12,7 @@ module.exports = {
             type: dbtypes.ID
         },
         value: {
-            type: dbtypes.BLOB
+            type: dbtypes.BLOB('medium')
         }
     }
 };
