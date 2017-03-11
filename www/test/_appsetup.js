@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Test fixture for app.
+ * Test fixture for init app.
  */
 
 const

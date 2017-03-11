@@ -20,7 +20,7 @@ var
     Text = db.Text,
     nextId = db.nextId;
 
-async function checkAliasAvailable(alias) {
+async function _checkAliasAvailable(alias) {
     var p = await Webpage.findOne({
         where: {
             'alias': alias
@@ -31,13 +31,13 @@ async function checkAliasAvailable(alias) {
     }
 }
 
-async function getWebpages() {
+async function _getWebpages() {
     return await Webpage.findAll({
         order: 'alias'
     });
 }
 
-async function getWebpage(id) {
+async function _getWebpage(id) {
     var p = await Webpage.findById(id);
     if (p === null) {
         throw api.notFound('Webpage');
@@ -45,51 +45,43 @@ async function getWebpage(id) {
     return p;
 }
 
-async function getWebpageWithContent(id) {
-    var
-        p = await getWebpage(id),
-        text = await Text.findById(p.content_id),
-        r = p.toJSON();
-    r.content = text.value;
-    return r;
-}
-
-async function getWebpageByAlias(alias, includeContent) {
-    var
-        text,
-        p = await Webpage.findById({
-            where: 'alias=?',
-            params: [alias]
-        });
+async function _getWebpageByAlias(alias) {
+    var p = await Webpage.findOne({
+        where: {
+            'alias': alias
+        }
+    });
     if (p === null) {
         throw api.notFound('Webpage');
-    }
-    if (includeContent) {
-        text = await Text.findById(p.content_id);
-        p.content = text.value;
     }
     return p;
 }
 
-async function getNavigationMenus() {
-    var ps = await getWebpages();
-    return _.map(ps, function (p) {
-        return {
-            name: p.name,
-            url: '/webpage/' + p.alias
-        };
-    });
+async function _attachContent(webpage) {
+    var text = await Text.findById(webpage.content_id);
+    webpage = webpage.toJSON();
+    webpage.content = text.value;
+    return webpage;
 }
 
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    getNavigationMenus: async () => {
+        var ps = await _getWebpages();
+        return ps.filter((p) => {
+            return ! p.draft;
+        }).map((p) => {
+            return {
+                name: p.name,
+                url: `/webpage/${p.alias}`
+            };
+        });
+    },
 
-    getWebpage: getWebpage,
-
-    getWebpages: getWebpages,
-
-    getWebpageByAlias: getWebpageByAlias,
+    getWebpageByAliasWithContent: async (alias) => {
+        var p = await _getWebpageByAlias(alias);
+        return _attachContent(p);
+    },
 
     'GET /api/webpages/:id': async (ctx, next) => {
         /**
@@ -99,8 +91,10 @@ module.exports = {
          * @param {string} id - The id of the Webpage.
          * @return {object} Webpage object.
          */
-        let id = ctx.params.id;
-        ctx.rest(await getWebpageWithContent(id));
+        let
+            id = ctx.params.id,
+            p = await _getWebpage(id);
+        ctx.rest(await _attachContent(p));
     },
 
     'GET /api/webpages': async (ctx, next) => {
@@ -111,7 +105,7 @@ module.exports = {
          * @return {object} Result as {"webpages": [{webpage}, {webpage}...]}
          */
         let
-            webpages = await getWebpages(),
+            webpages = await _getWebpages(),
             user = ctx.state.__user__;
         // remove draft webpages for non-editor:
         if (user !== null && user.role > constants.role.EDITOR) {
@@ -147,7 +141,7 @@ module.exports = {
             data = ctx.request.body;
         data.name = data.name.trim();
         data.tags = helper.formatTags(data.tags);
-        await checkAliasAvailable(data.alias);
+        await _checkAliasAvailable(data.alias);
         text = await Text.create({
             id: content_id,
             ref_id: webpage_id,
@@ -188,9 +182,9 @@ module.exports = {
             content_id = null,
             text,
             data = ctx.request.body,
-            webpage = await getWebpage(id);
+            webpage = await _getWebpage(id);
         if (data.alias && data.alias !== webpage.alias) {
-            await checkAliasAvailable(data.alias);
+            await _checkAliasAvailable(data.alias);
             webpage.alias = data.alias;
         }
         if (data.name) {
@@ -236,7 +230,7 @@ module.exports = {
         ctx.checkPermission(constants.role.EDITOR);
         var
             id = ctx.params.id,
-            webpage = await getWebpage(id);
+            webpage = await _getWebpage(id);
         await webpage.destroy();
         // delete all texts:
         await Text.destroy({

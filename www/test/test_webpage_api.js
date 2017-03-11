@@ -5,16 +5,19 @@
  */
 const
     appsetup = require('./_appsetup'), // <-- MUST be import first!
-    _ = require('lodash'),
+    appclose = require('./_appclose'),
     request = require('supertest'),
     expect = require('chai').expect,
     db = require('../db'),
     logger = require('../logger'),
-    Webpage = db.Webpage;
+    Webpage = db.Webpage,
+    webpageApi = require('../controllers/webpageApi');
 
 describe('#webpage apis', () => {
 
     before(appsetup);
+
+    after(appclose);
 
     describe('#webpage api', () => {
 
@@ -301,6 +304,27 @@ describe('#webpage apis', () => {
                     .expect(400);
             expect(response.body.error).to.equal('entity:notfound');
             expect(response.body.data).to.equal('Webpage');
+        });
+
+        it('get by alias', async () => {
+            var
+                wp,
+                response;
+            // create webpage 'apple':
+            response = await request($SERVER)
+                    .post('/api/webpages')
+                    .set('Authorization', auth($EDITOR))
+                    .set('Content-Type', 'application/json')
+                    .send({
+                        alias: 'apple',
+                        name: 'About apple',
+                        content: 'iOS is awesome.'
+                    })
+                    .expect(200);
+            wp = await webpageApi.getWebpageByAliasWithContent('apple');
+            expect(wp.alias).to.equal('apple');
+            expect(wp.name).to.equal('About apple');
+            expect(wp.content).to.equal('iOS is awesome.');
         });
     });
 });
