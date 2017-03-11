@@ -19,7 +19,7 @@ describe('#webpage apis', () => {
 
     after(appclose);
 
-    beforeEach(async ()=> {
+    beforeEach(async () => {
         logger.info('delete all webpages...');
         await Webpage.destroy($ALL);
     });

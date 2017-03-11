@@ -22,7 +22,7 @@ describe('#attachment-api', () => {
 
     after(appclose);
 
-    beforeEach(async ()=> {
+    beforeEach(async () => {
         logger.info('delete all attachments...');
         await Attachment.destroy($ALL);
     });
