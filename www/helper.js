@@ -18,25 +18,20 @@ function _str2int(s, defValue) {
 
 // ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
 function _formatTags(tags) {
-    if (!tags) {
+    if (! tags) {
         return '';
     }
-    var
-        lv,
-        dict = {},
-        arr = _.map(tags.split(/[\,\;\uff0c\uff1b]/), function (value) {
-            return value.trim();
-        });
-    return _.filter(arr, function (value) {
-        if (value) {
-            lv = value.toLowerCase();
-            if (dict.hasOwnProperty(lv)) {
-                return false;
-            }
-            dict[lv] = true;
-            return true;
-        }
-        return false;
+    let arr = tags.split(/[\,\;\uff0c\uff1b]/).map((value) => {
+        return value.trim();
+    }).filter((value) => {
+        return value !== '';
+    });
+    // remove duplicate ignore case:
+    let lowerArr = arr.map((value) => {
+        return value.toLowerCase();
+    });
+    return arr.filter((value, index) => {
+        return lowerArr.indexOf(value.toLowerCase()) === index;
     }).join(',');
 }
 
