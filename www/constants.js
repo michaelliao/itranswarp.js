@@ -24,8 +24,7 @@ module.exports = {
     cache: {
         NAVIGATIONS: '__navigations__',
         WEBSITE: '__website__',
-        SNIPPETS: '__snippet__',
-        SETTINGS: '__settings__'
+        SNIPPETS: '__snippet__'
     },
 
     // queue name:
