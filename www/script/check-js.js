@@ -12,15 +12,11 @@ const
     ];
 
 function info(s) {
-    console.log('[INFO] ' + s);
+    console.log('\x1b[32m[INFO]\x1b[0m ' + s);
 }
 
 function error(s) {
-    console.log('[ERROR] ' + s);
-}
-
-function checkUseStrict(jsfile) {
-    //
+    console.log('\x1b[31m[ERROR]\x1b[0m ' + s);
 }
 
 function checkFile(f) {
@@ -37,7 +33,7 @@ function scanFiles(dir) {
     files.filter((f) => {
         return ! f.startsWith('.') && f.endsWith('.js');
     }).forEach((f) => {
-        info(`check file ${f}...`);
+        // info(`check file ${f}...`);
         checkFile(`${dir}/${f}`);
     });
 }
