@@ -19,7 +19,7 @@ const
     Resource = db.Resource,
     nextId = db.nextId;
 
-async function getAttachment(id) {
+async function _getAttachment(id) {
     var atta = await Attachment.findById(id);
     if (atta === null) {
         throw api.notFound('Attachment');
@@ -27,7 +27,7 @@ async function getAttachment(id) {
     return atta;
 }
 
-async function getAttachments(page) {
+async function _getAttachments(page) {
     page.total = await Attachment.count();
     if (page.isEmpty) {
         return [];
@@ -81,16 +81,16 @@ async function createAttachment(user_id, name, description, buffer, mime, expect
     });
 }
 
-async function downloadAttachment(ctx, next) {
+async function _downloadAttachment(ctx, next) {
     let
-        id = ctx.request.params.id,
-        size = ctx.request.params.size || '0';
+        id = ctx.params.id,
+        size = ctx.params.size || '0';
     if ('0sml'.indexOf(size) === (-1)) {
         ctx.response.status = 404;
         return;
     }
-    var
-        atta = await getAttachment(id),
+    let
+        atta = await _getAttachment(id),
         mime = atta.mime,
         resource = await Resource.findById(atta.resource_id),
         data, origin_width, origin_height, target_width, resize;
@@ -101,6 +101,11 @@ async function downloadAttachment(ctx, next) {
     }
     data = resource.value;
     if (size !== '0') {
+        if (! mime.startsWith('image/')) {
+            // cannot resize non-image resource:
+            ctx.response.status = 400;
+            return;
+        }
         origin_width = atta.width;
         origin_height = atta.height;
         target_width = origin_width;
@@ -134,15 +139,11 @@ async function downloadAttachment(ctx, next) {
 
 module.exports = {
 
-    getAttachment: getAttachment,
-
-    getAttachments: getAttachments,
-
     createAttachment: createAttachment,
 
-    'GET /files/attachments/:id': downloadAttachment,
+    'GET /files/attachments/:id': _downloadAttachment,
 
-    'GET /files/attachments/:id/:size': downloadAttachment,
+    'GET /files/attachments/:id/:size': _downloadAttachment,
 
     'GET /api/attachments': async (ctx, next) => {
         /**
@@ -153,9 +154,9 @@ module.exports = {
          * @return {object} Attachment objects and page information.
          */
         ctx.checkPermission(constants.role.CONTRIBUTOR);
-        var
+        let
             page = helper.getPage(ctx.request),
-            attachments = await getAttachments(page);
+            attachments = await _getAttachments(page);
         ctx.rest({
             page: page,
             attachments: attachments
@@ -172,7 +173,8 @@ module.exports = {
          * @error {resource:notfound} Attachment was not found by id.
          */
         ctx.checkPermission(constants.role.CONTRIBUTOR);
-        ctx.rest(await getAttachment(id));
+        let id = ctx.params.id;
+        ctx.rest(await _getAttachment(id));
     },
 
     'POST /api/attachments/:id/delete': async (ctx, next) => {
@@ -186,8 +188,9 @@ module.exports = {
          * @error {permission:denied} If current user has no permission.
          */
         ctx.checkPermission(constants.role.CONTRIBUTOR);
-        var
-            atta = await getAttachment(id);
+        let
+            id = ctx.params.id,
+            atta = await _getAttachment(id);
         if (ctx.state.__user__.role !== constants.role.ADMIN && ctx.state.__user__.id !== atta.user_id) {
             throw api.notAllowed('Permission denied.');
         }
