@@ -66,10 +66,12 @@ function defineModel(modelName, tableName, attributes) {
         }
     };
     for (let key in attributes) {
-        // set default allowNull = false:
-        let opt = attributes[key];
-        opt.allowNull = opt.allowNull || false;
-        attrs[key] = opt;
+        if (attributes.hasOwnProperty(key)) {
+            // set default allowNull = false:
+            let opt = attributes[key];
+            opt.allowNull = opt.allowNull || false;
+            attrs[key] = opt;
+        }
     }
     attrs.created_at = {
         type: dbtypes.BIGINT,
