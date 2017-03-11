@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Test cache.js. Make sure memcached is running on localhost:11211.
  */

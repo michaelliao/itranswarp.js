@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Authenticate users.
  * 

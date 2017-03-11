@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * koa middleware that try to authenticate user from cookie, header, etc.
  * 

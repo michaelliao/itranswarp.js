@@ -1,3 +1,5 @@
+'use strict';
+
 // define db types:
 
 const Sequelize = require('sequelize');

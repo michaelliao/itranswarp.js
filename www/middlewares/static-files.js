@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * koa middleware to serve static staticFiles.
  * 

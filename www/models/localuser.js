@@ -1,3 +1,5 @@
+'use strict';
+
 // localuser.js
 
 const dbtypes = require('../dbtypes');

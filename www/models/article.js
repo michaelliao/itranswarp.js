@@ -1,3 +1,5 @@
+'use strict';
+
 // article.js
 
 const dbtypes = require('../dbtypes');

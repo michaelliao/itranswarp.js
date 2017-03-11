@@ -1,3 +1,5 @@
+'use strict';
+
 // resource.js
 
 const dbtypes = require('../dbtypes');

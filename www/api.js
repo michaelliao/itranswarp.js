@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * APIError object definition.
  * 

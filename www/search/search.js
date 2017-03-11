@@ -1,3 +1,5 @@
+'use strict';
+
 // search.js
 
 var

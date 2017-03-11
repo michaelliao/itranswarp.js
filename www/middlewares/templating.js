@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * koa middleware to render view using Nunjucks.
  * 

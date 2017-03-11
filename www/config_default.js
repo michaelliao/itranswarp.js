@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This is the default configuration for iTranswarp.js.
  * 

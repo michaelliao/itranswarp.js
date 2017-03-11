@@ -1,3 +1,5 @@
+'use strict';
+
 // reply.js
 
 const dbtypes = require('../dbtypes');

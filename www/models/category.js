@@ -1,3 +1,5 @@
+'use strict';
+
 // category.js
 
 const dbtypes = require('../dbtypes');

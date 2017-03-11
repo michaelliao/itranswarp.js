@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Plugin for js code practice.
  * 

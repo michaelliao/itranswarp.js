@@ -1,3 +1,5 @@
+'use strict';
+
 // board.js
 
 const dbtypes = require('../dbtypes');

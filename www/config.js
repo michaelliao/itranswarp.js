@@ -1,3 +1,5 @@
+'use strict';
+
 /*
 read config files from:
   * config_default.js

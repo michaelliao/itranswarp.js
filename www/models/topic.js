@@ -1,3 +1,5 @@
+'use strict';
+
 // topic.js
 
 const dbtypes = require('../dbtypes');

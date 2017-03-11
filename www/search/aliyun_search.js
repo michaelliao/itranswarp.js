@@ -1,3 +1,5 @@
+'use strict';
+
 // aliyun_search.js
 
 var

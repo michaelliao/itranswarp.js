@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Category API.
  * 

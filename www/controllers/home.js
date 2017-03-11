@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * UI controller.
  * 

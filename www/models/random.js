@@ -1,3 +1,5 @@
+'use strict';
+
 // random.js
 
 const dbtypes = require('../dbtypes');

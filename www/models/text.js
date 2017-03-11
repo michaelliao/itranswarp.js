@@ -1,3 +1,5 @@
+'use strict';
+
 // text.js
 
 const dbtypes = require('../dbtypes');

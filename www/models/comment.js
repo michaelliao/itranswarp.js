@@ -1,3 +1,5 @@
+'use strict';
+
 // comment.js
 
 const dbtypes = require('../dbtypes');

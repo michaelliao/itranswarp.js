@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * koa middleware to auto-scan & import controllers under dir 'controllers'.
  * 

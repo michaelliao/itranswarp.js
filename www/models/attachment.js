@@ -1,3 +1,5 @@
+'use strict';
+
 // attachment.js
 
 const dbtypes = require('../dbtypes');

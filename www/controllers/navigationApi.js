@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * navigation api.
  */

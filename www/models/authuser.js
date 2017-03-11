@@ -1,3 +1,5 @@
+'use strict';
+
 // authuser.js
 
 const dbtypes = require('../dbtypes');

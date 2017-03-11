@@ -1,3 +1,5 @@
+'use strict';
+
 // setting.js
 
 const dbtypes = require('../dbtypes');

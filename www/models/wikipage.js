@@ -1,3 +1,5 @@
+'use strict';
+
 // wikipage.js
 
 const dbtypes = require('../dbtypes');
