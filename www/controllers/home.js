@@ -174,27 +174,28 @@ module.exports = {
 
     'GET /webpage/:alias': async (ctx, next) => {
         var
-            webpage = await webpageApi.getWebpageByAlias(alias, true),
-            model;
+            alias = ctx.params.alias,
+            webpage = await webpageApi.getWebpageByAliasWithContent(alias);
         if (webpage.draft) {
             ctx.response.status = 404;
             return;
         }
         webpage.content = md.systemMarkdownToHtml(webpage.content);
-        model = {
+        ctx.render('webpage/webpage.html', await getModel({
             webpage: webpage
-        };
-        ctx.render('webpage/webpage.html', await getModel(model));
+        }));
     },
 
     'GET /wikipage/:id': async (ctx, next) => {
-        var wp = await wikiApi.getWikiPage(id);
+        var
+            id = ctx.params.id,
+            wp = await wikiApi.getWikiPage(id);
         ctx.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
     },
 
     'GET /wiki/:id': async (ctx, next) => {
         var
-            model,
+            id = ctx.params.id,
             wiki = await wikiApi.getWiki(id, true),
             num = await cache.incr(wiki.id),
             tree = await wikiApi.getWikiTree(wiki.id, true);
@@ -204,17 +205,18 @@ module.exports = {
         if (num > WRITE_VIEWS_BACK) {
             await updateEntityViews(wiki);
         }
-        model = {
+        ctx.render('wiki/wiki.html', await getModel({
             wiki: wiki,
             current: wiki,
             tree: tree.children
-        };
-        ctx.render('wiki/wiki.html', await getModel(model));
+        }));
     },
 
     'GET /wiki/:wid/:pid': async (ctx, next) => {
         var
-            model, wiki, tree, num,
+            wid = ctx.params.wid,
+            pid = ctx.params.pid,
+            wiki, tree, num,
             wikipage = await wikiApi.getWikiPage(pid, true);
         if (wikipage.wiki_id !== id) {
             this.throw(404);
@@ -228,21 +230,20 @@ module.exports = {
             await updateEntityViews(wikipage);
         }
         wikipage.content = helper.md2html(wikipage.content, true);
-        model = {
+        ctx.render('wiki/wiki.html', await getModel({
             wiki: await wikiApi.getWiki(id),
             current: wikipage,
             tree: tree.children
-        };
-        ctx.render('wiki/wiki.html', await getModel(model));
+        }));
     },
 
     'POST /api/comments/:ref_type/:ref_id': async (ctx, next) => {
         ctx.checkPermission(constants.role.SUBSCRIBER);
         ctx.validate('createComment');
         let
-            ref_type = ctx.request.params.ref_type,
-            ref_id = ctx.request.params.ref_id,
             board,
+            ref_type = ctx.params.ref_type,
+            ref_id = ctx.params.ref_id,
             user = ctx.state.__user__,
             data = ctx.request.body;
         if (!data.content.trim()) {
@@ -265,17 +266,15 @@ module.exports = {
     },
 
     'GET /discuss': async (ctx, next) => {
-        var
-            model,
-            boards = await discussApi.getBoards();
-        model = {
+        var boards = await discussApi.getBoards();
+        ctx.render('discuss/boards.html', await getModel({
             boards: boards
-        };
-        ctx.render('discuss/boards.html', await getModel(model));
+        }));
     },
 
     'GET /discuss/:id': async (ctx, next) => {
         var
+            id = ctx.params.id,
             page = helper.getPage(ctx.request),
             board = await discussApi.getBoard(id),
             topics = await discussApi.getTopics(id, page),
@@ -291,6 +290,8 @@ module.exports = {
 
     'GET /discuss/:bid/:tid': async (ctx, next) => {
         var
+            bid = ctx.params.bid,
+            tid = ctx.params.tid,
             topic = await discussApi.getTopic(tid),
             page,
             board,
@@ -347,7 +348,7 @@ module.exports = {
 
     'GET /me/profile': async (ctx, next) => {
         var
-            user = this.request.user,
+            user = ctx.state.__user__,
             model = {
                 user: user
             };
