@@ -143,7 +143,7 @@ const defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v,
 
 logger.info('default settings:\n' + JSON.stringify(defaultSettingValues, null, '  '));
 
-async function getSettings(group) {
+async function _getSettings(group) {
     // get settings by group, return object with key - value,
     // prefix of key has been removed:
     // 'group1:key1' ==> 'key1'
@@ -158,32 +158,6 @@ async function getSettings(group) {
         acc[setting.key.substring(n)] = setting.value;
         return acc;
     }, {});
-}
-
-async function getSetting(key, defaultValue=null) {
-    var setting = await Setting.findOne({
-        where: {
-            'key': key
-        }
-    });
-    return (setting === null) ? defaultValue :  setting.value;
-}
-
-async function setSetting(key, value) {
-    var m = key.match(RE_KEY);
-    if (m === null) {
-        throw api.invalidParam('key', 'key must be like "prefix:xyz"');
-    }
-    await Setting.destroy({
-        where: {
-            'key': key
-        }
-    });
-    await Setting.create({
-        group: m[1],
-        key: key,
-        value: value
-    });
 }
 
 async function setSettings(group, settings) {
@@ -206,7 +180,7 @@ async function setSettings(group, settings) {
 
 async function _getSettingsFillWithDefaultsIfMissing(name, defaults) {
     var
-        settings = await getSettings(name),
+        settings = await _getSettings(name),
         key,
         s = {};
     for (key in defaults) {
@@ -227,7 +201,7 @@ async function getWebsiteSettings() {
     });
 }
 
-async function setWebsiteSettings(settings) {
+async function _setWebsiteSettings(settings) {
     await setSettings('website', settings);
     await cache.remove(KEY_WEBSITE);
 }
@@ -238,7 +212,7 @@ async function getSnippets() {
     });
 }
 
-async function setSnippets(settings) {
+async function _setSnippets(settings) {
     await setSettings('snippets', settings);
     await cache.remove(KEY_SNIPPETS);
 }
@@ -251,10 +225,6 @@ module.exports = {
             url: 'http://'
         }];
     },
-
-    getSettings: getSettings,
-
-    getSetting: getSetting,
 
     getWebsiteSettings: getWebsiteSettings,
 
@@ -273,7 +243,7 @@ module.exports = {
     'POST /api/settings/website': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateWebsiteSettings');
-        await setWebsiteSettings(ctx.request.body);
+        await _setWebsiteSettings(ctx.request.body);
         ctx.rest(await getWebsiteSettings());
     },
 
@@ -285,7 +255,7 @@ module.exports = {
     'POST /api/settings/snippets': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateSnippets');
-        await setSnippets(ctx.request.body);
+        await _setSnippets(ctx.request.body);
         ctx.rest(await getSnippets());
     }
 };
