@@ -10,18 +10,12 @@ const
     cache = require('../cache'),
     helper = require('../helper'),
     logger = require('../logger'),
-    constants = require('../constants');
-
-var
-    Setting = db.setting,
-    warp = db.warp,
-    nextId = db.nextId;
-
-const
+    constants = require('../constants'),
+    Setting = db.Setting,
     RE_KEY = /^(\w{1,50})\:(\w{1,50})$/;
 
-// default settings:
-var defaultSettingDefinitions = {
+// default setting definitions:
+const defaultSettingDefinitions = {
     website: [
         {
             key: 'name',
@@ -41,7 +35,7 @@ var defaultSettingDefinitions = {
             key: 'keywords',
             label: 'Keywords',
             description: 'Keywords of the website',
-            value: '',
+            value: 'itranswarp',
             type: 'text',
         },
         {
@@ -62,7 +56,7 @@ var defaultSettingDefinitions = {
             key: 'custom_footer',
             label: 'Custom Footer',
             description: 'Any HTML embaeded in <footer>...</footer>',
-            value: '',
+            value: '<!-- custom footer -->',
             type: 'textarea'
         }
     ],
@@ -71,7 +65,7 @@ var defaultSettingDefinitions = {
             key: 'body_top',
             label: 'Top of the body',
             description: 'Snippet on top of the body',
-            value: '',
+            value: '<!-- body_top -->',
             type: 'textarea'
         },
         {
@@ -126,7 +120,20 @@ var defaultSettingDefinitions = {
     ]
 };
 
-var defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v, k) {
+/**
+ *  default setting key-value like:
+ *  {
+ *    "website": {
+ *      "name": "My Website",
+ *      "description": "powered by ..."
+ *    },
+ *    "snippets": {
+ *      "body_top": "",
+ *      "body_bottom": ""
+ *    }
+ *  }
+ */
+const defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v, k) {
     r[k] = _.reduce(v, function (result, item) {
         result[item.key] = item.value;
         return result;
@@ -135,13 +142,6 @@ var defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v, k
 }, {});
 
 logger.info('default settings:\n' + JSON.stringify(defaultSettingValues, null, '  '));
-
-async function getNavigationMenus() {
-    return [{
-        name: 'Custom',
-        url: 'http://'
-    }];
-}
 
 async function getSettings(group) {
     // get settings by group, return object with key - value,
@@ -153,41 +153,34 @@ async function getSettings(group) {
                 'group': group
             }
         }),
-        obj = {},
         n = group.length + 1;
-    _.each(settings, function (s) {
-        obj[s.key.substring(n)] = s.value;
-    });
-    return obj;
+    return settings.reduce((acc, setting) => {
+        acc[setting.key.substring(n)] = setting.value;
+        return acc;
+    }, {});
 }
 
-async function getSetting(key, defaultValue) {
+async function getSetting(key, defaultValue=null) {
     var setting = await Setting.findOne({
         where: {
             'key': key
         }
     });
-    if (setting === null) {
-        return defaultValue === undefined ? null : defaultValue;
-    }
-    return setting.value;
+    return (setting === null) ? defaultValue :  setting.value;
 }
 
 async function setSetting(key, value) {
-    var
-        m = key.match(RE_KEY),
-        group;
+    var m = key.match(RE_KEY);
     if (m === null) {
-        throw api.invalidParam('key');
+        throw api.invalidParam('key', 'key must be like "prefix:xyz"');
     }
-    group = m[1];
     await Setting.destroy({
         where: {
             'key': key
         }
     });
     await Setting.create({
-        group: group,
+        group: m[1],
         key: key,
         value: value
     });
@@ -211,7 +204,7 @@ async function setSettings(group, settings) {
     }
 }
 
-async function getSettingsByDefaults(name, defaults) {
+async function _getSettingsFillWithDefaultsIfMissing(name, defaults) {
     var
         settings = await getSettings(name),
         key,
@@ -224,13 +217,13 @@ async function getSettingsByDefaults(name, defaults) {
     return s;
 }
 
-var
+const
     KEY_WEBSITE = constants.cache.WEBSITE,
     KEY_SNIPPETS = constants.cache.SNIPPETS;
 
 async function getWebsiteSettings() {
     return await cache.get(KEY_WEBSITE, async () => {
-        return await getSettingsByDefaults('website', defaultSettingValues.website);
+        return await _getSettingsFillWithDefaultsIfMissing('website', defaultSettingValues.website);
     });
 }
 
@@ -241,7 +234,7 @@ async function setWebsiteSettings(settings) {
 
 async function getSnippets() {
     return await cache.get(KEY_SNIPPETS, async () => {
-        return await getSettingsByDefaults('snippets', defaultSettingValues.snippets);
+        return await _getSettingsFillWithDefaultsIfMissing('snippets', defaultSettingValues.snippets);
     });
 }
 
@@ -252,17 +245,16 @@ async function setSnippets(settings) {
 
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    getNavigationMenus: () => {
+        return [{
+            name: 'Custom',
+            url: 'http://'
+        }];
+    },
 
     getSettings: getSettings,
 
     getSetting: getSetting,
-
-    setSetting: setSetting,
-
-    setSettings: setSettings,
-
-    getSettingsByDefaults: getSettingsByDefaults,
 
     getWebsiteSettings: getWebsiteSettings,
 
@@ -280,9 +272,8 @@ module.exports = {
 
     'POST /api/settings/website': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
-        ctx.validateSchema('updateWebsiteSettings');
-        var data = ctx.request.body;
-        await setWebsiteSettings(data);
+        ctx.validate('updateWebsiteSettings');
+        await setWebsiteSettings(ctx.request.body);
         ctx.rest(await getWebsiteSettings());
     },
 
@@ -294,8 +285,7 @@ module.exports = {
     'POST /api/settings/snippets': async (ctx, next) => {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateSnippets');
-        var data = ctx.request.body;
-        await setSnippets(data);
+        await setSnippets(ctx.request.body);
         ctx.rest(await getSnippets());
     }
 };
