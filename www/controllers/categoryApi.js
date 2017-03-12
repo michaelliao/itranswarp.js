@@ -14,11 +14,10 @@ const
     constants = require('../constants');
 
 var
-    User = db.user,
-    Article = db.article,
-    Category = db.category,
-    Text = db.text,
-    warp = db.warp,
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
+    Text = db.Text,
     nextId = db.nextId;
 
 async function getCategories() {
@@ -35,23 +34,21 @@ async function getCategory(id) {
     return category;
 }
 
-async function getNavigationMenus() {
-    var categories = await getCategories();
-    return _.map(categories, function (cat) {
-        return {
-            name: cat.name,
-            url: '/category/' + cat.id
-        };
-    });
-}
-
 module.exports = {
+
+    getNavigationMenus: async () => {
+        var categories = await getCategories();
+        return categories.map((cat) => {
+            return {
+                name: cat.name,
+                url: '/category/' + cat.id
+            };
+        });
+    },
 
     getCategories: getCategories,
 
     getCategory: getCategory,
-
-    getNavigationMenus: getNavigationMenus,
 
     'GET /api/categories': async (ctx, next) => {
         /**
@@ -73,6 +70,7 @@ module.exports = {
          * @param {string} id: The id of the category.
          * @return {object} Category object.
          */
+        let id = ctx.params.id;
         ctx.rest(await getCategory(id));
     },
 
@@ -87,34 +85,49 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('createCategory');
-        var
-            num, cat,
-            data = ctx.request.body;
-        num = await Category.max('display_order');
-        cat = await Category.create({
-            name: data.name.trim(),
-            tag: data.tag.trim(),
-            description: data.description.trim(),
-            display_order: (num === null) ? 0 : num + 1
-        });
+        let
+            data = ctx.request.body,
+            num = await Category.max('display_order'),
+            cat = await Category.create({
+                name: data.name.trim(),
+                tag: data.tag.trim(),
+                description: data.description.trim(),
+                display_order: isNaN(num) ? 0 : num + 1
+            });
         ctx.rest(cat);
     },
 
     'POST /api/categories/all/sort': async (ctx, next) => {
         /**
          * Sort categories.
-         *
+         * 
          * @name Sort Categories
          * @param {array} id: The ids of categories.
          * @return {object} The sort result like { "sort": true }.
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('sortCategories');
-        var data = ctx.request.body;
-        // FIXME:
-        this.body = {
-            categories: await helper.$sort(data.ids, await getCategories())
-        };
+        let
+            cat,
+            data = ctx.request.body,
+            ids = data.ids,
+            categories = await getCategories();
+        if (ids.length !== categories.length) {
+            throw api.invalidParam('ids', 'invalid id list');
+        }
+        categories.forEach((cat) => {
+            let newIndex = ids.indexOf(cat.id);
+            if (newIndex === (-1)) {
+                throw api.invalidParam('ids', 'invalid id list');
+            }
+            cat.display_order = newIndex;
+        });
+        for (cat of categories) {
+            await cat.save();
+        }
+        ctx.rest({
+            ids: ids
+        });
     },
 
     'POST /api/categories/:id': async (ctx, next) => {
@@ -130,10 +143,9 @@ module.exports = {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateCategory');
         var
-            props = [],
-            category,
+            id = ctx.params.id,
+            category = await getCategory(id),
             data = ctx.request.body;
-        category = await getCategory(id);
         if (data.name) {
             category.name = data.name.trim();
         }
@@ -156,17 +168,18 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         ctx.checkPermission(constants.role.ADMIN);
-        var
-            category = await getCategory(id),
-            num = await Article.$findNumber({
-                select: 'count(id)',
-                where: 'category_id=?',
-                params: [id]
+        let
+            id = ctx.params.id,
+            cat = await getCategory(id),
+            num = await Article.count({
+                where: {
+                    category_id: id
+                }
             });
         if (num > 0) {
             throw api.conflictError('Category', 'Cannot delete category for there are some articles reference it.');
         }
-        await category.destroy();
+        await cat.destroy();
         ctx.rest({ 'id': id });
     }
 };

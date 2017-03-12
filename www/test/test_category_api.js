@@ -2,164 +2,343 @@
 
 // test category api:
 
-var
-    should = require('should'),
-    remote = require('./_remote'),
+const
+    appsetup = require('./_appsetup'), // <-- MUST be import first!
+    appclose = require('./_appclose'),
+    fs = require('fs'),
+    request = require('supertest'),
+    expect = require('chai').expect,
+    db = require('../db'),
+    logger = require('../logger'),
+    cache = require('../cache'),
     constants = require('../constants'),
-    roles = constants.role;
+    categoryApi = require('../controllers/categoryApi'),
+    Category = db.Category;
 
 describe('#categories', () => {
 
-    before(remote.setup);
+    before(appsetup);
 
-    describe('#api', () => {
+    after(appclose);
 
-        it('should get empty categories', async () => {
-            var r = yield remote.$get(roles.GUEST, '/api/categories');
-            remote.shouldNoError(r);
-            should(r.categories).be.ok;
-            r.categories.should.be.an.Array.and.have.length(0);
-        });
-
-        it('create a new category by admin ok', async () => {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: ' Test Category   ',
-                tag: 'java',
-                description: '  this is a test category...  '
-            });
-            remote.shouldNoError(r);
-            r.display_order.should.equal(0);
-            r.name.should.equal('Test Category');
-            r.tag.should.equal('java');
-            r.description.should.equal('this is a test category...');
-            r.version.should.equal(0);
-            r.id.should.be.ok.and.have.lengthOf(50);
-            // get by id:
-            var r2 = yield remote.$get(roles.GUEST, '/api/categories/' + r.id);
-            remote.shouldNoError(r2);
-            r2.id.should.equal(r.id);
-            r2.name.should.equal(r.name);
-            r2.description.should.equal(r.description);
-            r2.created_at.should.equal(r.created_at);
-            r2.updated_at.should.equal(r.updated_at);
-            r2.version.should.equal(r.version);
-            // create another:
-            var r3 = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: 'Another Category ',
-                tag: 'java'
-            });
-            remote.shouldNoError(r3);
-            r3.name.should.equal('Another Category');
-            r3.display_order.should.equal(1);
-            // get all category:
-            var rs = yield remote.$get(roles.GUEST, '/api/categories');
-            remote.shouldNoError(rs);
-            rs.categories.should.be.an.Array.and.have.lengthOf(2);
-        });
-
-        it('create new category with wrong parameter by admin', async () => {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                tag: 'java',
-                description: '  no name parameter...  '
-            });
-            remote.shouldHasError(r, 'parameter:invalid', 'name');
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: '  no tag parameter...  '
-            });
-            remote.shouldHasError(r, 'parameter:invalid', 'tag');
-        });
-
-        it('create new category by editor', async () => {
-            var r = yield remote.$post(roles.EDITOR, '/api/categories', {
-                name: 'by editor',
-                tag: 'java',
-                description: '  parameter...  '
-            });
-            remote.shouldHasError(r, 'permission:denied', 'permission');
-        });
-
-        it('update a category by admin', async () => {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: ' Before Update     ',
-                tag: 'java',
-                description: '  '
-            });
-            remote.shouldNoError(r);
-            r.name.should.equal('Before Update');
-            r.tag.should.equal('java');
-            r.description.should.equal('');
-            r.version.should.equal(0);
-            var r2 = yield remote.$post(roles.ADMIN, '/api/categories/' + r.id, {
-                name: ' After Update    ',
-                tag: 'python',
-                description: '  added description...  \t  '
-            });
-            remote.shouldNoError(r2);
-            r2.id.should.equal(r.id);
-            r2.name.should.equal('After Update');
-            r2.tag.should.equal('python');
-            r2.description.should.equal('added description...');
-            r2.created_at.should.equal(r.created_at);
-            r2.updated_at.should.greaterThan(r.updated_at);
-            r2.version.should.equal(1);
-            // query to verify:
-            var r3 = yield remote.$get(roles.ADMIN, '/api/categories/' + r.id);
-            remote.shouldNoError(r3);
-            r3.id.should.equal(r.id);
-            r3.name.should.equal('After Update');
-            r3.tag.should.equal('python');
-            r3.description.should.equal('added description...');
-            r3.created_at.should.equal(r.created_at);
-            r3.updated_at.should.greaterThan(r.updated_at);
-            r3.version.should.equal(1);
-        });
-
-        it('update a category by editor', async () => {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: ' Before Update    ',
-                tag: 'java',
-                description: '  '
-            });
-            remote.shouldNoError(r);
-            // try update its name and description:
-            var r2 = yield remote.$post(roles.EDITOR, '/api/categories/' + r.id, {
-                name: ' Try Update\n   ',
-                description: '  added description...  \t  '
-            });
-            remote.shouldHasError(r2, 'permission:denied', 'permission');
-        });
-
-        it('delete a category by admin', async () => {
-            // create first:
-            var r = yield remote.$post(roles.ADMIN, '/api/categories', {
-                name: ' Before Delete  ',
-                tag: 'java',
-                description: '  '
-            });
-            remote.shouldNoError(r);
-            r.name.should.equal('Before Delete');
-            // try delete:
-            var r2 = yield remote.$post(roles.ADMIN, '/api/categories/' + r.id + '/delete');
-            remote.shouldNoError(r2);
-            r2.id.should.equal(r.id);
-            // try get again:
-            var r3 = yield remote.$get(roles.GUEST, '/api/categories/' + r.id);
-            remote.shouldHasError(r3, 'entity:notfound', 'Category');
-        });
-
-        it('delete a non-exist category by editor', async () => {
-            var r = yield remote.$post(roles.EDITOR, '/api/categories/' + remote.nextId() + '/delete');
-            remote.shouldHasError(r, 'permission:denied', 'permission');
-        });
-
-        it('delete a non-exist category by admin', async () => {
-            var r = yield remote.$post(roles.ADMIN, '/api/categories/' + remote.nextId() + '/delete');
-            remote.shouldHasError(r, 'entity:notfound', 'Category');
-        });
-
-        it('get non-exist category', async () => {
-            var r = yield remote.$get(roles.GUEST, '/api/categories/' + remote.nextId());
-            remote.shouldHasError(r, 'entity:notfound', 'Category');
-        });
+    beforeEach(async () => {
+        logger.info('delete all categories...');
+        await Category.destroy($ALL);
+        // IMPORTANT: clear cache:
+        await cache.remove(constants.cache.CATEGORIES);
     });
+
+    afterEach(async () => {
+        // IMPORTANT: clear cache:
+        await cache.remove(constants.cache.CATEGORIES);
+    });
+
+    it('should get empty categories', async () => {
+        var response;
+        response = await request($SERVER)
+            .get('/api/categories')
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.categories).to.a('array').and.to.have.lengthOf(0);
+    });
+
+    it('create a new category failed/ok by admin, then check', async () => {
+        var response;
+        // editor:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($EDITOR))
+            .send({
+                name: 'Cat',
+                tag: 'dog',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        // admin:
+        // ok:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: ' Cat ',
+                tag: ' dog ',
+                description: 'ok '
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Cat');
+        expect(response.body.tag).to.equal('dog');
+        expect(response.body.description).to.equal('ok');
+        expect(response.body.display_order).to.equal(0);
+        // check:
+        let id = response.body.id;
+        response = await request($SERVER)
+            .get('/api/categories/' + id)
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Cat');
+        expect(response.body.tag).to.equal('dog');
+        expect(response.body.description).to.equal('ok');
+        // create another to check display_order:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: ' Tiger ',
+                tag: ' elephant ',
+                description: 'Oh '
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Tiger');
+        expect(response.body.display_order).to.equal(1);
+    });
+
+
+    it('create a new category with invalid param by admin', async () => {
+        var response;
+        // missing name:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                tag: 'dog',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        expect(response.body.data).to.equal('name');
+        // empty name:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: '  ',
+                tag: 'dog',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        expect(response.body.data).to.equal('name');
+    });
+
+    it('create / update category by admin, then check', async () => {
+        var response;
+        // create:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: 'Tom',
+                tag: 'cat',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Tom');
+        expect(response.body.tag).to.equal('cat');
+        let id = response.body.id;
+        // update by editor failed:
+        response = await request($SERVER)
+            .post('/api/categories/' + id)
+            .set('Authorization', auth($EDITOR))
+            .send({
+                name: 'Jerry',
+                tag: 'rat'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        // update by admin:
+        response = await request($SERVER)
+            .post('/api/categories/' + id)
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: 'Jerry',
+                tag: 'rat'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Jerry');
+        expect(response.body.tag).to.equal('rat');
+        // check by get:
+        response = await request($SERVER)
+            .get('/api/categories/' + id)
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Jerry');
+        expect(response.body.tag).to.equal('rat');
+    });
+
+    it('create categories by admin, then sort', async () => {
+        var
+            i, response,
+            ids = [null, null, null];
+        // create 3 categories:
+        for (i = 0; i < 3; i++) {
+            response = await request($SERVER)
+                .post('/api/categories')
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    name: 'Apple-' + i,
+                    tag: 'ios' + i
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+            expect(response.body.name).to.equal('Apple-' + i);
+            expect(response.body.display_order).to.equal(i);
+            ids[i] = response.body.id;
+        }
+        // sort by editor should failed:
+        response = await request($SERVER)
+            .post('/api/categories/all/sort')
+                .set('Authorization', auth($EDITOR))
+                .send({
+                    ids: ids
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        // sort by admin with invalid ids: length should be 3 but 4:
+        response = await request($SERVER)
+            .post('/api/categories/all/sort')
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    ids: [ids[0], ids[1], ids[2], ids[2]]
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        // sort by admin with invalid ids: duplicate id:
+        response = await request($SERVER)
+            .post('/api/categories/all/sort')
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    ids: [ids[0], ids[1], ids[1]]
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        // sort by admin with invalid ids: some id not found:
+        response = await request($SERVER)
+            .post('/api/categories/all/sort')
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    ids: [ids[0], ids[1], db.nextId()]
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        // sort by admin ok:
+        response = await request($SERVER)
+            .post('/api/categories/all/sort')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                ids: [ids[2], ids[1], ids[0]]
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.ids).to.a('array').and.to.eql([ids[2], ids[1], ids[0]]);
+        // query to check:
+        response = await request($SERVER)
+            .get('/api/categories')
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.categories).to.a('array').and.to.have.lengthOf(3);
+        expect(response.body.categories[0].name).to.equal('Apple-2');
+        expect(response.body.categories[1].name).to.equal('Apple-1');
+        expect(response.body.categories[2].name).to.equal('Apple-0');
+        for (i=0; i<3; i++) {
+            expect(response.body.categories[i].display_order).to.equal(i);
+        }
+    });
+
+    it('try delete category by editor / admin', async () => {
+        var id, response;
+        // create:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: 'Hello',
+                tag: 'hi',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        id = response.body.id;
+        // delete by editor:
+        response = await request($SERVER)
+            .post(`/api/categories/${id}/delete`)
+            .set('Authorization', auth($EDITOR))
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        // delete by admin:
+        response = await request($SERVER)
+            .post(`/api/categories/${id}/delete`)
+            .set('Authorization', auth($ADMIN))
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.id).to.equal(id);
+        // get:
+        response = await request($SERVER)
+            .get(`/api/categories/${id}`)
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('entity:notfound');
+    });
+
+    it('delete a non-exist category by admin', async () => {
+        let
+            id = db.nextId(),
+            response;
+        response = await request($SERVER)
+            .post(`/api/categories/${id}/delete`)
+            .set('Authorization', auth($ADMIN))
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('entity:notfound');
+    });
+
+    it('delete a non-empty category by admin', async () => {
+        var id, response;
+        // create:
+        response = await request($SERVER)
+            .post('/api/categories')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                name: 'Non-EMPTY',
+                tag: 'hi',
+                description: 'ok'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        id = response.body.id;
+        // create article with this category:
+        response = await request($SERVER)
+            .post('/api/articles')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                category_id: id,
+                name: 'New Article',
+                description: 'blablabla...',
+                content: 'a short article',
+                image: fs.readFileSync(__dirname + '/res-image-2.jpg').toString('base64')
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        // delete category
+        response = await request($SERVER)
+            .post(`/api/categories/${id}/delete`)
+            .set('Authorization', auth($ADMIN))
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('entity:conflict');
+    });
+
 });

@@ -6,6 +6,7 @@ const
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
+    md = require('../md'),
     cache = require('../cache'),
     helper = require('../helper'),
     constants = require('../constants'),
@@ -17,28 +18,27 @@ const
     attachmentApi = require('./attachmentApi');
 
 var
-    User = db.user,
-    Article = db.article,
-    Category = db.category,
-    Text = db.text,
-    warp = db.warp,
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
+    Text = db.Text,
     nextId = db.nextId;
 
 function indexArticle(r) {
-    process.nextTick(() => {
-        search.engine.index({
-            type: 'article',
-            id: r.id,
-            tags: r.tags,
-            name: r.name,
-            description: r.description,
-            content: helper.html2text(helper.md2html(r.content)),
-            created_at: r.publish_at,
-            updated_at: r.updated_at,
-            url: '/article/' + r.id,
-            upvotes: 0
-        });
-    });
+    // process.nextTick(() => {
+    //     search.engine.index({
+    //         type: 'article',
+    //         id: r.id,
+    //         tags: r.tags,
+    //         name: r.name,
+    //         description: r.description,
+    //         content: md.htmlToText(md.systemMarkdownToHtml(r.content)),
+    //         created_at: r.publish_at,
+    //         updated_at: r.updated_at,
+    //         url: '/article/' + r.id,
+    //         upvotes: 0
+    //     });
+    // });
 }
 
 function unindexArticle(r) {
@@ -277,12 +277,13 @@ module.exports = {
             text,
             article,
             attachment,
+            user = ctx.state.__user__,
             article_id = nextId(),
             content_id = nextId(),
-            data = this.request.body;
+            data = ctx.request.body;
         // check category id:
         await categoryApi.getCategory(data.category_id);
-
+        // create image:
         attachment = await attachmentApi.createAttachment(
             ctx.state.__user__.id,
             data.name.trim(),
@@ -290,17 +291,17 @@ module.exports = {
             new Buffer(data.image, 'base64'),
             null,
             true);
-
+        // create text:
         text = await Text.create({
             id: content_id,
             ref_id: article_id,
             value: data.content
         });
-
+        // create article:
         article = await Article.create({
             id: article_id,
-            user_id: this.request.user.id,
-            user_name: this.request.user.name,
+            user_id: user.id,
+            user_name: user.name,
             category_id: data.category_id,
             cover_id: attachment.id,
             content_id: content_id,
@@ -309,11 +310,12 @@ module.exports = {
             tags: helper.formatTags(data.tags),
             publish_at: (data.publish_at === undefined ? Date.now() : data.publish_at)
         });
-
+        // associate content:
+        article = article.toJSON();
         article.content = data.content;
+        // index:
         indexArticle(article);
-
-        this.body = article;
+        ctx.rest(article);
     },
 
     'POST /api/articles/:id': async (ctx, next) => {

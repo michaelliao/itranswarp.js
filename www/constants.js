@@ -23,6 +23,7 @@ module.exports = {
     // cache keys:
     cache: {
         NAVIGATIONS: '__navigations__',
+        CATEGORIES: '__categories__',
         WEBSITE: '__website__',
         SNIPPETS: '__snippet__'
     },

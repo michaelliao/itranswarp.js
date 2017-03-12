@@ -24,7 +24,8 @@ module.exports = {
             type: dbtypes.ID
         },
         views: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: 0
         },
         user_name: {
             type: dbtypes.STRING(100)
