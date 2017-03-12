@@ -9,9 +9,10 @@ const
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
-    helper = require('../helper'),
+    cache = require('../cache'),
     logger = require('../logger'),
-    constants = require('../constants');
+    constants = require('../constants'),
+    CACHE_KEY = constants.cache.CATEGORIES;
 
 var
     User = db.User,
@@ -20,18 +21,33 @@ var
     Text = db.Text,
     nextId = db.nextId;
 
-async function getCategories() {
+async function _clearCach() {
+    await cache.remove(CACHE_KEY);
+}
+
+async function _loadCategories() {
     return await Category.findAll({
         order: 'display_order'
     });
 }
 
-async function getCategory(id) {
-    var category = await Category.findById(id);
-    if (category === null) {
+async function getCategories(fromCache=true) {
+    if (fromCache) {
+        return await cache.get(CACHE_KEY, _loadCategories);
+    }
+    return await _loadCategories();
+}
+
+async function getCategory(id, fromCache=true) {
+    let
+        categories = await getCategories(fromCache),
+        filtered = categories.filter((cat) => {
+            return cat.id === id;
+        });
+    if (filtered.length === 0) {
         throw api.notFound('Category');
     }
-    return category;
+    return filtered[0];
 }
 
 module.exports = {
@@ -94,6 +110,7 @@ module.exports = {
                 description: data.description.trim(),
                 display_order: isNaN(num) ? 0 : num + 1
             });
+        await _clearCach();
         ctx.rest(cat);
     },
 
@@ -111,7 +128,7 @@ module.exports = {
             cat,
             data = ctx.request.body,
             ids = data.ids,
-            categories = await getCategories();
+            categories = await getCategories(false);
         if (ids.length !== categories.length) {
             throw api.invalidParam('ids', 'invalid id list');
         }
@@ -125,6 +142,7 @@ module.exports = {
         for (cat of categories) {
             await cat.save();
         }
+        await _clearCach();
         ctx.rest({
             ids: ids
         });
@@ -144,19 +162,20 @@ module.exports = {
         ctx.validate('updateCategory');
         var
             id = ctx.params.id,
-            category = await getCategory(id),
+            cat = await getCategory(id, false),
             data = ctx.request.body;
         if (data.name) {
-            category.name = data.name.trim();
+            cat.name = data.name.trim();
         }
         if (data.tag) {
-            category.tag = data.tag.trim();
+            cat.tag = data.tag.trim();
         }
         if (data.description) {
-            category.description = data.description.trim();
+            cat.description = data.description.trim();
         }
-        await category.save();
-        ctx.rest(category);
+        await cat.save();
+        await _clearCach();
+        ctx.rest(cat);
     },
 
     'POST /api/categories/:id/delete': async (ctx, next) => {
@@ -179,7 +198,12 @@ module.exports = {
         if (num > 0) {
             throw api.conflictError('Category', 'Cannot delete category for there are some articles reference it.');
         }
-        await cat.destroy();
+        await Category.destroy({
+            where: {
+                id: id
+            }
+        });
+        await _clearCach();
         ctx.rest({ 'id': id });
     }
 };
