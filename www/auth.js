@@ -25,18 +25,14 @@ const
     config = require('./config'),
     api = require('./api'),
     db = require('./db'),
+    User = db.User,
+    LocalUser = db.LocalUser,
+    AuthUser = db.AuthUser,
     constants = require('./constants'),
     COOKIE_NAME = config.session.cookie,
     COOKIE_SALT = config.session.salt,
-    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000;
-
-var
-    User = db.user,
-    LocalUser = db.localuser,
-    AuthUser = db.authuser;
-
-// for safe base64 replacements:
-var
+    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000,
+    // for safe base64 replacements:
     re_add = new RegExp(/\+/g),
     re_sla = new RegExp(/\//g),
     re_equ = new RegExp(/\=/g),
@@ -54,20 +50,20 @@ function _verifyPassword(salt, inputPassword, expectedPassword) {
 
 // string -> base64:
 function _safe_b64encode(s) {
-    var b64 = Buffer.from(s).toString('base64');
+    let b64 = Buffer.from(s).toString('base64');
     return b64.replace(re_add, '-').replace(re_sla, '_').replace(re_equ, '.');
 }
 
 // base64 -> string
 function _safe_b64decode(s) {
-    var b64 = s.replace(re_r_add, '+').replace(re_r_sla, '/').replace(re_r_equ, '=');
+    let b64 = s.replace(re_r_add, '+').replace(re_r_sla, '/').replace(re_r_equ, '=');
     return Buffer.from(b64, 'base64').toString();
 }
 
 // Generate a secure client session cookie by constructing string:
 // base64(provider:id:expires:sha1(provider:id:expires:passwd:salt)).
 function makeSessionCookie(provider, theId, passwd, expires=0) {
-    var
+    let
         now = Date.now(),
         min = now + 86400000, // 1 day
         max = now + 2592000000, // 30 days

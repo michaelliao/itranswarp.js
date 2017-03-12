@@ -2,23 +2,22 @@
 
 // user api
 
-var
+const
     _ = require('lodash'),
     oauth2 = require('oauth2-warp'),
+    bluebird = require('bluebird'),
     api = require('../api'),
     db = require('../db'),
     auth = require('../auth'),
     helper = require('../helper'),
     logger = require('../logger'),
     config = require('../config'),
-    constants = require('../constants');
-
-var
-    User = db.user,
-    AuthUser = db.authuser,
-    LocalUser = db.localuser,
-    warp = db.warp,
-    nextId = db.nextId;
+    constants = require('../constants'),
+    User = db.User,
+    AuthUser = db.AuthUser,
+    LocalUser = db.LocalUser,
+    nextId = db.nextId,
+    SECURE = config.session.https;
 
 var LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
@@ -33,14 +32,14 @@ var LOCK_TIMES = {
 
 var oauth2_providers = {};
 
-_.each(config.oauth2, function (cfg, name) {
-    var provider = oauth2.createProvider(
+_.each(config.oauth2, (cfg, name) => {
+    let provider = oauth2.createProvider(
         name,
         cfg.app_key,
         cfg.app_secret,
         cfg.redirect_uri
     );
-    provider.$getAuthentication = thunkify(provider.getAuthentication);
+    provider.getAuthentication = bluebird.promisify(provider.getAuthentication, { context: provider });
     oauth2_providers[name] = provider;
     logger.info('Init OAuth2: ' + name + ', redirect_uri = ' + provider.redirect_uri);
 });
@@ -58,6 +57,11 @@ async function getUsers(page) {
     return users;
 }
 
+/**
+ * Get user by email. Return null if not found.
+ * 
+ * @param {string} email 
+ */
 async function getUserByEmail(email) {
     return await User.findOne({
         where: {
@@ -67,7 +71,7 @@ async function getUserByEmail(email) {
 }
 
 async function getUser(id) {
-    var user = await User.findById(id);
+    let user = await User.findById(id);
     if (user === null) {
         throw api.notFound('User');
     }
@@ -86,27 +90,16 @@ async function bindUsers(entities, propName) {
     }
 }
 
-async function lockUser(id, lockTime) {
-    var user = await getUser(id);
-    if (user.role <= constants.role.ADMIN) {
-        throw api.notAllowed('Cannot lock admin user.');
-    }
-    await user.update({
-        'locked_until': lockTime
-    });
-    return lockTime;
-}
-
 async function processOAuthAuthentication(provider_name, authentication) {
-    var
+    let
         auth_id = provider_name + ':' + authentication.auth_id,
-        auth_user,
         user,
-        user_id;
-    auth_user = await AuthUser.findById({
-        where: 'auth_id=?',
-        params: [auth_id]
-    });
+        user_id,
+        auth_user = await AuthUser.findById({
+            where: {
+                auth_id: auth_id
+            }
+        });
     if (auth_user === null) {
         // first time to signin:
         user_id = nextId();
@@ -153,8 +146,8 @@ async function processOAuthAuthentication(provider_name, authentication) {
     };
 }
 
-function getReferer(request) {
-    var url = request.get('referer') || '/';
+function _getReferer(request) {
+    let url = request.get('referer') || '/';
     if (url.indexOf('/auth/') >= 0 || url.indexOf('/manage/') >= 0) {
         url = '/';
     }
@@ -171,7 +164,10 @@ module.exports = {
 
     'GET /api/users/:id': async (ctx, next) => {
         ctx.checkPermission(constants.role.EDITOR);
-        ctx.rest(await getUser(id));
+        let
+            id = ctx.params.id,
+            user = await getUser(id);
+        ctx.rest(user);
     },
 
     'GET /api/users': async (ctx, next) => {
@@ -193,7 +189,7 @@ module.exports = {
          * @param passwd: The password, 40-chars SHA1 string, in lower case.
          */
         ctx.validate('authenticate');
-        var
+        let
             localuser,
             data = ctx.request.body,
             email = data.email,
@@ -205,9 +201,10 @@ module.exports = {
         if (user.locked_until > Date.now()) {
             throw api.authFailed('locked', 'User is locked.');
         }
-        localuser = await LocalUser.findById({
-            where: 'user_id=?',
-            params: [user.id]
+        localuser = await LocalUser.findOne({
+            where: {
+                user_id: user.id
+            }
         });
         if (localuser === null) {
             throw api.authFailed('passwd', 'Cannot signin local.')
@@ -217,12 +214,13 @@ module.exports = {
             throw api.authFailed('passwd', 'Bad password.');
         }
         // make session cookie:
-        var
+        let
             expires = Date.now() + LOCAL_SIGNIN_EXPIRES_IN_MS,
             cookieStr = auth.makeSessionCookie(constants.signin.LOCAL, localuser.id, localuser.passwd, expires);
-        this.cookies.set(config.session.cookie, cookieStr, {
+        ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
+            secure: SECURE,
             expires: new Date(expires)
         });
         logger.info('set session cookie for user: ' + user.email);
@@ -230,54 +228,55 @@ module.exports = {
     },
 
     'GET /auth/signout': async (ctx, next) => {
-        this.cookies.set(config.session.cookie, 'deleted', {
+        ctx.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
+            secure: SECURE,
             expires: new Date(0)
         });
-        var redirect = getReferer(this.request);
-        console.log('Signout, goodbye!');
-        this.response.redirect(redirect);
+        logger.info('Signout, goodbye!');
+        ctx.response.redirect(_getReferer(ctx.request));
     },
 
+    // start oauth:
     'GET /auth/from/:name': async (ctx, next) => {
-        var provider, redirect, redirect_uri, jscallback, r;
-        provider = oauth2_providers[name];
-        if (!provider) {
+        let
+            name = ctx.params.name,
+            provider = oauth2_providers[name],
+            redirect_uri,
+            jscallback = ctx.request.query.jscallback;
+        if (! provider) {
             ctx.response.status = 404;
-            ctx.response.body = 'Invalid URL.';
+            ctx.response.body = 'Invalid URL';
             return;
         }
         redirect_uri = provider.redirect_uri;
-        if (redirect_uri.indexOf('http://') != 0) {
-            redirect_uri = 'http://' + this.request.host + '/auth/callback/' + name;
+        if (redirect_uri.indexOf('http://') !== 0 || redirect_uri.indexOf('https://') !== 0) {
+            redirect_uri = (SECURE ? 'https://' : 'http://') + ctx.request.host + '/auth/callback/' + name;
         }
-        jscallback = this.request.query.jscallback;
         if (jscallback) {
             redirect_uri = redirect_uri + '?jscallback=' + jscallback;
         }
         else {
-            redirect = getReferer(this.request);
-            redirect_uri = redirect_uri + '?redirect=' + encodeURIComponent(redirect);
+            redirect_uri = redirect_uri + '?redirect=' + encodeURIComponent(_getReferer(ctx.request));
         }
-        r = provider.getAuthenticateURL({
+        ctx.response.redirect(provider.getAuthenticateURL({
             redirect_uri: redirect_uri
-        });
-        logger.info('Redirect to: ' + r);
-        ctx.response.redirect(r);
+        }));
     },
 
+    // callback from oauth provider:
     'GET /auth/callback/:name': async (ctx, next) => {
-        var provider, redirect, redirect_uri, code, jscallback, authentication, r, auth_user, user, cookieStr;
-        provider = oauth2_providers[name];
-        if (!provider) {
+        let
+            provider = oauth2_providers[name],
+            code = ctx.request.query.code,
+            jscallback = ctx.request.query.jscallback || '',
+            authentication, r, auth_user, user, cookieStr;
+        if (! provider) {
             ctx.response.status = 404;
-            ctx.response.body = 'Invalid URL.';
+            ctx.response.body = 'Invalid URL';
             return;
         }
-        jscallback = ctx.request.query.jscallback;
-        redirect = ctx.request.query.redirect || '/';
-        code = ctx.request.query.code;
         if (!code) {
             logger.warn('OAuth2 callback error: code is not found.');
             ctx.response.body = '<html><body>Invalid code.</body></html>';
@@ -307,6 +306,7 @@ module.exports = {
         ctx.response.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
+            secure: SECURE,
             expires: new Date(auth_user.expires_at)
         });
         logger.info('set session cookie for user: ' + user.email);
@@ -320,21 +320,25 @@ module.exports = {
                       }) + ');self.close(); </script></body></html>';
         }
         else {
-            ctx.response.redirect(redirect);
+            ctx.response.redirect(ctx.request.query.redirect || '/');
         }
     },
 
     'POST /api/users/:id/lock': async (ctx, next) => {
-        // FIXME: check schema:
+        ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('lockUser');
-        var locked_until = ctx.request.body.locked_until;
-        if (!helper.isInteger(locked_until) || (locked_until < 0)) {
-            throw api.invalidParam('locked_until', 'locked_until must be an integer as a timestamp.');
+        let
+            id = ctx.params.id,
+            user = await getUser(id),
+            locked_until = ctx.request.body.locked_until;
+        if (user.role <= constants.role.ADMIN) {
+            throw api.notAllowed('Cannot lock admin user.');
         }
-        ctx.checkPermission(constants.role.EDITOR);
-        await lockUser(id, locked_until);
-        this.body = {
+        await user.update({
+            'locked_until': lockTime
+        });
+        ct.rest({
             locked_until: locked_until
-        };
+        });
     }
 };

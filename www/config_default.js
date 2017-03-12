@@ -19,6 +19,8 @@ module.exports = {
         salt: 'itranswarp.js',
         // signin expires in N seconds:
         expires: 7 * 24 * 3600,
+        // node is behind a https reverse proxy?
+        https: false,
         // use https for management:
         httpsForManagement: false
     },
