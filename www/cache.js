@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Cache interface.
+ * Cache object to operate cache (memcached as underlying service).
  * 
  * author: Michael Liao
  */
