@@ -195,6 +195,13 @@ const schemas = {
         },
         required: ['email', 'passwd']
     },
+    lockUser: {
+        type: 'object',
+        properties: {
+            locked_until: PROPERTY.TIMESTAMP
+        },
+        required: ['locked_until']
+    },
     createCategory: {
         type: 'object',
         properties: {
