@@ -12,16 +12,14 @@ const
     db = require('../db'),
     helper = require('../helper'),
     logger = require('../logger'),
-    constants = require('../constants');
-
-var
+    constants = require('../constants'),
     User = db.User,
     Webpage = db.Webpage,
     Text = db.Text,
     nextId = db.nextId;
 
 async function _checkAliasAvailable(alias) {
-    var p = await Webpage.findOne({
+    let p = await Webpage.findOne({
         where: {
             'alias': alias
         }
@@ -38,7 +36,7 @@ async function _getWebpages() {
 }
 
 async function _getWebpage(id) {
-    var p = await Webpage.findById(id);
+    let p = await Webpage.findById(id);
     if (p === null) {
         throw api.notFound('Webpage');
     }
@@ -46,7 +44,7 @@ async function _getWebpage(id) {
 }
 
 async function _getWebpageByAlias(alias) {
-    var p = await Webpage.findOne({
+    let p = await Webpage.findOne({
         where: {
             'alias': alias
         }
@@ -67,7 +65,7 @@ async function _attachContent(entity) {
 module.exports = {
 
     getNavigationMenus: async () => {
-        var ps = await _getWebpages();
+        let ps = await _getWebpages();
         return ps.filter((p) => {
             return ! p.draft;
         }).map((p) => {
@@ -79,7 +77,7 @@ module.exports = {
     },
 
     getWebpageByAliasWithContent: async (alias) => {
-        var p = await _getWebpageByAlias(alias);
+        let p = await _getWebpageByAlias(alias);
         return _attachContent(p);
     },
 
@@ -132,8 +130,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createWebpage');
-        var
-            r,
+        let
             content_id = nextId(),
             webpage_id = nextId(),
             text,
@@ -156,9 +153,9 @@ module.exports = {
             draft: data.draft
         });
         // attach content:
-        r = webpage.toJSON();
-        r.content = data.content;
-        ctx.rest(r);
+        webpage = webpage.toJSON();
+        webpage.content = data.content;
+        ctx.rest(webpage);
     },
 
     'POST /api/webpages/:id': async (ctx, next) => {
@@ -176,8 +173,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateWebpage');
-        var
-            r,
+        let
             id = ctx.params.id,
             content_id = null,
             text,
@@ -208,15 +204,15 @@ module.exports = {
         }
         await webpage.save();
         // attach content:
-        r = webpage.toJSON();
+        webpage = webpage.toJSON();
         if (content_id) {
-            r.content = data.content;
+            webpage.content = data.content;
         }
         else {
             text = await Text.findById(webpage.content_id);
-            r.content = text.value;
+            webpage.content = text.value;
         }
-        ctx.rest(r);
+        ctx.rest(webpage);
     },
 
     'POST /api/webpages/:id/delete': async (ctx, next) => {
@@ -228,7 +224,7 @@ module.exports = {
          * @return {object} Results contains id of the webpage, e.g. {"id": "12345"}
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
             id = ctx.params.id,
             webpage = await _getWebpage(id);
         await webpage.destroy();

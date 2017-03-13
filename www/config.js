@@ -22,11 +22,11 @@ const
     fs = require('fs'),
     logger = require('./logger');
 
-var cfg = require('./config_default');
+let cfg = require('./config_default');
 
 if (fs.existsSync(overrideConfigPath)) {
     logger.info(`load ${overrideConfigPath}...`);
-    var ovr = require(overrideConfigPath);
+    let ovr = require(overrideConfigPath);
     cfg = _.merge(cfg, ovr);
 }
 
