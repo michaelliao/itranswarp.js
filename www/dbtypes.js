@@ -2,11 +2,11 @@
 
 // define db types:
 
-const Sequelize = require('sequelize');
+const
+    Sequelize = require('sequelize'),
+    TYPES = ['STRING', 'INTEGER', 'BIGINT', 'TEXT', 'DOUBLE', 'DATEONLY', 'BOOLEAN', 'BLOB'];
 
-const TYPES = ['STRING', 'INTEGER', 'BIGINT', 'TEXT', 'DOUBLE', 'DATEONLY', 'BOOLEAN', 'BLOB'];
-
-var exp = {
+let exp = {
     ID: Sequelize.STRING(50)
 };
 

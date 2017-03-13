@@ -16,7 +16,7 @@ logger.info('init sequelize...');
 const ID_LENGTH = 50;
 
 const paddings = (() => {
-    var i, _paddings = [];
+    let i, _paddings = [];
     for (i = 1; i < 30; i++) {
         _paddings.push(new Array(i).join('0'));
     }
@@ -31,7 +31,7 @@ const paddings = (() => {
  */
 function nextId() {
     // generate uuid with timestamp:
-    var id = util.format('%d%s000', Date.now(), uuid().replace(/\-/g, ''));
+    let id = util.format('%d%s000', Date.now(), uuid().replace(/\-/g, ''));
     return paddings[ID_LENGTH - id.length] + id;
 }
 
@@ -58,7 +58,7 @@ const sequelize = new Sequelize(
     });
 
 function defineModel(modelName, tableName, attributes) {
-    var attrs = {
+    let attrs = {
         id: {
             type: dbtypes.ID,
             allowNull: false,
@@ -108,7 +108,7 @@ function defineModel(modelName, tableName, attributes) {
         }
         return v;
     }, '  '));
-    var model = sequelize.define(tableName, attrs, {
+    let model = sequelize.define(tableName, attrs, {
         tableName: tableName,
         timestamps: false,
         hooks: {
@@ -134,7 +134,7 @@ function defineModel(modelName, tableName, attributes) {
     return model;
 }
 
-var exp = {
+let exp = {
     ID_LENGTH: ID_LENGTH,
     sequelize: sequelize,
     nextId: nextId,
@@ -156,7 +156,7 @@ var exp = {
 };
 
 // scan models:
-var
+let
     files = require('fs').readdirSync(__dirname + '/models'),
     re = new RegExp("^[A-Za-z][A-Za-z0-9\\_]*\\.js$");
 
@@ -164,7 +164,7 @@ var
 files.filter((f) => { return re.test(f); }).map((f) => {
     return f.substring(0, f.length - 3);
 }).forEach((modelName) => {
-    var modelDefinition = require('./models/' + modelName);
+    let modelDefinition = require('./models/' + modelName);
     exp[modelDefinition.name] = defineModel(modelDefinition.name, modelDefinition.table, modelDefinition.fields);
 });
 
