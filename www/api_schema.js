@@ -17,7 +17,7 @@ const
 env.defaultOptions.useDefault = true;
 env.defaultOptions.removeAdditional = true;
 
-var code2Message = {
+const code2Message = {
     required: 'Parameter is required',
     email: 'Invalid email',
     pattern: 'Invalid format',
