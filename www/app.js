@@ -24,11 +24,10 @@ const
 
 var
     static_prefix = config.cdn.static_prefix,
-    activeTheme = config.theme,
-    User = db.user;
+    activeTheme = config.theme;
 
 // global app:
-var app = new Koa();
+let app = new Koa();
 
 // log request URL:
 app.use(async (ctx, next) => {

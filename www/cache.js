@@ -21,9 +21,7 @@ const
     memcached = new Memcached(config.cache.host + ':' + config.cache.port, {
         'timeout': config.cache.timeout,
         'retries': config.cache.retries
-    });
-
-var
+    }),
     _incr = bluebird.promisify(memcached.incr, { context: memcached }),
     _get = bluebird.promisify(memcached.get, { context: memcached }),
     _set = bluebird.promisify(memcached.set, { context: memcached }),
@@ -49,7 +47,7 @@ module.exports = {
          *   otherwise call defaultValueOfFn, put the result into cache
          *   and return as value.
          */
-        var
+        let
             k = CACHE_PREFIX + key,
             data = await _get(k);
         if (data) {
@@ -79,7 +77,7 @@ module.exports = {
         if (keys.length === 0) {
             return [];
         }
-        var
+        let
             multiKeys = _.map(keys, (key) => {
                 return CACHE_PREFIX + key;
             }),
@@ -90,17 +88,17 @@ module.exports = {
     },
 
     set: async (key, value, lifetime=DEFAULT_LIFETIME) => {
-        var k = CACHE_PREFIX + key;
+        let k = CACHE_PREFIX + key;
         await _set(k, value, lifetime);
     },
 
     remove: async (key) => {
-        var k = CACHE_PREFIX + key;
+        let k = CACHE_PREFIX + key;
         await _del(k);
     },
 
     count: async (key) => {
-        var
+        let
             k = CACHE_PREFIX + key,
             num = await _get(k);
         return num ? num : 0;
@@ -110,7 +108,7 @@ module.exports = {
         if (keys.length === 0) {
             return [];
         }
-        var
+        let
             multiKeys = _.map(keys, (key) => {
                 return CACHE_PREFIX + key;
             }),
