@@ -84,7 +84,7 @@ function makeSessionCookie(provider, theId, passwd, expires=0) {
 }
 
 async function findUserAuthByProvider(provider, id) {
-    var au, lu, user, passwd;
+    let au, lu, user, passwd;
     if (provider === constants.signin.LOCAL) {
         lu = await LocalUser.findById(id);
         if (lu === null) {
