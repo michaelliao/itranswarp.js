@@ -61,8 +61,9 @@ function encodePre(code) {
 }
 
 function generateForm(prefixCode, editableCode, postfixCode) {
-    var id = 'f-' + uuid();
-    var s = JS;
+    let
+        id = 'f-' + uuid(),
+        s = JS;
     s += `<form id="${id}" class="uk-form uk-form-stack" action="#0">`;
     if (prefixCode) {
         s += `<pre class="js-practice-prefix" style="font-size: 14px; margin-bottom: 0; border-bottom: none; padding: 6px; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">${encodePre(prefixCode)}</pre>`;
@@ -80,7 +81,7 @@ module.exports = {
     type: 'code',
     plugin: 'js-practice',
     render: function (code, lang) {
-        var
+        let
             pre, editable, post,
             parts = code.split('----');
         if (parts.length === 1) {

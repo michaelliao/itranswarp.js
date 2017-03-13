@@ -20,7 +20,7 @@ function Page(index, size=10) {
     });
 
     this.__defineGetter__('pages', function () {
-        var total = this.__total;
+        let total = this.__total;
         if (total === 0) {
             return 0;
         }
@@ -47,7 +47,7 @@ function Page(index, size=10) {
         if (this.pages === 2) {
             return [1, 2];
         }
-        var
+        let
             i,
             list = [1],
             start = Math.max(2, index - 4),
@@ -79,7 +79,7 @@ function Page(index, size=10) {
         if (n === undefined || n < 0) {
             n = 5;
         }
-        var
+        let
             i,
             arr = [],
             min = this.index - n,

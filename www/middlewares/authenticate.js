@@ -14,9 +14,7 @@ const
     db = require('../db'),
     COOKIE_NAME = config.session.cookie,
     COOKIE_SALT = config.session.salt,
-    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000;
-
-var
+    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000,
     User = db.User,
     LocalUser = db.LocalUser,
     AuthUser = db.AuthUser;
@@ -33,7 +31,7 @@ async function _parseAuthorization(auth) {
     if ((auth.length < 6) || (auth.substring(0, 6) !== 'Basic ')) {
         return null;
     }
-    var
+    let
         u, p, user, luser,
         up = Buffer.from(auth.substring(6), 'base64').toString().split(':');
     if (up.length !== 2) {

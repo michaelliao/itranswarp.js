@@ -20,16 +20,14 @@ function error(s) {
 }
 
 function checkFile(f) {
-    var
-        content = fs.readFileSync(f, 'utf-8');
+    let content = fs.readFileSync(f, 'utf-8');
     if (!content.startsWith('\'use strict\';\n')) {
         error('missing use strict!');
     }
 }
 
 function scanFiles(dir) {
-    var
-        files = fs.readdirSync(dir);
+    let files = fs.readdirSync(dir);
     files.filter((f) => {
         return ! f.startsWith('.') && f.endsWith('.js');
     }).forEach((f) => {
@@ -39,7 +37,7 @@ function scanFiles(dir) {
 }
 
 function scanDir(dir) {
-    var
+    let
         dirs,
         pwd = `${basedir}/${dir}`;
     info(`scan dir ${pwd}...`);

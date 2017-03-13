@@ -9,7 +9,7 @@
 const nunjucks = require('nunjucks');
 
 function createEnv(path, opts) {
-    var
+    let
         autoescape = opts.autoescape === undefined ? true : opts.autoescape,
         noCache = opts.noCache || false,
         watch = opts.watch || false,
