@@ -57,11 +57,11 @@ async function _getWebpageByAlias(alias) {
     return p;
 }
 
-async function _attachContent(webpage) {
-    var text = await Text.findById(webpage.content_id);
-    webpage = webpage.toJSON();
-    webpage.content = text.value;
-    return webpage;
+async function _attachContent(entity) {
+    let text = await Text.findById(entity.content_id);
+    entity = entity.toJSON();
+    entity.content = text.value;
+    return entity;
 }
 
 module.exports = {
