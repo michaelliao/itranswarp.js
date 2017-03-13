@@ -12,9 +12,7 @@ const
     cache = require('../cache'),
     logger = require('../logger'),
     constants = require('../constants'),
-    CACHE_KEY = constants.cache.CATEGORIES;
-
-var
+    CACHE_KEY = constants.cache.CATEGORIES,
     User = db.User,
     Article = db.Article,
     Category = db.Category,
@@ -53,7 +51,7 @@ async function getCategory(id, fromCache=true) {
 module.exports = {
 
     getNavigationMenus: async () => {
-        var categories = await getCategories();
+        let categories = await getCategories();
         return categories.map((cat) => {
             return {
                 name: cat.name,
@@ -160,7 +158,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateCategory');
-        var
+        let
             id = ctx.params.id,
             cat = await getCategory(id, false),
             data = ctx.request.body;
