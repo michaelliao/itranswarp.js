@@ -10,42 +10,46 @@ const
     sequelize = require('sequelize'),
     api = require('../api'),
     db = require('../db'),
+    md = require('../md'),
     helper = require('../helper'),
     search = require('../search/search'),
-    constants = require('../constants');
-
-var
-    attachmentApi = require('./attachmentApi');
-
-var
-    User = db.user,
-    Wiki = db.wiki,
-    WikiPage = db.wikipage,
-    Text = db.text,
+    constants = require('../constants'),
+    attachmentApi = require('./attachmentApi'),
+    User = db.User,
+    Wiki = db.Wiki,
+    WikiPage = db.WikiPage,
+    Text = db.Text,
     nextId = db.nextId;
 
 function indexWiki(r) {
     process.nextTick(() => {
-        search.engine.index({
-            type: 'wiki',
-            id: r.id,
-            name: r.name,
-            description: r.description || '',
-            content: helper.html2text(helper.md2html(r.content, true)),
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-            url: '/wiki/' + (r.wiki_id ? r.wiki_id + '/' : '') + r.id,
-            upvotes: 0
-        });
+        // search.engine.index({
+        //     type: 'wiki',
+        //     id: r.id,
+        //     name: r.name,
+        //     description: r.description || '',
+        //     content: helper.html2text(helper.md2html(r.content, true)),
+        //     created_at: r.created_at,
+        //     updated_at: r.updated_at,
+        //     url: '/wiki/' + (r.wiki_id ? r.wiki_id + '/' : '') + r.id,
+        //     upvotes: 0
+        // });
     });
 }
 
 function unindexWiki(r) {
-    process.nextTick(() => {
-        search.engine.unindex({
-            id: r.id
-        });
-    });
+    // process.nextTick(() => {
+    //     search.engine.unindex({
+    //         id: r.id
+    //     });
+    // });
+}
+
+async function _attachContent(entity) {
+    let text = await Text.findById(entity.content_id);
+    entity = entity.toJSON();
+    entity.content = text.value;
+    return entity;
 }
 
 async function getWikis() {
@@ -55,37 +59,19 @@ async function getWikis() {
 }
 
 async function getWiki(id, includeContent=false) {
-    var
-        text,
-        wiki = await Wiki.findById(id);
+    let wiki = await Wiki.findById(id);
     if (wiki === null) {
         throw api.notFound('Wiki');
     }
-    if (includeContent) {
-        text = await Text.findById(wiki.content_id);
-        if (text === null) {
-            throw api.notFound('Text');
-        }
-        wiki.content = text.value;
-    }
-    return wiki;
+    return includeContent ? _attachContent(wiki) : wiki;
 }
 
 async function getWikiPage(id, includeContent=false) {
-    var
-        text,
-        wp = await WikiPage.findById(id);
+    let wp = await WikiPage.findById(id);
     if (wp === null) {
         throw api.notFound('Wiki');
     }
-    if (includeContent) {
-        text = await Text.findById(wp.content_id);
-        if (text === null) {
-            throw api.notFound('Text');
-        }
-        wp.content = text.value;
-    }
-    return wp;
+    return includeContent ? _attachContent(wp) : wp;
 }
 
 function treeIterate(nodes, root) {
@@ -148,6 +134,7 @@ async function getWikiTree(id, isFlatten=false) {
         arr,
         wiki = await getWiki(id),
         children = await getWikiPages(id);
+    wiki = wiki.toJSON();
     if (isFlatten) {
         arr = [];
         flatten(arr, 0, children);
@@ -159,19 +146,17 @@ async function getWikiTree(id, isFlatten=false) {
     return wiki;
 }
 
-async function getNavigationMenus() {
-    var ws = await getWikis();
-    return _.map(ws, function (w) {
-        return {
-            name: w.name,
-            url: '/wiki/' + w.id
-        };
-    });
-}
-
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    getNavigationMenus: async () => {
+        let ws = await getWikis();
+        return ws.map((w) => {
+            return {
+                name: w.name,
+                url: '/wiki/' + w.id
+            };
+        });
+    },
 
     getWikiTree: getWikiTree,
 
@@ -191,18 +176,18 @@ module.exports = {
          * @return {object} Wiki object.
          * @error {entity:notfound} Wiki was not found by id.
          */
-        var
-            id = ctx.request.params.id,
+        let
+            id = ctx.params.id,
             wiki = await getWiki(id, true);
         if (ctx.request.query.format === 'html') {
-            wiki.content = helper.md2html(wiki.content, true);
+            wiki.content = md.systemMarkdownToHtml(wiki.content);
         }
         ctx.rest(wiki);
     },
 
     'GET /api/wikis': async (ctx, next) => {
         /**
-         * Get all wikis.
+         * Get all wikis (without content).
          * 
          * @name Get Wikis
          * @return {object} Wikis object.
@@ -233,17 +218,16 @@ module.exports = {
             text,
             wiki_id = nextId(),
             content_id = nextId(),
-            attachment,
-            data = ctx.request.body;
-
-        // create image:
-        attachment = await attachmentApi.createAttachment(
-            this.request.user.id,
-            data.name.trim(),
-            data.description.trim(),
-            new Buffer(data.image, 'base64'),
-            null,
-            true);
+            data = ctx.request.body,
+            user = ctx.state.__user__,
+            attachment = await attachmentApi.createAttachment(
+                user.id,
+                data.name.trim(),
+                data.description.trim(),
+                new Buffer(data.image, 'base64'),
+                null,
+                true
+            );
 
         // create text:
         text = await Text.create({
@@ -261,6 +245,8 @@ module.exports = {
             description: data.description.trim(),
             tag: data.tag.trim()
         });
+        // attach content:
+        wiki = wiki.toJSON();
         wiki.content = data.content;
         ctx.rest(wiki);
     },
@@ -280,23 +266,22 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateWiki');
-        var
-            id = ctx.request.params.id,
+        let
+            id = ctx.params.id,
             wiki = await getWiki(id),
             text,
             wiki_id,
             content_id,
             attachment,
-            props = {},
             data = ctx.request.body;
         if (data.name) {
-            props.name = data.name.trim();
+            wiki.name = data.name.trim();
         }
         if (data.description) {
-            props.description = data.description.trim();
+            wiki.description = data.description.trim();
         }
         if (data.tag) {
-            props.tag = data.tag.trim();
+            wiki.tag = data.tag.trim();
         }
         if (data.image) {
             // create image:
@@ -307,20 +292,20 @@ module.exports = {
                 new Buffer(data.image, 'base64'),
                 null,
                 true);
-            props.cover_id = attachment.id;
+            wiki.cover_id = attachment.id;
         }
         if (data.content) {
             text = await Text.create({
                 ref_id: wiki.id,
                 value: data.content
             });
-            props.content_id = text.id;
+            wiki.content_id = text.id;
+        }
+        await wiki.save();
+        wiki = wiki.toJSON();
+        if (data.content) {
             wiki.content = data.content;
-        }
-        if (Object.getOwnPropertyNames(props).length > 0) {
-            await wiki.update(props);
-        }
-        if (!wiki.content) {
+        } else {
             text = await Text.findById(wiki.content_id);
             wiki.content = text.value;
         }
@@ -342,23 +327,19 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createWikiPage');
-        var
-            wiki_id = ctx.request.params.id,
+        let
+            wiki_id = ctx.params.id,
             wp_id = nextId(),
             content_id = nextId(),
-            wiki,
+            wiki = await getWiki(wiki_id),
             wikipage,
             text,
             num,
-            data = this.request.body;
-
-        // check wiki id:
-        await getWiki(wiki_id);
+            data = ctx.request.body;
         // check parent id:
         if (data.parent_id) {
             await getWikiPage(data.parent_id);
         }
-
         // count:
         num = await WikiPage.max('display_order', {
             where: {
@@ -378,11 +359,12 @@ module.exports = {
             content_id: content_id,
             parent_id: data.parent_id,
             name: data.name.trim(),
-            display_order: ((num === null) ? 0 : num + 1)
+            display_order: isNaN(num) ? 0 : num + 1
         });
+        wikipage = wikipage.toJSON();
         wikipage.content = data.content;
         indexWiki(wikipage);
-        ctx(wikipage);
+        ctx.rest(wikipage);
     },
 
     'POST /api/wikis/wikipages/:id': async (ctx, next) => {
@@ -397,27 +379,26 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateWikiPage');
-        var
-            id = ctx.request.params.id,
+        let
+            id = ctx.params.id,
             wikipage = await getWikiPage(id),
             text,
-            props = {},
             data = ctx.request.body;
         if (data.name) {
-            props.name = data.name.trim();
+            wikipage.name = data.name.trim();
         }
         if (data.content) {
             text = await Text.create({
                 ref_id: wikipage.id,
                 value: data.content
             });
-            props.content_id = text.id;
+            wikipage.content_id = text.id;
+        }
+        await wikipage.save();
+        wikipage = wikipage.toJSON();
+        if (data.content) {
             wikipage.content = data.content;
-        }
-        if (Object.getOwnPropertyNames(props).length > 0) {
-            await wikipage.update(props);
-        }
-        if (!wikipage.content) {
+        } else {
             text = await Text.findById(wikipage.content_id);
             wikipage.content = text.value;
         }
@@ -435,9 +416,11 @@ module.exports = {
          * @return {object} WikiPage object.
          * @error {resource:notfound} WikiPage was not found by id.
          */
-        var wp = await getWikiPage(id, true);
+        let
+            id = ctx.params.id,
+            wp = await getWikiPage(id, true);
         if (ctx.request.query.format === 'html') {
-            wp.content = helper.md2html(wp.content, true);
+            wp.content = md.systemMarkdownToHtml(wp.content);
         }
         ctx.rest(wp);
     },
@@ -465,24 +448,16 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('moveWikiPage');
-        var
-            index = data.index,
-            p, i, L,
-            wiki,
-            movingPage = await getWikiPage(id),
-            parentPage,
-            allPages,
+        let
+            id = ctx.params.id,
             data = ctx.request.body,
-            parent_id = data.parent_id;
-        if (movingPage.parent_id === parent_id && movingPage.display_order === index) {
-            logger.info('>> No need to update.');
-            ctx.rest(movingPage);
-            return;
-        }
-
-        wiki = await getWiki(movingPage.wiki_id);
-
-        parentPage = parent_id === '' ? null : await getWikiPage(parent_id);
+            index = data.index,
+            parent_id = data.parent_id,
+            movingPage = await getWikiPage(id),
+            wiki = await getWiki(movingPage.wiki_id),
+            parentPage = parent_id === '' ? null : await getWikiPage(parent_id),
+            p, i, L,
+            allPages;
         if (parentPage !== null && parentPage.wiki_id !== wiki.id) {
             throw api.invalidParam('parent_id');
         }
@@ -498,6 +473,9 @@ module.exports = {
                 p = allPages[p.parent_id];
             }
         }
+        // set to new parent:
+        movingPage.parent_id = parent_id;
+        await movingPage.save();
 
         // get current children:
         L = [];
@@ -524,10 +502,6 @@ module.exports = {
             });
         }
         movingPage.display_order = index; // <-- already updated, but need to pass to result
-        movingPage.parent_id = parent_id;
-        await movingPage.save({
-            fields: ['parent_id', 'updated_at', 'version']
-        });
         ctx.rest(movingPage);
     },
 
@@ -540,7 +514,7 @@ module.exports = {
          * @return {object} Returns object contains id of deleted wiki. { "id": "1234" }
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
             wikipage = await getWikiPage(id),
             num = await WikiPage.count({
                 where: {
@@ -573,7 +547,8 @@ module.exports = {
          * @error {resource:notfound} If resource not found by id.
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
+            id = ctx.params.id,
             wiki = await getWiki(id),
             num = await WikiPage.count({
                 where: {
@@ -584,7 +559,6 @@ module.exports = {
             throw api.conflictError('Wiki', 'Wiki is not empty.');
         }
         await wiki.destroy();
-
         // delete all texts:
         await Text.destroy({
             where: {
