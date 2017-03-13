@@ -12,7 +12,7 @@ const
     logger = require('./logger.js');
 
 // add plugins:
-var
+let
     headingPlugins = {},
     codePlugins = {};
 
@@ -39,23 +39,25 @@ const
 // for heading plugins:
 pluginRenderer.heading = function (text, level, raw) {
     // find syntax like 'XXX:xxxx':
-    var n = raw.indexOf(':');
+    let
+        n = raw.indexOf(':');
     if (n > 0) {
-        var plugin = raw.substring(0, n);
-        var rest = raw.substring(n + 1);
-        var render = headingPlugins[plugin];
+        let
+            plugin = raw.substring(0, n),
+            rest = raw.substring(n + 1),
+            render = headingPlugins[plugin];
         if (render) {
             return render(rest);
         }
     }
-    var name = encodeURIComponent(text.replace(/\s+/g, '-')).replace(/[^\w]+/g, '-');
+    let name = encodeURIComponent(text.replace(/\s+/g, '-')).replace(/[^\w]+/g, '-');
     return '<h' + level + '><a name="#' + name + '"></a>' + text + '</h' + level + '>\n';
 };
 
 // for code plugins:
 pluginRenderer.code = function (code, lang) {
     // find lang in codePlugins:
-    var render = codePlugins[lang];
+    let render = codePlugins[lang];
     if (render) {
         return render(code, lang);
     }
@@ -96,7 +98,7 @@ function systemMarkdownToHtml(mdText) {
 
 // html -> text:
 
-var HTML2TEXT_TAGS = {
+let HTML2TEXT_TAGS = {
     'applet': ' ',
     'area': ' ',
     'audio': '\n',
@@ -144,7 +146,7 @@ var HTML2TEXT_TAGS = {
 };
 
 function htmlToText(html) {
-    var
+    let
         buffer = [],
         saveTexts = [true],
         saveCurrent = true,
