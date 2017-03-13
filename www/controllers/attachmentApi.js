@@ -20,7 +20,7 @@ const
     nextId = db.nextId;
 
 async function _getAttachment(id) {
-    var atta = await Attachment.findById(id);
+    let atta = await Attachment.findById(id);
     if (atta === null) {
         throw api.notFound('Attachment');
     }
@@ -40,7 +40,7 @@ async function _getAttachments(page) {
 }
 
 async function createAttachment(user_id, name, description, buffer, mime, expectedImage) {
-    var
+    let
         att_id = nextId(),
         res_id = nextId(),
         imageInfo = null;
@@ -219,7 +219,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.CONTRIBUTOR);
         ctx.validate('createAttachment');
-        var
+        let
             data = ctx.request.body,
             buffer = new Buffer(data.data, 'base64');
         ctx.rest(await createAttachment(
