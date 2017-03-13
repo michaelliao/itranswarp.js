@@ -2,12 +2,11 @@
 
 // helper:
 
-var
+const
     _ = require('lodash'),
     api = require('./api'),
-    Page = require('./page');
-
-var re_int = /^[0-9]+$/;
+    Page = require('./page'),
+    re_int = /^[0-9]+$/;
 
 function _str2int(s, defValue) {
     if (re_int.test(s)) {
@@ -16,28 +15,26 @@ function _str2int(s, defValue) {
     return defValue;
 }
 
-// ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
-function _formatTags(tags) {
-    if (! tags) {
-        return '';
-    }
-    let arr = tags.split(/[\,\;\uff0c\uff1b]/).map((value) => {
-        return value.trim();
-    }).filter((value) => {
-        return value !== '';
-    });
-    // remove duplicate ignore case:
-    let lowerArr = arr.map((value) => {
-        return value.toLowerCase();
-    });
-    return arr.filter((value, index) => {
-        return lowerArr.indexOf(value.toLowerCase()) === index;
-    }).join(',');
-}
-
 module.exports = {
 
-    formatTags: _formatTags,
+    // ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
+    formatTags: (tags) => {
+        if (! tags) {
+            return '';
+        }
+        let arr = tags.split(/[\,\;\uff0c\uff1b]/).map((value) => {
+            return value.trim();
+        }).filter((value) => {
+            return value !== '';
+        });
+        // remove duplicate ignore case:
+        let lowerArr = arr.map((value) => {
+            return value.toLowerCase();
+        });
+        return arr.filter((value, index) => {
+            return lowerArr.indexOf(value.toLowerCase()) === index;
+        }).join(',');
+    },
 
     // $sort: function* (ids, entities) {
     //     var i, pos, entity;
@@ -63,7 +60,7 @@ module.exports = {
     // },
 
     getPageIndex: function (request) {
-        var index = _str2int(request.query.page, 1);
+        let index = _str2int(request.query.page, 1);
         if (index < 1) {
             index = 1;
         }
@@ -71,7 +68,7 @@ module.exports = {
     },
 
     getPage: function (request, pageSize=10) {
-        var
+        let
             index = _str2int(request.query.page, 1),
             size = _str2int(request.query.size, pageSize);
         if (index < 1) {
