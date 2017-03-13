@@ -28,7 +28,7 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
     if (origin_width === resize_width && origin_height === resize_height) {
         return { width: origin_width, height: origin_height, resized: false, enlarge: false };
     }
-    var
+    let
         expected_height,
         target_width = resize_width,
         target_height = resize_height;
@@ -52,7 +52,7 @@ function calcScaleSize(origin_width, origin_height, resize_width, resize_height,
 }
 
 function getImageInfo(buffer, callback) {
-    var i = gm(buffer);
+    let i = gm(buffer);
     i.format(function (err, format) {
         if (err) {
             return callback(api.invalidParam('image', 'Invalid image data'));
@@ -80,7 +80,7 @@ function resizeKeepAspect(buffer, origin_width, origin_height, resize_width, res
         logger.debug('no need to resize!');
         return callback(null, buffer);
     }
-    var
+    let
         img = gm(buffer),
         r = calcScaleSize(origin_width, origin_height, resize_width, resize_height, true);
     logger.info('resized to ' + r.width + 'x' + r.height);
@@ -97,7 +97,7 @@ function resizeAsCover(buffer, origin_width, origin_height, resize_width, resize
         logger.debug('no need to resize!');
         return callback(null, buffer);
     }
-    var
+    let
         img = gm(buffer),
         scale_width,
         scale_height;
