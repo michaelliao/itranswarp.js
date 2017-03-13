@@ -10,19 +10,15 @@ const
     cache = require('../cache'),
     helper = require('../helper'),
     constants = require('../constants'),
-    search = require('../search/search');
-
-const
-    settingApi = require('./settingApi'),
-    categoryApi = require('./categoryApi'),
-    attachmentApi = require('./attachmentApi');
-
-var
+    search = require('../search/search'),
     User = db.User,
     Article = db.Article,
     Category = db.Category,
     Text = db.Text,
-    nextId = db.nextId;
+    nextId = db.nextId,
+    settingApi = require('./settingApi'),
+    categoryApi = require('./categoryApi'),
+    attachmentApi = require('./attachmentApi');
 
 function indexArticle(r) {
     // process.nextTick(() => {
@@ -66,10 +62,7 @@ async function getRecentArticles(max) {
 
 // get all articles (include unpublished):
 async function getAllArticles(page) {
-    var nums = await Article.findAll({
-        attributes: [[db.fn('COUNT', db.col('id')), 'num']]
-    });
-    page.total = await Article.findNumber('count(id)');
+    page.total = await Article.count();
     if (page.isEmpty) {
         return [];
     }
