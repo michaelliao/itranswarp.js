@@ -147,7 +147,7 @@ async function _getSettings(group) {
     // get settings by group, return object with key - value,
     // prefix of key has been removed:
     // 'group1:key1' ==> 'key1'
-    var
+    let
         settings = await Setting.findAll({
             where: {
                 'group': group
@@ -166,7 +166,7 @@ async function setSettings(group, settings) {
             'group': group
         }
     });
-    var key;
+    let key;
     for (key in settings) {
         if (settings.hasOwnProperty(key)) {
             await Setting.create({
@@ -179,7 +179,7 @@ async function setSettings(group, settings) {
 }
 
 async function _getSettingsFillWithDefaultsIfMissing(name, defaults) {
-    var
+    let
         settings = await _getSettings(name),
         key,
         s = {};
