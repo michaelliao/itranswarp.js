@@ -52,7 +52,7 @@ async function _attachContent(entity) {
     return entity;
 }
 
-async function getWikis() {
+async function _getWikis() {
     return await Wiki.findAll({
         order: 'name'
     });
@@ -69,7 +69,7 @@ async function getWiki(id, includeContent=false) {
 async function getWikiPage(id, includeContent=false) {
     let wp = await WikiPage.findById(id);
     if (wp === null) {
-        throw api.notFound('Wiki');
+        throw api.notFound('WikiPage');
     }
     return includeContent ? _attachContent(wp) : wp;
 }
@@ -149,7 +149,7 @@ async function getWikiTree(id, isFlatten=false) {
 module.exports = {
 
     getNavigationMenus: async () => {
-        let ws = await getWikis();
+        let ws = await _getWikis();
         return ws.map((w) => {
             return {
                 name: w.name,
@@ -161,8 +161,6 @@ module.exports = {
     getWikiTree: getWikiTree,
 
     getWiki: getWiki,
-
-    getWikis: getWikis,
 
     getWikiPage: getWikiPage,
 
@@ -193,7 +191,7 @@ module.exports = {
          * @return {object} Wikis object.
          */
         ctx.rest({
-            wikis: await getWikis()
+            wikis: await _getWikis()
         });
     },
 
@@ -243,7 +241,7 @@ module.exports = {
             cover_id: attachment.id,
             name: data.name.trim(),
             description: data.description.trim(),
-            tag: data.tag.trim()
+            tag: (data.tag || '').trim()
         });
         // attach content:
         wiki = wiki.toJSON();

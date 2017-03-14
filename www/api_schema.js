@@ -318,7 +318,7 @@ const schemas = {
             content: PROPERTY.TEXT,
             image: PROPERTY.FILE
         },
-        required: ['name', 'description', 'tag', 'content', 'image']
+        required: ['name', 'description', 'content', 'image']
     },
     updateWiki: {
         type: 'object',
