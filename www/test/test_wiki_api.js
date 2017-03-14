@@ -232,14 +232,14 @@ describe('#wikis', () => {
         expect(response.body.error).to.equal('permission:denied');
     });
 
-    it('create wiki page by editor', async () => {
+    it('create wiki page by editor failed', async () => {
         let wiki_id, response;
         // create ok:
         response = await request($SERVER)
             .post('/api/wikis')
             .set('Authorization', auth($EDITOR))
             .send({
-                name: ' Learn JavaScript  ',
+                name: '  JavaScript  ',
                 description: 'blablabla...',
                 content: 'Oppps',
                 image: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
@@ -299,55 +299,49 @@ describe('#wikis', () => {
         expect(response.body.data).to.equal('content');
     });
 
-
-        // it('create wiki and wikipage with wrong parameter by editor', async () => {
-        //     var
-        //         i, r, params,
-        //         required = ['name', 'tag', 'description', 'content', 'image'],
-        //         prepared = {
-        //             name: 'Test Param',
-        //             description: 'blablabla...',
-        //             tag: 'tag1',
-        //             content: 'a long content...',
-        //             image: remote.readFileSync('res-image.jpg').toString('base64')
-        //         };
-        //     for (i=0; i<required.length; i++) {
-        //         params = _.clone(prepared);
-        //         delete params[required[i]];
-        //         r = yield remote.$post(roles.EDITOR, '/api/wikis', params);
-        //         remote.shouldHasError(r, 'parameter:invalid', required[i]);
-        //     }
-        //     var w1 = yield remote.$post(roles.EDITOR, '/api/wikis', prepared);
-        //     remote.shouldNoError(w1);
-        //     // try create wikipage:
-        //     var r1 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
-        //         name: 'WP',
-        //         content: 'wiki page...'
-        //     });
-        //     remote.shouldHasError(r1, 'parameter:invalid', 'parent_id');
-        //     var r2 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
-        //         parent_id: remote.nextId(),
-        //         content: 'wiki page...'
-        //     });
-        //     remote.shouldHasError(r2, 'parameter:invalid', 'name');
-        //     var r3 = yield remote.$post(roles.EDITOR, '/api/wikis/' + w1.id + '/wikipages', {
-        //         parent_id: remote.nextId(),
-        //         name: 'WP'
-        //     });
-        //     remote.shouldHasError(r3, 'parameter:invalid', 'content');
-        // });
-
-        // it('create by contributor failed', async () => {
-        //     // create wiki:
-        //     var r = yield remote.$post(roles.CONTRIBUTER, '/api/wikis', {
-        //         name: ' To be delete...   ',
-        //         tag: 'java',
-        //         description: '   blablabla\nhaha...  \n   ',
-        //         content: '  Long long long content... ',
-        //         image: remote.readFileSync('res-image.jpg').toString('base64')
-        //     });
-        //     remote.shouldHasError(r, 'permission:denied');
-        // });
+    it('create and update wiki page by editor ok', async () => {
+        let wiki_id, wp_id, response;
+        // create ok:
+        response = await request($SERVER)
+            .post('/api/wikis')
+            .set('Authorization', auth($EDITOR))
+            .send({
+                name: 'JavaScript',
+                description: 'blablabla...',
+                content: 'Oppps',
+                image: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        wiki_id = response.body.id;
+        // create wiki page by editor:
+        response = await request($SERVER)
+            .post(`/api/wikis/${wiki_id}/wikipages`)
+            .set('Authorization', auth($EDITOR))
+            .send({
+                name: ' Learn JavaScript  ',
+                parent_id: '',
+                content: 'js is awesome'
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body).to.a('object');
+        expect(response.body.name).to.equal('Learn JavaScript');
+        expect(response.body.parent_id).to.equal('');
+        expect(response.body.content).to.equal('js is awesome');
+        expect(response.body.display_order).to.equal(0);
+        // get to check:
+        wp_id = response.body.id;
+        response = await request($SERVER)
+            .get(`/api/wikis/wikipages/${wp_id}`)
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body).to.a('object');
+        expect(response.body.name).to.equal('Learn JavaScript');
+        expect(response.body.parent_id).to.equal('');
+        expect(response.body.content).to.equal('js is awesome');
+        expect(response.body.display_order).to.equal(0);
+    });
 
         // it('create and delete wiki by editor', async () => {
         //     // create wiki:
