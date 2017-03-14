@@ -299,7 +299,7 @@ describe('#wikis', () => {
         expect(response.body.data).to.equal('content');
     });
 
-    it('create and update wiki page by editor ok', async () => {
+    it('create, update wiki page by editor ok', async () => {
         let wiki_id, wp_id, response;
         // create ok:
         response = await request($SERVER)
@@ -341,8 +341,35 @@ describe('#wikis', () => {
         expect(response.body.parent_id).to.equal('');
         expect(response.body.content).to.equal('js is awesome');
         expect(response.body.display_order).to.equal(0);
+        // update by contrib failed:
+        response = await request($SERVER)
+            .post(`/api/wikis/wikipages/${wp_id}`)
+            .set('Authorization', auth($CONTRIB))
+            .expect('Content-Type', /application\/json/)
+            .send({
+                name: 'Changed'
+            })
+            .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        // update by editor ok:
+        response = await request($SERVER)
+            .post(`/api/wikis/wikipages/${wp_id}`)
+            .set('Authorization', auth($EDITOR))
+            .expect('Content-Type', /application\/json/)
+            .send({
+                name: 'Changed',
+                content: 'node.js is awesome'
+            })
+            .expect(200);
+        expect(response.body).to.a('object');
+        expect(response.body.name).to.equal('Changed');
+        expect(response.body.parent_id).to.equal('');
+        expect(response.body.content).to.equal('node.js is awesome');
     });
 
+    it('delete wiki', async () => {
+
+    });
         // it('create and delete wiki by editor', async () => {
         //     // create wiki:
         //     var r1 = yield remote.$post(roles.EDITOR, '/api/wikis', {
