@@ -12,6 +12,7 @@ const
     expect = require('chai').expect,
     db = require('../db'),
     Attachment = db.Attachment,
+    Resource = db.Resource,
     logger = require('../logger'),
     helper = require('../helper'),
     attachmentApi = require('../controllers/attachmentApi');
@@ -25,6 +26,7 @@ describe('#attachment-api', () => {
     beforeEach(async () => {
         logger.info('delete all attachments...');
         await Attachment.destroy($ALL);
+        await Resource.destroy($ALL);
     });
 
     it('no permission to get attachment(s)', async () => {
