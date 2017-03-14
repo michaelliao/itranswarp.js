@@ -20,18 +20,24 @@ const
             }),
             new winston.transports.File({
                 name: 'info-file',
-                filename: '/tmp/itranswarp-info.log',
+                dirname: '/tmp',
+                filename: 'itranswarp-info.log',
                 level: 'info',
                 json: false,
+                maxsize: 100 * 1024 * 1024, // 100M
+                maxFiles: 20,
                 timestamp: function () {
                     return new Date().toString();
                 }
             }),
             new winston.transports.File({
                 name: 'error-file',
-                filename: '/tmp/itranswarp-error.log',
+                dirname: '/tmp',
+                filename: 'itranswarp-error.log',
                 level: 'error',
                 json: false,
+                maxsize: 100 * 1024 * 1024, // 100M
+                maxFiles: 50,
                 timestamp: function () {
                     return new Date().toString();
                 }
