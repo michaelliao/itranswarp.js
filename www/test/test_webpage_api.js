@@ -9,8 +9,9 @@ const
     request = require('supertest'),
     expect = require('chai').expect,
     db = require('../db'),
-    logger = require('../logger'),
     Webpage = db.Webpage,
+    Text = db.Text,
+    logger = require('../logger'),
     webpageApi = require('../controllers/webpageApi');
 
 describe('#webpage apis', () => {
@@ -22,6 +23,7 @@ describe('#webpage apis', () => {
     beforeEach(async () => {
         logger.info('delete all webpages...');
         await Webpage.destroy($ALL);
+        await Text.destroy($ALL);
     });
 
     it('should get empty webpages', async () => {
