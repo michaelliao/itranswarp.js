@@ -8,7 +8,10 @@ const
     _ = require('lodash'),
     db = require('../db'),
     sleep = require('sleep-promise'),
-    expect = require('chai').expect;
+    expect = require('chai').expect,
+    Category = db.Category,
+    Setting = db.Setting,
+    Article = db.Article;
 
 describe('#db-test', () => {
 
@@ -17,21 +20,20 @@ describe('#db-test', () => {
         before(dbsetup);
 
         it('#query db', async () => {
-            const Article = db.Article;
-            var articles = await Article.findAll();
+            let articles = await Article.findAll();
             expect(articles).to.have.lengthOf(0);
-            var article = await Article.findById(db.nextId());
+            let article = await Article.findById(db.nextId());
             expect(article).to.be.null;
         });
 
         it('#curd test', async () => {
-            const Category = db.Category;
-            var cat = await Category.create({
-                name: 'Sample',
-                tag: 'cat,dog',
-                display_order: 1,
-                description: 'sample category'
-            });
+            let
+                cat = await Category.create({
+                    name: 'Sample',
+                    tag: 'cat,dog',
+                    display_order: 1,
+                    description: 'sample category'
+                });
             expect(cat.name).to.equal('Sample');
             expect(cat.tag).to.equal('cat,dog');
             expect(cat.display_order).to.equal(1);
@@ -54,25 +56,23 @@ describe('#db-test', () => {
             expect(cat.name).to.equal('Partial Update');
             expect(cat.version).to.equal(2);
             // query to check again:
-            var copy = await Category.findById(cat.id);
+            let copy = await Category.findById(cat.id);
             expect(copy.name).to.equal('Partial Update');
             expect(copy.version).to.equal(2);
             // serialize test:
             copy.extra = 1234;
-            var s = JSON.stringify(copy);
+            let s = JSON.stringify(copy);
             expect(s).to.contain('"name":"Partial Update"');
             expect(s).to.contain('"version":2');
             // destroy test:
             await copy.destroy();
-            var q = await Category.findById(cat.id);
+            let q = await Category.findById(cat.id);
             expect(q).to.be.null;
         });
 
         it('#batch delete test', async () => {
-            const Setting = db.Setting;
-            var i, s;
-            for (i=0; i<10; i++) {
-                s = await Setting.create({
+            for (let i=0; i<10; i++) {
+                await Setting.create({
                     group: 'g',
                     key: 'g:key' + i,
                     value: 'value-' + i
@@ -87,11 +87,12 @@ describe('#db-test', () => {
                 }
             });
             // check:
-            var s9 = await Setting.findOne({
-                where: {
-                    key: 'g:key9'
-                }
-            });
+            let
+                s9 = await Setting.findOne({
+                    where: {
+                        key: 'g:key9'
+                    }
+                });
             expect(s9.value).to.equal('special');
             // delete:
             await Setting.destroy({
@@ -101,7 +102,7 @@ describe('#db-test', () => {
                     }
                 }
             });
-            var count = await Setting.count();
+            let count = await Setting.count();
             expect(count).to.equal(6);
         });
     });
