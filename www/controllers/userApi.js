@@ -17,16 +17,9 @@ const
     AuthUser = db.AuthUser,
     LocalUser = db.LocalUser,
     nextId = db.nextId,
-    SECURE = config.session.https;
-
-var LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
-
-var LOCK_TIMES = {
-    d: 86400000,
-    w: 604800000,
-    m: 2592000000,
-    y: 31536000000
-};
+    SECURE = config.session.https,
+    COOKIE_EXPIRED_DATE = new Date(0),
+    LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
 // init oauth2 providers:
 
@@ -78,16 +71,18 @@ async function getUser(id) {
     return user;
 }
 
-async function bindUsers(entities, propName) {
-    var i, entity, u, prop = propName || 'user_id';
-    for (i=0; i<entities.length; i++) {
-        entity = entities[i];
-        entity.user = await User.findById({
-            select: ['id', 'name', 'image_url'],
-            where: 'id=?',
-            params: [entity[prop]]
-        });
-    }
+async function bindUsers(entities, propName = 'user_id') {
+    let cachedUsers = {};
+    entities.forEach((entity) => {
+        let
+            user_id = entity[propName],
+            user = cachedUsers[user_id];
+        if (! user) {
+            user = await getUser(user_id);
+            cachedUsers[user_id] = user;
+        }
+        entity.user = user;
+    });
 }
 
 async function processOAuthAuthentication(provider_name, authentication) {
@@ -172,7 +167,7 @@ module.exports = {
 
     'GET /api/users': async (ctx, next) => {
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
             page = helper.getPage(ctx.request),
             users = await getUsers(page);
         ctx.rest({
@@ -190,7 +185,6 @@ module.exports = {
          */
         ctx.validate('authenticate');
         let
-            localuser,
             data = ctx.request.body,
             email = data.email,
             passwd = data.passwd,
@@ -201,16 +195,16 @@ module.exports = {
         if (user.locked_until > Date.now()) {
             throw api.authFailed('locked', 'User is locked.');
         }
-        localuser = await LocalUser.findOne({
+        let localuser = await LocalUser.findOne({
             where: {
                 user_id: user.id
             }
         });
         if (localuser === null) {
-            throw api.authFailed('passwd', 'Cannot signin local.')
+            throw api.authFailed('passwd', 'Password signin is not allowed for this user.')
         }
         // check password:
-        if (!auth.verifyPassword(localuser.id, passwd, localuser.passwd)) {
+        if (! auth.verifyPassword(localuser.id, passwd, localuser.passwd)) {
             throw api.authFailed('passwd', 'Bad password.');
         }
         // make session cookie:
@@ -228,18 +222,23 @@ module.exports = {
     },
 
     'GET /auth/signout': async (ctx, next) => {
+        /**
+         * Clear cookie and redirect to referer page.
+         */
         ctx.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
             secure: SECURE,
-            expires: new Date(0)
+            expires: COOKIE_EXPIRED_DATE
         });
         logger.info('Signout, goodbye!');
         ctx.response.redirect(_getReferer(ctx.request));
     },
 
-    // start oauth:
     'GET /auth/from/:name': async (ctx, next) => {
+        /**
+         * Start OAuth2 authenticate.
+         */
         let
             name = ctx.params.name,
             provider = oauth2_providers[name],
@@ -265,8 +264,10 @@ module.exports = {
         }));
     },
 
-    // callback from oauth provider:
     'GET /auth/callback/:name': async (ctx, next) => {
+        /**
+         * Process callback from OAuth2 provider.
+         */
         let
             provider = oauth2_providers[name],
             code = ctx.request.query.code,
@@ -325,6 +326,11 @@ module.exports = {
     },
 
     'POST /api/users/:id/lock': async (ctx, next) => {
+        /**
+         * Set user lock time. Set to 0 to unlock user.
+         * 
+         * @param locked_until(number): set locked until timestamp in millis.
+         */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('lockUser');
         let

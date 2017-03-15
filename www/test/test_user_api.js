@@ -1,13 +1,17 @@
 'use strict';
 
-// test user api:
+// test user api
 
-var
-    _ = require('lodash'),
-    should = require('should'),
-    remote = require('./_remote'),
+const
+    appsetup = require('./_appsetup'), // <-- MUST be import first!
+    appclose = require('./_appclose'),
+    request = require('supertest'),
+    expect = require('chai').expect,
+    db = require('../db'),
+    logger = require('../logger'),
     constants = require('../constants'),
-    roles = constants.role;
+    User = db.User,
+    userApi = require('../controllers/userApi');
 
 describe('#user', () => {
 
