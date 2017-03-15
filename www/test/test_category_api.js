@@ -34,7 +34,7 @@ describe('#categories', () => {
     });
 
     it('should get empty categories', async () => {
-        var response;
+        let response;
         response = await request($SERVER)
             .get('/api/categories')
             .expect('Content-Type', /application\/json/)
@@ -43,7 +43,7 @@ describe('#categories', () => {
     });
 
     it('create a new category failed/ok by admin, then check', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
             .post('/api/categories')
@@ -98,7 +98,7 @@ describe('#categories', () => {
 
 
     it('create a new category with invalid param by admin', async () => {
-        var response;
+        let response;
         // missing name:
         response = await request($SERVER)
             .post('/api/categories')
@@ -127,7 +127,7 @@ describe('#categories', () => {
     });
 
     it('create / update category by admin, then check', async () => {
-        var response;
+        let response;
         // create:
         response = await request($SERVER)
             .post('/api/categories')
@@ -175,7 +175,7 @@ describe('#categories', () => {
     });
 
     it('create categories by admin, then sort', async () => {
-        var
+        let
             i, response,
             ids = [null, null, null];
         // create 3 categories:
@@ -258,7 +258,7 @@ describe('#categories', () => {
     });
 
     it('try delete category by editor / admin', async () => {
-        var id, response;
+        let id, response;
         // create:
         response = await request($SERVER)
             .post('/api/categories')
@@ -306,7 +306,7 @@ describe('#categories', () => {
     });
 
     it('delete a non-empty category by admin', async () => {
-        var id, response;
+        let id, response;
         // create:
         response = await request($SERVER)
             .post('/api/categories')
