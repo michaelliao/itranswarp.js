@@ -116,8 +116,8 @@ async function getWikiPages(wiki_id, returnAsDict=false) {
                 'wiki_id': wiki_id
             }
         });
-    _.each(pages, function (p) {
-        pdict[p.id] = p;
+    pages.forEach((p) => {
+        pdict[p.id] = p.toJSON();
     });
     if (returnAsDict) {
         return pdict;
@@ -513,6 +513,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         let
+            id = ctx.params.id,
             wikipage = await getWikiPage(id),
             num = await WikiPage.count({
                 where: {
