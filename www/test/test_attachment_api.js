@@ -30,7 +30,7 @@ describe('#attachment-api', () => {
     });
 
     it('no permission to get attachment(s)', async () => {
-        var response;
+        let response;
         response = await request($SERVER)
             .get('/api/attachments')
             .set('Authorization', auth($SUBS))
@@ -46,7 +46,7 @@ describe('#attachment-api', () => {
     });
 
     it('should get empty attachments by contributor', async () => {
-        var response;
+        let response;
         // subscriber:
         response = await request($SERVER)
             .get('/api/attachments')
@@ -61,7 +61,7 @@ describe('#attachment-api', () => {
 
     it('create attachment failed by subscriber', async () => {
         // create attachment:
-        var response;
+        let response;
         response = await request($SERVER)
             .post('/api/attachments')
             .set('Authorization', auth($SUBS))
@@ -77,7 +77,7 @@ describe('#attachment-api', () => {
 
     it('create image attachment ok by contributor and get/download', async () => {
         // create attachment:
-        var response;
+        let response;
         response = await request($SERVER)
             .post('/api/attachments')
             .set('Authorization', auth($CONTRIB))
@@ -131,7 +131,7 @@ describe('#attachment-api', () => {
 
     it('create text attachment ok by contributor and download', async () => {
         // create attachment:
-        var response;
+        let response;
         response = await request($SERVER)
             .post('/api/attachments')
             .set('Authorization', auth($CONTRIB))
@@ -166,7 +166,7 @@ describe('#attachment-api', () => {
 
     it('create attachment ok then delete it', async () => {
         // create attachment:
-        var response;
+        let response;
         response = await request($SERVER)
             .post('/api/attachments')
             .set('Authorization', auth($CONTRIB))
@@ -207,7 +207,7 @@ describe('#attachment-api', () => {
     });
 
     it('get attachments by page', async () => {
-        var i, response;
+        let i, response;
         for (i=0; i<21; i++) {
             await sleep(10);
             response = await request($SERVER)
