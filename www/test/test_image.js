@@ -5,7 +5,7 @@
  * 
  * ImageMagick MUST be installed first.
  */
-var
+const
     _ = require('lodash'),
     fs = require('fs'),
     expect = require('chai').expect,
@@ -14,7 +14,7 @@ var
 describe('#image', () => {
 
     it('calcScaleSize', () => {
-        var image_sizes = [
+        let image_sizes = [
             // [ori_w, ori_h, res_w, res_h, keepAspect, expected_w, expected_h, resized]
             // square:
             [1200, 1200, 600, 600, false, 600, 600],
@@ -70,8 +70,8 @@ describe('#image', () => {
             [  80,  120, 400, 700,  true, 400, 600],
             [  80,  120, 500, 700, false, 500, 700],
         ];
-        _.each(image_sizes, function (arr) {
-            var
+        image_sizes.forEach((arr) => {
+            let
                 ori_w = arr[0],
                 ori_h = arr[1],
                 res_w = arr[2],
@@ -79,8 +79,8 @@ describe('#image', () => {
                 keepAspect = arr[4],
                 expected_w = arr[5],
                 expected_h = arr[6],
-                resized = arr[7];
-            var r = image.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
+                resized = arr[7],
+                r = image.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
             //console.log(ori_w + 'x' + ori_h + ' > ' + res_w + 'x' + res_h + ' ===> ' + r.width + 'x' + r.height);
             expect(r).to.be.ok;
             expect(r.width).to.equal(expected_w);
@@ -92,7 +92,7 @@ describe('#image', () => {
     });
 
     it('get image size ok', async () => {
-        var info = await image.getImageInfo(fs.readFileSync('./test/res-image.jpg'));
+        let info = await image.getImageInfo(fs.readFileSync('./test/res-image.jpg'));
         expect(info).to.be.ok;
         expect(info.format).to.equal('jpeg');
         expect(info.width).to.equal(1280);
@@ -110,10 +110,11 @@ describe('#image', () => {
     });
 
     it('resize small', async () => {
-        var imgData = fs.readFileSync('./test/res-image.jpg');
-        var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 480, 270);
+        let
+            imgData = fs.readFileSync('./test/res-image.jpg'),
+            resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 480, 270);
         // check resized image:
-        var resizedInfo = await image.getImageInfo(resizedData);
+        let resizedInfo = await image.getImageInfo(resizedData);
         expect(resizedInfo).to.be.ok;
         expect(resizedInfo.format).to.equal('jpeg');
         expect(resizedInfo.width).to.equal(480);
@@ -121,14 +122,14 @@ describe('#image', () => {
     });
 
     it('resize large', async () => {
-        var imgData = fs.readFileSync('./test/res-image.jpg');
-        var resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
+        let
+            imgData = fs.readFileSync('./test/res-image.jpg'),
+            resizedData = await image.resizeKeepAspect(imgData, 1280, 720, 1920, 1600);
         // check resized image:
-        var resizedInfo = await image.getImageInfo(resizedData);
+        let resizedInfo = await image.getImageInfo(resizedData);
         expect(resizedInfo).to.be.ok;
         expect(resizedInfo.format).to.equal('jpeg');
         expect(resizedInfo.width).to.equal(1920);
         expect(resizedInfo.height).to.equal(1080);
     });
-
 });
