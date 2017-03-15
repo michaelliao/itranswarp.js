@@ -37,27 +37,27 @@ async function appsetup() {
             ['$SUBS',    'subs@itranswarp.com',    constants.role.SUBSCRIBER,  false],
             ['$LOCKED',  'locked@itranswarp.com',  constants.role.SUBSCRIBER,  true]
         ];
-    var param;
-    for (param of userParams) {
-        var
+    for (let param of userParams) {
+        let
             key = param[0],
             email = param[1],
             role = param[2],
             locked = param[3],
             local_id = db.nextId(),
-            user, local_user;
-        user = await User.create({
-            email: email,
-            role: role,
-            locked_until: locked ? Date.now() + 600000 : 0,
-            name: email.substring(0, email.indexOf('@')),
-            image_url: 'http://www.itranswarp.com/test.jpg'
-        });
-        local_user = await LocalUser.create({
-            id: local_id,
-            user_id: user.id,
-            passwd: generatePassword(local_id, email)
-        });
+            user = await User.create({
+                email: email,
+                role: role,
+                locked_until: locked ? Date.now() + 600000 : 0,
+                name: email.substring(0, email.indexOf('@')),
+                image_url: 'http://www.itranswarp.com/test.jpg'
+            }),
+            passwd = generatePassword(local_id, email),
+            local_user = await LocalUser.create({
+                id: local_id,
+                user_id: user.id,
+                passwd: passwd
+            });
+        user.__passwd__ = passwd; // user hashed password
         global[key] = user;
     }
     global.auth = function (user) {
