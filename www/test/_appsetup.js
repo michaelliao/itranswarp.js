@@ -14,7 +14,7 @@ const
     LocalUser = db.LocalUser;
 
 function generatePassword(id, email) {
-    var hashPasswd = crypto.createHash('sha1').update(email + ':password').digest('hex');
+    let hashPasswd = crypto.createHash('sha1').update(email + ':password').digest('hex');
     return crypto.createHash('sha1').update(id + ':' + hashPasswd).digest('hex');
 }
 
