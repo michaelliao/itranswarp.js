@@ -35,7 +35,7 @@ describe('#settings', () => {
     });
 
     it('get setting definition failed/ok', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
                 .get('/api/settings/definitions')
@@ -54,7 +54,7 @@ describe('#settings', () => {
     });
 
     it('get settings of website failed/ok', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
                 .get('/api/settings/website')
@@ -73,7 +73,7 @@ describe('#settings', () => {
     });
 
     it('get settings of snippets failed/ok', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
                 .get('/api/settings/snippets')
@@ -92,7 +92,7 @@ describe('#settings', () => {
     });
 
     it('update settings of website failed/ok', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
                 .post('/api/settings/website')
@@ -123,14 +123,14 @@ describe('#settings', () => {
         expect(response.body.name).to.equal('New Name');
         expect(response.body.invalid_key).to.a('undefined');
         // get setting by function:
-        var ss = await settingApi.getWebsiteSettings();
+        let ss = await settingApi.getWebsiteSettings();
         expect(ss).to.be.a('object');
         expect(ss.name).to.equal('New Name');
         expect(ss.invalid_key).to.a('undefined');
     });
 
     it('update settings of snippets failed/ok', async () => {
-        var response;
+        let response;
         // editor:
         response = await request($SERVER)
                 .post('/api/settings/snippets')
@@ -158,7 +158,7 @@ describe('#settings', () => {
         expect(response.body.body_top).to.equal('<h1>top</h1>');
         expect(response.body.invalid_key).to.a('undefined');
         // get setting by function:
-        var ss = await settingApi.getSnippets();
+        let ss = await settingApi.getSnippets();
         expect(ss).to.be.a('object');
         expect(ss.body_top).to.equal('<h1>top</h1>');
         expect(ss.invalid_key).to.a('undefined');

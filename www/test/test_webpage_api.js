@@ -27,9 +27,8 @@ describe('#webpage apis', () => {
     });
 
     it('should get empty webpages', async () => {
-        var response;
         // guest:
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .get('/api/webpages')
                 .expect('Content-Type', /application\/json/)
                 .expect(200);
@@ -60,9 +59,7 @@ describe('#webpage apis', () => {
     });
 
     it('create webpage failed by EDITOR for bad param', async () => {
-        var response;
-
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -109,8 +106,7 @@ describe('#webpage apis', () => {
     });
 
     it('create webpage twice by EDITOR', async () => {
-        var response;
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -144,8 +140,7 @@ describe('#webpage apis', () => {
     });
 
     it('create and update by EDITOR', async () => {
-        var response;
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -199,9 +194,8 @@ describe('#webpage apis', () => {
     });
 
     it('create and update alias but duplicate by EDITOR', async () => {
-        var response;
         // create webpage 'java':
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -238,9 +232,8 @@ describe('#webpage apis', () => {
     });
 
     it('get draft webpage by editor and non-editor', async () => {
-        var response, id;
         // create draft webpages:
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -251,7 +244,7 @@ describe('#webpage apis', () => {
                     draft: true
                 })
                 .expect(200);
-        id = response.body.id;
+        let id = response.body.id;
         // get webpages by editor:
         response = await request($SERVER)
                 .get('/api/webpages')
@@ -273,9 +266,8 @@ describe('#webpage apis', () => {
     });
 
     it('delete webpage by non-editor and editor', async () => {
-        var response, i, id;
         // create:
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -285,7 +277,7 @@ describe('#webpage apis', () => {
                     content: 'blablabla...'
                 })
                 .expect(200);
-        id = response.body.id;
+        let id = response.body.id;
         // delete by non-editor:
         response = await request($SERVER)
                 .post('/api/webpages/' + id + '/delete')
@@ -307,11 +299,8 @@ describe('#webpage apis', () => {
     });
 
     it('get by alias', async () => {
-        var
-            wp,
-            response;
         // create webpage 'apple':
-        response = await request($SERVER)
+        let response = await request($SERVER)
                 .post('/api/webpages')
                 .set('Authorization', auth($EDITOR))
                 .set('Content-Type', 'application/json')
@@ -321,7 +310,7 @@ describe('#webpage apis', () => {
                     content: 'iOS is awesome.'
                 })
                 .expect(200);
-        wp = await webpageApi.getWebpageByAliasWithContent('apple');
+        let wp = await webpageApi.getWebpageByAliasWithContent('apple');
         expect(wp.alias).to.equal('apple');
         expect(wp.name).to.equal('About apple');
         expect(wp.content).to.equal('iOS is awesome.');
