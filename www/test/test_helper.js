@@ -11,14 +11,13 @@ const
     Page = require('../page');
 
 function createMockRequest(query='') {
-    var
+    let
         qs = querystring.parse(query),
-        k, v,
         req = {
             query: {
             }
         };
-    for (k in qs) {
+    for (let k in qs) {
         req.query[k] = qs[k];
     }
     return req;
@@ -27,7 +26,7 @@ function createMockRequest(query='') {
 describe('#helper', () => {
 
     it('#formatTags', () => {
-        var params, tags = [
+        let tags = [
             // input             , output
             [null                , ''],
             [undefined           , ''],
@@ -41,13 +40,13 @@ describe('#helper', () => {
             ['  ABC, def, ha ha ', 'ABC,def,ha ha'],
             ['a-b-c d-e-f,'      , 'a-b-c d-e-f']
         ];
-        for (params of tags) {
+        for (let params of tags) {
             expect(helper.formatTags(params[0])).to.equal(params[1]);
         }
     });
 
     it('#page', () => {
-        var pages = [
+        let pages = [
             // index, per, total, pages, offset:
             [  1,     20,  81,    5,     0],
             [  2,     20,  99,    5,     20],
@@ -57,15 +56,15 @@ describe('#helper', () => {
             [  1,     5,   5,     1,     0],
             [  10,    10,  99,    10,    90]
         ];
-        for (var i=0; i<pages.length; i++) {
-            var data = pages[i];
-            var
+        for (let i=0; i<pages.length; i++) {
+            let
+                data = pages[i],
                 pageIndex = data[0],
                 itemsPerPage = data[1],
                 totalItems = data[2],
                 totalPages = data[3],
-                offset = data[4];
-            var page = new Page(pageIndex, itemsPerPage);
+                offset = data[4],
+                page = new Page(pageIndex, itemsPerPage);
             page.total = totalItems;
             expect(page.pages).to.equal(totalPages);
             expect(page.offset).to.equal(offset);
@@ -86,8 +85,7 @@ describe('#helper', () => {
     });
 
     it('#getPage', () => {
-        var page;
-        page = helper.getPage(createMockRequest(''));
+        let page = helper.getPage(createMockRequest(''));
         expect(page.index).to.equal(1);
         expect(page.size).to.equal(10);
         page = helper.getPage(createMockRequest('page=2'));
