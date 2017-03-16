@@ -94,6 +94,15 @@ describe('#user', () => {
         expect(response.body.email).to.equal('subs@itranswarp.com');
     });
 
+    it('sign in failed for user is locked', async () => {
+        let response = await request($SERVER)
+                .get('/api/users/me')
+                .set('Authorization', auth($LOCKED))
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+    });
+
     // it('auth should failed for bad password', async () => {
     //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
     //         email: 'admin@itranswarp.com',

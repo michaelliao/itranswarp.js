@@ -63,6 +63,17 @@ async function _parseAuthorization(auth) {
     return null;
 }
 
+function _checkIsLocked(user) {
+    if (user === null) {
+        return null;
+    }
+    if (user.locked_until > Date.now()) {
+        logger.warn('CANNOT signin: user ' + user.email + ' is still locked.');
+        return null;
+    }
+    return user;
+}
+
 module.exports = async (ctx, next) => {
     ctx.state.__user__ = null;
     let
@@ -74,6 +85,7 @@ module.exports = async (ctx, next) => {
     if (cookie) {
         logger.info('try to parse session cookie...');
         user = await auth.parseSessionCookie(cookie);
+        user = _checkIsLocked(user);
         if (user) {
             logger.info('bind user from session cookie: ' + user.email)
         } else {
@@ -92,6 +104,7 @@ module.exports = async (ctx, next) => {
         if (authHdr) {
             logger.info('try to parse authorization header...');
             user = await _parseAuthorization(authHdr);
+            user = _checkIsLocked(user);
             if (user) {
                 logger.info('bind user from authorization: ' + user.email);
             } else {
