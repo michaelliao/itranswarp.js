@@ -94,15 +94,6 @@ describe('#user', () => {
         expect(response.body.email).to.equal('subs@itranswarp.com');
     });
 
-    it('sign in failed for user is locked', async () => {
-        let response = await request($SERVER)
-                .get('/api/users/me')
-                .set('Authorization', auth($LOCKED))
-                .expect('Content-Type', /application\/json/)
-                .expect(400);
-        expect(response.body.error).to.equal('permission:denied');
-    });
-
     it('auth should failed for bad password', async () => {
         let
             email = $ADMIN.email,
@@ -128,46 +119,121 @@ describe('#user', () => {
                 .expect('Content-Type', /application\/json/)
                 .expect(400);
         expect(response.body.error).to.equal('parameter:invalid');
+        expect(response.body.data).to.equal('passwd');
     });
 
-    // it('auth should failed for invalid password', async () => {
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'admin@itranswarp.com',
-    //         passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
-    //     });
-    //     remote.shouldHasError(r, 'parameter:invalid', 'passwd');
-    // });
+    it('auth should failed for invalid email', async () => {
+        let
+            email = $ADMIN.email,
+            hashedPasswd = crypto.createHash('sha1').update($ADMIN.email + ':password').digest('hex');
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: 'admin#itranswarp.com',
+                    passwd: hashedPasswd
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+        expect(response.body.data).to.equal('email');
+    });
 
-    // it('auth should failed for invalid email', async () => {
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'notexist@itranswarp.com',
-    //         passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
-    //     });
-    //     remote.shouldHasError(r, 'auth:failed', 'email');
-    // });
+    it('auth should failed for email not exist', async () => {
+        let
+            email = $ADMIN.email,
+            hashedPasswd = crypto.createHash('sha1').update($ADMIN.email + ':password').digest('hex');
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: 'notexist@itranswarp.com',
+                    passwd: hashedPasswd
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('auth:failed');
+        expect(response.body.data).to.equal('email');
+    });
 
-    // it('auth missing param', async () => {
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'admin@itranswarp.com'
-    //     });
-    //     remote.shouldHasError(r, 'parameter:invalid', 'passwd');
-    // });
+    it('sign in failed for user is locked', async () => {
+        let response = await request($SERVER)
+                .get('/api/users/me')
+                .set('Authorization', auth($LOCKED))
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+        let
+            email = $LOCKED.email,
+            hashedPasswd = crypto.createHash('sha1').update($LOCKED.email + ':password').digest('hex');
+        response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: email,
+                    passwd: hashedPasswd
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('auth:failed');
+        expect(response.body.data).to.equal('locked');
+    });
 
-    // it('auth should forbidden because password is not set', async () => {
-    //     yield remote.warp.$update('delete from localusers where user_id in (select id from users where email=?)', ['contributor@itranswarp.com']);
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'contributor@itranswarp.com',
-    //         passwd: remote.generatePassword('contributor@itranswarp.com')
-    //     });
-    //     remote.shouldHasError(r, 'auth:failed', 'passwd');
-    // });
+    it('lock user and its cookie should be invalid', async () => {
+        // authenticate ok:
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: 'subs@itranswarp.com',
+                    passwd: crypto.createHash('sha1').update('subs@itranswarp.com:password').digest('hex')
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.email).to.equal('subs@itranswarp.com');
+        let userId = response.body.id;
+        // get cookie:
+        let cookies = response.get('Set-Cookie');
+        expect(cookies).to.a('array').and.to.have.lengthOf(1);
+        let cookie = cookies[0];
+        let pos = cookie.indexOf('isession=');
+        let cookieStr = cookie.substring(pos, cookie.indexOf(';', pos));
+        logger.info('cookie string: ' + cookieStr);
+        // login using cookie ok:
+        response = await request($SERVER)
+                .get('/api/users/me')
+                .set('Cookie', cookieStr)
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.email).to.equal('subs@itranswarp.com');
 
-    // it('auth should locked', async () => {
-    //     yield remote.warp.$update('update users set locked_until=? where email=?', [Date.now() + 3600000, 'editor@itranswarp.com']);
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'editor@itranswarp.com',
-    //         passwd: remote.generatePassword('editor@itranswarp.com')
-    //     });
-    //     remote.shouldHasError(r, 'auth:failed', 'locked');
-    // });
+        let LOCKTIME = Date.now() + 3600000;
+        // lock this user failed by editor:
+        response = await request($SERVER)
+                .post(`/api/users/${userId}/lock`)
+                .set('Authorization', auth($EDITOR))
+                .send({
+                    locked_until: LOCKTIME
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal("permission:denied");
+        // lock this user ok by admin:
+        response = await request($SERVER)
+                .post(`/api/users/${userId}/lock`)
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    locked_until: LOCKTIME
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.email).to.equal('subs@itranswarp.com');
+        expect(response.body.locked_until).to.equal(LOCKTIME);
+        // lock admin user failed:
+        response = await request($SERVER)
+                .post(`/api/users/${$ADMIN.id}/lock`)
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    locked_until: LOCKTIME
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal("permission:denied");
+    })
 });

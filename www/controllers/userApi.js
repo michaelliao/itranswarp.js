@@ -237,7 +237,7 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
-            secure: SECURE,
+            secureProxy: SECURE,
             expires: COOKIE_EXPIRED_DATE
         });
         logger.info('Signout, goodbye!');
@@ -350,10 +350,8 @@ module.exports = {
             throw api.notAllowed('Cannot lock admin user.');
         }
         await user.update({
-            'locked_until': lockTime
-        });
-        ct.rest({
             locked_until: locked_until
         });
+        ctx.rest(user);
     }
 };
