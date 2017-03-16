@@ -103,13 +103,32 @@ describe('#user', () => {
         expect(response.body.error).to.equal('permission:denied');
     });
 
-    // it('auth should failed for bad password', async () => {
-    //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
-    //         email: 'admin@itranswarp.com',
-    //         passwd: 'bad0000000ffffffffffffffffffffffffffffff' // 40-char
-    //     });
-    //     remote.shouldHasError(r, 'auth:failed');
-    // });
+    it('auth should failed for bad password', async () => {
+        let
+            email = $ADMIN.email,
+            badHashedPasswd = crypto.createHash('sha1').update($ADMIN.email + ':badpassword').digest('hex');
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: email,
+                    passwd: badHashedPasswd
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('auth:failed');
+    });
+
+    it('auth should failed for invalid password', async () => {
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: $ADMIN.email,
+                    passwd: 'xxxxxxxxxx0000000000xxxxxxxxxx0000000000' // not a valid sha-1
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+    });
 
     // it('auth should failed for invalid password', async () => {
     //     var r = yield remote.$post(roles.GUEST, '/api/authenticate', {
