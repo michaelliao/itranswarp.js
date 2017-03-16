@@ -12,6 +12,7 @@ const
     config = require('../config'),
     api = require('../api'),
     db = require('../db'),
+    auth = require('../auth'),
     COOKIE_NAME = config.session.cookie,
     COOKIE_SALT = config.session.salt,
     COOKIE_EXPIRES_IN_MS = config.session.expires * 1000,
@@ -65,7 +66,6 @@ async function _parseAuthorization(auth) {
 module.exports = async (ctx, next) => {
     ctx.state.__user__ = null;
     let
-        auth,
         user = null,
         request = ctx.request,
         response = ctx.response,
@@ -73,7 +73,7 @@ module.exports = async (ctx, next) => {
         cookie = ctx.cookies.get(COOKIE_NAME);
     if (cookie) {
         logger.info('try to parse session cookie...');
-        user = await parseSessionCookie(cookie);
+        user = await auth.parseSessionCookie(cookie);
         if (user) {
             logger.info('bind user from session cookie: ' + user.email)
         } else {
@@ -88,10 +88,10 @@ module.exports = async (ctx, next) => {
         logger.info('cookie not found.');
     }
     if (user === null) {
-        auth = request.get('authorization');
-        if (auth) {
+        let authHdr = request.get('authorization');
+        if (authHdr) {
             logger.info('try to parse authorization header...');
-            user = await _parseAuthorization(auth);
+            user = await _parseAuthorization(authHdr);
             if (user) {
                 logger.info('bind user from authorization: ' + user.email);
             } else {

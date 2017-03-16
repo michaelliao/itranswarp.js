@@ -71,6 +71,7 @@ describe('#user', () => {
         expect(response.body.name).to.equal('subs');
         expect(response.body.email).to.equal('subs@itranswarp.com');
         expect(response.body.role).to.equal(constants.role.SUBSCRIBER);
+        let userId = response.body.id;
         // check cookie:
         let cookies = response.get('Set-Cookie');
         expect(cookies).to.a('array').and.to.have.lengthOf(1);
@@ -79,8 +80,18 @@ describe('#user', () => {
         logger.info('get cookie: ' + cookie);
         let pos = cookie.indexOf('isession=');
         expect(pos).to.gte(0);
-        let s = cookie.substring(pos + 9, cookie.indexOf(';', pos));
-        logger.info('session: ' + s);
+        let cookieStr = cookie.substring(pos, cookie.indexOf(';', pos));
+        logger.info('cookie string: ' + cookieStr);
+        // login using cookie:
+        response = await request($SERVER)
+                .get('/api/users/me')
+                .set('Cookie', cookieStr)
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body).to.a('object');
+        expect(response.body.id).to.equal(userId);
+        expect(response.body.name).to.equal('subs');
+        expect(response.body.email).to.equal('subs@itranswarp.com');
     });
 
     // it('auth should failed for bad password', async () => {

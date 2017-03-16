@@ -40,11 +40,11 @@ const
     re_r_sla = new RegExp(/\_/g),
     re_r_equ = new RegExp(/\./g);
 
-function _generatePassword(salt, inputPassword) {
+function generatePassword(salt, inputPassword) {
     return crypto.createHash('sha1').update(salt + ':' + inputPassword).digest('hex');
 }
 
-function _verifyPassword(salt, inputPassword, expectedPassword) {
+function verifyPassword(salt, inputPassword, expectedPassword) {
     return expectedPassword === crypto.createHash('sha1').update(salt + ':' + inputPassword).digest('hex');
 }
 
@@ -84,9 +84,9 @@ function makeSessionCookie(provider, theId, passwd, expires=0) {
 }
 
 async function findUserAuthByProvider(provider, id) {
-    let au, lu, user, passwd;
+    let user, passwd;
     if (provider === constants.signin.LOCAL) {
-        lu = await LocalUser.findById(id);
+        let lu = await LocalUser.findById(id);
         if (lu === null) {
             return null;
         }
@@ -94,7 +94,7 @@ async function findUserAuthByProvider(provider, id) {
         user = await User.findById(lu.user_id);
     }
     else {
-        au = await AuthUser.findById(id);
+        let au = await AuthUser.findById(id);
         if (au === null) {
             return null;
         }
@@ -106,7 +106,6 @@ async function findUserAuthByProvider(provider, id) {
         passwd: passwd
     };
 }
-
 
 // parseSessionCookie:
 // provider:uid:expires:sha1(provider:uid:expires:passwd:salt)
@@ -149,10 +148,12 @@ async function parseSessionCookie(s) {
 
 module.exports = {
 
-    generatePassword: _generatePassword,
+    generatePassword: generatePassword,
 
-    verifyPassword: _verifyPassword,
+    verifyPassword: verifyPassword,
 
-    makeSessionCookie: makeSessionCookie
+    makeSessionCookie: makeSessionCookie,
+
+    parseSessionCookie: parseSessionCookie
 
 };

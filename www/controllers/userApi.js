@@ -159,6 +159,12 @@ module.exports = {
 
     bindUsers: bindUsers,
 
+    'GET /api/users/me': async (ctx, next) => {
+        ctx.checkPermission(constants.role.SUBSCRIBER);
+        let user = await getUser(ctx.state.__user__.id);
+        ctx.rest(user);
+    },
+
     'GET /api/users/:id': async (ctx, next) => {
         ctx.checkPermission(constants.role.EDITOR);
         let
