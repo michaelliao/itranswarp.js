@@ -6,6 +6,7 @@ const
     appsetup = require('./_appsetup'), // <-- MUST be import first!
     appclose = require('./_appclose'),
     sleep = require('sleep-promise'),
+    _ = require('lodash'),
     fs = require('fs'),
     request = require('supertest'),
     expect = require('chai').expect,
@@ -132,25 +133,49 @@ describe('#article api', () => {
         expect(response.body.error).to.equal('permission:denied');
     });
 
-    // it('create and update article by editor', async () => {
-    //     // create article:
-    //     var r1 = yield remote.$post(roles.EDITOR, '/api/articles', {
-    //         category_id: category.id,
-    //         name: 'Test Article   ',
-    //         description: '   blablabla\nhaha...  \n   ',
-    //         tags: ' aaa,\n BBB,  \t ccc,CcC',
-    //         content: 'Long content...',
-    //         image: remote.readFileSync('res-image.jpg').toString('base64')
-    //     });
-    //     remote.shouldNoError(r1);
-    //     r1.category_id.should.equal(category.id);
-    //     r1.name.should.equal('Test Article');
-    //     r1.description.should.equal('blablabla\nhaha...');
-    //     r1.tags.should.equal('aaa,BBB,ccc');
-    //     r1.content.should.equal('Long content...');
-    //     r1.content_id.should.be.ok;
-    //     r1.cover_id.should.be.ok;
-    //     r1.version.should.equal(0);
+    it('create and update article by editor', async () => {
+        let response;
+        // create article by editor failed for missing parameter:
+        let validParams = {
+            category_id: $CATEGORY_1.id,
+            name: ' Test Article  ',
+            description: '  blablabla\nhaha...  \n  ',
+            tags: ' aaa,\n BBB,  \t ccc,CcC ',
+            content: 'Long content...',
+            image: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
+        };
+        ['category_id', 'name', 'description', 'content', 'image'].forEach(async (key) => {
+            let invalidParams = _.clone(validParams);
+            delete invalidParams[key];
+            response = await request($SERVER)
+                .post('/api/articles')
+                .set('Authorization', auth($EDITOR))
+                .send(invalidParams)
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+            expect(response.body.error).to.equal('parameter:invalid');
+            expect(response.body.data).to.equal(key);
+        });
+
+        // create article by editor ok:
+        response = await request($SERVER)
+            .post('/api/articles')
+            .set('Authorization', auth($EDITOR))
+            .send({
+                category_id: $CATEGORY_1.id,
+                name: ' Test Article  ',
+                description: '  blablabla\nhaha...  \n  ',
+                tags: ' aaa,\n BBB,  \t ccc,CcC ',
+                content: 'Long content...',
+                image: fs.readFileSync(__dirname + '/res-image.jpg').toString('base64')
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+
+        let articleId = response.body.id;
+        expect(response.body.name).to.equal('Test Article');
+
+
 
     //     // check image:
     //     var dl = yield remote.$download('/files/attachments/' + r1.cover_id + '/l');
@@ -180,7 +205,7 @@ describe('#article api', () => {
     //     // not updated:
     //     r3.tags.should.equal(r1.tags);
     //     r3.description.should.equal(r1.description);
-    // });
+    });
 
     // it('create article then change cover', async () => {
     //     // create article:
