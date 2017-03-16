@@ -3,6 +3,8 @@ itranswarp.js
 
 A nodejs powered website containing blog, wiki, discuss and search engine.
 
+[![NPM version][npm-image]][npm-url]
+
 ### Environment
 
 Nodejs: >= 6.x
