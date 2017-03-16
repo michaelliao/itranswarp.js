@@ -1,17 +1,20 @@
 'use strict';
 
-// test wiki api:
+// test discuss api:
 
-var
-    _ = require('lodash'),
-    fs = require('fs'),
-    co = require('co'),
-    should = require('should'),
+const
+    appsetup = require('./_appsetup'), // <-- MUST be import first!
+    appclose = require('./_appclose'),
+    request = require('supertest'),
+    expect = require('chai').expect,
+    db = require('../db'),
+    logger = require('../logger'),
+    cache = require('../cache'),
+    Board = db.Board,
+    Topic = db.Topic,
+    Reply = db.Reply,
     discussApi = require('../controllers/discussApi'),
-    Page = require('../page'),
-    remote = require('./_remote'),
-    constants = require('../constants'),
-    roles = constants.role;
+    constants = require('../constants');
 
 describe('#discuss', () => {
 

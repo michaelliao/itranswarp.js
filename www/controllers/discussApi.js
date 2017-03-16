@@ -2,8 +2,7 @@
 
 // discuss api
 
-var
-    _ = require('lodash'),
+const
     db = require('../db'),
     md = require('../md'),
     api = require('../api'),
@@ -12,68 +11,58 @@ var
     logger = require('../logger'),
     search = require('../search/search'),
     constants = require('../constants'),
-    userApi = require('./userApi');
-
-var
-    Board = db.board,
-    Topic = db.topic,
-    Reply = db.reply,
-    warp = db.warp,
+    userApi = require('./userApi'),
+    Board = db.Board,
+    Topic = db.Topic,
+    Reply = db.Reply,
     nextId = db.nextId;
 
 function indexDiscuss(r) {
-    var doc = {
-        type: 'discuss',
-        id: r.id,
-        tags: r.tags || '',
-        name: r.name,
-        description: '',
-        content: helper.html2text(r.content),
-        created_at: r.created_at,
-        updated_at: r.updated_at,
-        url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
-        upvotes: 0
-    };
-    process.nextTick(() => {
-        search.engine.index(doc);
-    });
+    // var doc = {
+    //     type: 'discuss',
+    //     id: r.id,
+    //     tags: r.tags || '',
+    //     name: r.name,
+    //     description: '',
+    //     content: helper.html2text(r.content),
+    //     created_at: r.created_at,
+    //     updated_at: r.updated_at,
+    //     url: '/discuss/' + (r.topic_id ? 'topics/' + r.topic_id + '/find/' + r.id : r.board_id + '/' + r.id),
+    //     upvotes: 0
+    // };
+    // process.nextTick(() => {
+    //     search.engine.index(doc);
+    // });
 }
 
 function unindexDiscuss(r) {
-    process.nextTick(() => {
-        search.engine.unindex({
-            id: r.id
-        });
-    });
+    // process.nextTick(() => {
+    //     search.engine.unindex({
+    //         id: r.id
+    //     });
+    // });
 }
 
 function unindexDiscussByIds(ids) {
-    process.nextTick(() => {
-        var
-            arr = ids,
-            fn = () => {
-                if (arr.length > 0) {
-                    if (arr.length > 10) {
-                        search.engine.unindex(arr.splice(arr.length - 10, 10));
-                    } else {
-                        search.engine.unindex(arr.splice(0, arr.length));
-                    }
-                    setTimeout(fn, 500);
-                }
-            };
-        fn();
-    });
-}
-
-async function getNavigationMenus() {
-    return [{
-        name: 'Discuss',
-        url: '/discuss'
-    }];
+    // process.nextTick(() => {
+    //     var
+    //         arr = ids,
+    //         fn = () => {
+    //             if (arr.length > 0) {
+    //                 if (arr.length > 10) {
+    //                     search.engine.unindex(arr.splice(arr.length - 10, 10));
+    //                 } else {
+    //                     search.engine.unindex(arr.splice(0, arr.length));
+    //                 }
+    //                 setTimeout(fn, 500);
+    //             }
+    //         };
+    //     fn();
+    // });
 }
 
 async function getBoard(id) {
-    var board = await Board.findById(id);
+    let board = await Board.findById(id);
     if (board === null) {
         throw api.notFound('Board');
     }
@@ -81,10 +70,10 @@ async function getBoard(id) {
 }
 
 async function getBoardByTag(tag) {
-    var
+    let
         boards = await getBoards(),
-        filtered = _.filter(boards, function (b) {
-            return b.tag === tag;
+        filtered = boards.filter((board) => {
+            return board.tag === tag;
         });
     if (filtered.length === 0) {
         throw api.notFound('Board');
@@ -99,16 +88,14 @@ async function getBoards() {
 }
 
 async function lockBoard(id, locked) {
-    var board = await getBoard(id);
-    if (board.locked !== locked) {
-        board.locked = locked;
-        await board.save();
-    }
+    let board = await getBoard(id);
+    board.locked = locked;
+    await board.save();
     return board;
 }
 
 async function getTopic(id) {
-    var topic = await Topic.findById(id);
+    let topic = await Topic.findById(id);
     if (topic === null) {
         throw api.notFound('Topic');
     }
@@ -184,7 +171,7 @@ async function getAllReplies(page) {
 }
 
 async function getReplies(topic_id, page) {
-    var num = await Reply.count({
+    let num = await Reply.count({
         where: {
             'topic_id': topic_id
         }
@@ -215,7 +202,7 @@ async function getFirstReplies(topic_id, num) {
 }
 
 async function getReplyPageIndex(topic, reply_id) {
-    var num = await Reply.count({
+    let num = await Reply.count({
             where: {
                 'topic_id': topic.id,
                 'id': {
@@ -227,19 +214,23 @@ async function getReplyPageIndex(topic, reply_id) {
 }
 
 async function createReply(user, topic_id, data) {
-    var
-        reply,
-        topic = await getTopic(topic_id);
+    let topic = await getTopic(topic_id);
     if (topic.locked) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
-    reply = await Reply.create({
+    let reply = await Reply.create({
         topic_id: topic_id,
         user_id: user.id,
         content: md.ugcMarkdownToHtml(data.content)
     });
-    // FIXME:
-    await Topic.update('update topics set replies=replies+1, version=version+1, updated_at=? where id=?', [Date.now(), topic_id]);
+    // FIXME: updated_at = Date.now()?
+    await Topic.update({
+        replies: db.sequelize.literal('replies + 1')
+    }, {
+        where: {
+            id: topic_id
+        }
+    });
     reply.name = 'Re:' + topic.name;
     indexDiscuss(reply);
     delete reply.name;
@@ -250,7 +241,7 @@ async function createReply(user, topic_id, data) {
 }
 
 async function createTopic(user, board_id, ref_type, ref_id, data) {
-    var
+    let
         board = await getBoard(board_id),
         topic = await Topic.create({
             board_id: board_id,
@@ -261,8 +252,7 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
             tags: (data.tags || '').trim(),
             content: md.ugcMarkdownToHtml(data.content)
         });
-    // FIXME:
-    await warp.$update('update boards set topics = topics + 1 where id=?', [board_id]);
+    await board.increment('topics');
     indexDiscuss(topic);
     if (ref_id) {
         await cache.remove('REF-TOPICS-' + ref_id);
@@ -272,7 +262,7 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
 
 async function loadTopicsByRefWithCache(ref_id, page) {
     if (page.index === 1) {
-        var key = 'REF-TOPICS-' + ref_id;
+        let key = 'REF-TOPICS-' + ref_id;
         return await cache.get(key, async () => {
             return await loadTopicsByRef(ref_id, page); 
         });
@@ -281,20 +271,18 @@ async function loadTopicsByRefWithCache(ref_id, page) {
 }
 
 async function loadTopicsByRef(ref_id, page) {
-    var
-        i,
-        topics = await getTopicsByRef(ref_id, page);
+    let topics = await getTopicsByRef(ref_id, page);
     await userApi.bindUsers(topics);
-    for (i=0; i<topics.length; i++) {
-        await bindReplies(topics[i]);
-    }
+    topics.forEach(async (topic) => {
+        await bindReplies(topic);
+    });
     return topics;
 }
 
 async function bindReplies(topic) {
-    var key = 'REPLIES-' + topic.id + '_' + topic.version;
+    let key = 'REPLIES-' + topic.id + '_' + topic.version;
     topic.replies = await cache.get(key, async () => {
-        var replies = await getFirstReplies(topic.id, 10);
+        let replies = await getFirstReplies(topic.id, 10);
         await userApi.bindUsers(replies);
         return replies;
     });
@@ -302,7 +290,12 @@ async function bindReplies(topic) {
 
 module.exports = {
 
-    getNavigationMenus: getNavigationMenus,
+    getNavigationMenus: () => {
+        return [{
+            name: 'Discuss',
+            url: '/discuss'
+        }];
+    },
 
     createTopic: createTopic,
 
@@ -328,7 +321,8 @@ module.exports = {
         /**
          * Get topics by ref id
          */
-        var
+        let
+            id = ctx.params.id,
             page = helper.getPage(ctx.request, 10),
             topics = await loadTopicsByRefWithCache(id, page);
         ctx.rest({
@@ -358,23 +352,21 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('createBoard');
-        var
-            num, board,
-            data = ctx.request.body;
-
-        num = await Board.max('display_order');
-        board = await Board.create({
-            name: data.name.trim(),
-            tag: data.tag.trim(),
-            description: data.description.trim(),
-            display_order: ((num === null) ? 0 : num + 1)
-        });
+        let
+            data = ctx.request.body,
+            num = await Board.max('display_order'),
+            board = await Board.create({
+                name: data.name.trim(),
+                tag: data.tag.trim(),
+                description: data.description.trim(),
+                display_order: isNaN(num) ? 0 : (num + 1)
+            });
         ctx.rest(board);
     },
 
     'GET /api/boards/:id': async (ctx, next) => {
-        ctx.checkPermission(constants.role.EDITOR);
-        ctx.rest(await getBoard(id));
+        let board = await getBoard(id);
+        ctx.rest(board);
     },
 
     'POST /api/boards/:id': async (ctx, next) => {
@@ -389,29 +381,20 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('updateBoard');
-
-        var
-            props = [],
+        let
+            id = ctx.params.id,
             data = ctx.request.body,
             board = await getBoard(id);
         if (data.name) {
             board.name = data.name.trim();
-            props.push('name');
         }
         if (data.description) {
             board.description = data.description.trim();
-            props.push('description');
         }
         if (data.tag) {
             board.tag = data.tag.trim();
-            props.push('tag');
         }
-        if (props.length > 0) {
-            props.push('updated_at');
-            props.push('version');
-            // FIXME:
-            await board.$update(props);
-        }
+        await board.save();
         ctx.rest(board);
     },
 
@@ -449,27 +432,26 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('sortBoards');
-        var
-            board,
-            i, pos,
+        let
             data = ctx.request.body,
             ids = data.ids,
             boards = await Board.findAll();
         if (ids.length !== boards.length) {
             throw api.invalidParam('ids', 'Invalid id list.');
         }
-        for (i=0; i<boards.length; i++) {
-            board = boards[i];
-            pos = ids.indexOf(board.id);
+        boards.forEach((board) => {
+            let pos = ids.indexOf(board.id);
             if (pos === (-1)) {
                 throw api.invalidParam('ids', 'Invalid id list.');
             }
             board.display_order = pos;
-        }
-        for (i=0; i<boards.length; i++) {
-            await boards[i].save({ fields: ['display_order', 'updated_at', 'version'] });
-        }
-        ctx.rest({ boards: await getBoards() });
+        });
+        boards.forEach(async (board) => {
+            await board.save();
+        });
+        ctx.rest({
+            boards: boards
+        });
     },
 
     'GET /api/boards/:id/topics': async (ctx, next) => {
@@ -477,7 +459,8 @@ module.exports = {
          * Get topics by page.
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
+            board_id = ctx.params.id,
             page = helper.getPage(ctx.request),
             topics = await getTopics(board_id, page);
         ctx.rest({
@@ -499,7 +482,8 @@ module.exports = {
         ctx.checkPermission(constants.role.SUBSCRIBER);
         ctx.validate('createTopic');
         let
-            data = ctx.request.body;
+            board_id = ctx.params.id,
+            data = ctx.request.body,
             topic = await createTopic(ctx.request.user, board_id, '', '', data);
         ctx.rest(topic);
     },
@@ -508,8 +492,7 @@ module.exports = {
         /**
          * Get all topics.
          */
-        ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
             page = helper.getPage(ctx.request),
             topics = await getAllTopics(page);
         await userApi.bindUsers(topics);
@@ -524,7 +507,7 @@ module.exports = {
          * Get all replies by page.
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
+        let
             page = helper.getPage(ctx.request),
             replies = await getAllReplies(page);
         await userApi.bindUsers(replies);
@@ -550,9 +533,9 @@ module.exports = {
             throw api.notFound('Reply');
         }
         reply.deleted = true;
-        await reply.$update(['deleted', 'updated_at', 'version']);
+        await reply.save();
         unindexDiscuss(reply);
-        ctx.rest({ 'id': id });
+        ctx.rest({ id: id });
     },
 
     'POST /api/topics/:id/delete': async (ctx, next) => {
@@ -569,11 +552,22 @@ module.exports = {
             topic = await getTopic(id),
             reply_ids = await warp.$query('select id from replies where topic_id=?', [id]);
         await topic.destroy();
-        await Reply.$update('delete from replies where topic_id=?', [id]);
-        await Board.$update('update boards set topics = topics - 1 where id=?', [topic.board_id]);
+        await Reply.destroy({
+            where: {
+                topic_id: id
+            }
+        });
+        // set topics - 1:
+        await Board.update({
+            topics: db.sequelize.literal('topics - 1')
+        }, {
+            where: {
+                id: topic.board_id
+            }
+        });
         unindexDiscuss(topic);
         unindexDiscussByIds(reply_ids);
-        ctx.rest({ 'id': id });
+        ctx.rest({ id: id });
     },
 
     'POST /api/topics/:id/replies': async (ctx, next) => {
@@ -586,7 +580,9 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.SUBSCRIBER);
         ctx.validate('createReply');
-        var data = ctx.request.body;
+        let
+            id = ctx.params.id,
+            data = ctx.request.body;
         ctx.rest(await createReply(ctx.state.__user__, id, data));
     }
 };
