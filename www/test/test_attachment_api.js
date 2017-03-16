@@ -10,11 +10,11 @@ const
     fs = require('fs'),
     request = require('supertest'),
     expect = require('chai').expect,
+    logger = require('../logger'),
+    helper = require('../helper'),
     db = require('../db'),
     Attachment = db.Attachment,
     Resource = db.Resource,
-    logger = require('../logger'),
-    helper = require('../helper'),
     attachmentApi = require('../controllers/attachmentApi');
 
 describe('#attachment-api', () => {
