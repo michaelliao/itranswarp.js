@@ -60,52 +60,43 @@ async function getRecentArticles(max) {
     });
 }
 
-// get all articles (include unpublished):
-async function getAllArticles(page) {
-    page.total = await Article.count();
+async function getArticles(page, includeUnpublished=false) {
+    let opt = includeUnpublished ? {} : {
+        where: {
+            publish_at: {
+                $lt: Date.now()
+            }
+        }
+    };
+    page.total = await Article.count(opt);
     if (page.isEmpty) {
         return [];
     }
-    return await Article.findAll({
-        offset: page.offset,
-        limit: page.limit,
-        order: 'publish_at DESC'
-    });
-}
-
-async function getArticles(page) {
-    var now = Date.now();
-    page.total = await Article.findNumber({
-        select: 'count(id)',
-        where: 'publish_at<?',
-        params: [now]
-    });
-    if (page.isEmpty) {
-        return [];
-    }
-    return await Article.findAll({
-        offset: page.offset,
-        limit: page.limit,
-        order: 'publish_at DESC'
-    });
+    opt.offset = page.offset;
+    opt.limit = page.limit;
+    opt.order = 'publish_at DESC';
+    return await Article.findAll(opt);
 }
 
 async function getArticlesByCategory(categoryId, page) {
-    var now = Date.now();
-    page.total = await Article.findNumber({
-        select: 'count(id)',
-        where: 'publish_at<? and category_id=?',
-        params: [now, categoryId]
+    let now = Date.now();
+    page.total = await Article.count({
+        where: {
+            publish_at: {
+                $lt: now
+            },
+            category_id: categoryId
+        }
     });
     if (page.isEmpty) {
         return [];
     }
     return await Article.findAll({
         where: {
-            'publish_at': {
+            publish_at: {
                 $lt: now
             },
-            'category_id': categoryId
+            category_id: categoryId
         },
         order: 'publish_at DESC',
         offset: page.offset,
@@ -114,9 +105,7 @@ async function getArticlesByCategory(categoryId, page) {
 }
 
 async function getArticle(id, includeContent) {
-    var
-        text,
-        article = await Article.findById(id);
+    let article = await Article.findById(id);
     if (article === null) {
         throw api.notFound('Article');
     }
@@ -125,6 +114,7 @@ async function getArticle(id, includeContent) {
         if (text === null) {
             throw api.notFound('Text');
         }
+        article = article.toJSON();
         article.content = text.value;
     }
     return article;
@@ -135,7 +125,7 @@ function toRssDate(dt) {
 }
 
 async function getFeed(domain) {
-    var
+    let
         i, text, article, url,
         articles = await getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
@@ -188,24 +178,17 @@ module.exports = {
 
     getArticlesByCategory: getArticlesByCategory,
 
-    getAllArticles: getAllArticles,
-
     getArticles: getArticles,
 
     getArticle: getArticle,
 
     'GET /feed': async (ctx, next) => {
-        var
-            rss,
-            host = ctx.request.host,
-            response = ctx.response,
-            gf = async () => {
-                return await getFeed(host);
-            };
-        rss = await cache.get('cached_rss', gf);
-        response.set('Cache-Control', 'max-age: 3600');
-        response.type = 'text/xml';
-        response.body = rss;
+        let rss = await cache.get('cached_rss', async () => {
+            return await getFeed(ctx.request.host);
+        });
+        ctx.response.set('Cache-Control', 'max-age: 3600');
+        ctx.response.type = 'text/xml';
+        ctx.response.body = rss;
     },
 
     'GET /api/articles/:id': async function (ctx, next) {
@@ -238,10 +221,11 @@ module.exports = {
          * @param {number} [page=1]: The page number, starts from 1.
          * @return {object} Article objects and page information.
          */
-        ctx.checkPermission(constants.role.CONTRIBUTOR);
-        var
-            page = helper.getPage(this.request),
-            articles = await getAllArticles(page);
+        let
+            user = ctx.state.__user__,
+            includeUnpublished = (user !== null) && (user.role <= constants.role.EDITOR),
+            page = helper.getPage(ctx.request),
+            articles = await getArticles(page, includeUnpublished);
         ctx.rest({
             page: page,
             articles: articles
@@ -266,10 +250,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createArticle');
-        var
-            text,
-            article,
-            attachment,
+        let
             user = ctx.state.__user__,
             article_id = nextId(),
             content_id = nextId(),
@@ -277,21 +258,21 @@ module.exports = {
         // check category id:
         await categoryApi.getCategory(data.category_id);
         // create image:
-        attachment = await attachmentApi.createAttachment(
-            ctx.state.__user__.id,
+        let attachment = await attachmentApi.createAttachment(
+            user.id,
             data.name.trim(),
             data.description.trim(),
             new Buffer(data.image, 'base64'),
             null,
             true);
         // create text:
-        text = await Text.create({
+        let text = await Text.create({
             id: content_id,
             ref_id: article_id,
             value: data.content
         });
         // create article:
-        article = await Article.create({
+        let article = await Article.create({
             id: article_id,
             user_id: user.id,
             user_name: user.name,
@@ -330,58 +311,55 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('updateArticle');
-        var
+        let
+            id = ctx.params.id,
             user = ctx.state.__user__,
-            article,
-            props = {},
-            text,
-            attachment,
-            data = ctx.request.body;
-
-        article = await getArticle(id);
+            data = ctx.request.body,
+            article = await getArticle(id);
         if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
             throw api.notAllowed('Permission denied.');
         }
         if (data.category_id) {
             await categoryApi.getCategory(data.category_id);
-            props.category_id = data.category_id;
+            article.category_id = data.category_id;
         }
         if (data.name) {
-            props.name = data.name.trim();
+            article.name = data.name.trim();
         }
         if (data.description) {
-            props.description = data.description.trim();
+            article.description = data.description.trim();
         }
         if (data.tags) {
-            props.tags = helper.formatTags(data.tags);
+            article.tags = helper.formatTags(data.tags);
         }
         if (data.publish_at !== undefined) {
-            props.publish_at = data.publish_at;
+            article.publish_at = data.publish_at;
         }
         if (data.image) {
             // check image:
-            attachment = await attachmentApi.createAttachment(
+            let attachment = await attachmentApi.createAttachment(
                 user.id,
                 article.name,
                 article.description,
                 new Buffer(data.image, 'base64'),
                 null,
                 true);
-            props.cover_id = attachment.id;
+            article.cover_id = attachment.id;
         }
         if (data.content) {
-            text = await Text.create({
+            let text = await Text.create({
                 ref_id: article.id,
                 value: data.content
             });
-            props.content_id = text.id;
+            article.content_id = text.id;
+        }
+        await article.save();
+        // attach content:
+        article = article.toJSON();
+        if (data.content) {
             article.content = data.content;
-        }
-        if (Object.getOwnPropertyNames(props).length > 0) {
-            await article.update(props);
-        }
-        if (!article.content) {
-            text = await Text.findById(article.content_id);
+        } else {
+            let text = await Text.findById(article.content_id);
             article.content = text.value;
         }
         ctx.rest(article);
@@ -398,10 +376,11 @@ module.exports = {
          * @error {permission:denied} If current user has no permission.
          */
         ctx.checkPermission(constants.role.EDITOR);
-        var
-            user = this.request.user,
+        let
+            id = ctx.params.id,
+            user = ctx.state.__user__,
             article = await getArticle(id);
-        if (user.role !== constants.role.ADMIN && user.id !== article.user_id) {
+        if ((user.role > constants.role.ADMIN) && (user.id !== article.user_id)) {
             throw api.notAllowed('Permission denied.');
         }
         await article.destroy();
@@ -410,6 +389,6 @@ module.exports = {
                 'ref_id': id
             }
         });
-        ctx.rest({ 'id': id });
+        ctx.rest({ id: id });
     }
 };
