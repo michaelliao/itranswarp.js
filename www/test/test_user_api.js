@@ -225,6 +225,18 @@ describe('#user', () => {
                 .expect(200);
         expect(response.body.email).to.equal('subs@itranswarp.com');
         expect(response.body.locked_until).to.equal(LOCKTIME);
+        // login using cookie failed for user is already locked:
+        response = await request($SERVER)
+                .get('/api/users/me')
+                .set('Cookie', cookieStr)
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal("permission:denied");
+        cookies = response.get('Set-Cookie');
+        expect(cookies).to.a('array').and.to.have.lengthOf(1);
+        cookie = cookies[0];
+        expect(cookie).to.a('string').and.to.contains('isession=deleted');
+
         // lock admin user failed:
         response = await request($SERVER)
                 .post(`/api/users/${$ADMIN.id}/lock`)

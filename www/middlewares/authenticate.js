@@ -90,9 +90,10 @@ module.exports = async (ctx, next) => {
             logger.info('bind user from session cookie: ' + user.email)
         } else {
             logger.info('invalid session cookie. cleared.');
-            response.cookies.set(COOKIE_NAME, 'deleted', {
+            ctx.cookies.set(COOKIE_NAME, 'deleted', {
                 path: '/',
                 httpOnly: true,
+                secureProxy: true,
                 expires: new Date(0)
             });
         }
