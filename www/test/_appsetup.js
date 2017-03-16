@@ -6,6 +6,12 @@
 
 const
     dbsetup = require('./_dbsetup'), // <-- MUST be import first!
+    config = require('../config');
+
+// set https mode:
+config.session.https = true;
+
+const
     app = require('../app'),
     crypto = require('crypto'),
     constants = require('../constants'),
