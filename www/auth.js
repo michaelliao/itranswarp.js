@@ -66,8 +66,7 @@ function makeSessionCookie(provider, theId, passwd, expires=0) {
     let
         now = Date.now(),
         min = now + 86400000, // 1 day
-        max = now + 2592000000, // 30 days
-        secure, sha1, str;
+        max = now + 2592000000; // 30 days
     if (expires === 0) {
         expires = now + COOKIE_EXPIRES_IN_MS;
     } else if (expires < min) {
@@ -75,11 +74,12 @@ function makeSessionCookie(provider, theId, passwd, expires=0) {
     } else if (expires > max) {
         expires = max;
     }
-    secure = [provider, theId, String(expires), passwd, COOKIE_SALT].join(':');
-    sha1 = crypto.createHash('sha1').update(secure).digest('hex');
-    str = [provider, theId, expires, sha1].join(':');
-    logger.debug('make session cookie: ' + str);
-    logger.debug('session cookie expires at ' + new Date(expires).toLocaleString());
+    let
+        secure = [provider, theId, String(expires), passwd, COOKIE_SALT].join(':'),
+        sha1 = crypto.createHash('sha1').update(secure).digest('hex'),
+        str = [provider, theId, expires, sha1].join(':');
+    logger.info('make session cookie: ' + str);
+    logger.info('session cookie expires at ' + new Date(expires).toLocaleString());
     return _safe_b64encode(str);
 }
 
@@ -111,29 +111,29 @@ async function findUserAuthByProvider(provider, id) {
 // parseSessionCookie:
 // provider:uid:expires:sha1(provider:uid:expires:passwd:salt)
 async function parseSessionCookie(s) {
-    var
-        ss = _safe_b64decode(s).split(':'),
-        user,
-        auth,
-        theId, provider, expiresStr, expires, sha1, secure, expected;
+    let decoded = _safe_b64decode(s);
+    logger.info('decode cookie to: ' + decoded);
+    let ss = decoded.split(':');
     if (ss.length !== 4) {
         return null;
     }
-    provider = ss[0];
-    theId = ss[1];
-    expiresStr = ss[2];
-    expires = parseInt(expiresStr, 10);
-    sha1 = ss[3];
+    let
+        provider = ss[0],
+        theId = ss[1],
+        expiresStr = ss[2],
+        sha1 = ss[3],
+        expires = parseInt(expiresStr, 10);
     if (isNaN(expires) || (expires < Date.now()) || !theId || !sha1) {
         return null;
     }
-    auth = await findUserAuthByProvider(provider, theId);
+    let auth = await findUserAuthByProvider(provider, theId);
     if (auth === null) {
         return null;
     }
     // check:
-    secure = [provider, theId, expiresStr, auth.passwd, COOKIE_SALT].join(':');
-    expected = crypto.createHash('sha1').update(secure).digest('hex');
+    let
+        secure = [provider, theId, expiresStr, auth.passwd, COOKIE_SALT].join(':'),
+        expected = crypto.createHash('sha1').update(secure).digest('hex');
     logger.debug('>>> secure: ' + secure);
     logger.debug('>>> sha1: ' + sha1);
     logger.debug('>>> expected: ' + expected);

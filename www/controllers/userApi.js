@@ -21,6 +21,8 @@ const
     COOKIE_EXPIRED_DATE = new Date(0),
     LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
+logger.info('set secure: ' + SECURE);
+
 // init oauth2 providers:
 
 var oauth2_providers = {};
@@ -73,7 +75,7 @@ async function getUser(id) {
 
 async function bindUsers(entities, propName = 'user_id') {
     let cachedUsers = {};
-    entities.forEach((entity) => {
+    entities.forEach(async (entity) => {
         let
             user_id = entity[propName],
             user = cachedUsers[user_id];
@@ -214,10 +216,11 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secure: SECURE,
+            secureProxy: SECURE,
             expires: new Date(expires)
         });
         logger.info('set session cookie for user: ' + user.email);
+        logger.info('cookie: ' + cookieStr);
         ctx.rest(user);
     },
 
