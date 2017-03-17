@@ -8,7 +8,9 @@ const
     db = require('../db'),
     md = require('../md'),
     cache = require('../cache'),
+    logger = require('../logger'),
     helper = require('../helper'),
+    config = require('../config'),
     constants = require('../constants'),
     search = require('../search/search'),
     User = db.User,
@@ -54,8 +56,7 @@ async function getRecentArticles(max) {
                 $lt: Date.now()
             }
         },
-        order: ['publish_at', 'DESC'],
-        offset: 0,
+        order: 'publish_at DESC',
         limit: max
     });
 }
@@ -120,18 +121,18 @@ async function getArticle(id, includeContent) {
     return article;
 }
 
-function toRssDate(dt) {
+function _toRssDate(dt) {
     return new Date(dt).toGMTString();
 }
 
 async function getFeed(domain) {
+    logger.info('generate rss...');
     let
-        i, text, article, url,
+        url_prefix = (config.session.https ? 'https://' : 'http://') + domain + '/article/',
         articles = await getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,
         website = await settingApi.getWebsiteSettings(),
-        rss = [],
-        rss_footer = '</channel></rss>';
+        rss = [];
     rss.push('<?xml version="1.0"?>\n');
     rss.push('<rss version="2.0"><channel><title><![CDATA[');
     rss.push(website.name);
@@ -140,33 +141,29 @@ async function getFeed(domain) {
     rss.push('/</link><description><![CDATA[');
     rss.push(website.description);
     rss.push(']]></description><lastBuildDate>');
-    rss.push(toRssDate(last_publish_at));
+    rss.push(_toRssDate(last_publish_at));
     rss.push('</lastBuildDate><generator>iTranswarp.js</generator><ttl>3600</ttl>');
-
-    if (articles.length === 0) {
-        rss.push(rss_footer);
+    for (let i=0; i<articles.length; i++) {
+        let
+            article = articles[i],
+            text = await Text.findById(article.content_id),
+            url = url_prefix + article.id;
+        rss.push('<item><title><![CDATA[');
+        rss.push(article.name);
+        rss.push(']]></title><link>');
+        rss.push(url);
+        rss.push('</link><guid>');
+        rss.push(url);
+        rss.push('</guid><author><![CDATA[');
+        rss.push(article.user_name);
+        rss.push(']]></author><pubDate>');
+        rss.push(_toRssDate(article.publish_at));
+        rss.push('</pubDate><description><![CDATA[');
+        rss.push(md.systemMarkdownToHtml(text.value));
+        rss.push(']]></description></item>');
     }
-    else {
-        for (i=0; i<articles.length; i++) {
-            article = articles[i];
-            text = await Text.findById(article.content_id);
-            url = 'http://' + domain + '/article/' + article.id;
-            rss.push('<item><title><![CDATA[');
-            rss.push(article.name);
-            rss.push(']]></title><link>');
-            rss.push(url);
-            rss.push('</link><guid>');
-            rss.push(url);
-            rss.push('</guid><author><![CDATA[');
-            rss.push(article.user_name);
-            rss.push(']]></author><pubDate>');
-            rss.push(toRssDate(article.publish_at));
-            rss.push('</pubDate><description><![CDATA[');
-            rss.push(helper.md2html(text.value, true));
-            rss.push(']]></description></item>');
-        }
-        rss.push(rss_footer);
-    }
+    rss.push('</channel></rss>');
+    console.log(rss.join('\n'));
     return rss.join('');
 }
 
@@ -182,8 +179,8 @@ module.exports = {
 
     getArticle: getArticle,
 
-    'GET /feed': async (ctx, next) => {
-        let rss = await cache.get('cached_rss', async () => {
+    'GET /feed/articles': async (ctx, next) => {
+        let rss = await cache.get(constants.cache.ARTICLE_FEED, async () => {
             return await getFeed(ctx.request.host);
         });
         ctx.response.set('Cache-Control', 'max-age: 3600');
