@@ -186,26 +186,6 @@ describe('#discuss', () => {
         expect(response.body.error).to.equal('parameter:invalid');
         expect(response.body.data).to.equal('content');
     });
-    //     // prepare board:
-    //     var b = yield remote.$post(roles.ADMIN, '/api/boards', {
-    //         tag: 'test',
-    //         name: 'test topic parameters',
-    //         description: 'test for topic parameters'
-    //     });
-    //     remote.shouldNoError(b);
-
-    //     // try create topic:
-    //     var r1 = yield remote.$post(roles.SUBSCRIBER, '/api/boards/' + b.id + '/topics', {
-    //         // name: missing
-    //         content: 'not signin yet...'
-    //     });
-    //     remote.shouldHasError(r1, 'parameter:invalid', 'name');
-    //     var r2 = yield remote.$post(roles.SUBSCRIBER, '/api/boards/' + b.id + '/topics', {
-    //         name: 'try post a topic but should failed',
-    //         //content: missing
-    //     });
-    //     remote.shouldHasError(r2, 'parameter:invalid', 'content');
-    // });
 
     // it('create topic ok and delete topic', async () => {
     //     // prepare board:
