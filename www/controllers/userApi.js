@@ -75,8 +75,9 @@ async function getUser(id) {
 
 async function bindUsers(entities, propName = 'user_id') {
     let cachedUsers = {};
-    entities.forEach(async (entity) => {
+    for (let i=0; i<entities.length; i++) {
         let
+            entity = entities[i],
             user_id = entity[propName],
             user = cachedUsers[user_id];
         if (! user) {
@@ -84,7 +85,7 @@ async function bindUsers(entities, propName = 'user_id') {
             cachedUsers[user_id] = user;
         }
         entity.user = user;
-    });
+    }
 }
 
 async function processOAuthAuthentication(provider_name, authentication) {
