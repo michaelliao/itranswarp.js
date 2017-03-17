@@ -11,11 +11,8 @@ const
     cache = require('../cache'),
     helper = require('../helper'),
     config = require('../config'),
-    constants = require('../constants');
-
-var
-    Navigation = db.navigation,
-    warp = db.warp,
+    constants = require('../constants'),
+    Navigation = db.Navigation,
     nextId = db.nextId;
 
 async function getNavigation(id) {
@@ -33,18 +30,28 @@ async function getNavigations() {
 }
 
 async function getNavigationMenus() {
-    var
-        apiNames = ['categoryApi', 'articleApi', 'wikiApi', 'webpageApi', 'discussApi', 'attachmentApi', 'userApi', 'settingApi'],
-        apis = _.filter(
-            _.map(apiNames, function (name) {
-                return require('./' + name);
-            }), function (api) {
-                return api.hasOwnProperty('getNavigationMenus');
-            }),
+    let
         menus = [],
-        i;
-    for (i = 0; i < apis.length; i ++) {
-        menus = menus.concat(await apis[i].getNavigationMenus());
+        apiNames = ['categoryApi', 'articleApi', 'wikiApi', 'webpageApi', 'discussApi', 'attachmentApi', 'userApi', 'settingApi'],
+        apiModules = apiNames.map((name) => {
+            return require('./' + name);
+        });
+    for (let i=0; i<apiModules.length; i++) {
+        let apiModule = apiModules[i];
+        if (apiModule.hasOwnProperty('getNavigationMenus')) {
+            let getNavigationMenus = apiModule.getNavigationMenus;
+            if (typeof (getNavigationMenus) === 'function') {
+                let result;
+                if (getNavigationMenus.constructor.name === 'AsyncFunction') {
+                    results = await getNavigationMenus();
+                } else {
+                    results = getNavigationMenus();
+                }
+                menus = menus.concat(results);
+            } else {
+                logger.warn(`"${apiNames[i]}.getNavigationMenus" is invalid function.`);
+            }
+        }
     }
     return menus;
 }
