@@ -16,6 +16,15 @@ const
 
 env.defaultOptions.useDefault = true;
 env.defaultOptions.removeAdditional = true;
+env.addCheck('nonEmpty', (v, flag) => {
+    if (flag) {
+        if (v) {
+            return v.trim() !== '';
+        }
+        return false;
+    }
+    return true;
+});
 
 const code2Message = {
     required: 'Parameter is required',
@@ -117,6 +126,7 @@ const PROPERTY = {
 
     TEXT: {
         type: 'string',
+        nonEmpty: true,
         minLength: 1,
         maxLength: 65536, // 64K
     },
