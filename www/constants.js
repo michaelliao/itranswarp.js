@@ -24,6 +24,7 @@ module.exports = {
     cache: {
         NAVIGATIONS: '__navigations__',
         CATEGORIES: '__categories__',
+        BOARDS: '__boards__',
         ARTICLE_FEED: '__articlefeed__',
         WEBSITE: '__website__',
         SNIPPETS: '__snippet__'
