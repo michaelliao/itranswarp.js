@@ -110,7 +110,7 @@ async function getArticle(id, includeContent) {
         throw api.notFound('Article');
     }
     if (includeContent) {
-        text = await Text.findById(article.content_id);
+        let text = await Text.findById(article.content_id);
         if (text === null) {
             throw api.notFound('Text');
         }
@@ -202,9 +202,10 @@ module.exports = {
          * @error {resource:notfound} Article was not found by id.
          */
         let
-            id = ctx.request.params.id,
+            id = ctx.params.id,
+            user = ctx.state.__user__,
             article = await getArticle(id, true);
-        if (article.publish_at > Date.now() && (this.request.user===null || this.request.user.role > constants.role.CONTRIBUTOR)) {
+        if (article.publish_at > Date.now() && (user === null || user.role > constants.role.CONTRIBUTOR)) {
             throw api.notFound('Article');
         }
         if (ctx.request.query.format === 'html') {

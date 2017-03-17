@@ -104,6 +104,7 @@ describe('#article api', () => {
             })
             .expect('Content-Type', /application\/json/)
             .expect(200);
+        expect(response.body.user_id).to.equal($ADMIN.id);
         expect(response.body.category_id).to.equal($CATEGORY_1.id);
         expect(response.body.cover_id).to.a('string').and.to.have.lengthOf(50); // ID length
         expect(response.body.content_id).to.a('string').and.to.have.lengthOf(50); // ID length
@@ -171,40 +172,48 @@ describe('#article api', () => {
             })
             .expect('Content-Type', /application\/json/)
             .expect(200);
+        expect(response.body.user_id).to.equal($EDITOR.id);
 
         let articleId = response.body.id;
+        let coverId = response.body.cover_id;
         expect(response.body.name).to.equal('Test Article');
+        // check image:
+        response = await request($SERVER)
+                .get(`/files/attachments/${coverId}/l`)
+                .expect('Content-Type', /image\/jpeg/)
+                .expect(200);
+        // update article:
+        let PUBLISH = Date.now() + 3600000;
+        response = await request($SERVER)
+            .post(`/api/articles/${articleId}`)
+            .set('Authorization', auth($EDITOR))
+            .send({
+                name: 'Name Changed',
+                content: 'Changed!',
+                publish_at: PUBLISH
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Name Changed');
+        expect(response.body.content).to.equal('Changed!');
+        expect(response.body.publish_at).to.equal(PUBLISH);
+        // query to verify:
+        response = await request($SERVER)
+            .get(`/api/articles/${articleId}`)
+            .set('Authorization', auth($EDITOR))
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.name).to.equal('Name Changed');
+        expect(response.body.publish_at).to.equal(PUBLISH);
+        // query as subscriber should get 404 for not published yet:
 
-
-
-    //     // check image:
-    //     var dl = yield remote.$download('/files/attachments/' + r1.cover_id + '/l');
-    //     remote.shouldNoError(dl);
-    //     dl.statusCode.should.equal(200);
-    //     dl.headers['content-type'].should.equal('image/jpeg');
-    //     parseInt(dl.headers['content-length'], 10).should.approximately(122826, 10000);
-
-    //     // update article:
-    //     var r2 = yield remote.$post(roles.EDITOR, '/api/articles/' + r1.id, {
-    //         name: 'Name Changed  ',
-    //         content: 'Changed!'
-    //     });
-    //     remote.shouldNoError(r2);
-    //     r2.name.should.equal('Name Changed');
-    //     r2.content.should.equal('Changed!');
-    //     r2.content_id.should.not.equal(r1.content_id);
-    //     r2.cover_id.should.equal(r1.cover_id);
-    //     r2.user_id.should.equal(r1.user_id);
-    //     r2.version.should.equal(1);
-
-    //     // query:
-    //     var r3 = yield remote.$get(roles.EDITOR, '/api/articles/' + r1.id);
-    //     r3.name.should.equal(r2.name);
-    //     r3.content.should.equal(r2.content);
-    //     r3.version.should.equal(1);
-    //     // not updated:
-    //     r3.tags.should.equal(r1.tags);
-    //     r3.description.should.equal(r1.description);
+        response = await request($SERVER)
+            .get(`/api/articles/${articleId}`)
+            .set('Authorization', auth($SUBS))
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('entity:notfound');
+        expect(response.body.data).to.equal('Article');
     });
 
     // it('create article then change cover', async () => {
