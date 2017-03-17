@@ -9,10 +9,12 @@ module.exports = {
     table: 'boards',
     fields: {
         topics: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: () => 0
         },
         locked: {
-            type: dbtypes.BOOLEAN
+            type: dbtypes.BOOLEAN,
+            defaultValue: () => false
         },
         display_order: {
             type: dbtypes.BIGINT

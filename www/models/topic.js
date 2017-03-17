@@ -24,19 +24,24 @@ module.exports = {
             index: true
         },
         replies: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: () => 0
         },
         upvotes: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: () => 0
         },
         downvotes: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: () => 0
         },
         score: {
-            type: dbtypes.BIGINT
+            type: dbtypes.BIGINT,
+            defaultValue: () => 0
         },
         locked: {
-            type: dbtypes.BOOLEAN
+            type: dbtypes.BOOLEAN,
+            defaultValue: () => false
         },
         name: {
             type: dbtypes.STRING(100)

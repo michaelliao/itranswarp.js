@@ -250,7 +250,8 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
             ref_id: ref_id,
             name: data.name.trim(),
             tags: (data.tags || '').trim(),
-            content: md.ugcMarkdownToHtml(data.content)
+            content: md.ugcMarkdownToHtml(data.content),
+            replies: 0
         });
     await board.increment('topics');
     indexDiscuss(topic);
@@ -273,9 +274,9 @@ async function loadTopicsByRefWithCache(ref_id, page) {
 async function loadTopicsByRef(ref_id, page) {
     let topics = await getTopicsByRef(ref_id, page);
     await userApi.bindUsers(topics);
-    topics.forEach(async (topic) => {
-        await bindReplies(topic);
-    });
+    for (let i=0; i<topics.length; i++) {
+        await bindReplies(topics[i]);
+    }
     return topics;
 }
 
@@ -335,7 +336,6 @@ module.exports = {
         /**
          * Get all boards.
          */
-        ctx.checkPermission(constants.role.EDITOR);
         ctx.rest({
             boards: await getBoards()
         });
@@ -359,13 +359,17 @@ module.exports = {
                 name: data.name.trim(),
                 tag: data.tag.trim(),
                 description: data.description.trim(),
-                display_order: isNaN(num) ? 0 : (num + 1)
+                display_order: isNaN(num) ? 0 : (num + 1),
+                topics: 0,
+                locked: false
             });
         ctx.rest(board);
     },
 
     'GET /api/boards/:id': async (ctx, next) => {
-        let board = await getBoard(id);
+        let
+            id = ctx.params.id,
+            board = await getBoard(id);
         ctx.rest(board);
     },
 
@@ -446,9 +450,9 @@ module.exports = {
             }
             board.display_order = pos;
         });
-        boards.forEach(async (board) => {
-            await board.save();
-        });
+        for (let i=0; i<boards.length; i++) {
+            await boards[i].save();
+        }
         ctx.rest({
             boards: boards
         });
@@ -484,7 +488,7 @@ module.exports = {
         let
             board_id = ctx.params.id,
             data = ctx.request.body,
-            topic = await createTopic(ctx.request.user, board_id, '', '', data);
+            topic = await createTopic(ctx.state.__user__, board_id, '', '', data);
         ctx.rest(topic);
     },
 
