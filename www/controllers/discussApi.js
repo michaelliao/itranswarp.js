@@ -62,11 +62,15 @@ function unindexDiscussByIds(ids) {
 }
 
 async function getBoard(id) {
-    let board = await Board.findById(id);
-    if (board === null) {
+    let
+        boards = await getBoards(),
+        filtered = boards.filter((board) => {
+            return board.id === id;
+        });
+    if (filtered.length === 0) {
         throw api.notFound('Board');
     }
-    return board;
+    return filtered[0];
 }
 
 async function getBoardByTag(tag) {
@@ -82,12 +86,14 @@ async function getBoardByTag(tag) {
 }
 
 async function getBoards() {
-    return await Board.findAll({
-        order: 'display_order'
+    return await cache.get(constants.cache.BOARDS, async () => {
+        return await Board.findAll({
+            order: 'display_order'
+        });
     });
 }
 
-async function lockBoard(id, locked) {
+async function _lockBoard(id, locked) {
     let board = await getBoard(id);
     board.locked = locked;
     await board.save();
@@ -253,7 +259,13 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
             content: md.ugcMarkdownToHtml(data.content),
             replies: 0
         });
-    await board.increment('topics');
+    await Board.update({
+        topics: db.sequelize.literal('topics + 1')
+    }, {
+        where: {
+            id: board_id
+        }
+    });    
     indexDiscuss(topic);
     if (ref_id) {
         await cache.remove('REF-TOPICS-' + ref_id);
@@ -363,6 +375,7 @@ module.exports = {
                 topics: 0,
                 locked: false
             });
+        await cache.remove(constants.cache.BOARDS);
         ctx.rest(board);
     },
 
@@ -399,6 +412,7 @@ module.exports = {
             board.tag = data.tag.trim();
         }
         await board.save();
+        await cache.remove(constants.cache.BOARDS);
         ctx.rest(board);
     },
 
@@ -411,7 +425,9 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        ctx.rest(await lockBoard(id, true));
+        let r = await _lockBoard(id, true);
+        await cache.remove(constants.cache.BOARDS);
+        ctx.rest(r);
     },
 
     'POST /api/boards/:id/unlock': async (ctx, next) => {
@@ -423,7 +439,9 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        ctx.rest(await lockBoard(id, false));
+        let r = await _lockBoard(id, false);
+        await cache.remove(constants.cache.BOARDS);
+        ctx.rest(r);
     },
 
     'POST /api/boards/all/sort': async (ctx, next) => {
@@ -453,6 +471,7 @@ module.exports = {
         for (let i=0; i<boards.length; i++) {
             await boards[i].save();
         }
+        await cache.remove(constants.cache.BOARDS);
         ctx.rest({
             boards: boards
         });
@@ -460,9 +479,8 @@ module.exports = {
 
     'GET /api/boards/:id/topics': async (ctx, next) => {
         /**
-         * Get topics by page.
+         * Get topics by page. NOTE: the returned topics do not have 'content'.
          */
-        ctx.checkPermission(constants.role.EDITOR);
         let
             board_id = ctx.params.id,
             page = helper.getPage(ctx.request),
@@ -506,6 +524,45 @@ module.exports = {
         });
     },
 
+    'POST /api/topics/:id/delete': async (ctx, next) => {
+        /**
+         * Delete a topic by its id.
+         * 
+         * @name Delete Topic
+         * @param {string} id - The id of the topic.
+         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
+         */
+        ctx.checkPermission(constants.role.EDITOR);
+        let
+            id = ctx.params.id,
+            topic = await getTopic(id),
+            reply_ids = await Reply.findAll({
+                attributes: ['id'],
+                where: {
+                    topic_id: id
+                }
+            }).map((r) => {
+                return r.id;
+            });
+        await topic.destroy();
+        await Reply.destroy({
+            where: {
+                topic_id: id
+            }
+        });
+        // set topics - 1:
+        await Board.update({
+            topics: db.sequelize.literal('topics - 1')
+        }, {
+            where: {
+                id: topic.board_id
+            }
+        });
+        unindexDiscuss(topic);
+        unindexDiscussByIds(reply_ids);
+        ctx.rest({ id: id });
+    },
+
     'GET /api/replies': async (ctx, next) => {
         /**
          * Get all replies by page.
@@ -531,7 +588,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         let
-            id = ctx.request.params.id,
+            id = ctx.params.id,
             reply = await Reply.findById(id);
         if (reply === null) {
             throw api.notFound('Reply');
@@ -539,38 +596,6 @@ module.exports = {
         reply.deleted = true;
         await reply.save();
         unindexDiscuss(reply);
-        ctx.rest({ id: id });
-    },
-
-    'POST /api/topics/:id/delete': async (ctx, next) => {
-        /**
-         * Delete a topic by its id.
-         * 
-         * @name Delete Topic
-         * @param {string} id - The id of the topic.
-         * @return {object} Results contains deleted id. e.g. {"id": "12345"}
-         */
-        ctx.checkPermission(constants.role.EDITOR);
-        let
-            id = ctx.request.params.id,
-            topic = await getTopic(id),
-            reply_ids = await warp.$query('select id from replies where topic_id=?', [id]);
-        await topic.destroy();
-        await Reply.destroy({
-            where: {
-                topic_id: id
-            }
-        });
-        // set topics - 1:
-        await Board.update({
-            topics: db.sequelize.literal('topics - 1')
-        }, {
-            where: {
-                id: topic.board_id
-            }
-        });
-        unindexDiscuss(topic);
-        unindexDiscussByIds(reply_ids);
         ctx.rest({ id: id });
     },
 
