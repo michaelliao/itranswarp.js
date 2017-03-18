@@ -35,8 +35,16 @@ module.exports = (path, opts) => {
     let env = createEnv(path, opts);
     return async (ctx, next) => {
         ctx.render = function (view, model) {
+            let
+                viewPath,
+                path = ctx.request.path;
+            if (path.startsWith('/manage/')) {
+                viewPath = 'manage/' + view;
+            } else {
+                viewPath = 'themes/' + ctx.state.__theme__ + '/' + view;
+            }
             ctx.response.type = 'text/html';
-            ctx.response.body = env.render(view, Object.assign({}, ctx.state || {}, model || {}));
+            ctx.response.body = env.render(viewPath, Object.assign({}, ctx.state || {}, model || {}));
         };
         await next();
     };

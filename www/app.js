@@ -16,15 +16,14 @@ const
     restify = require('./middlewares/restify'),
     logger = require('./logger.js'),
     api = require('./api'),
-    i18n = require('./i18n'),
     auth = require('./auth'),
     config = require('./config'),
     db = require('./db'),
-    constants = require('./constants');
-
-var
+    constants = require('./constants'),
+    i18n = require('./i18n'),
+    i18nTranslators = i18n.loadI18NTranslators('./views/i18n'),
     static_prefix = config.cdn.static_prefix,
-    activeTheme = config.theme;
+    ACTIVE_THEME = config.theme;
 
 // global app:
 let app = new Koa();
@@ -55,9 +54,9 @@ if (! isProduction) {
 // parse request body:
 app.use(bodyParser());
 
-// set i18n filter:
+// set filter:
 var filters = {
-    i18n: function (input) {
+    json: function (input) {
         return input;
     },
     min: function (input) {
@@ -84,9 +83,6 @@ app.use(authenticate);
 // rest support:
 app.use(restify());
 
-// load i18n:
-const i18nT = i18n.getI18NTranslators('./views/i18n');
-
 // add global state for MVC:
 app.use(async (ctx, next) => {
     let
@@ -103,10 +99,10 @@ app.use(async (ctx, next) => {
         }
     }
     if (! isApi) {
-        ctx.state._ = i18n.createI18N(request.get('Accept-Language') || 'en', i18nT);
+        ctx.state._ = i18n.createI18N(request.get('Accept-Language') || 'en', i18nTranslators);
         ctx.state.__static_prefix__ = static_prefix;
         ctx.state.__time__ = Date.now();
-        ctx.state.__theme__ = activeTheme;
+        ctx.state.__theme__ = ACTIVE_THEME;
         ctx.state.__request__ = request;
     }
     await next();

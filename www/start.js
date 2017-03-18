@@ -1,13 +1,14 @@
 'use strict';
 
 /**
- * App entry.
+ * Start app.
  */
 
 const
+    PORT = 2017,
     logger = require('./logger'),
     app = require('./app');
 
-app.listen(2015);
+app.listen(PORT);
 
-logger.info(`application start in ${process.isProductionMode ? 'production' : 'development'} mode at 2015...`);
+logger.info(`application start in ${process.isProductionMode ? 'production' : 'development'} mode at ${PORT}...`);
