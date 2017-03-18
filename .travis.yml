@@ -15,8 +15,8 @@ addons:
   - local.itranswarp.com
 
 before_install:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
-  - mysql -e 'SET PASSWORD FOR root = PASSWORD(\'password\');'
+  - mysql -e "CREATE DATABASE IF NOT EXISTS test;"
+  - mysql -e "SET PASSWORD FOR root = PASSWORD('password');"
 
 install:
   - npm install -g mocha
