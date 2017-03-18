@@ -6,6 +6,7 @@
 // Sub-objects:     `uk-panel-title`
 //                  `uk-panel-badge`
 //                  `uk-panel-teaser`
+//                  `uk-panel-body`
 //
 // Modifiers:       `uk-panel-box`
 //                  `uk-panel-box-hover`
@@ -87,6 +88,8 @@
 @panel-divider-border:                          #ddd;
 @panel-divider-border-width:                    1px;
 
+@panel-body-padding:                            @panel-box-padding;
+
 
 /* ========================================================================
    Component: Panel
@@ -124,10 +127,10 @@
 .uk-panel:after { clear: both; }
 
 /*
- * Remove margin from the last-child
+ * Remove margin from the last-child if not `uk-widget-title`
  */
 
-.uk-panel > :last-child { margin-bottom: 0; }
+.uk-panel > :not(.uk-panel-title):last-child { margin-bottom: 0; }
 
 
 /* Sub-object: `uk-panel-title`
@@ -162,6 +165,12 @@
 .uk-panel-teaser { margin-bottom: @panel-teaser-margin-bottom; }
 
 
+/* Sub-object: `uk-panel-body`
+ ========================================================================== */
+
+.uk-panel-body { padding: @panel-body-padding; }
+
+
 /* Modifier: `uk-panel-box`
  ========================================================================== */
 
@@ -184,7 +193,7 @@
     right: @panel-box-badge-right;
 }
 
-.uk-panel-box .uk-panel-teaser {
+.uk-panel-box > .uk-panel-teaser {
     margin-top: @panel-box-teaser-margin;
     margin-left: @panel-box-teaser-margin;
     margin-right: @panel-box-teaser-margin;
@@ -251,7 +260,7 @@
     right: @panel-hover-badge-right;
 }
 
-.uk-panel-hover .uk-panel-teaser {
+.uk-panel-hover > .uk-panel-teaser {
     margin-top: @panel-hover-teaser-margin;
     margin-left: @panel-hover-teaser-margin;
     margin-right: @panel-hover-teaser-margin;

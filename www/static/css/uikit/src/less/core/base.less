@@ -82,7 +82,7 @@
  ========================================================================== */
 
 /*
- * 1. Normalizes default `font-family` and sets `font-size` here to support `rem` units
+ * 1. Normalize default `font-family` and set `font-size` to support `rem` units
  * 2. Prevents iOS text size adjust after orientation change, without disabling user zoom
  * 3. Style
  */
@@ -116,7 +116,7 @@ body { margin: 0; }
 a { background: transparent; }
 
 /*
- * Improves readability when focused and also mouse hovered in all browsers.
+ * Improve readability of focused elements when they are also in an active/hover state.
  */
 
 a:active,
@@ -131,12 +131,14 @@ a,
     color: @base-link-color;
     text-decoration: @base-link-text-decoration;
     cursor: pointer;
+    .hook-base-link;
 }
 
 a:hover,
 .uk-link:hover {
     color: @base-link-hover-color;
     text-decoration: @base-link-hover-text-decoration;
+    .hook-base-link-hover;
 }
 
 
@@ -144,13 +146,13 @@ a:hover,
  ========================================================================== */
 
 /*
- * Addresses styling not present in Chrome, Safari, Opera and IE 8/9/10.
+ * Address styling not present in IE 8/9/10/11, Safari, and Chrome.
  */
 
 abbr[title] { border-bottom: 1px dotted; }
 
 /*
- * Addresses style set to `bolder` in Firefox
+ * Address style set to `bolder` in Firefox 4+, Safari, and Chrome.
  */
 
 b,
@@ -228,35 +230,54 @@ sup { top: -0.5em; }
 sub { bottom: -0.25em; }
 
 
-/* Images
+/* Embedded content
  ========================================================================== */
 
 /*
- * 1. Responsiveness: Sets a maximum width relative to the parent and auto scales the height
- * 2. Corrects `max-width` behavior if padding and border are used
- * 3. Remove border when inside `a` element in IE 8/9/10.
- * 4. Remove the gap between images and the bottom of their containers
+ * Remove the gap between embedded content and the bottom of their containers.
  */
 
-img {
+audio,
+canvas,
+iframe,
+img,
+svg,
+video { vertical-align: middle; }
+
+/*
+ * Responsiveness
+ * 1. Sets a maximum width relative to the parent and auto scales the height
+ * 2. Corrects `max-width` behavior if padding and border are used
+ */
+
+audio,
+canvas,
+img,
+svg,
+video {
     /* 1 */
     max-width: 100%;
     height: auto;
     /* 2 */
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
-    /* 3 */
-    border: 0;
-    /* 4 */
-    vertical-align: middle;
 }
 
 /*
- * Preserve original image dimensions
+ * Preserve original dimensions
  */
 
 .uk-img-preserve,
-.uk-img-preserve img { max-width: none; }
+.uk-img-preserve audio,
+.uk-img-preserve canvas,
+.uk-img-preserve img,
+.uk-img-preserve svg,
+.uk-img-preserve video { max-width: none; }
+
+/*
+ * Remove border when inside `a` element in IE 8/9/10.
+ */
+
+img { border: 0; }
 
 /*
  * Correct overflow not hidden in IE 9/10/11.
@@ -309,6 +330,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: @base-heading-font-weight;
     color: @base-heading-color;
     text-transform: @base-heading-text-transform;
+    .hook-base-h;
 }
 
 /*
@@ -329,31 +351,37 @@ h1, h2, h3, h4, h5, h6 {
 h1, .uk-h1 {
     font-size: @base-h1-font-size;
     line-height: @base-h1-line-height;
+    .hook-base-h1;
 }
 
 h2, .uk-h2 {
     font-size: @base-h2-font-size;
     line-height: @base-h2-line-height;
+    .hook-base-h2;
 }
 
 h3, .uk-h3 {
     font-size: @base-h3-font-size;
     line-height: @base-h3-line-height;
+    .hook-base-h3;
 }
 
 h4, .uk-h4 {
     font-size: @base-h4-font-size;
     line-height: @base-h4-line-height;
+    .hook-base-h4;
 }
 
 h5, .uk-h5 {
     font-size: @base-h5-font-size;
     line-height: @base-h5-line-height;
+    .hook-base-h5;
 }
 
 h6, .uk-h6 {
     font-size: @base-h6-font-size;
     line-height: @base-h6-line-height;
+    .hook-base-h6;
 }
 
 
@@ -390,13 +418,13 @@ dd { margin-left: 0; }
 
 hr {
     /* 1 */
-    -moz-box-sizing: content-box;
     box-sizing: content-box;
     height: 0;
     /* 2 */
     margin: @base-hr-margin-vertical 0;
     border: 0;
     border-top: @base-hr-border-width solid @base-hr-border;
+    .hook-base-hr;
 }
 
 
@@ -415,6 +443,7 @@ blockquote {
     font-size: @base-blockquote-font-size;
     line-height: @base-blockquote-line-height;
     font-style: @base-blockquote-font-style;
+    .hook-base-blockquote;
 }
 
 
@@ -438,7 +467,7 @@ pre {
 }
 
 
-/* Selection pseudo-element 
+/* Selection pseudo-element
  ========================================================================== */
 
 ::-moz-selection {
@@ -458,7 +487,9 @@ pre {
  ========================================================================== */
 
 /*
- * Corrects `block` display not defined in IE 8/9.
+ * Correct `block` display not defined for any HTML5 element in IE 8/9.
+ * Correct `block` display not defined for `details` or `summary` in IE 10/11 and Firefox.
+ * Correct `block` display not defined for `main` in IE 11.
  */
 
 article,
@@ -474,7 +505,7 @@ section,
 summary { display: block; }
 
 /*
- * Addresses inconsistent vertical alignment of `progress` in Chrome, Firefox and Opera.
+ * Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.
  */
 
 progress { vertical-align: baseline; }
@@ -486,8 +517,8 @@ progress { vertical-align: baseline; }
 audio:not([controls]) { display: none; }
 
 /*
- * Address `[hidden]` styling not present in IE 8/9.
- * Hide the `template` element in IE and Safari
+ * Address `[hidden]` styling not present in IE 8/9/10.
+ * Hide the `template` element in IE 8/9/10/11, Safari, and Firefox < 22.
  */
 
 [hidden],
@@ -516,6 +547,17 @@ iframe { border: 0; }
 .hook-base-misc;
 
 .hook-base-body() {}
+.hook-base-link() {}
+.hook-base-link-hover() {}
 .hook-base-code() {}
+.hook-base-h() {}
+.hook-base-h1() {}
+.hook-base-h2() {}
+.hook-base-h3() {}
+.hook-base-h4() {}
+.hook-base-h5() {}
+.hook-base-h6() {}
+.hook-base-hr() {}
+.hook-base-blockquote() {}
 .hook-base-pre() {}
 .hook-base-misc() {}

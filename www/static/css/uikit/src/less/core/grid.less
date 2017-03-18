@@ -9,6 +9,7 @@
 // Modifiers:       `uk-grid-collapse`
 //                  `uk-grid-small`
 //                  `uk-grid-medium`
+//                  `uk-grid-large`
 //                  `uk-grid-divider`
 //                  `uk-grid-margin`
 //                  `uk-grid-match`
@@ -48,6 +49,9 @@
 
 @grid-gutter-large-horizontal:                  35px;
 @grid-gutter-large-vertical:                    35px;
+
+@grid-gutter-xlarge-horizontal:                 50px;
+@grid-gutter-xlarge-vertical:                   50px;
 
 @grid-gutter-small-horizontal:                  10px;
 @grid-gutter-small-vertical:                    10px;
@@ -187,6 +191,39 @@
 .uk-grid-medium > * > .uk-panel + .uk-panel { margin-top: @grid-gutter-vertical; }
 
 
+/*
+ * Large gutter
+ */
+
+/* Large screen and bigger */
+@media (min-width: @breakpoint-large) {
+
+    /* Horizontal */
+    .uk-grid-large { margin-left: -@grid-gutter-large-horizontal; }
+    .uk-grid-large > * { padding-left: @grid-gutter-large-horizontal; }
+
+    /* Vertical */
+    .uk-grid-large + .uk-grid-large,
+    .uk-grid-large-margin,
+    .uk-grid-large > * > .uk-panel + .uk-panel { margin-top: @grid-gutter-large-vertical; }
+
+}
+
+/* Extra Large screens */
+@media (min-width: @breakpoint-xlarge) {
+
+    /* Horizontal */
+    .uk-grid-large { margin-left: -@grid-gutter-xlarge-horizontal; }
+    .uk-grid-large > * { padding-left: @grid-gutter-xlarge-horizontal; }
+
+    /* Vertical */
+    .uk-grid-large + .uk-grid-large,
+    .uk-grid-large-margin,
+    .uk-grid-large > * > .uk-panel + .uk-panel { margin-top: @grid-gutter-xlarge-vertical; }
+
+}
+
+
 /* Modifier: `uk-grid-divider`
  ========================================================================== */
 
@@ -267,22 +304,25 @@
 /* Match panels in grids
  ========================================================================== */
 
-.uk-grid-match > * {
-    display: -ms-flexbox;
-    display: -webkit-flex;
-    display: flex;
-}
-
 /*
  * 1. Behave like a block element
  */
 
+.uk-grid-match > * {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    /* 1 */
+    -ms-flex-wrap: wrap;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+
 .uk-grid-match > * > * {
+    /* 1 */
     -ms-flex: none;
     -webkit-flex: none;
     flex: none;
-    /* 1 */
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 100%;
 }
@@ -292,7 +332,6 @@
  ========================================================================== */
 
 [class*='uk-grid-width'] > * {
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 100%;
 }
@@ -304,9 +343,12 @@
 .uk-grid-width-1-6 > * { width: 16.666%; }
 .uk-grid-width-1-10 > * { width: 10%; }
 
+.uk-grid-width-auto > * { width: auto; }
+
 /* Phone landscape and bigger */
 @media (min-width: @breakpoint-small) {
 
+    .uk-grid-width-small-1-1 > * { width: 100%; }
     .uk-grid-width-small-1-2 > * { width: 50%; }
     .uk-grid-width-small-1-3 > * { width: 33.333%; }
     .uk-grid-width-small-1-4 > * { width: 25%; }
@@ -319,6 +361,7 @@
 /* Tablet and bigger */
 @media (min-width: @breakpoint-medium) {
 
+    .uk-grid-width-medium-1-1 > * { width: 100%; }
     .uk-grid-width-medium-1-2 > * { width: 50%; }
     .uk-grid-width-medium-1-3 > * { width: 33.333%; }
     .uk-grid-width-medium-1-4 > * { width: 25%; }
@@ -331,6 +374,7 @@
 /* Desktop and bigger */
 @media (min-width: @breakpoint-large) {
 
+    .uk-grid-width-large-1-1 > * { width: 100%; }
     .uk-grid-width-large-1-2 > * { width: 50%; }
     .uk-grid-width-large-1-3 > * { width: 33.333%; }
     .uk-grid-width-large-1-4 > * { width: 25%; }
@@ -343,6 +387,7 @@
 /* Large screen and bigger */
 @media (min-width: @breakpoint-xlarge) {
 
+    .uk-grid-width-xlarge-1-1 > * { width: 100%; }
     .uk-grid-width-xlarge-1-2 > * { width: 50%; }
     .uk-grid-width-xlarge-1-3 > * { width: 33.333%; }
     .uk-grid-width-xlarge-1-4 > * { width: 25%; }
@@ -357,7 +402,6 @@
  ========================================================================== */
 
 [class*='uk-width'] {
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 100%;
 }
@@ -534,6 +578,50 @@
     .uk-width-large-3-10 { width: 30%; }
     .uk-width-large-7-10 { width: 70%; }
     .uk-width-large-9-10 { width: 90%; }
+
+}
+
+/* Large screen and bigger */
+@media (min-width: @breakpoint-xlarge) {
+
+    /* Whole */
+    .uk-width-xlarge-1-1 { width: 100%; }
+
+    /* Halves */
+    .uk-width-xlarge-1-2,
+    .uk-width-xlarge-2-4,
+    .uk-width-xlarge-3-6,
+    .uk-width-xlarge-5-10 { width: 50%; }
+
+    /* Thirds */
+    .uk-width-xlarge-1-3,
+    .uk-width-xlarge-2-6 { width: 33.333%; }
+    .uk-width-xlarge-2-3,
+    .uk-width-xlarge-4-6 { width: 66.666%; }
+
+    /* Quarters */
+    .uk-width-xlarge-1-4 { width: 25%; }
+    .uk-width-xlarge-3-4 { width: 75%; }
+
+    /* Fifths */
+    .uk-width-xlarge-1-5,
+    .uk-width-xlarge-2-10 { width: 20%; }
+    .uk-width-xlarge-2-5,
+    .uk-width-xlarge-4-10 { width: 40%; }
+    .uk-width-xlarge-3-5,
+    .uk-width-xlarge-6-10 { width: 60%; }
+    .uk-width-xlarge-4-5,
+    .uk-width-xlarge-8-10 { width: 80%; }
+
+    /* Sixths */
+    .uk-width-xlarge-1-6 { width: 16.666%; }
+    .uk-width-xlarge-5-6 { width: 83.333%; }
+
+    /* Tenths */
+    .uk-width-xlarge-1-10 { width: 10%; }
+    .uk-width-xlarge-3-10 { width: 30%; }
+    .uk-width-xlarge-7-10 { width: 70%; }
+    .uk-width-xlarge-9-10 { width: 90%; }
 
 }
 

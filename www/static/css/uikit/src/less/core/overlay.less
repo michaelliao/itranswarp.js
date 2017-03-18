@@ -9,6 +9,7 @@
 //                  `uk-overlay-icon`
 //
 // Modifier:        `uk-overlay-background`
+//                  `uk-overlay-image`
 //                  `uk-overlay-top`
 //                  `uk-overlay-bottom`
 //                  `uk-overlay-left`
@@ -37,10 +38,10 @@
 // Markup:
 //
 // <!-- uk-overlay -->
-// <a class="uk-overlay" href="">
+// <figure class="uk-overlay" href="">
 //     <img src="" alt="">
-//     <div class="uk-overlay-panel"></div>
-// </a>
+//     <figcaption class="uk-overlay-panel"></figcaption>
+// </figure>
 //
 // ========================================================================
 
@@ -193,6 +194,19 @@
 }
 
 
+/* Modifier `uk-overlay-image`
+ ========================================================================== */
+
+/*
+ * Reset panel
+ */
+
+.uk-overlay-image {
+    padding: 0;
+    .hook-overlay-image;
+}
+
+
 /* Position modifiers
  ========================================================================== */
 
@@ -237,7 +251,7 @@
 [class*='uk-overlay-slide'] {
     transition-duration: 0.3s;
     transition-timing-function: ease-out;
-    transition-property: opacity transform filter;
+    transition-property: opacity, transform, filter;
 }
 
 .uk-overlay-active .uk-overlay-fade,
@@ -252,6 +266,7 @@
 .uk-overlay-fade { opacity: @overlay-fade-out-opacity; }
 
 .uk-overlay-hover:hover .uk-overlay-fade,
+.uk-overlay-hover.uk-hover .uk-overlay-fade,
 .uk-overlay-active .uk-active > .uk-overlay-fade { opacity: @overlay-fade-in-opacity; }
 
 /*
@@ -264,6 +279,7 @@
 }
 
 .uk-overlay-hover:hover .uk-overlay-scale,
+.uk-overlay-hover.uk-hover .uk-overlay-scale,
 .uk-overlay-active .uk-active > .uk-overlay-scale {
     -webkit-transform: scale(@overlay-scale-in-scale);
     transform: scale(@overlay-scale-in-scale);
@@ -279,6 +295,7 @@
 }
 
 .uk-overlay-hover:hover .uk-overlay-spin,
+.uk-overlay-hover.uk-hover .uk-overlay-spin,
 .uk-overlay-active .uk-active > .uk-overlay-spin {
     -webkit-transform: scale(@overlay-spin-in-scale) rotate(@overlay-spin-in-rotate);
     transform: scale(@overlay-spin-in-scale) rotate(@overlay-spin-in-rotate);
@@ -294,6 +311,7 @@
 }
 
 .uk-overlay-hover:hover .uk-overlay-grayscale,
+.uk-overlay-hover.uk-hover .uk-overlay-grayscale,
 .uk-overlay-active .uk-active > .uk-overlay-grayscale {
     -webkit-filter: grayscale(0%);
     filter: grayscale(0%);
@@ -331,6 +349,7 @@
 
 /* Hover */
 .uk-overlay-hover:hover [class*='uk-overlay-slide'],
+.uk-overlay-hover.uk-hover [class*='uk-overlay-slide'],
 .uk-overlay-active .uk-active > [class*='uk-overlay-slide'] {
     opacity: 1;
     -webkit-transform: translateX(0) translateY(0);
@@ -430,7 +449,6 @@
 .uk-overlay-area-content {
     /* 1 */
     display: inline-block;
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 100%;
     vertical-align: middle;
@@ -505,6 +523,7 @@
 
 .hook-overlay-panel() {}
 .hook-overlay-background() {}
+.hook-overlay-image() {}
 .hook-overlay-icon() {}
 .hook-overlay-misc() {}
 
