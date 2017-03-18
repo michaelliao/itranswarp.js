@@ -6,3 +6,23 @@ node_js:
 env:
   - NODE_ENV=development
 
+services:
+  - memcached
+  - mysql
+
+addons:
+  hosts:
+  - local.itranswarp.com
+
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
+  - mysql -e 'SET PASSWORD FOR root = PASSWORD(\'password\');'
+
+install:
+  - npm install -g mocha
+  - npm install
+
+script:
+  - mocha
+
+
