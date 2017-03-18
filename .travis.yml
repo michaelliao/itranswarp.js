@@ -16,7 +16,7 @@ addons:
 
 before_install:
   - mysql -e "CREATE DATABASE IF NOT EXISTS test;"
-  - mysql -e "SET PASSWORD FOR root = PASSWORD('password');"
+  - mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('password');"
 
 install:
   - npm install -g mocha
