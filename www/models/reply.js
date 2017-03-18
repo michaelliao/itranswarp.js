@@ -18,19 +18,19 @@ module.exports = {
         },
         deleted: {
             type: dbtypes.BOOLEAN,
-            defaultValue: false
+            defaultValue: () => false
         },
         upvotes: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         downvotes: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         score: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         content: {
             type: dbtypes.TEXT

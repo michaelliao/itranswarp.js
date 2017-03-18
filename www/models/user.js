@@ -13,13 +13,11 @@ module.exports = {
     fields: {
         role: {
             type: dbtypes.BIGINT,
-            defaultValue: () => {
-                return SUBSCRIBER;
-            }
+            defaultValue: () => SUBSCRIBER
         },
         locked_until: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         email: {
             type: dbtypes.STRING(100),
@@ -27,7 +25,7 @@ module.exports = {
         },
         verified: {
             type: dbtypes.BOOLEAN,
-            defaultValue: false
+            defaultValue: () => false
         },
         name: {
             type: dbtypes.STRING(100)

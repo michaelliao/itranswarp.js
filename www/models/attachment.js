@@ -31,7 +31,7 @@ module.exports = {
         },
         meta: {
             type: dbtypes.STRING(100),
-            defaultValue: ''
+            defaultValue: () => ''
         },
         description: {
             type: dbtypes.STRING(1000)

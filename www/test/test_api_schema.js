@@ -3,7 +3,8 @@
 /**
  * Test api_schema.js
  */
-var
+
+const
     _ = require('lodash'),
     api = require('../api'),
     schema = require('../api_schema'),

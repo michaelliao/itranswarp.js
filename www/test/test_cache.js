@@ -88,13 +88,13 @@ describe('#cache', () => {
 
     it('set and get then expires', async () => {
         let key1 = keyPrefix + 'exp1';
-        await cache.set(key1, { expires: 1234 }, 2);
+        await cache.set(key1, { expires: 1500 }, 2);
         // get:
         let data = await cache.get(key1);
         expect(data).to.be.ok;
-        expect(data.expires).to.equal(1234);
-        // wait 2 seconds:
-        await sleep(2000);
+        expect(data.expires).to.equal(1500);
+        // wait 3 seconds:
+        await sleep(3000);
         // get again:
         let data2 = await cache.get(key1);
         expect(data2===null).to.be.true;

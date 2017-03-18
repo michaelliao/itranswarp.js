@@ -16,7 +16,7 @@ module.exports = {
         },
         views: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         name: {
             type: dbtypes.STRING(100)

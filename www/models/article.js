@@ -18,14 +18,14 @@ module.exports = {
         },
         cover_id: {
             type: dbtypes.ID,
-            defaultValue: ''
+            defaultValue: () => ''
         },
         content_id: {
             type: dbtypes.ID
         },
         views: {
             type: dbtypes.BIGINT,
-            defaultValue: 0
+            defaultValue: () => 0
         },
         user_name: {
             type: dbtypes.STRING(100)

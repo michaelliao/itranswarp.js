@@ -17,7 +17,7 @@ module.exports = {
         },
         draft: {
             type: dbtypes.BOOLEAN,
-            defaultValue: false
+            defaultValue: () => false
         },
         name: {
             type: dbtypes.STRING(100)

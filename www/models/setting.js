@@ -17,9 +17,7 @@ module.exports = {
         },
         value: {
             type: dbtypes.TEXT,
-            defaultValue: () => {
-                return '';
-            }
+            defaultValue: () => ''
         }
     }
 };
