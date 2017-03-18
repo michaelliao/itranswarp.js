@@ -22,7 +22,8 @@ function error(s) {
 function checkFile(f) {
     let content = fs.readFileSync(f, 'utf-8');
     if (!content.startsWith('\'use strict\';\n')) {
-        error('missing use strict!');
+        error('missing \'use strict\': ' + f);
+        process.exit(1);
     }
 }
 
