@@ -2,83 +2,84 @@
 
 // i18n support:
 
-var
+const
     _ = require('lodash'),
-    fs = require('fs');
+    fs = require('fs'),
+    logger = require('./logger'),
+    RE_I18N_FILENAME = /^(\w+)\.json$/;
 
-var RE_I18N_FILENAME = /^(\w+)\.json$/;
-
-function loadI18NFile(filePath) {
-    console.log('Load i18n file: ' + filePath);
-    var dict, i18n = {};
-    try {
+function _loadI18NFileAsMap(filePath) {
+    logger.info('Load i18n file: ' + filePath);
+    let
+        i18n = new Map(),
         dict = require(filePath);
-    } catch (e) {
-        console.log(e);
-        return null;
-    }
-    _.each(dict, function (value, key) {
+    _.each(dict, (value, key) => {
         if (typeof key === 'string' && typeof value === 'string') {
-            i18n[key] = value;
+            i18n.set(key, value);
         } else {
-            console.log('[INVALID] i18n: ' + key + ' -> ' + value);
+            logger.warn('[INVALID] i18n: ' + key + ' -> ' + value);
         }
     });
     return i18n;
 }
 
-function getI18NTranslators(path) {
-    var
-        locales = {},
-        files = fs.readdirSync(path),
-        i18nFiles = _.filter(files, function (f) {
+/**
+ * return Map:
+ * key = locale, string.
+ * value = translate Map.
+ */
+function loadI18NTranslators(path) {
+    let
+        locales = new Map(),
+        i18nFiles = fs.readdirSync(path).filter((f) => {
             return RE_I18N_FILENAME.test(f);
         });
-    _.each(i18nFiles, function (jsonFile) {
-        var locale, d = loadI18NFile(path + '/' + jsonFile);
-        if (d !== null) {
-            // load successfully:
+    i18nFiles.forEach((jsonFile) => {
+        let
+            i18n = _loadI18NFileAsMap(path + '/' + jsonFile),
             locale = jsonFile.match(RE_I18N_FILENAME)[1];
-            console.log('Locale ' + locale + ' loaded.');
-            locales[locale.toLowerCase()] = d;
-        }
+        logger.info('Locale ' + locale + ' loaded.');
+        locales.set(locale.toLowerCase(), i18n);
     });
     return locales;
 }
 
-function getTranslator(header, translators) {
+/**
+ * Get only suitable translators (array) from 'Accept-Language' header.
+ */
+function _getSuitableTranslators(acceptHeader, allTranslators) {
     // header like: zh-CN,zh;q=0.8,en;q=0.6,en-US;q=0.4,ru;q=0.2,zh-TW;q=0.2
-    header = header.toLowerCase().replace(/\-/g, '_');
-    var
-        i, s, n, ss = header.split(',');
-    for (i = 0; i < ss.length; i++) {
-        s = ss[i].trim();
-        n = s.indexOf(';');
-        if (n !== (-1)) {
-            s = s.substring(0, n).trim();
-        }
-        if (translators.hasOwnProperty(s)) {
-            return translators[s];
-        }
-    }
-    return null;
+    let suitables = [];
+    acceptHeader.toLowerCase()
+        .replace(/\-/g, '_')
+        .split(',')
+        .map((s) => {
+            // "zh;q=0.8" --> "zh"
+            s = s.trim();
+            let n = s.indexOf(';');
+            if (n !== (-1)) {
+                s = s.substring(0, n).trim();
+            }
+            return s;
+        }).forEach((locale) => {
+            let t = allTranslators.get(locale);
+            if (t) {
+                suitables.push(t);
+            }
+        });
+    return suitables;
 }
 
-function noTranslate(s) {
-    return s;
-}
-
-function createI18N(header, translators) {
-    var translator = getTranslator(header, translators);
-    if (translator === null) {
-        return noTranslate;
-    }
-    return function (s) {
-        var trans = translator[s];
-        if (!trans) {
-            console.log(s + ' ==> (missing)');
+function createI18N(acceptHeader, allTranslators) {
+    let translators = _getSuitableTranslators(acceptHeader, allTranslators);
+    return (s) => {
+        for (let translator of translators) {
+            let value = translator.get(s);
+            if (value) {
+                return value;
+            }
         }
-        return trans || s;
+        return s;
     };
 }
 
@@ -86,6 +87,6 @@ module.exports = {
 
     createI18N: createI18N,
 
-    getI18NTranslators: getI18NTranslators
+    loadI18NTranslators: loadI18NTranslators
 
 };
