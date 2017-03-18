@@ -23,6 +23,7 @@ install:
   - npm install
 
 script:
+  - cd www
   - mocha
 
 
