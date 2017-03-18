@@ -3,78 +3,142 @@
 /**
  * Init database.
  */
-const crypto = require('crypto');
-const readline = require('readline');
-const config = require('../config');
-const constants = require('../constants');
+const
+    crypto = require('crypto'),
+    readline = require('readline'),
+    config = require('../config'),
+    exec = require('child_process').exec,
+    constants = require('../constants'),
+    DATABASE = config.db.database,
+    DB_HOST = config.db.host,
+    DB_USER = config.db.username,
+    DB_PASS = config.db.password;
 
 var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
+var info = {};
+
 var prompt = [
-    'WARNING:',
-    '  MySQL host: ' + config.db.host,
-    '  Database "' + config.db.database + '" will be dropped and re-created!',
-    '  All data will be lost!',
-    '',
+    '\x1b[31m',
+    '----------------------------------------------------------------------',
+    '  WARNING:',
+    `  MySQL host: ${DB_HOST}`,
+    `  Database "${DATABASE}" will be dropped and re-created.`,
+    '  ALL DATA IN THIS DATABASE WILL BE LOST!',
+    '----------------------------------------------------------------------',
+    '\x1b[0m',
     'Enter MySQL root password to continue: '
 ]
+
+function skip() {
+    console.log('cancelled.');
+    process.exit(1);
+}
 
 function generatePassword(localId, email, passwd) {
     var hashedPasswd = crypto.createHash('sha1').update(email + ':' + passwd).digest('hex');
     return crypto.createHash('sha1').update(localId + ':' + hashedPasswd).digest('hex');
 }
 
-function skip() {
-    console.log('skipped.');
-    process.exit(1);
+function initTables() {
+    // set root for db operation:
+    config.db.username = 'root';
+    config.db.password = info.rootPassword;
+    config.db.maxConnections = 1;
+    config.db.maxIdleTime = 1000;
+    (async () => {
+        var
+            db = require('../db'),
+            userId = db.nextId(),
+            localId = db.nextId(),
+            User = db.User,
+            LocalUser = db.LocalUser;
+        await db.sync(true);
+        // create admin user:
+        await User.create({
+            id: userId,
+            role: constants.role.ADMIN,
+            email: info.email,
+            verified: true,
+            name: 'Admin',
+            image_url: '/static/img/admin.png'
+        });
+        await LocalUser.create({
+            id: localId,
+            user_id: userId,
+            passwd: generatePassword(localId, info.email, info.adminPassword)
+        });
+        let ss = [
+            '\x1b[32m',
+            '----------------------------------------------------------------------',
+            `  Database ${DATABASE} has been initialized successfully!`,
+            '----------------------------------------------------------------------',
+            '\x1b[0m'
+        ];
+        console.log(ss.join('\n'));
+    })();
 }
 
-rl.question(prompt.join('\n'), function (answer) {
-    if (answer === '') {
+function grantDatabase() {
+    let cmd = `mysql -u root --password=${info.rootPassword} -e "GRANT SELECT, INSERT, UPDATE, DELETE ON ${DATABASE}.* TO '${DB_USER}'@'${DB_HOST}' IDENTIFIED BY '${DB_PASS}';"`;
+    console.log('Exec: ' + cmd);
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error:\n${error}`);
+            process.exit(1);
+        } else {
+            initTables();
+        }
+    });
+}
+
+function createDatabase() {
+    let cmd = `mysql -u root --password=${info.rootPassword} -e "CREATE DATABASE ${DATABASE};"`;
+    console.log('Exec: ' + cmd);
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error:\n${error}`);
+            process.exit(1);
+        } else {
+            grantDatabase();
+        }
+    });
+}
+
+function dropDatabase() {
+    let cmd = `mysql -u root --password=${info.rootPassword} -e "DROP DATABASE IF EXISTS ${DATABASE};"`;
+    console.log('Exec: ' + cmd);
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error:\n${error}`);
+            process.exit(1);
+        } else {
+            createDatabase();
+        }
+    });
+}
+
+rl.question(prompt.join('\n'), function (rootPassword) {
+    if (rootPassword === '') {
         skip();
     }
+    info.rootPassword = rootPassword;
     rl.question('Enter admin email: ', function (email) {
         if (email.trim() === '') {
             skip();
         }
-        rl.question('Enter admin password: ', function (passwd) {
-            if (passwd === '') {
+        info.email = email;
+        rl.question('Enter admin password: ', function (adminPassword) {
+            if (adminPassword === '') {
                 skip();
             }
+            info.adminPassword = adminPassword;
             rl.close();
             console.log('init database...');
-            // set root for db operation:
-            config.db.username = 'root';
-            config.db.password = answer;
-            config.db.maxConnections = 1;
-            config.db.maxIdleTime = 1000;
-            (async () => {
-                var
-                    db = require('../db'),
-                    userId = db.nextId(),
-                    localId = db.nextId(),
-                    User = db.User,
-                    LocalUser = db.LocalUser;
-                await db.sync(true);
-                // create admin user:
-                await User.create({
-                    id: userId,
-                    role: constants.role.ADMIN,
-                    email: email,
-                    verified: true,
-                    name: 'Admin',
-                    image_url: '/static/img/admin.png'
-                });
-                await LocalUser.create({
-                    id: localId,
-                    user_id: userId,
-                    passwd: generatePassword(localId, email, passwd)
-                });
-                console.log('ok.');
-            })();
+            dropDatabase();
         });
     });
 });
