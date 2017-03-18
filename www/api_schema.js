@@ -450,6 +450,7 @@ module.exports = {
     validate: (schemaName, data) => {
         var errors = env.validate(schemaName, data);
         if (errors !== null) {
+            logger.warn('api:check schema failed.');
             throw createApiError(errors);
         }
     }

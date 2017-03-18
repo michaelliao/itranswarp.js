@@ -416,34 +416,6 @@ module.exports = {
         ctx.rest(board);
     },
 
-    'POST /api/boards/:id/lock': async (ctx, next) => {
-        /**
-         * Lock the board by its id.
-         * 
-         * @name Lock Board
-         * @param {string} id - The id of the board.
-         * @return {object} Board object.
-         */
-        ctx.checkPermission(constants.role.ADMIN);
-        let r = await _lockBoard(id, true);
-        await cache.remove(constants.cache.BOARDS);
-        ctx.rest(r);
-    },
-
-    'POST /api/boards/:id/unlock': async (ctx, next) => {
-        /**
-         * Unlock the board by its id.
-         * 
-         * @name Unlock Board
-         * @param {string} id - The id of the board.
-         * @return {object} Board object.
-         */
-        ctx.checkPermission(constants.role.ADMIN);
-        let r = await _lockBoard(id, false);
-        await cache.remove(constants.cache.BOARDS);
-        ctx.rest(r);
-    },
-
     'POST /api/boards/all/sort': async (ctx, next) => {
         /**
          * Sort boards.
@@ -475,6 +447,34 @@ module.exports = {
         ctx.rest({
             boards: boards
         });
+    },
+
+    'POST /api/boards/:id/lock': async (ctx, next) => {
+        /**
+         * Lock the board by its id.
+         * 
+         * @name Lock Board
+         * @param {string} id - The id of the board.
+         * @return {object} Board object.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        let r = await _lockBoard(id, true);
+        await cache.remove(constants.cache.BOARDS);
+        ctx.rest(r);
+    },
+
+    'POST /api/boards/:id/unlock': async (ctx, next) => {
+        /**
+         * Unlock the board by its id.
+         * 
+         * @name Unlock Board
+         * @param {string} id - The id of the board.
+         * @return {object} Board object.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        let r = await _lockBoard(id, false);
+        await cache.remove(constants.cache.BOARDS);
+        ctx.rest(r);
     },
 
     'GET /api/boards/:id/topics': async (ctx, next) => {

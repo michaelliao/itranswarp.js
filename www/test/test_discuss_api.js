@@ -144,6 +144,86 @@ describe('#discuss', () => {
         expect(response.body.name).to.equal('Try update board');
     });
 
+    it('create boards then sort', async () => {
+        let response;
+        // create board A, B, C:
+        let names = ['A', 'B', 'C'];
+        let boardIds = [];
+        for (let i=0; i<names.length; i++) {
+            let name = names[i];
+            response = await request($SERVER)
+                .post('/api/boards')
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    name: name,
+                    tag: name,
+                    description: 'discuss ' + name
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+            boardIds.push(response.body.id);
+            await sleep(10);
+        }
+        let boardA = boardIds[0];
+        let boardB = boardIds[1];
+        let boardC = boardIds[2];
+        logger.info(`ids: ${boardA}, ${boardB}, ${boardC}`);
+        // get boards should be A, B, C:
+        response = await request($SERVER)
+            .get('/api/boards')
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.boards).to.a('array').and.to.have.lengthOf(3);
+        expect(response.body.boards.map(b => b.name )).to.eql(['A', 'B', 'C']);
+
+        // sort as B, C, A:
+        response = await request($SERVER)
+            .post('/api/boards/all/sort')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                ids: [boardB, boardC, boardA]
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        // check:
+        response = await request($SERVER)
+            .get('/api/boards')
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body.boards).to.a('array').and.to.have.lengthOf(3);
+        expect(response.body.boards.map(b => b.name )).to.eql(['B', 'C', 'A']);
+        // sort with invalid ids:
+        response = await request($SERVER)
+            .post('/api/boards/all/sort')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                ids: [boardB, boardC, boardC] // <-- duplicate id
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+
+        response = await request($SERVER)
+            .post('/api/boards/all/sort')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                ids: [boardB, boardC] // <-- only 2 ids
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+
+        response = await request($SERVER)
+            .post('/api/boards/all/sort')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                ids: [boardB, boardC, db.nextId()] // <-- invalid id
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('parameter:invalid');
+    });
+
     it('create topic failed for no permission', async () => {
         // prepare board:
         let boardId = await prepareBoard();
