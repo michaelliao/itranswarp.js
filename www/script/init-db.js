@@ -83,7 +83,7 @@ function initTables() {
 }
 
 function grantDatabase() {
-    let cmd = `mysql -u root --password=${info.rootPassword} -e "GRANT SELECT, INSERT, UPDATE, DELETE ON ${DATABASE}.* TO '${DB_USER}'@'${DB_HOST}' IDENTIFIED BY '${DB_PASS}';"`;
+    let cmd = `mysql -h ${DB_HOST} -u root --password=${info.rootPassword} -e "GRANT SELECT, INSERT, UPDATE, DELETE ON ${DATABASE}.* TO '${DB_USER}'@'${DB_HOST}' IDENTIFIED BY '${DB_PASS}';"`;
     console.log('Exec: ' + cmd);
     exec(cmd, (error, stdout, stderr) => {
         if (error) {
@@ -96,7 +96,7 @@ function grantDatabase() {
 }
 
 function createDatabase() {
-    let cmd = `mysql -u root --password=${info.rootPassword} -e "CREATE DATABASE ${DATABASE};"`;
+    let cmd = `mysql -h ${DB_HOST} -u root --password=${info.rootPassword} -e "CREATE DATABASE ${DATABASE};"`;
     console.log('Exec: ' + cmd);
     exec(cmd, (error, stdout, stderr) => {
         if (error) {
@@ -109,7 +109,7 @@ function createDatabase() {
 }
 
 function dropDatabase() {
-    let cmd = `mysql -u root --password=${info.rootPassword} -e "DROP DATABASE IF EXISTS ${DATABASE};"`;
+    let cmd = `mysql -h ${DB_HOST} -u root --password=${info.rootPassword} -e "DROP DATABASE IF EXISTS ${DATABASE};"`;
     console.log('Exec: ' + cmd);
     exec(cmd, (error, stdout, stderr) => {
         if (error) {
