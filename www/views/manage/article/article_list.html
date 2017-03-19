@@ -12,7 +12,7 @@ $(function() {
         }
         var categories = d.categories;
         getJSON('/api/articles', {
-            page: {{ pageIndex }}
+            page: '{{ pageIndex }}'
         }, function (err, data) {
             if (err) {
                 return fatal(err);
@@ -29,9 +29,10 @@ $(function() {
 
 function bindCategories(articles, categories) {
     // bind category_name to article:
-    for (var i = 0; i < articles.length; i ++) {
-        var a = articles[i];
-        for (var n = 0; n < categories.length; n ++) {
+    var i, a, n;
+    for (i = 0; i < articles.length; i ++) {
+        a = articles[i];
+        for (n = 0; n < categories.length; n ++) {
             if (a.category_id===categories[n].id) {
                 a.category_name = categories[n].name;
                 break;
@@ -48,6 +49,10 @@ function initVM(data) {
         data: {
             articles: data.articles,
             page: data.page
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
         },
         methods: {
             editArticle: function(id) {
@@ -75,8 +80,6 @@ function initVM(data) {
             },
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 {% endblock %}
@@ -91,9 +94,9 @@ function initVM(data) {
     </div>
 
     <div id="vm" class="uk-width-1-1">
-        <ul class="uk-tab" data-uk-tab>
+        <ul data-uk-tab class="uk-tab">
             <li class="uk-active"><a href="#0">{{ _('Articles') }}</a></li>
-            <li><a href="#0" onclick="location.assign('/manage/article/category_list')">{{ _('Categories') }}</a></li>
+            <li><a href="category_list">{{ _('Categories') }}</a></li>
         </ul>
         <div class="uk-margin">
             <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
@@ -111,17 +114,17 @@ function initVM(data) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="a: articles">
+                <tr v-for="a in articles">
                     <td>
-                        <img v-attr="src: '/files/attachments/' + a.cover_id + '/s'" />
+                        <img :src="'/files/attachments/' + a.cover_id + '/s'" />
                     </td>
                     <td>
-                        <p><a v-text="a.name" v-attr="href: '/article/' + a.id" target="_blank"></a></p>
+                        <p><a v-text="a.name" :href="'/article/' + a.id" target="_blank"></a></p>
                         <p v-text="a.description"></p>
-                        <p><span v-repeat="t: a.tags" style="padding-right:1em;"><i class="uk-icon-tag"></i><span v-text="t"></span></span></p>
+                        <p><span v-for="t in a.tags" style="padding-right:1em;"><i class="uk-icon-tag"></i><span v-text="t"></span></span></p>
                     </td>
                     <td>
-                        <p><i class="uk-icon-list"></i> <a v-attr="href: '/category/' + a.category_id" v-text="a.category_name" target="_blank"></a></p>
+                        <p><i class="uk-icon-list"></i> <a :href="'/category/' + a.category_id" v-text="a.category_name" target="_blank"></a></p>
                         <p><i class="uk-icon-user"></i> <span v-text="a.user_name"></span></p>
                     </td>
                     <td>
@@ -129,8 +132,8 @@ function initVM(data) {
                         <p><span v-text="a.created_at.toDateTime()"></span></p>
                     </td>
                     <td>
-                        <a v-on="click: editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-on="click: deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-on:click=" editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on:click="deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
                 <tr v-if="page.totalItems===0">

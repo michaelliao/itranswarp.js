@@ -1,4 +1,4 @@
-{% extends '_manage.html' %}
+{% extends './_manage.html' %}
 
 {% block title %}{{ _('Sign In') }}{% endblock %}
 
@@ -7,27 +7,29 @@
 
 <script>
 $(function() {
-    var vmAuth = new Vue({
-        el: '#form-auth',
+    var vm = new Vue({
+        el: '#vm',
         data: {
             email: '',
             passwd: ''
         },
+        created: function () {
+            $('#vm').show();
+        },
         methods: {
-            onSubmit: function(event) {
-                event.preventDefault();
+            submit: function() {
                 var
-                    $form = $('#form-auth'),
+                    that = this,
                     email = this.email.trim().toLowerCase(),
                     data = {
                         email: email,
                         passwd: this.passwd==='' ? '' : CryptoJS.SHA1(email + ':' + this.passwd).toString()
                     };
-                $form.postJSON('/api/authenticate', data, function(err, result) {
-                    if (! err) {
+                that.$resource('/api/authenticate').save(data).then(function (resp) {
+                    resp.json().then(function (result) {
                         location.assign('/manage/');
-                    }
-                });
+                    });
+                }, bindFormError());
             }
         }
     });
@@ -39,8 +41,8 @@ $(function() {
 {% block main %}
     <div class="uk-width-3-10">&nbsp;</div>
     <div class="uk-width-4-10">
-        <form id="form-auth" v-on="submit: onSubmit" class="uk-form uk-form-stack">
-            <legend>{{ _('Please Sign In') }}</legend>
+        <form id="vm" v-on:submit.prevent="submit" class="uk-form uk-form-stack">
+            <legend>{{ _('Please sign in') }}</legend>
             <div class="uk-alert uk-alert-danger uk-hidden"></div>
             <div class="uk-form-row">
                 <label class="uk-form-label" for="email">{{ _('Email') }}:</label>

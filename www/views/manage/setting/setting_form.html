@@ -92,7 +92,7 @@ function initVM(definitions, settings) {
             {% endif %}
             {% endfor %}
         </ul>
-        <form v-on="submit: submit" class="uk-form uk-form-stacked uk-margin">
+        <form v-on:submit.prevent="submit" class="uk-form uk-form-stacked uk-margin">
             <legend>{{ form.name }}</legend>
             <fieldset>
                 <div class="uk-alert uk-alert-success" style="display:none">

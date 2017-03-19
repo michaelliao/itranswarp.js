@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>{% block title %}<!-- title -->{% endblock %} - Management Console</title>
+    <title>{% block title %} ??? {% endblock %} - {{ _('Management Console') }}</title>
     <link rel="stylesheet" href="/static/css/codemirror.css" />
     <link rel="stylesheet" href="/static/css/itranswarp.css" />
     <script src="/static/js/jquery.js"></script>
@@ -11,8 +11,66 @@
     <script src="/static/js/marked.js"></script>
     <script src="/static/js/uikit/uikit.js"></script>
     <script src="/static/js/uikit/components/htmleditor.js"></script>
-    <script src="/static/js/vue.min.js"></script>
+    <script src="/static/js/vue.js"></script>
+    <script src="/static/js/vue-resource.min.js"></script>
     <script src="/static/js/itranswarp.js"></script>
+
+<script>
+
+// FIX: jQuery $(xxx).show() cannot display 'uk-hidden':
+(function () {
+    var _jShow = $.fn.show;
+    var _jHide = $.fn.hide;
+    $.fn.show = function() {
+        _jShow.apply(this);
+        this.removeClass('uk-hidden');
+    };
+    $.fn.hide = function() {
+        _jHide.apply(this);
+        this.addClass('uk-hidden');
+    };
+})();
+// END FIX
+
+Vue.http.options.timeout = 5000;
+
+function _findForm(vmId) {
+    var $form = $('#' + (vmId || 'vm'));
+    if (! $form.is('form')) {
+        $form = $form.find('form');
+    }
+    if (! $form.is('form')) {
+        console.log('WARN: _findForm failed for: ' + vmId);
+    }
+    return $form;
+}
+
+function clearFormError(vmId) {
+    var $form = _findForm(vmId);
+    var $err = $form.find('.uk-alert-danger');
+    $err.text('').hide();
+    $form.find('input').removeClass('uk-form-danger');
+}
+
+function bindFormError(vmId) {
+    return function (resp) {
+        resp.json().then(function (result) {
+            console.log('Error: ' + JSON.stringify(result));
+            // try find form:
+            clearFormError(vmId);
+            var $form = _findForm(vmId);
+            var $err = $form.find('.uk-alert-danger');
+            $err.text(result.message || result.error).show();
+            if (result.error === 'parameter:invalid') {
+                if (result.data) {
+                    $form.find('input[name=' + result.data + ']').addClass('uk-form-danger');
+                }
+            }
+        });
+    };
+}
+</script>
+
 <style>
 #vm {
     display: none;

@@ -61,7 +61,7 @@ function initVM(board) {
             <li><a href="#0" onclick="location.assign('reply_list')">Replies</a></li>
         </ul>
 
-        <form v-on="submit: submit" class="uk-margin uk-form uk-form-stacked">
+        <form v-on:submit.prevent="submit" class="uk-margin uk-form uk-form-stacked">
             <legend>{{ form.name }}</legend>
             <fieldset>
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
