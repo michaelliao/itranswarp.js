@@ -14,15 +14,10 @@ const
     cache = require('../cache'),
     helper = require('../helper'),
     logger = require('../logger'),
-    constants = require('../constants');
-
-var
-    User = db.user,
-    Article = db.article,
-    Category = db.category,
-    warp = db.warp;
-
-var
+    constants = require('../constants'),
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
@@ -62,13 +57,13 @@ module.exports = {
 
     // redirect:
     'GET /manage/': async (ctx, next) => {
-        this.response.redirect('/manage/article/');
+        ctx.response.redirect('/manage/article/');
     },
 
     // overview ///////////////////////////////////////////////////////////////
 
     'GET /manage/overview/(index)?': async (ctx, next) => {
-        var page = helper.getPage(this.request);
+        var page = helper.getPage(ctx.request);
         ctx.body = '';
     },
 
@@ -76,13 +71,13 @@ module.exports = {
 
     'GET /manage/article/(article_list)?': async (ctx, next) => {
         ctx.render('manage/article/article_list.html', await _getModel({
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
     'GET /manage/article/category_list': async (ctx, next) => {
         ctx.render('manage/article/category_list.html', await _getModel({
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
@@ -237,13 +232,13 @@ module.exports = {
 
     'GET /manage/discuss/reply_list': async (ctx, next) => {
         ctx.render('manage/discuss/reply_list.html', await _getModel({
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
     'GET /manage/discuss/topic_list': async (ctx, next) => {
         ctx.render('manage/discuss/topic_list.html', await _getModel({
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
@@ -251,7 +246,7 @@ module.exports = {
 
     'GET /manage/attachment/(attachment_list)?': async (ctx, next) => {
         ctx.render('manage/attachment/attachment_list.html', await _getModel({
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
@@ -260,7 +255,7 @@ module.exports = {
     'GET /manage/user/(user_list)?': async (ctx, next) => {
         ctx.render('manage/user/user_list.html', await _getModel({
             currentTime: Date.now(),
-            pageIndex: helper.getPageNumber(this.request)
+            pageIndex: helper.getPageIndex(ctx.request)
         }));
     },
 
