@@ -19,11 +19,11 @@ before_install:
   - mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('password');"
 
 install:
+  - cd www
   - npm install -g mocha
   - npm install
 
 script:
-  - cd www
   - mocha
 
 
