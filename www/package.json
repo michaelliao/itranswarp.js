@@ -20,7 +20,7 @@
     "url": "https://github.com/michaelliao/itranswarp.js.git"
   },
   "dependencies": {
-    "bluebird": "3.3.4",
+    "bluebird": "^3.4.6",
     "gm": "1.23.0",
     "htmlparser2": "3.9.1",
     "jjv": "1.0.2",
