@@ -107,7 +107,7 @@ function initVM(navigations) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="n: navigations">
+                <tr v-for="n in navigations">
                     <td><a v-text="n.name" v-attr="href: n.url" target="_blank"></a></td>
                     <td><a v-text="n.url" v-attr="href: n.url" target="_blank"></a></td>
                     <td><span v-text="n.created_at.toDateTime()"></span></td>

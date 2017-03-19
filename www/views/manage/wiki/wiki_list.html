@@ -77,7 +77,7 @@ function initVM(wikis) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="w: wikis">
+                <tr v-for="w in wikis">
                     <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
                     <td>
                         <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>

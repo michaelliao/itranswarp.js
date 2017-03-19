@@ -195,7 +195,7 @@ function initVM(article, categories) {
                         <select name="category_id" v-model="category_id" class="uk-width-1-1">
                             <option value="">-- Select a category --</option>
                             {% raw %}
-                            <option v-repeat="category: categories" value="{{ category.id }}">{{ category.name }}</option>
+                            <option v-for="category in categories" value="{{ category.id }}">{{ category.name }}</option>
                             {% endraw %}
                         </select>
                     </div>

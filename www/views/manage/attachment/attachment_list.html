@@ -75,7 +75,7 @@ function initVM(data) {
                 </tr>
             </thead>
         	<tbody>
-                <tr v-repeat="a: attachments">
+                <tr v-for="a in attachments">
                     <td>
                         <a v-attr="href: '/files/attachments/' + a.id + '/'" target="_blank"><img v-attr="src: '/files/attachments/' + a.id + '/s'" style="width: 160px;" /></a>
                     </td>

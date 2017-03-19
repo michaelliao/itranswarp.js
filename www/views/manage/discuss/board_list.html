@@ -116,7 +116,7 @@ function initVM(boards) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="obj: boards">
+                <tr v-for="obj in boards">
                     <td><span v-text="obj.tag"></span></td>
                     <td>
                         <a v-text="obj.name" v-attr="href: '/discuss/' + obj.id" target="_blank"></a>

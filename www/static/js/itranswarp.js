@@ -445,7 +445,7 @@ if (typeof(Vue)!=='undefined') {
     Vue.filter('size', size2string);
     Vue.component('pagination', {
         template: '<ul class="uk-pagination">' +
-                  '  <li v-repeat="i: list" v-attr="class: i===index?\'uk-active\':\'x-undefined\'">' +
+                  '  <li v-for="i in list" v-attr="class: i===index?\'uk-active\':\'x-undefined\'">' +
                   '    <a v-if="i!==\'...\' && i!==index" v-attr="href: \'javascript:gotoPage(\' + i + \')\'">{{ i }}</a>' +
                   '    <span v-if="i===\'...\' || i===index">{{ i }}</span>' +
                   '  </li>' +

@@ -92,7 +92,7 @@ function initVM(menus) {
                         <select v-model="menu">
                             <option value="">- Select a menu -</option>
                         {% raw %}
-                            <option v-repeat="menu: menus" value="{{ menu.url }}">{{ menu.name }}</option>
+                            <option v-for="menu in menus" value="{{ menu.url }}">{{ menu.name }}</option>
                         {% endraw %}
                         </select>
                     </div>
