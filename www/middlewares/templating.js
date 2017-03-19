@@ -36,11 +36,9 @@ module.exports = (path, opts) => {
     return async (ctx, next) => {
         ctx.render = function (view, model) {
             let
-                viewPath,
+                viewPath = view,
                 path = ctx.request.path;
-            if (path.startsWith('/manage/')) {
-                viewPath = 'manage/' + view;
-            } else {
+            if (! path.startsWith('/manage/')) {
                 viewPath = 'themes/' + ctx.state.__theme__ + '/' + view;
             }
             ctx.response.type = 'text/html';
