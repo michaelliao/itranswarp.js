@@ -56,7 +56,10 @@ app.use(bodyParser());
 
 // set filter:
 var filters = {
-    json: function (input) {
+    json: (input) => {
+        return input;
+    },
+    addslashes: (input) => {
         return input;
     },
     min: function (input) {
