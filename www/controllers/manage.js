@@ -114,7 +114,7 @@ module.exports = {
     },
 
     'GET /manage/article/edit_category': async (ctx, next) => {
-        let id = getId(ctx.request);
+        let id = _getId(ctx);
         ctx.render('manage/article/category_form.html', await _getModel({
             id: id,
             form: {

@@ -62,6 +62,10 @@ function initVM(article, categories) {
             publish: article.publish_at ? article.publish_at.toDateTime() : '',
             content: article.content || ''
         },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
         methods: {
             getPostData: function () {
                 var data = {
@@ -87,37 +91,38 @@ function initVM(article, categories) {
                 return data;
             },
             submit: function () {
-                var
-                    data,
-                    form = $('#vm').find('form');
+                var that = this;
+                clearFormError();
+                var data;
                 try {
                     data = this.getPostData();
                 }
                 catch (e) {
-                    form.showFormError(e);
+                    showFormError(e);
                     return;
                 }
-                form.postJSON('{{ form.action}}', data, function (err, r) {
-                    if (!err) {
-                        window.onbeforeunload = null;
+                that.$resource('{{ form.action }}').save(data).then(function (resp) {
+                    resp.json().then(function (result) {
+                        that.saved = true;
                         location.assign('{{ form.redirect }}');
-                    }
-                });
+                    });
+                }, bindFormError());
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 
     // check content when unload:
     window.onbeforeunload = function() {
+        if (vm.saved) {
+            return;
+        }
         if (vm.content !== $('#content-editor').val()) {
-            return 'Content has been changed.';
+            return "{{ _('Content has been changed.') }}";
         }
     };
 
     // fix vue select init:
-    $('select[name=category_id]').val(article.category_id || '');
+//    $('select[name=category_id]').val(article.category_id || '');
 
     $('#content-editor').val(article.content || '');
     var htmleditor = UIkit.htmleditor($('#content-editor').get(0), {
@@ -165,7 +170,7 @@ function initVM(article, categories) {
         </ul>
 
         <form v-on:submit.prevent="submit" class="uk-form uk-form-stacked uk-margin">
-            <legend>{{ form.name }}</legend>
+            <legend>{{ _(form.name) }}</legend>
             <fieldset>
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
                 <div class="uk-form-row">
@@ -178,24 +183,24 @@ function initVM(article, categories) {
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Name:</label>
+                    <label class="uk-form-label">{{ _('Name') }}:</label>
                     <div class="uk-form-controls">
-                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
                     </div>
                 </div>
                 <div class="uk-form-row">
                     <label class="uk-form-label">Description:</label>
                     <div class="uk-form-controls">
-                        <textarea v-model="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
+                        <textarea v-model="description" name="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Category:</label>
+                    <label class="uk-form-label">{{ _('Category') }}:</label>
                     <div class="uk-form-controls">
-                        <select name="category_id" v-model="category_id" class="uk-width-1-1">
-                            <option value="">-- Select a category --</option>
+                        <select v-model="category_id" name="category_id" class="uk-width-1-1">
+                            <option value="">-- {{ _('Select a category') }} --</option>
                             {% raw %}
-                            <option v-for="category in categories" value="{{ category.id }}">{{ category.name }}</option>
+                            <option v-for="category in categories" v-bind:value="category.id" v-text="category.name"></option>
                             {% endraw %}
                         </select>
                     </div>
@@ -215,7 +220,7 @@ function initVM(article, categories) {
                 <div class="uk-form-row">
                     <label class="control-label">Content:</label>
                     <div class="controls">
-                        <textarea id="content-editor" rows="20" style="width:100%; resize:none;"></textarea>
+                        <textarea id="content-editor" name="content" rows="20" style="width:100%; resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">

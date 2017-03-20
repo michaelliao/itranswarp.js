@@ -34,22 +34,40 @@
 
 Vue.http.options.timeout = 5000;
 
-function _findForm(vmId) {
+// find a jQuery form object that within a #vm scope:
+function findForm(vmId) {
     var $form = $('#' + (vmId || 'vm'));
     if (! $form.is('form')) {
         $form = $form.find('form');
     }
     if (! $form.is('form')) {
-        console.log('WARN: _findForm failed for: ' + vmId);
+        console.log('WARN: findForm failed for: ' + vmId);
     }
     return $form;
 }
 
+// show form error whtin a #vm scope:
+function showFormError(err, vmId) {
+    var $form = findForm(vmId);
+    var $alert = $form.find('.uk-alert-danger');
+    $alert.text(err.message || err.error).show();
+    if (err.error === 'parameter:invalid') {
+        if (err.data) {
+            $form.find('input[name=' + err.data + ']').addClass('uk-form-danger');
+            $form.find('select[name=' + err.data + ']').addClass('uk-form-danger');
+        }
+    }
+    if (($alert.offset().top - 60) < $(window).scrollTop()) {
+        $('html,body').animate({ scrollTop: $alert.offset().top - 60 });
+    }
+}
+
 function clearFormError(vmId) {
-    var $form = _findForm(vmId);
+    var $form = findForm(vmId);
     var $err = $form.find('.uk-alert-danger');
     $err.text('').hide();
     $form.find('input').removeClass('uk-form-danger');
+    $form.find('select').removeClass('uk-form-danger');
 }
 
 function bindFormError(vmId) {
@@ -58,14 +76,7 @@ function bindFormError(vmId) {
             console.log('Error: ' + JSON.stringify(result));
             // try find form:
             clearFormError(vmId);
-            var $form = _findForm(vmId);
-            var $err = $form.find('.uk-alert-danger');
-            $err.text(result.message || result.error).show();
-            if (result.error === 'parameter:invalid') {
-                if (result.data) {
-                    $form.find('input[name=' + result.data + ']').addClass('uk-form-danger');
-                }
-            }
+            showFormError(result, vmId);
         });
     };
 }
