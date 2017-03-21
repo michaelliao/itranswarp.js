@@ -32,8 +32,6 @@
 })();
 // END FIX
 
-Vue.http.options.timeout = 5000;
-
 // find a jQuery form object that within a #vm scope:
 function findForm(vmId) {
     var $form = $('#' + (vmId || 'vm'));
@@ -80,6 +78,8 @@ function bindFormError(vmId) {
         });
     };
 }
+
+
 </script>
 
 <style>

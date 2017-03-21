@@ -70,8 +70,7 @@ function Page(index, size=10) {
             index: this.index,
             size: this.size,
             total: this.total,
-            pages: this.pages,
-            list: this.list
+            pages: this.pages
         };
     };
 

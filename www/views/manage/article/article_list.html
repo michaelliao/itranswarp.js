@@ -141,7 +141,7 @@ function initVM(data) {
                 </tr>
             </tbody>
         </table>
-        <div v-component="pagination" v-with="page"></div>
+        <div is="pagination" v-bind:page="page"></div>
     </div>
 
 {% endblock %}

@@ -431,10 +431,35 @@ function postJSON(url, data, callback) {
     }
     _httpJSON('POST', url, data, callback);
 }
-
 // register custom filters for Vue:
 
 if (typeof(Vue)!=='undefined') {
+    console.log('init Vue global settings...');
+    var createPageList = function (page) {
+        if (page.pages <= 1) {
+            return [1];
+        }
+        if (page.pages === 2) {
+            return [1, 2];
+        }
+        let
+            i,
+            list = [1],
+            start = Math.max(2, index - 4),
+            end = Math.min(page.pages-1, index + 4);
+        if (start > 2) {
+            list.push('...');
+        }
+        for (i=start; i<=end; i++) {
+            list.push(i);
+        }
+        if (end < (page.pages-1)) {
+            list.push('...');
+        }
+        list.push(page.pages);
+        return list;
+    };
+    Vue.http.options.timeout = 5000;
     Vue.filter('datetime', function (value) {
         var d = value;
         if (typeof(value)==='number') {
@@ -444,10 +469,17 @@ if (typeof(Vue)!=='undefined') {
     });
     Vue.filter('size', size2string);
     Vue.component('pagination', {
+        props: ['page'],
+        data: function () {
+            console.log('init page list: ' + createPageList(this.page));
+            return {
+                list: createPageList(this.page)
+            }
+        },
         template: '<ul class="uk-pagination">' +
-                  '  <li v-for="i in list" v-attr="class: i===index?\'uk-active\':\'x-undefined\'">' +
-                  '    <a v-if="i!==\'...\' && i!==index" v-attr="href: \'javascript:gotoPage(\' + i + \')\'">{{ i }}</a>' +
-                  '    <span v-if="i===\'...\' || i===index">{{ i }}</span>' +
+                  '  <li v-for="i in this.list" v-bind:class="{\'uk-active\':i===page.index}">' +
+                  '    <a v-if="i!==\'...\' && i!==page.index" v-bind:href="\'javascript:gotoPage(\' + i + \')\'">{{ i }}</a>' +
+                  '    <span v-if="i===\'...\' || i===page.index">{{ i }}</span>' +
                   '  </li>' +
                   '</ul>'
     });
