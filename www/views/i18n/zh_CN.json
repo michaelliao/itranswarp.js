@@ -1,9 +1,11 @@
 {
     "All": "所有",
+    "April": "四月",
     "Article": "文章",
     "Articles": "文章",
     "Attachment": "附件",
     "Attachments": "附件",
+    "August": "八月",
 
     "Back": "返回",
     "Board": "板块",
@@ -17,6 +19,7 @@
     "Content": "内容",
     "Created At": "创建时间",
 
+    "December": "十二月",
     "Delete": "删除",
     "Discuss": "讨论",
     "Draft": "草稿",
@@ -24,14 +27,21 @@
     "Edit": "编辑",
     "Email": "电子邮件",
 
+    "February": "二月",
+    "Fri": "周五",
+
     "Home": "首页",
     "Hot Articles": "热门文章",
 
     "Index": "目录",
 
     "January": "一月",
+    "June": "六月",
+    "July": "七月",
 
     "Make a Comment": "发表评论",
+    "March": "三月",
+    "May": "五月",
     "Mon": "周一",
 
     "Navigation": "导航",
@@ -42,6 +52,9 @@
     "New Navigation": "新导航",
     "New Topic": "新话题",
     "New Wiki": "新维基",
+    "November": "十一月",
+
+    "October": "十月",
 
     "Password": "口令",
     "Please sign in": "请登录",
@@ -57,21 +70,26 @@
     "Replies": "回复",
     "Reply": "回复",
 
+    "Sat": "周六",
     "Save": "保存",
     "Say something": "说点什么吧",
     "Search": "搜索",
     "Search result": "搜索结果",
+    "September": "九月",
     "Setting": "设置",
     "Settings": "设置",
     "Sign In": "登录",
     "Sign Out": "登出",
     "Snippets": "片段",
+    "Sun": "周日",
 
     "Tags": "标签",
+    "Thu": "周四",
     "This reply was deleted": "该回复已被删除",
     "Title": "标题",
     "Topic": "话题",
     "Topics": "话题",
+    "Tue": "周二",
 
     "User": "用户",
     "Users": "用户",
