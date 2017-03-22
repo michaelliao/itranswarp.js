@@ -112,6 +112,30 @@ if (! Number.prototype.toDateTime) {
         }
         return arr.join('');
     };
+    Number.prototype.toDate = function(format) {
+        var fmt = format || 'yyyy-MM-dd'
+        var dt = new Date(this);
+        var arr = fmt.split(token);
+        for (var i=0; i<arr.length; i++) {
+            var s = arr[i];
+            if (s && s in replaces) {
+                arr[i] = replaces[s](dt);
+            }
+        }
+        return arr.join('');
+    };
+    Number.prototype.toTime = function(format) {
+        var fmt = format || 'hh:mm'
+        var dt = new Date(this);
+        var arr = fmt.split(token);
+        for (var i=0; i<arr.length; i++) {
+            var s = arr[i];
+            if (s && s in replaces) {
+                arr[i] = replaces[s](dt);
+            }
+        }
+        return arr.join('');
+    };
 }
 
 if (! Number.prototype.toFileSize) {

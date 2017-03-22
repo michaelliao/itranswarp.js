@@ -59,7 +59,8 @@ function initVM(article, categories) {
             description: article.description,
             category_id: article.category_id,
             tags: article.tags,
-            publish: article.publish_at ? article.publish_at.toDateTime() : '',
+            publish_date: article.publish_at ? article.publish_at.toDate() : '',
+            publish_time: article.publish_at ? article.publish_at.toTime() : '',
             content: article.content || ''
         },
         created: function () {
@@ -73,13 +74,28 @@ function initVM(article, categories) {
                     description: this.description,
                     category_id: this.category_id,
                     tags: this.tags
-                }
-                if (this.publish) {
-                    var pt = parseDateTime(this.publish);
-                    if (isNaN(pt)) {
-                        throw { error: 'parameter:invalid', data: 'publish_at', message: 'Invalid publish time.'};
+                };
+                var pubDate = findForm().find('input[name=publish_date]').val().trim();
+                var pubTime = findForm().find('input[name=publish_time]').val().trim();
+                if (pubDate !== '' || pubTime !== '') {
+                    var ts;
+                    if (pubDate === '') {
+                        throw { error: 'parameter:invalid', data: 'publish_date', message: 'Invalid publish date.'};
                     }
-                    data.publish_at = pt;
+                    if (pubTime === '') {
+                        ts = Date.parse(pubDate);
+                        if (isNaN(ts)) {
+                            throw { error: 'parameter:invalid', data: 'publish_date', message: 'Invalid publish date.'};
+                        }
+                    } else {
+                        ts = Date.parse(pubDate + 'T' + pubTime);
+                        if (isNaN(ts)) {
+                            throw { error: 'parameter:invalid', data: 'publish_time', message: 'Invalid publish time.'};
+                        }
+                    }
+                    // adjust timezone:
+                    ts = ts + (new Date()).getTimezoneOffset() * 60000;
+                    data.publish_at = ts;
                 }
                 var content = $('#content-editor').val();
                 if (this.content !== content) {
@@ -120,6 +136,7 @@ function initVM(article, categories) {
             return "{{ _('Content has been changed.') }}";
         }
     };
+    window.vm=vm;
 
     // fix vue select init:
 //    $('select[name=category_id]').val(article.category_id || '');
@@ -198,7 +215,6 @@ function initVM(article, categories) {
                     <label class="uk-form-label">{{ _('Category') }}:</label>
                     <div class="uk-form-controls">
                         <select v-model="category_id" name="category_id" class="uk-width-1-1">
-                            <option value="">-- {{ _('Select a category') }} --</option>
                             {% raw %}
                             <option v-for="category in categories" v-bind:value="category.id" v-text="category.name"></option>
                             {% endraw %}
@@ -214,7 +230,8 @@ function initVM(article, categories) {
                 <div class="uk-form-row">
                     <label class="control-label">Publish At:</label>
                     <div class="controls">
-                        <input v-model="publish" name="publish_at" type="text" class="uk-width-1-1" placeholder="YYYY-MM-DD hh:mm:ss">
+                        <input v-once v-model="publish_date" name="publish_date" type="text" class="uk-width-1-6" data-uk-datepicker="{format:'YYYY-MM-DD', i18n:{ months:['{{ _('January') }}' , '{{ _('February') }}' , '{{ _('March') }}' , '{{ _('April') }}' , '{{ _('May') }}' , '{{ _('June') }}' , '{{ _('July') }}' , '{{ _('August') }}' , '{{ _('September') }}' , '{{ _('October') }}' , '{{ _('November') }}' , '{{ _('December') }}'], weekdays:['{{ _('Sun') }}' , '{{ _('Mon') }}' , '{{ _('Tue') }}' , '{{ _('Wed') }}' , '{{ _('Thu') }}' , '{{ _('Fri') }}' , '{{ _('Sat') }}'] } }">
+                        <input v-once v-model="publish_time" name="publish_time"type="text" data-uk-timepicker>
                     </div>
                 </div>
                 <div class="uk-form-row">
