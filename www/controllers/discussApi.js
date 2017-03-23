@@ -401,7 +401,7 @@ module.exports = {
         let
             id = ctx.params.id,
             data = ctx.request.body,
-            board = await getBoard(id);
+            board = await Board.findById(id);
         if (data.name) {
             board.name = data.name.trim();
         }
