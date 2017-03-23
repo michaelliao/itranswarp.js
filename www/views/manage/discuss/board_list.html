@@ -20,62 +20,60 @@ function initVM(boards) {
             boards: boards
         },
         methods: {
-            sort: function(event) {
-                var ids = [];
+            find: function (id) {
                 for (var i = 0; i < this.boards.length; i ++) {
-                    ids.push(this.boards[i].id);
-                }
-                postJSON('/api/boards/all/sort', {
-                    ids: ids
-                }, function(err, result) {
-                    if (err) {
-                        return error(err);
-                    }
-                    refresh();
-                });
-            },
-            find: function(id) {
-                for (var i = 0; i < this.boards.length; i ++) {
-                    var obj = this.boards[i];
-                    if (obj.id===id) {
+                    var b = this.boards[i];
+                    if (b.id===id) {
                         return i;
                     }
                 }
                 throw 'logic error';
             },
-            swap: function(index1, index2) {
-                var obj = this.boards[index2];
+            swap: function (index1, index2) {
+                var b = this.boards[index2];
                 this.boards.splice(index2, 1);
-                this.boards.splice(index1, 0, obj);
+                this.boards.splice(index1, 0, b);
                 $('#sort').show();
             },
-            moveUp: function(id) {
+            moveUp: function (id) {
                 var index = this.find(id);
                 if (index===(-1) || index===0) {
                     return;
                 }
                 this.swap(index - 1, index);
             },
-            moveDown: function(id) {
+            moveDown: function (id) {
                 var index = this.find(id);
                 if (index===(-1) || index===(this.boards.length-1)) {
                     return;
                 }
                 this.swap(index, index + 1);
             },
-            editBoard: function(id) {
+            sort: function () {
+                var ids = [];
+                for (var i = 0; i < this.boards.length; i ++) {
+                    ids.push(this.boards[i].id);
+                }
+                var that = this;
+                that.$resource('/api/boards/all/sort').save({ ids: ids }).then(function (resp) {
+                    resp.json().then(function (result) {
+                        refresh();
+                    });
+                }, onJsonError);
+            },
+            editBoard: function (id) {
                 location.assign('edit_board?id=' + id);
             },
             lockBoard: function(id, locked) {
-                var obj = this.boards[this.find(id)];
-                if (confirm(locked ? 'Board \"' + obj.name + '\" will be locked. Continue?' : 'Board \"' + obj.name + '\" will be unlock. Continue?')) {
-                    postJSON('/api/boards/' + obj.id + (locked ? '/lock' : '/unlock'), function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        location.assign('{{ form.redirect }}');
-                    });
-                }
+                var b = this.boards[this.find(id)];
+                var that = this;
+                UIkit.modal.confirm('Board \"' + b.name + '\" will be ' + (locked ? 'locked' : 'unlocked') + '. Continue?', function() {
+                    that.$resource('/api/boards/' + b.id + (locked ? '/lock' : '/unlock')).save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            location.assign('{{ form.redirect }}');
+                        });
+                    }, onJsonFormError);
+                });
             }
         }
     });
@@ -116,30 +114,31 @@ function initVM(boards) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="obj in boards">
-                    <td><span v-text="obj.tag"></span></td>
+                <tr v-for="b in boards">
+                    <td><span v-text="b.tag"></span></td>
                     <td>
-                        <a v-text="obj.name" v-attr="href: '/discuss/' + obj.id" target="_blank"></a>
-                        <i v-if="obj.locked" class="uk-icon-lock"></i>
+                        <a v-text="b.name" v-bind:href="'/discuss/' + b.id" target="_blank"></a>
+                        <i v-if="b.locked" class="uk-icon-lock"></i>
                     </td>
-                    <td><span v-text="obj.description"></span></td>
-                    <td><span v-text="obj.created_at.toDateTime()"></span></td>
+                    <td><span v-text="b.description"></span></td>
+                    <td><span v-text="b.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-on="click: moveUp(obj.id)" title="Move this board up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
-                        <a v-on="click: moveDown(obj.id)" title="Move this board down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
-                        <a v-on="click: editBoard(obj.id)" title="Edit this board" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-if="!obj.locked" v-on="click: lockBoard(obj.id, true)" title="Lock this board" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
-                        <a v-if="obj.locked" v-on="click: lockBoard(obj.id, false)" title="Unock this board" href="#0" class="x-btn"><i class="uk-icon-circle-o"></i></a>
+                        <a v-on:click="moveUp(b.id)" title="Move this board up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
+                        <a v-on:click="moveDown(b.id)" title="Move this board down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
+                        <a v-on:click="editBoard(b.id)" title="Edit this board" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-if="!b.locked" v-on:click="lockBoard(b.id, true)" title="Lock this board" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
+                        <a v-if="b.locked" v-on:click="lockBoard(b.id, false)" title="Unock this board" href="#0" class="x-btn"><i class="uk-icon-circle-o"></i></a>
                     </td>
-                </tr>
-                <tr v-if="categories.length===0">
-                    <td colspan="5">No board found.</td>
                 </tr>
             </tbody>
         </table>
 
+        <div v-if="boards.length===0" class="x-empty-list">
+            <p>No board found.</p>
+        </div>
+
         <div id="sort" class="uk-margin" style="text-align:right; display:none">
-            <button v-on="click: sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
+            <button v-on:click="sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
         </div>
     </div>
 

@@ -29,20 +29,21 @@ function initVM(board) {
             tag: board.tag,
             description: board.description,
         },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
         methods: {
-            submit: function(event) {
-                event.preventDefault();
-                $('#vm').find('form').postJSON('{{ form.action }}', this.$data, function(err, result) {
-                    if (err) {
-                        return;
-                    }
-                    location.assign('{{ form.redirect }}');
-                });
+            submit: function() {
+                var that = this;
+                that.$resource('{{ form.action }}').save(that.$data).then(function (resp) {
+                    resp.json().then(function (result) {
+                        location.assign('{{ form.redirect }}');
+                    });
+                }, onJsonFormError);
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 
@@ -56,9 +57,9 @@ function initVM(board) {
 
     <div id="vm" class="uk-width-1-1">
         <ul class="uk-tab" data-uk-tab>
-            <li class="uk-active"><a href="#0">Boards</a></li>
-            <li><a href="#0" onclick="location.assign('topic_list')">Topics</a></li>
-            <li><a href="#0" onclick="location.assign('reply_list')">Replies</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Boards') }}</a></li>
+            <li><a href="#0" onclick="location.assign('topic_list')">{{ _('Topics') }}</a></li>
+            <li><a href="#0" onclick="location.assign('reply_list')">{{ _('Replies') }}</a></li>
         </ul>
 
         <form v-on:submit.prevent="submit" class="uk-margin uk-form uk-form-stacked">
@@ -66,27 +67,27 @@ function initVM(board) {
             <fieldset>
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Name:</label>
+                    <label class="uk-form-label">{{ _('Name') }}:</label>
                     <div class="uk-form-controls">
-                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1">
+                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Tag:</label>
+                    <label class="uk-form-label">{{ _('Tag') }}:</label>
                     <div class="uk-form-controls">
-                        <input v-model="tag" type="text" maxlength="50" class="uk-width-1-1">
+                        <input v-model="tag" name="tag" type="text" maxlength="50" class="uk-width-1-1">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Description:</label>
+                    <label class="uk-form-label">{{ _('Description') }}:</label>
                     <div class="uk-form-controls">
-                        <input v-model="description" type="text" maxlength="100" class="uk-width-1-1">
+                        <input v-model="description" name="description" type="text" maxlength="100" class="uk-width-1-1">
                     </div>
                 </div>
                 <div class="uk-form-row">
                     <div class="uk-form-controls">
-                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
-                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> {{ _('Save') }}</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> {{ _('Cancel') }}</button>
                     </div>
                 </div>
             </fieldset>
