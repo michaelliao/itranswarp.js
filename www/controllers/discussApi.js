@@ -94,7 +94,7 @@ async function getBoards() {
 }
 
 async function _lockBoard(id, locked) {
-    let board = await getBoard(id);
+    let board = await Board.findById(id);
     board.locked = locked;
     await board.save();
     return board;
@@ -458,7 +458,9 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        let r = await _lockBoard(id, true);
+        let
+            id = ctx.params.id,
+            r = await _lockBoard(id, true);
         await cache.remove(constants.cache.BOARDS);
         ctx.rest(r);
     },
@@ -472,7 +474,9 @@ module.exports = {
          * @return {object} Board object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        let r = await _lockBoard(id, false);
+        let
+            id = ctx.params.id,
+            r = await _lockBoard(id, false);
         await cache.remove(constants.cache.BOARDS);
         ctx.rest(r);
     },
