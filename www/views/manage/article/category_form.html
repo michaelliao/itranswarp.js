@@ -11,7 +11,7 @@ $(function() {
     if (id) {
         getJSON('/api/categories/' + id, function (err, category) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(category);
         });
@@ -43,7 +43,7 @@ function initVM(category) {
                     resp.json().then(function (result) {
                         location.assign('{{ form.redirect }}');
                     });
-                }, bindFormError());
+                }, onJsonFormError);
             }
         }
     });

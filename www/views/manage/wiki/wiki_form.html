@@ -9,7 +9,7 @@ $(function () {
     if (id) {
         getJSON('/api/wikis/' + id, function (err, wiki) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(wiki);
         });

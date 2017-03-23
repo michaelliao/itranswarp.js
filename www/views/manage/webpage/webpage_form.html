@@ -9,7 +9,7 @@ $(function() {
     if (id) {
         getJSON('/api/webpages/' + id, function (err, webpage) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(webpage);
         });
@@ -50,8 +50,7 @@ function initVM(webpage) {
             content: webpage.content || ''
         },
         methods: {
-            submit: function(event) {
-                event.preventDefault();
+            submit: function() {
                 var data = {
                     name: this.name,
                     alias: this.alias,
@@ -62,13 +61,13 @@ function initVM(webpage) {
                 if (this.content !== content) {
                     data.content = content;
                 }
-                $('#vm').find('form').postJSON('{{ form.action }}', data, function(err, result) {
-                    if (err) {
-                        return;
-                    }
-                    window.onbeforeunload = null;
-                    location.assign('{{ form.redirect }}');
-                });
+                var that = this;
+                that.$resource('{{ form.action }}').save(data).then(function (resp) {
+                    resp.json().then(function (result) {
+                        that.saved = true;
+                        location.assign('{{ form.redirect }}');
+                    });
+                }, onJsonFormError);
             }
         }
     });
@@ -77,6 +76,9 @@ function initVM(webpage) {
 
     // check content when unload:
     window.onbeforeunload = function() {
+        if (vm.saved) {
+            return;
+        }
         if (vm.content !== $('#content-editor').val()) {
             return 'Content has been changed.';
         }
@@ -107,7 +109,7 @@ function initVM(webpage) {
                 <div class="uk-form-row">
                     <label class="uk-form-label">Name:</label>
                     <div class="uk-form-controls">
-                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
                     </div>
                 </div>
 

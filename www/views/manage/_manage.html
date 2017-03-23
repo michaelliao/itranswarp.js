@@ -11,6 +11,8 @@
     <script src="/static/js/marked.js"></script>
     <script src="/static/js/uikit/uikit.js"></script>
     <script src="/static/js/uikit/components/autocomplete.js"></script>
+    <script src="/static/js/uikit/components/sticky.js"></script>
+    <script src="/static/js/uikit/components/notify.js"></script>
     <script src="/static/js/uikit/components/datepicker.js"></script>
     <script src="/static/js/uikit/components/timepicker.js"></script>
     <script src="/static/js/uikit/components/htmleditor.js"></script>
@@ -25,12 +27,14 @@
     var _jShow = $.fn.show;
     var _jHide = $.fn.hide;
     $.fn.show = function() {
-        _jShow.apply(this);
+        var r = _jShow.apply(this);
         this.removeClass('uk-hidden');
+        return r;
     };
     $.fn.hide = function() {
-        _jHide.apply(this);
+        var r = _jHide.apply(this);
         this.addClass('uk-hidden');
+        return r;
     };
 })();
 // END FIX
@@ -63,6 +67,15 @@ function showFormError(err, vmId) {
     }
 }
 
+function showError(err) {
+    UIkit.notify({
+        message: '<i class="uk-icon-exclamation-triangle"></i> '+ (err.message || err.error),
+        status: 'danger',
+        timeout: 0,
+        pos: 'top-center'
+    });
+}
+
 function clearFormError(vmId) {
     var $form = findForm(vmId);
     var $err = $form.find('.uk-alert-danger');
@@ -71,15 +84,20 @@ function clearFormError(vmId) {
     $form.find('select').removeClass('uk-form-danger');
 }
 
-function bindFormError(vmId) {
-    return function (resp) {
-        resp.json().then(function (result) {
-            console.log('Error: ' + JSON.stringify(result));
-            // try find form:
-            clearFormError(vmId);
-            showFormError(result, vmId);
-        });
-    };
+function onJsonFormError(resp) {
+    resp.json().then(function (result) {
+        console.log('Error: ' + JSON.stringify(result));
+        // try find form:
+        clearFormError();
+        showFormError(result);
+    });
+}
+
+function onJsonError(resp) {
+    resp.json().then(function (err) {
+        console.log('Error: ' + JSON.stringify(err));
+        showError(err);
+    });
 }
 
 
@@ -119,9 +137,6 @@ function _display_error($obj, err) {
 }
 function error(err) {
     _display_error($('#error'), err);
-}
-function fatal(err) {
-    _display_error($('#loading'), err);
 }
 </script>
 

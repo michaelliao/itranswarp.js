@@ -8,14 +8,14 @@
 $(function () {
     getJSON('/api/categories', function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         var categories = data.categories;
         var id = '{{ id }}';
         if (id) {
             getJSON('/api/articles/' + id, function (err, article) {
                 if (err) {
-                    return fatal(err);
+                    return showError(err);
                 }
                 initVM(article, categories);
             });
@@ -122,7 +122,7 @@ function initVM(article, categories) {
                         that.saved = true;
                         location.assign('{{ form.redirect }}');
                     });
-                }, bindFormError());
+                }, onJsonFormError);
             }
         }
     });
@@ -136,7 +136,6 @@ function initVM(article, categories) {
             return "{{ _('Content has been changed.') }}";
         }
     };
-    window.vm=vm;
 
     // fix vue select init:
 //    $('select[name=category_id]').val(article.category_id || '');

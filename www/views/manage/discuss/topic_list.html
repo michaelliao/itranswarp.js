@@ -7,13 +7,13 @@
 $(function() {
     getJSON('/api/boards', function (err, r) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         getJSON('/api/topics', {
             page: {{ pageIndex }}
         }, function (err, data) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             bindBoards(data.topics, r.boards);
             initVM(data.topics, data.page)

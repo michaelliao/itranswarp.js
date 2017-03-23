@@ -136,13 +136,13 @@ $(function() {
     // load wiki:
     getJSON('/api/wikis/{{ id }}', function (err, w) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         g_wiki = w;
         // load tree data:
         getJSON('/api/wikis/' + g_wiki.id + '/wikipages', function(err, result) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initTree(result);
         });

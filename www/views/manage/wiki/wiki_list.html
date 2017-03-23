@@ -7,7 +7,7 @@
 $(function() {
     getJSON('/api/wikis', function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data.wikis);
     });

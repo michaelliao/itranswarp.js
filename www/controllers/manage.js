@@ -142,7 +142,7 @@ module.exports = {
     },
 
     'GET /manage/webpage/edit_webpage': async (ctx, next) => {
-        let id = getId(ctx);
+        let id = _getId(ctx);
         ctx.render('manage/webpage/webpage_form.html', await _getModel({
             id: id,
             form: {

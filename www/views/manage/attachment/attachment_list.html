@@ -9,7 +9,7 @@ $(function() {
         page: {{ pageIndex }}
     }, function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data);
     });
@@ -21,6 +21,10 @@ function initVM(data) {
         data: {
             attachments: data.attachments,
             page: data.page
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
         },
         methods: {
             find: function(id) {
@@ -34,19 +38,17 @@ function initVM(data) {
             },
             deleteAttachment: function(id) {
                 var a = this.find(id);
-                if (confirm('Attachment \"' + a.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/attachments/' + a.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                UIkit.modal.confirm('Attachment \"' + a.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/attachments/' + a.id + '/delete').save({}).then(function (resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 {% endblock %}
@@ -67,7 +69,7 @@ function initVM(data) {
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th width="20%">Preview</th>
+                    <th width="20%">{{ _('Preview') }}</th>
                     <th width="15%">Mime / Size</th>
                     <th width="40%">Name / Description</th>
                     <th width="15%">Created At</th>
@@ -77,7 +79,7 @@ function initVM(data) {
         	<tbody>
                 <tr v-for="a in attachments">
                     <td>
-                        <a v-attr="href: '/files/attachments/' + a.id + '/'" target="_blank"><img v-attr="src: '/files/attachments/' + a.id + '/s'" style="width: 160px;" /></a>
+                        <a v-bind:href="'/files/attachments/' + a.id + '/'" target="_blank"><img v-bind:src="'/files/attachments/' + a.id + '/s'" style="width: 160px;" /></a>
                     </td>
                     <td>
                         <p v-text="a.mime"></p>
@@ -90,16 +92,17 @@ function initVM(data) {
                     </td>
                     <td><span v-text="a.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-on="click: deleteAttachment(a.id)" href="#0" title="Delete Attachment" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-on:click="deleteAttachment(a.id)" href="#0" title="Delete Attachment" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
-                </tr>
-                <tr v-if="page.totalItems===0">
-                    <td colspan="5">No attachment found.</td>
                 </tr>
             </tbody>
         </table>
 
-        <div v-component="pagination" v-with="page"></div>
+        <div v-if="page.totalItems===0" class="x-empty-list">
+            <p>No attachment found.</p>
+        </div>
+
+        <div is="pagination" v-bind:page="page"></div>
     </div>
 
 {% endblock %}

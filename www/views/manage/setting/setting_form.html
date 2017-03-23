@@ -28,11 +28,11 @@ var GROUP = '{{ group }}';
 $(function() {
     getJSON('/api/settings/definitions', function (err, defs) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         getJSON('/api/settings/' + GROUP, function (err, settings) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(defs[GROUP], settings);
         });

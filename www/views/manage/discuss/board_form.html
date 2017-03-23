@@ -10,7 +10,7 @@ $(function() {
     if (id) {
         getJSON('/api/boards/' + id, function (err, board) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(board);
         });

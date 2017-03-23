@@ -9,7 +9,7 @@ $(function() {
         page: {{ pageIndex }}
     }, function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data.replies, data.page)
     });

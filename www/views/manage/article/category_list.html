@@ -8,7 +8,7 @@
 $(function() {
     getJSON('/api/categories', function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data);
     });
@@ -26,20 +26,6 @@ function initVM(data) {
             $('#vm').show();
         },
         methods: {
-            sort: function(event) {
-                var ids = [];
-                for (var i = 0; i < this.categories.length; i ++) {
-                    ids.push(this.categories[i].id);
-                }
-                postJSON('/api/categories/all/sort', {
-                    ids: ids
-                }, function(err, result) {
-                    if (err) {
-                        return fatal(err);
-                    }
-                    refresh();
-                });
-            },
             find: function(id) {
                 for (var i = 0; i < this.categories.length; i ++) {
                     var c = this.categories[i];
@@ -69,19 +55,31 @@ function initVM(data) {
                 }
                 this.swap(index, index + 1);
             },
-            editCategory: function(id) {
+            sort: function(event) {
+                var ids = [];
+                var that = this;
+                for (var i = 0; i < this.categories.length; i ++) {
+                    ids.push(this.categories[i].id);
+                }
+                that.$resource('/api/categories/all/sort').save({ ids: ids }).then(function (resp) {
+                    resp.json().then(function (result) {
+                        refresh();
+                    });
+                }, onJsonError);
+            },
+            editCategory: function (id) {
                 location.assign('edit_category?id=' + id);
             },
             deleteCategory: function(id) {
                 var c = this.categories[this.find(id)];
-                if (confirm('Category \"' + c.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/categories/' + c.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                };
+                var that = this;
+                UIkit.modal.confirm('Category \"' + c.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/categories/' + c.id + '/delete').save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             }
         }
     });
@@ -135,7 +133,7 @@ function initVM(data) {
                 </tr>
             </tbody>
         </table>
-        <div v-if="categories.length===0">
+        <div v-if="categories.length===0" class="x-empty-list">
             <p>No category found.</p>
         </div>
 

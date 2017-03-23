@@ -8,14 +8,14 @@
 $(function() {
     getJSON('/api/categories', function (err, d) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         var categories = d.categories;
         getJSON('/api/articles', {
             page: '{{ pageIndex }}'
         }, function (err, data) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             bindCategories(data.articles, categories);
             initVM({
@@ -68,15 +68,15 @@ function initVM(data) {
                 throw 'logic error';
             },
             deleteArticle: function(id) {
-                var a = this.find(id);
-                if (confirm('Article \"' + a.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/articles/' + a.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                var a = that.find(id);
+                UIkit.modal.confirm('Article \"' + a.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/articles/' + a.id + '/delete').save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             },
         }
     });
@@ -132,15 +132,17 @@ function initVM(data) {
                         <p><span v-text="a.created_at.toDateTime()"></span></p>
                     </td>
                     <td>
-                        <a v-on:click=" editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on:click="editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
                         <a v-on:click="deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
-                <tr v-if="page.totalItems===0">
-                    <td colspan="5">No article found.</td>
-                </tr>
             </tbody>
         </table>
+        
+        <div v-if="page.totalItems===0" class="x-empty-list">
+            <p>No category found.</p>
+        </div>
+
         <div is="pagination" v-bind:page="page"></div>
     </div>
 

@@ -9,7 +9,7 @@ $(function () {
     if (id) {
         getJSON('/api/wikis/wikipages/' + id, function (err, wp) {
             if (err) {
-                return fatal(err);
+                return showError(err);
             }
             initVM(wp);
         });

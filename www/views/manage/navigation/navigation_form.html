@@ -8,7 +8,7 @@
 $(function() {
     getJSON('/api/navigations/all/menus', function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data.navigationMenus);
     });

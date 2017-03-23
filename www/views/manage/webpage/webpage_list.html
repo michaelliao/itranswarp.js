@@ -8,7 +8,7 @@
 $(function() {
     getJSON('/api/webpages', function (err, data) {
         if (err) {
-            return fatal(err);
+            return showError(err);
         }
         initVM(data.webpages);
     });
@@ -20,8 +20,12 @@ function initVM(webpages) {
         data: {
             webpages: webpages
         },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
         methods: {
-            find: function(id) {
+            find: function (id) {
                 for (var i = 0; i < this.webpages.length; i ++) {
                     var p = this.webpages[i];
                     if (p.id===id) {
@@ -30,24 +34,22 @@ function initVM(webpages) {
                 }
                 throw 'logic error';
             },
-            editWebpage: function(id) {
+            editWebpage: function (id) {
                 location.assign('edit_webpage?id=' + id);
             },
-            deleteWebpage: function(id) {
+            deleteWebpage: function (id) {
                 var p = this.webpages[this.find(id)];
-                if (confirm('Web page \"' + p.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/webpages/' + p.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                UIkit.modal.confirm('Web page \"' + p.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/webpages/' + p.id + '/delete').save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 };
 
 </script>
@@ -81,7 +83,7 @@ function initVM(webpages) {
             <tbody>
                 <tr v-for="p in webpages">
                     <td>
-                        <a v-text="p.name" v-attr="href: '/webpage/'+p.alias" target="_blank"></a>
+                        <a v-text="p.name" v-bind:href="'/webpage/'+p.alias" target="_blank"></a>
                     </td>
                     <td><span v-text="p.alias"></span></td>
                     <td>
@@ -89,15 +91,15 @@ function initVM(webpages) {
                     </td>
                     <td><span v-text="p.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-on="click: editWebpage(p.id)" title="Edit Web Page" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-on="click: deleteWebpage(p.id)" title="Delete Web Page" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-on:click="editWebpage(p.id)" title="Edit Web Page" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on:click="deleteWebpage(p.id)" title="Delete Web Page" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
-                </tr>
-                <tr v-if="webpages.length===0">
-                    <td colspan="5">No web page found.</td>
                 </tr>
             </tbody>
         </table>
+        <div v-if="webpages.length===0" class="x-empty-list">
+            <p>No web page found.</p>
+        </div>
     </div>
 
 {% endblock%}
