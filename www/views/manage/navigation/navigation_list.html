@@ -20,21 +20,7 @@ function initVM(navigations) {
             navigations: navigations
         },
         methods: {
-            sort: function(event) {
-                var ids = [];
-                for (var i = 0; i < this.navigations.length; i ++) {
-                    ids.push(this.navigations[i].id);
-                }
-                postJSON('/api/navigations/all/sort', {
-                    ids: ids
-                }, function(err, result) {
-                    if (err) {
-                        return error(err);
-                    }
-                    refresh();
-                });
-            },
-            find: function(id) {
+            find: function (id) {
                 for (var i = 0; i < this.navigations.length; i ++) {
                     var c = this.navigations[i];
                     if (c.id===id) {
@@ -43,28 +29,42 @@ function initVM(navigations) {
                 }
                 throw 'logic error';
             },
-            swap: function(index1, index2) {
+            swap: function (index1, index2) {
                 var obj = this.navigations[index2];
                 this.navigations.splice(index2, 1);
                 this.navigations.splice(index1, 0, obj);
                 $('#sort').show();
             },
-            moveUp: function(id) {
+            moveUp: function (id) {
                 var index = this.find(id);
                 if (index===(-1) || index===0) {
                     return;
                 }
                 this.swap(index - 1, index);
             },
-            moveDown: function(id) {
+            moveDown: function (id) {
                 var index = this.find(id);
                 if (index===(-1) || index===(this.navigations.length-1)) {
                     return;
                 }
                 this.swap(index, index + 1);
             },
-            deleteNavigation: function(id) {
+            sort: function () {
+                var ids = [];
+                for (var i = 0; i < this.navigations.length; i ++) {
+                    ids.push(this.navigations[i].id);
+                }
+                var that = this;
+                that.$resource('/api/navigations/all/sort').save({ ids: ids }).then(function (resp) {
+                    resp.json().then(function (result) {
+                        refresh();
+                    });
+                }, onJsonError);
+            },
+            deleteNavigation: function (id) {
                 var n = this.navigations[this.find(id)];
+                var that = this;
+                
                 if (confirm('Delete navigation \"' + n.name + '\". Continue?')) {
                     postJSON('/api/navigations/' + n.id + '/delete', function(err, result) {
                         if (err) {
