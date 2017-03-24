@@ -1,3 +1,4 @@
+/*! UIkit 2.27.2 | http://www.getuikit.com | (c) 2014 YOOtheme | MIT License */
 (function(addon) {
 
     var component;
@@ -6,8 +7,8 @@
         component = addon(UIkit);
     }
 
-    if (typeof define == "function" && define.amd) {
-        define("uikit-autocomplete", ["uikit"], function(){
+    if (typeof define == 'function' && define.amd) {
+        define('uikit-autocomplete', ['uikit'], function(){
             return component || addon(UIkit);
         });
     }
@@ -44,17 +45,17 @@
         boot: function() {
 
             // init code
-            UI.$html.on("focus.autocomplete.uikit", "[data-uk-autocomplete]", function(e) {
+            UI.$html.on('focus.autocomplete.uikit', '[data-uk-autocomplete]', function(e) {
 
                 var ele = UI.$(this);
 
-                if (!ele.data("autocomplete")) {
-                    var obj = UI.autocomplete(ele, UI.Utils.options(ele.attr("data-uk-autocomplete")));
+                if (!ele.data('autocomplete')) {
+                    UI.autocomplete(ele, UI.Utils.options(ele.attr('data-uk-autocomplete')));
                 }
             });
 
             // register outer click for autocompletes
-            UI.$html.on("click.autocomplete.uikit", function(e) {
+            UI.$html.on('click.autocomplete.uikit', function(e) {
                 if (active && e.target!=active.input[0]) active.hide();
             });
         },
@@ -64,9 +65,11 @@
             var $this   = this,
                 select  = false,
                 trigger = UI.Utils.debounce(function(e) {
-                    if(select) {
+
+                    if (select) {
                         return (select = false);
                     }
+
                     $this.handle();
                 }, this.options.delay);
 
@@ -87,9 +90,10 @@
             this.dropdown.attr('aria-expanded', 'false');
 
             this.input.on({
-                "keydown": function(e) {
 
-                    if (e && e.which && !e.shiftKey) {
+                keydown: function(e) {
+
+                    if (e && e.which && !e.shiftKey && $this.visible) {
 
                         switch (e.which) {
                             case 13: // enter
@@ -118,14 +122,15 @@
                     }
 
                 },
-                "keyup": trigger
+
+                keyup: trigger
             });
 
-            this.dropdown.on("click", ".uk-autocomplete-results > *", function(){
+            this.dropdown.on('click', '.uk-autocomplete-results > *', function(){
                 $this.select();
             });
 
-            this.dropdown.on("mouseover", ".uk-autocomplete-results > *", function(){
+            this.dropdown.on('mouseover', '.uk-autocomplete-results > *', function(){
                 $this.pick(UI.$(this));
             });
 
@@ -198,7 +203,7 @@
 
             var data = this.selected.data();
 
-            this.trigger("select.uk.autocomplete", [data, this]);
+            this.trigger('selectitem.uk.autocomplete', [data, this]);
 
             if (data.value) {
                 this.input.val(data.value).trigger('change');
@@ -208,9 +213,15 @@
         },
 
         show: function() {
+
             if (this.visible) return;
+
             this.visible = true;
-            this.element.addClass("uk-open");
+            this.element.addClass('uk-open');
+
+            if (active && active!==this) {
+                active.hide();
+            }
 
             active = this;
 
@@ -223,7 +234,7 @@
         hide: function() {
             if (!this.visible) return;
             this.visible = false;
-            this.element.removeClass("uk-open");
+            this.element.removeClass('uk-open');
 
             if (active === this) {
                 active = false;
@@ -305,8 +316,6 @@
 
         render: function(data) {
 
-            var $this = this;
-
             this.dropdown.empty();
 
             this.selected = false;
@@ -317,7 +326,7 @@
 
             } else if(data && data.length) {
 
-                this.dropdown.append(this.template({"items":data}));
+                this.dropdown.append(this.template({items:data}));
                 this.show();
 
                 this.trigger('show.uk.autocomplete');

@@ -1,3 +1,4 @@
+/*! UIkit 2.27.2 | http://www.getuikit.com | (c) 2014 YOOtheme | MIT License */
 //  Based on Zeptos touch.js
 //  https://raw.github.com/madrobby/zepto/master/src/touch.js
 //  Zepto.js may be freely distributed under the MIT license.
@@ -18,7 +19,7 @@
   function longTap() {
     longTapTimeout = null;
     if (touch.last) {
-      touch.el.trigger('longTap');
+      if ( touch.el !== undefined ) touch.el.trigger('longTap');
       touch = {};
     }
   }
@@ -54,7 +55,7 @@
 
         var swipeDirectionFromVelocity = e.originalEvent.velocityX > 1 ? 'Right' : e.originalEvent.velocityX < -1 ? 'Left' : e.originalEvent.velocityY > 1 ? 'Down' : e.originalEvent.velocityY < -1 ? 'Up' : null;
 
-        if (swipeDirectionFromVelocity) {
+        if (swipeDirectionFromVelocity && touch.el !== undefined) {
           touch.el.trigger('swipe');
           touch.el.trigger('swipe'+ swipeDirectionFromVelocity);
         }
@@ -82,7 +83,7 @@
         longTapTimeout = setTimeout(longTap, longTapDelay);
 
         // adds the current touch contact for IE gesture recognition
-        if (gesture && ( e.type == 'MSPointerDown' || e.type == 'pointerdown' || e.type == 'touchstart' ) ) {
+        if (e.originalEvent && e.originalEvent.pointerId && gesture && ( e.type == 'MSPointerDown' || e.type == 'pointerdown' || e.type == 'touchstart' ) ) {
           gesture.addPointer(e.originalEvent.pointerId);
         }
 
@@ -114,8 +115,10 @@
         if ((touch.x2 && Math.abs(touch.x1 - touch.x2) > 30) || (touch.y2 && Math.abs(touch.y1 - touch.y2) > 30)){
 
           swipeTimeout = setTimeout(function() {
-            touch.el.trigger('swipe');
-            touch.el.trigger('swipe' + (swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2)));
+            if ( touch.el !== undefined ) {
+              touch.el.trigger('swipe');
+              touch.el.trigger('swipe' + (swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2)));
+            }
             touch = {};
           }, 0);
 
@@ -133,11 +136,11 @@
               // (cancelTouch cancels processing of single vs double taps for faster 'tap' response)
               var event = $.Event('tap');
               event.cancelTouch = cancelAll;
-              touch.el.trigger(event);
+              if ( touch.el !== undefined ) touch.el.trigger(event);
 
               // trigger double tap immediately
               if (touch.isDoubleTap) {
-                touch.el.trigger('doubleTap');
+                if ( touch.el !== undefined ) touch.el.trigger('doubleTap');
                 touch = {};
               }
 
@@ -145,7 +148,7 @@
               else {
                 touchTimeout = setTimeout(function(){
                   touchTimeout = null;
-                  touch.el.trigger('singleTap');
+                  if ( touch.el !== undefined ) touch.el.trigger('singleTap');
                   touch = {};
                 }, 250);
               }
@@ -159,7 +162,7 @@
       // when the browser window loses focus,
       // for example when a modal dialog is shown,
       // cancel all ongoing events
-      .on('touchcancel MSPointerCancel', cancelAll);
+      .on('touchcancel MSPointerCancel pointercancel', cancelAll);
 
     // scrolling the window indicates intention of the user
     // to scroll, not tap or swipe, so cancel all ongoing events
