@@ -100,6 +100,27 @@ function onJsonError(resp) {
     });
 }
 
+function processImageFile(file, callback) {
+    if (file.type!=='image/jpeg' && file.type!=='image/png') {
+        UIkit.modal.alert('File is not a valid image!');
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var
+            data = e.target.result;
+            index = data.indexOf(';base64,');
+        if ((index >= 0) && (index < 100)) {
+            callback({
+                image: data,
+                data: data.substring(index + 8)
+            });
+        } else {
+            UIkit.modal.alert('Browser does not support data URL!');
+        }
+    };
+    reader.readAsDataURL(file);
+}
 
 </script>
 
@@ -198,7 +219,7 @@ function uploadImage(callback) {
                     f = f.substring(0, pos);
                 }
                 $text.val(f);
-                processFile(lf, function (r) {
+                processImageFile(lf, function (r) {
                     imageData = r.data;
                     $preview.css('background-image', 'url(' + r.image + ')');
                     $upload.removeAttr('disabled');
