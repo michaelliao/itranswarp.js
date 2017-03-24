@@ -57,7 +57,7 @@ app.use(bodyParser());
 // set filter:
 var filters = {
     json: (input) => {
-        return input;
+        return JSON.stringify(input);
     },
     addslashes: (input) => {
         return input;
