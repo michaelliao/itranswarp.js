@@ -1,11 +1,18 @@
 {
+    "Alias": "别名",
     "All": "所有",
+    "All Articles": "所有文章",
+    "All Categories": "所有分类",
+    "All Comments": "所有评论",
+    "All Navigations": "所有导航",
+    "All Pages": "所有页面",
     "April": "四月",
     "Article": "文章",
     "Articles": "文章",
     "Attachment": "附件",
     "Attachments": "附件",
     "August": "八月",
+    "Author": "作者",
 
     "Back": "返回",
     "Board": "板块",
@@ -17,10 +24,14 @@
     "Comment": "评论",
     "Comments": "评论",
     "Content": "内容",
-    "Created At": "创建时间",
+    "Cover": "封面",
+    "Created at": "创建时间",
 
+    "Date format": "日期格式",
     "December": "十二月",
     "Delete": "删除",
+    "Deleted": "已删除",
+    "Description": "描述",
     "Discuss": "讨论",
     "Draft": "草稿",
 
@@ -28,10 +39,12 @@
     "Email": "电子邮件",
 
     "February": "二月",
+    "Forgot password": "忘记口令",
     "Fri": "周五",
 
     "Home": "首页",
     "Hot Articles": "热门文章",
+    "Hot Topics": "热门话题",
 
     "Index": "目录",
 
@@ -39,11 +52,14 @@
     "June": "六月",
     "July": "七月",
 
+    "Loading": "正在加载",
+
     "Make a Comment": "发表评论",
     "March": "三月",
     "May": "五月",
     "Mon": "周一",
 
+    "Name": "名称",
     "Navigation": "导航",
     "Navigations": "导航",
     "New Article": "新文章",
@@ -52,10 +68,14 @@
     "New Navigation": "新导航",
     "New Topic": "新话题",
     "New Wiki": "新维基",
+    "New Wiki Page": "新维基页",
     "November": "十一月",
 
     "October": "十月",
+    "OK": "确定",
 
+    "Page": "页面",
+    "Pages": "页面",
     "Password": "口令",
     "Please sign in": "请登录",
     "Popular Articles": "热门推荐",
@@ -83,13 +103,17 @@
     "Snippets": "片段",
     "Sun": "周日",
 
+    "Tag": "标签",
     "Tags": "标签",
     "Thu": "周四",
     "This reply was deleted": "该回复已被删除",
+    "Time format": "时间格式",
+    "Timezone": "时区",
     "Title": "标题",
     "Topic": "话题",
     "Topics": "话题",
     "Tue": "周二",
+    "Type": "类型",
 
     "User": "用户",
     "Users": "用户",
