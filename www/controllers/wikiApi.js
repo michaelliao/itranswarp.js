@@ -431,6 +431,7 @@ module.exports = {
          * @param {string} id - The id of the wiki.
          * @return {object} The full tree object.
          */
+        let id = ctx.params.id;
         ctx.rest(await getWikiTree(id));
     },
 
