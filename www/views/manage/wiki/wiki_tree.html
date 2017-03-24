@@ -169,8 +169,7 @@ function initTree(result) {
     $('#btn-add').click(function() {
         var $tree = $('#tree');
         var node = $tree.tree('getSelectedNode');
-        //UIkit.modal.prompt('{{ _('Name') }}:', 'New Wiki Page', function (name) {
-        var name = 'New Wiki Page';
+        UIkit.modal.prompt("{{ _('Name') }}:", "{{ _('New Wiki Page') }}", function (name) {
             postJSON('/api/wikis/' + g_wiki.id + '/wikipages', {
                 name: name,
                 content: 'New wiki page content',
@@ -184,7 +183,7 @@ function initTree(result) {
                 $tree.tree('openNode', node);
                 $tree.tree('selectNode', $tree.tree('getNodeById', result.id));
             });
-        //});
+        });
     });
 
     $('#btn-edit').click(function() {
