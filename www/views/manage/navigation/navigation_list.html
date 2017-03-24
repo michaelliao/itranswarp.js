@@ -88,7 +88,7 @@ function initVM(navigations) {
     </div>
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">
@@ -108,23 +108,24 @@ function initVM(navigations) {
             </thead>
             <tbody>
                 <tr v-for="n in navigations">
-                    <td><a v-text="n.name" v-attr="href: n.url" target="_blank"></a></td>
-                    <td><a v-text="n.url" v-attr="href: n.url" target="_blank"></a></td>
+                    <td><a v-text="n.name" v-bind:href="n.url" target="_blank"></a></td>
+                    <td><a v-text="n.url" v-bind:href="n.url" target="_blank"></a></td>
                     <td><span v-text="n.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-on="click: moveUp(n.id)" title="Move this navigation up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
-                        <a v-on="click: moveDown(n.id)" title="Move this navigation down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
-                        <a v-on="click: deleteNavigation(n.id)" title="Delete this navigation" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-on:click="moveUp(n.id)" title="Move this navigation up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
+                        <a v-on:click="moveDown(n.id)" title="Move this navigation down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
+                        <a v-on:click="deleteNavigation(n.id)" title="Delete this navigation" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
-                </tr>
-                <tr v-if="navigations.length===0">
-                    <td colspan="5">No navigation found.</td>
                 </tr>
             </tbody>
         </table>
 
+        <div v-if="navigations.length===0" class="x-empty-list">
+            <p>No navigation found.</p>
+        </div>
+
         <div id="sort" class="uk-margin" style="text-align:right; display:none">
-            <button v-on="click: sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
+            <button v-on:click="sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
         </div>
     </div>
 

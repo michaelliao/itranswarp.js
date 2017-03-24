@@ -47,7 +47,7 @@ function initVM(replies, page) {
     </div>
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">
@@ -73,13 +73,13 @@ function initVM(replies, page) {
             <tbody>
                 <tr v-for="obj in replies">
                     <td>
-                        <img v-attr="src: obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
+                        <img v-once v-bind:src="obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
                     </td>
                     <td>
                         <span v-text="obj.user.name"></span>
                     </td>
                     <td>
-                        <p><a target="_blank" v-attr="href: '/discuss/topic/' + obj.topic_id + '/find/' + obj.id">Topic</a></p>
+                        <p><a target="_blank" v-bind:href="'/discuss/topic/' + obj.topic_id + '/find/' + obj.id">Topic</a></p>
                         <div v-if="!obj.deleted" v-html="obj.content"></div>
                         <div v-if="obj.deleted"><div class="uk-alert uk-alert-danger">{{ _('Deleted') }}</div></div>
                     </td>
@@ -87,7 +87,7 @@ function initVM(replies, page) {
                         <span v-text="obj.created_at.toDateTime()"></span>
                     </td>
                     <td>
-                        <a v-if="!obj.deleted" v-on="click: deleteReply(obj)" title="Delete Reply" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-if="!obj.deleted" v-on:click="deleteReply(obj)" title="Delete Reply" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
                 <tr v-if="page.totalItems===0">
@@ -95,7 +95,8 @@ function initVM(replies, page) {
                 </tr>
             </tbody>
         </table>
-        <div v-component="pagination" v-with="page"></div>
+
+        <div is="pagination" v-bind:page="page"></div>
     </div>
 
 {% endblock%}

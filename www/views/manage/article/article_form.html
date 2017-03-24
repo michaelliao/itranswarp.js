@@ -26,26 +26,6 @@ $(function () {
     });
 });
 
-function processFile(file, callback) {
-    if (file.type!=='image/jpeg' && file.type!=='image/png') {
-        alert('File is not a valid image!');
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var
-            data = e.target.result;
-            index = data.indexOf(';base64,');
-        if ((index >= 0) && (index < 100)) {
-            callback({
-                image: data,
-                data: data.substring(index + 8)
-            });
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
 function initVM(article, categories) {
     if (article.cover_id) {
         $('#image-preview').css('background-image', 'url(/files/attachments/' + article.cover_id + '/l)');
@@ -158,13 +138,13 @@ function initVM(article, categories) {
         }
         try {
             var file = $('#file').get(0).files[0];
-            processFile(file, function (r) {
+            processImageFile(file, function (r) {
                 vm.image = r.data;
                 $('#image-preview').css('background-image', 'url(' + r.image + ')');
             });
         }
         catch (e) {
-            alert('Error when process file: ' + e);
+            UIkit.modal.alert('Error when process file: ' + e);
         }
     });
 }
@@ -176,7 +156,7 @@ function initVM(article, categories) {
 {% block main %}
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">

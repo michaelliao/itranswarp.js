@@ -95,7 +95,7 @@ function initVM(data) {
 {% block main %}
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="error" class="uk-width-1-1">
@@ -136,25 +136,25 @@ function initVM(data) {
             <tbody>
                 <tr v-for="u in users">
                     <td>
-                        <a v-attr="href: '/user/'+u.id" target="_blank"><img v-attr="src: u.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;"></a>
+                        <a v-bind:href="'/user/'+u.id" target="_blank"><img v-bind:src="u.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;"></a>
                     </td>
                     <td>
-                        <a v-attr="href: '/user/'+u.id" target="_blank"><span v-text="u.name"></span></a>
+                        <a v-bind:href="'/user/'+u.id" target="_blank"><span v-text="u.name"></span></a>
                         <br>
                         <span v-text="getRoleName(u)"></span>
                     </td>
                     <td><span v-text="u.email"></span></td>
                     <td><span v-text="u.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-if="! isLocked(u)" v-on="click: lockUser(u)" title="Lock User" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
-                        <a href="#0" v-if="isLocked(u)" v-on="click: unlockUser(u)"><i class="uk-icon-circle-o"></i></a>
+                        <a v-if="! isLocked(u)" v-on:click="lockUser(u)" title="Lock User" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
+                        <a href="#0" v-if="isLocked(u)" v-on:click="unlockUser(u)"><i class="uk-icon-circle-o"></i></a>
                         <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
                     </td>
                 </tr>
             </tbody>
         </table>
 
-        <div v-component="pagination" v-with="page"></div>
+        <div is="pagination" v-bind:page="page"></div>
     </div>
 
 {% endblock%}

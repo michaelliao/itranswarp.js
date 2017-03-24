@@ -21,26 +21,6 @@ $(function () {
     }
 });
 
-function processFile(file, callback) {
-    if (file.type!=='image/jpeg' && file.type!=='image/png') {
-        alert('File is not a valid image!');
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var
-            data = e.target.result;
-            index = data.indexOf(';base64,');
-        if ((index >= 0) && (index < 100)) {
-            callback({
-                image: data,
-                data: data.substring(index + 8)
-            });
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
 function initVM(wiki) {
     if (wiki.cover_id) {
         $('#image-preview').css('background-image', 'url(/files/attachments/' + wiki.cover_id + '/l)');
@@ -55,6 +35,10 @@ function initVM(wiki) {
             tag: wiki.tag,
             description: wiki.description,
             content: wiki.content || ''
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
         },
         methods: {
             getPostData: function () {
@@ -73,32 +57,32 @@ function initVM(wiki) {
                 return data;
             },
 
-            submit: function(event) {
-                event.preventDefault();
-                var
-                    data,
-                    $form = $('#vm').find('form');
+            submit: function() {
+                var data;
                 try {
                     data = this.getPostData();
                 }
                 catch (e) {
-                    $form.showFormError(e);
+                    onJsonFormError(e);
                     return;
                 }
-                $form.postJSON('{{ form.action}}', data, function (err, r) {
-                    if (!err) {
-                        window.onbeforeunload = null;
+                var that = this;
+                clearFormError();
+                that.$resource('{{ form.action }}').save(data).then(function (resp) {
+                    resp.json().then(function (result) {
+                        that.saved = true;
                         location.assign('{{ form.redirect }}');
-                    }
-                });
+                    });
+                }, onJsonFormError);
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 
     // check content when unload:
     window.onbeforeunload = function() {
+        if (vm.saved) {
+            return;
+        }
         if (vm.content !== $('#content-editor').val()) {
             return 'Content has been changed.';
         }
@@ -122,13 +106,13 @@ function initVM(wiki) {
         }
         try {
             var file = $('#file').get(0).files[0];
-            processFile(file, function (r) {
+            processImageFile(file, function (r) {
                 vm.image = r.data;
                 $('#image-preview').css('background-image', 'url(' + r.image + ')');
             });
         }
         catch (e) {
-            alert('Error when process file: ' + e);
+            UIkit.modal.alert('Error when process file: ' + e);
         }
     });
 }
@@ -139,7 +123,7 @@ function initVM(wiki) {
 {% block main %}
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">
@@ -164,7 +148,7 @@ function initVM(wiki) {
                 <div class="uk-form-row">
                     <label class="uk-form-label">Name:</label>
                     <div class="uk-form-controls">
-                        <input v-model="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
                     </div>
                 </div>
                 <div class="uk-form-row">
@@ -176,7 +160,7 @@ function initVM(wiki) {
                 <div class="uk-form-row">
                     <label class="uk-form-label">Description:</label>
                     <div class="uk-form-controls">
-                        <textarea v-model="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
+                        <textarea v-model="description" name="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">

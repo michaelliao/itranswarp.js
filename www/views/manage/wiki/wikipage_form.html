@@ -19,26 +19,6 @@ $(function () {
     }
 });
 
-function processFile(file, callback) {
-    if (file.type!=='image/jpeg' && file.type!=='image/png') {
-        alert('File is not a valid image!');
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var
-            data = e.target.result;
-            index = data.indexOf(';base64,');
-        if ((index >= 0) && (index < 100)) {
-            callback({
-                image: data,
-                data: data.substring(index + 8)
-            });
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
 function initVM(wp) {
     var vm = new Vue({
         el: '#vm',
@@ -103,7 +83,7 @@ function initVM(wp) {
 {% block main %}
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">

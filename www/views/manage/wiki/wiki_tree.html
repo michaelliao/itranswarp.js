@@ -6,16 +6,6 @@
 <script src="/static/js/tree.jquery.js"></script>
 
 <script>
-function showError(err) {
-    var $err = $('.uk-alert-danger')
-    if (err) {
-        $err.text(err.message || err.error || err);
-        $err.removeClass('uk-hidden');
-    }
-    else {
-        $err.addClass('uk-hidden');
-    }
-}
 
 var g_wiki = null;
 
@@ -23,7 +13,7 @@ var g_wiki_id = '{{ id }}';
 
 
 
-var g_wiki_name = {{ wiki.name|json|safe }};
+var g_wiki_name = null;
 var g_ajaxing = false;
 
 function is_ajaxing() {
@@ -31,7 +21,6 @@ function is_ajaxing() {
 }
 
 function start_ajax() {
-    showError();
     g_ajaxing = true;
     $('#ajaxing').show();
 }
@@ -39,7 +28,6 @@ function start_ajax() {
 function end_ajax() {
     g_ajaxing = false;
     $('#ajaxing').hide();
-    showError();
 }
 
 function set_button_enabled(btn, enabled) {
@@ -94,7 +82,6 @@ function delete_wikipage() {
     var node = $('#tree').tree('getSelectedNode');
 
     if (confirm('Wiki page \"' + node.name + '\" will be deleted. Continue?')) {
-        showError();
         start_ajax();
         postJSON('/api/wikis/wikipages/' + node.id + '/delete', function(err, result) {
             end_ajax();
@@ -121,7 +108,7 @@ function preview_wiki(node) {
     }
     var preview_url = '/wiki/' + g_wiki_id + (node.id=='' ? '' : '/' + node.id);
     $('#wiki-preview-name').html('<a href="' + preview_url + '" target="_blank">' + $('<div/>').text(node.name).html() + '</a>');
-    $('#wiki-preview-content').text('Loading...');
+    $('#wiki-preview-content').text('{{ _('Loading') }}...');
     var url = node.id==='' ? '/api/wikis/' + g_wiki_id : '/api/wikis/wikipages/' + node.id;
     getJSON(url, function(err, result) {
         if (err) {
@@ -139,6 +126,8 @@ $(function() {
             return showError(err);
         }
         g_wiki = w;
+        g_wiki_name = w.name;
+
         // load tree data:
         getJSON('/api/wikis/' + g_wiki.id + '/wikipages', function(err, result) {
             if (err) {
@@ -180,19 +169,22 @@ function initTree(result) {
     $('#btn-add').click(function() {
         var $tree = $('#tree');
         var node = $tree.tree('getSelectedNode');
-        postJSON('/api/wikis/' + g_wiki.id + '/wikipages', {
-            name: 'New Wiki Page',
-            content: 'New wiki page content',
-            parent_id: node.id
-        }, function(err, result) {
-            if (err) {
-                showError(err);
-                return;
-            }
-            $tree.tree('appendNode', result, node);
-            $tree.tree('openNode', node);
-            $tree.tree('selectNode', $tree.tree('getNodeById', result.id));
-        });
+        //UIkit.modal.prompt('{{ _('Name') }}:', 'New Wiki Page', function (name) {
+        var name = 'New Wiki Page';
+            postJSON('/api/wikis/' + g_wiki.id + '/wikipages', {
+                name: name,
+                content: 'New wiki page content',
+                parent_id: node.id
+            }, function(err, result) {
+                if (err) {
+                    showError(err);
+                    return;
+                }
+                $tree.tree('appendNode', result, node);
+                $tree.tree('openNode', node);
+                $tree.tree('selectNode', $tree.tree('getNodeById', result.id));
+            });
+        //});
     });
 
     $('#btn-edit').click(function() {
@@ -223,7 +215,7 @@ function initTree(result) {
 {% block main %}
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">
@@ -239,15 +231,15 @@ function initTree(result) {
             <button id="btn-delete" disabled class="uk-button uk-button-danger"><i class="uk-icon-trash"></i> {{ _('Delete') }}</button>
         </div>
 
-        <div class="uk-alert uk-alert-danger uk-hidden"></div>
         <div class="x-placeholder"></div>
     </div>
 
     <div class="uk-width-1-4">
         <div id="tree"></div>
     </div>
+
     <div class="uk-width-3-4">
-        <h3 id="wiki-preview-name">Preview</h3>
+        <h3 id="wiki-preview-name">{{ _('Preview') }}</h3>
         <hr>
         <div id="wiki-preview-content"></div>
     </div>

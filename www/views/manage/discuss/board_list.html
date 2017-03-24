@@ -19,6 +19,10 @@ function initVM(boards) {
         data: {
             boards: boards
         },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
         methods: {
             find: function (id) {
                 for (var i = 0; i < this.boards.length; i ++) {
@@ -67,8 +71,8 @@ function initVM(boards) {
             lockBoard: function(id, locked) {
                 var b = this.boards[this.find(id)];
                 var that = this;
-                UIkit.modal.confirm('Board \"' + b.name + '\" will be ' + (locked ? 'locked' : 'unlocked') + '. Continue?', function() {
-                    that.$resource('/api/boards/' + b.id + (locked ? '/lock' : '/unlock')).save({}).then(function(resp) {
+                UIkit.modal.confirm('Board \"' + b.name + '\" will be ' + (locked ? 'locked' : 'unlocked') + '. Continue?', function () {
+                    that.$resource('/api/boards/' + b.id + (locked ? '/lock' : '/unlock')).save({}).then(function (resp) {
                         resp.json().then(function (result) {
                             location.assign('{{ form.redirect }}');
                         });
@@ -77,8 +81,6 @@ function initVM(boards) {
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 {% endblock %}
@@ -89,7 +91,7 @@ function initVM(boards) {
     </div>
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">

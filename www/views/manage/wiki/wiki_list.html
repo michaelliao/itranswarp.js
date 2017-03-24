@@ -19,8 +19,12 @@ function initVM(wikis) {
         data: {
             wikis: wikis
         },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
         methods: {
-            find: function(id) {
+            find: function (id) {
                 for (var i = 0; i < this.wikis.length; i ++) {
                     var p = this.wikis[i];
                     if (p.id===id) {
@@ -29,24 +33,22 @@ function initVM(wikis) {
                 }
                 throw 'logic error';
             },
-            listWiki: function(id) {
+            editWiki: function (id) {
                 location.assign('wiki_tree?id=' + id);
             },
-            deleteWiki: function(id) {
+            deleteWiki: function (id) {
                 var w = this.wikis[this.find(id)];
-                if (confirm('Confirm Deletion: Wiki \"' + w.name + '\" will be deleted. Continue?')) {
-                    postJSON('/api/wikis/' + w.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                UIkit.modal.confirm('Wiki \"' + w.name + '\" will be deleted. Continue?', function () {
+                    that.$resource('/api/wikis/' + w.id + '/delete').save({}).then(function (resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonFormError);
+                });
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 {% endblock %}
@@ -57,7 +59,7 @@ function initVM(wikis) {
     </div>
 
     <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> Loading...
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
     <div id="vm" class="uk-width-1-1">
@@ -72,31 +74,30 @@ function initVM(wikis) {
                 <tr>
                     <th width="20%">{{ _('Cover') }}</th>
                     <th width="55%">{{ _('Name') }} / {{ _('Tag') }} / {{ _('Description') }}</th>
-                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="15%">{{ _('Created at') }}</th>
                     <th width="10%">&nbsp;</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="w in wikis">
-                    <td><img v-attr="src: '/files/attachments/' + w.cover_id + '/s'" /></td>
+                    <td><img v-bind:src="'/files/attachments/' + w.cover_id + '/s'" /></td>
                     <td>
-                        <p><a v-attr="href: '/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
+                        <p><a v-bind:href="'/wiki/' + w.id" target="_blank" v-text="w.name"></a></p>
                         <p v-text="w.tag"></p>
                         <p v-text="w.description"></p>
                     </td>
                     <td><span v-text="w.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-on="click: listWiki(w.id)" data-toggle="tooltip" title="List Wiki" href="#0" class="x-btn"><i class="uk-icon-list"></i></a>
-                        <a v-on="click: deleteWiki(w.id)" data-toggle="tooltip" title="Delete wiki" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
-                    </td>
-                </tr>
-                <tr v-if="wikis.length===0">
-                    <td colspan="4">
-                        No wiki found.
+                        <a v-on:click="editWiki(w.id)" data-toggle="tooltip" title="Edit Wiki" href="#0" class="x-btn"><i class="uk-icon-list"></i></a>
+                        <a v-on:click="deleteWiki(w.id)" data-toggle="tooltip" title="Delete wiki" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        <div v-if="wikis.length===0" class="x-empty-list">
+            <p>No wiki found.</p>
+        </div>
     </div>
 
 {% endblock %}
