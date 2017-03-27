@@ -579,7 +579,17 @@
             addAction('strike', '~~$1~~');
             addAction('blockquote', '> $1', 'replaceLine');
             addAction('link', '[$1](http://)');
-            addAction('image', '![$1](http://)');
+            // MODIFY
+            //addAction('image', '![$1](http://)');
+            editor.on('action.image', function() {
+                uploadImage(function (err, result) {
+                    if (err) {
+                        return;
+                    }
+                    editor['replaceSelection']('\n\n![' + result.name + '](' + result.url + ')\n\n');
+                });
+            });
+            // END MODIFY
 
             editor.on('action.listUl', function() {
 
