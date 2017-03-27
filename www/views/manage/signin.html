@@ -25,11 +25,12 @@ $(function() {
                         email: email,
                         passwd: this.passwd==='' ? '' : CryptoJS.SHA1(email + ':' + this.passwd).toString()
                     };
+                clearFormError();
                 that.$resource('/api/authenticate').save(data).then(function (resp) {
                     resp.json().then(function (result) {
                         location.assign('/manage/');
                     });
-                }, bindFormError());
+                }, onJsonFormError);
             }
         }
     });

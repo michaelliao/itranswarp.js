@@ -237,9 +237,9 @@ function uploadImage(callback) {
                 mime: mime,
                 data: imageData
             };
-            $form.postJSON('/api/attachments', data, function (err, result) {
+            postJSON('/api/attachments', data, function (err, result) {
                 if (err) {
-                    alert(err.message || err.error || 'ERROR: ' + String(err));
+                    $alert.text(err.message || err.error || 'ERROR: ' + String(err));
                     return;
                 }
                 callback(err, {

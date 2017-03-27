@@ -108,7 +108,7 @@ function preview_wiki(node) {
     }
     var preview_url = '/wiki/' + g_wiki_id + (node.id=='' ? '' : '/' + node.id);
     $('#wiki-preview-name').html('<a href="' + preview_url + '" target="_blank">' + $('<div/>').text(node.name).html() + '</a>');
-    $('#wiki-preview-content').text('{{ _('Loading') }}...');
+    $('#wiki-preview-content').text("{{ _('Loading') }}...");
     var url = node.id==='' ? '/api/wikis/' + g_wiki_id : '/api/wikis/wikipages/' + node.id;
     getJSON(url, function(err, result) {
         if (err) {
