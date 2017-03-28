@@ -19,51 +19,39 @@ function initVM(menus) {
         el: '#vm',
         data: {
             menus: menus,
-            _menu: '',
+            selectUrl: '',
             name: '',
             url: '',
         },
-        computed: {
-            menu: {
-                $get: function () {
-                    return this._menu;
-                },
-                $set: function (url) {
-                    this._menu = url;
-                    if (url !== '') {
-                        var m = this.find(this._menu);
-                        this.name = m.name;
-                        this.url = m.url;
-                    }
-                }
-            }
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
         },
         methods: {
-            find: function (url) {
-                for (var i=0; i<this.menus.length; i++) {
-                    if (menus[i].url === url) {
-                        return menus[i];
+            selectMenu: function () {
+                var that = this;
+                var i, selected = that.selectUrl;
+                for (i=0; i<menus.length; i++) {
+                    if (menus[i].url === selected) {
+                        that.name = menus[i].name;
+                        that.url = menus[i].url;
+                        break;
                     }
                 }
-                throw 'logic error';
             },
-            submit: function (event) {
-                event.preventDefault();
-                var $form = $('#vm').find('form');
-                $form.postJSON('{{ form.action }}', {
+            submit: function () {
+                var that = this;
+                that.$resource('{{ form.action }}').save({
                     name: this.name,
                     url: this.url
-                }, function(err, result) {
-                    if (err) {
-                        return;
-                    }
-                    location.assign('{{ form.redirect }}');
-                });
+                }).then(function (resp) {
+                    resp.json().then(function (result) {
+                        location.assign('{{ form.redirect }}');
+                    });
+                }, onJsonFormError);
             }
         }
     });
-    $('#loading').hide();
-    $('#vm').show();
 }
 </script>
 
@@ -89,11 +77,9 @@ function initVM(menus) {
                 <div class="uk-form-row">
                     <label class="uk-form-label">Type:</label>
                     <div class="uk-form-controls">
-                        <select v-model="menu">
-                            <option value="">- Select a menu -</option>
-                        {% raw %}
-                            <option v-for="menu in menus" value="{{ menu.url }}">{{ menu.name }}</option>
-                        {% endraw %}
+                        <select v-model="selectUrl" v-on:change="selectMenu">
+                            <option value="">- select navigation -</option>
+                            <option v-for="m in menus" v-bind:value="m.url" v-text="m.name"></option>
                         </select>
                     </div>
                 </div>

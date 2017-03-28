@@ -64,15 +64,13 @@ function initVM(navigations) {
             deleteNavigation: function (id) {
                 var n = this.navigations[this.find(id)];
                 var that = this;
-                
-                if (confirm('Delete navigation \"' + n.name + '\". Continue?')) {
-                    postJSON('/api/navigations/' + n.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                UIkit.modal.confirm('Navigation \"' + n.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/navigations/' + n.id + '/delete').save({}).then(function (resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             }
         }
     });
@@ -101,8 +99,8 @@ function initVM(navigations) {
             <thead>
                 <tr>
                     <th width="15%">{{ _('Name') }}</th>
-                    <th width="55%">URL</th>
-                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="55%">{{ _('URL') }}</th>
+                    <th width="15%">{{ _('Created at') }}</th>
                     <th width="15%">&nbsp;</th>
                 </tr>
             </thead>
