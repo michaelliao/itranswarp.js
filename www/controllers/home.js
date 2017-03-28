@@ -5,7 +5,7 @@
  * 
  * author: Michael Liao
  */
-var
+const
     _ = require('lodash'),
     api = require('../api'),
     db = require('../db'),
@@ -16,16 +16,11 @@ var
     helper = require('../helper'),
     logger = require('../logger'),
     constants = require('../constants'),
-    searchEngine = require('../search/search').engine;
-
-var
-    User = db.user,
-    Article = db.article,
-    Category = db.category,
-    Text = db.text,
-    warp = db.warp;
-
-var
+    searchEngine = require('../search/search').engine,
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
+    Text = db.Text,
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     settingApi = require('./settingApi'),
