@@ -142,24 +142,6 @@ function processImageFile(file, callback) {
     margin-right: 10px;
 }
 </style>
-<script>
-function _display_error($obj, err) {
-    if ($obj.is(':visible')) {
-        $obj.hide();
-    }
-    var msg = err.message || String(err);
-    var L = ['<div class="uk-alert uk-alert-danger">'];
-    L.push('<p>Error: ');
-    L.push(msg);
-    L.push('</p><p>Code: ');
-    L.push(err.error || '500');
-    L.push('</p></div>');
-    $obj.html(L.join('')).slideDown();
-}
-function error(err) {
-    _display_error($('#error'), err);
-}
-</script>
 
 {% set __show_navigations__ = true %}
 {% block head %}<!-- block head  -->{% endblock %}
