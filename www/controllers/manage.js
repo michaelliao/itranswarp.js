@@ -266,7 +266,7 @@ module.exports = {
     },
 
     'GET /manage/navigation/create_navigation': async (ctx, next) => {
-        ctx.render('manage/navigation/navigation_form.html', await getModel({
+        ctx.render('manage/navigation/navigation_form.html', await _getModel({
             form: {
                 name: 'Create Navigation',
                 action: '/api/navigations',
@@ -283,7 +283,7 @@ module.exports = {
 
     'GET /manage/setting/:g': async (ctx, next) => {
         let g = ctx.params.g;
-        ctx.render('manage/setting/setting_form.html', await getModel({
+        ctx.render('manage/setting/setting_form.html', await _getModel({
             tabs: [
                 {
                     key: 'website',
