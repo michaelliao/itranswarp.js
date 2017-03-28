@@ -15,17 +15,27 @@ const
     Navigation = db.Navigation,
     nextId = db.nextId;
 
+async function _clearCache() {
+    await cache.remove(constants.cache.NAVIGATIONS);
+}
+
 async function getNavigation(id) {
-    var navigation = await Navigation.findById(id);
-    if (navigation === null) {
+    let
+        navigations = await getNavigations(),
+        filtered = navigations.filter((nav) => {
+            return nav.id === id;
+        });
+    if (filtered.length === 0) {
         throw api.notFound('Navigation');
     }
-    return navigation;
+    return filtered[0];
 }
 
 async function getNavigations() {
-    return await Navigation.findAll({
-        order: 'display_order'
+    return await cache.get(constants.cache.NAVIGATIONS, async () => {
+        return await Navigation.findAll({
+            order: 'display_order'
+        });
     });
 }
 
@@ -41,7 +51,7 @@ async function getNavigationMenus() {
         if (apiModule.hasOwnProperty('getNavigationMenus')) {
             let getNavigationMenus = apiModule.getNavigationMenus;
             if (typeof (getNavigationMenus) === 'function') {
-                let result;
+                let results;
                 if (getNavigationMenus.constructor.name === 'AsyncFunction') {
                     results = await getNavigationMenus();
                 } else {
@@ -100,20 +110,15 @@ module.exports = {
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('createNavigation');
         let
-            name,
-            url,
-            num,
-            data = ctx.request.body;
-        name = data.name.trim();
-        url = data.url.trim();
-
-        num = await Navigation.findNumber('max(display_order)');
-        ctx.rest(await Navigation.create({
-            name: name,
-            url: url,
-            display_order: (num === null) ? 0 : num + 1
-        }));
-        await cache.remove(constants.cache.NAVIGATIONS);
+            data = ctx.request.body,
+            num = await Navigation.max('display_order'),
+            nav = await Navigation.create({
+                name: data.name.trim(),
+                url: data.url.trim(),
+                display_order: isNaN(num) ? 0 : num + 1
+            });
+        await _clearCache();
+        ctx.rest(nav)
     },
 
     'POST /api/navigations/all/sort': async (ctx, next) => {
@@ -126,11 +131,28 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('sortNavigations');
-        let data = this.request.body;
-        ctx.rest({
-            navigations: await helper.$sort(data.ids, await getNavigations())
+        let
+            nav,
+            data = ctx.request.body,
+            ids = data.ids,
+            navigations = await Navigation.findAll();
+        if (ids.length !== navigations.length) {
+            throw api.invalidParam('ids', 'invalid id list');
+        }
+        navigations.forEach((nav) => {
+            let newIndex = ids.indexOf(nav.id);
+            if (newIndex === (-1)) {
+                throw api.invalidParam('ids', 'invalid id list');
+            }
+            nav.display_order = newIndex;
         });
-        await cache.remove(constants.cache.NAVIGATIONS);
+        for (nav of navigations) {
+            await nav.save();
+        }
+        await _clearCache();
+        ctx.rest({
+            navigations: navigations
+        });
     },
 
     'POST /api/navigations/:id/delete': async (ctx, next) => {
@@ -143,12 +165,16 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         let
-            id = ctx.request.params.id,
+            id = ctx.params.id,
             navigation = await getNavigation(id);
-        await navigation.destroy();
+        await Navigation.destroy({
+            where: {
+                id: id
+            }
+        });
+        await _clearCache();
         ctx.rest({
             id: id
         });
-        await cache.remove(constants.cache.NAVIGATIONS);
     }
 };
