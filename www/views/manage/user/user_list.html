@@ -4,7 +4,7 @@
 
 {% block head %}
 <script>
-var g_currentTime = {{ currentTime }};
+var g_currentTime = parseInt('{{ currentTime }}');
 
 $(function() {
     getJSON('/api/users', {
@@ -61,28 +61,26 @@ function initVM(data) {
                 return 'in ' + parseInt(t / 86400000, 10) + ' days';
             },
             lockUser: function (u) {
-                if (confirm('Do you want to lock user \"' + u.name + '\" for ' + $('option[value=' + this.days + ']').text() + '?')) {
-                    postJSON('/api/users/' + u.id + '/lock', {
-                        locked_until: this.days * 3600000 * 24 + g_currentTime
-                    }, function(err, r) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                UIkit.modal.confirm('User \"' + u.name + '\" will be locked for ' + $('option[value=' + that.days + ']').text() + '. Continue?', function() {
+                    that.$resource('/api/users/' + u.id + '/lock').save({
+                        locked_until: that.days * 3600000 * 24 + g_currentTime
+                    }).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             },
             unlockUser: function (u) {
-                if (confirm('Do you want to unlock user \"' + u.name + '\"?')) {
-                    postJSON('/api/users/' + u.id + '/lock', {
-                        locked_until: 0
-                    }, function(err, r) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
-                }
+                var that = this;
+                UIkit.modal.confirm('User \"' + u.name + '\" will be unlocked. Continue?', function() {
+                    that.$resource('/api/users/' + u.id + '/unlock').save({}).then(function (resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
             }
         }
     });
@@ -98,12 +96,8 @@ function initVM(data) {
         <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
     </div>
 
-    <div id="error" class="uk-width-1-1">
-    </div>
-
     <div id="vm" class="uk-width-1-1">
-
-        <h3>All Users</h3>
+        <h3>{{ _('All Users') }}</h3>
 
         <div class="uk-margin uk-clearfix">
             <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
@@ -129,7 +123,7 @@ function initVM(data) {
                     <th width="10%">{{ _('Name') }}</th>
                     <th width="15%">{{ _('Name') }}</th>
                     <th width="45%">{{ _('Email') }}</th>
-                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="15%">{{ _('Created at') }}</th>
                     <th width="15%">{{ _('Lock') }}</th>
                 </tr>
             </thead>
