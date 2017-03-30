@@ -52,9 +52,9 @@ function initVM(replies, page) {
 
     <div id="vm" class="uk-width-1-1">
         <ul class="uk-tab" data-uk-tab>
-            <li><a href="#0" onclick="location.assign('board_list')">Boards</a></li>
-            <li><a href="#0" onclick="location.assign('topic_list')">Topics</a></li>
-            <li class="uk-active"><a href="#0">Replies</a></li>
+            <li><a href="#0" onclick="location.assign('board_list')">{{ _('Boards') }}</a></li>
+            <li><a href="#0" onclick="location.assign('topic_list')">{{ _('Topics') }}</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Replies') }}</a></li>
         </ul>
         <div class="uk-margin">
             <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
