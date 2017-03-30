@@ -26,9 +26,8 @@ const
     settingApi = require('./settingApi'),
     categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi'),
-    navigationApi = require('./navigationApi');
-
-var apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
+    navigationApi = require('./navigationApi'),
+    apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
 // do management console
 
@@ -36,7 +35,7 @@ var KEY_WEBSITE = constants.cache.WEBSITE;
 
 function _getId(ctx) {
     var id = ctx.request.query.id;
-    if (id && id.length === 50) {
+    if (id) {
         return id;
     }
     throw api.notFound('id');
@@ -64,7 +63,7 @@ module.exports = {
 
     'GET /manage/overview/(index)?': async (ctx, next) => {
         var page = helper.getPage(ctx.request);
-        ctx.body = '';
+        ctx.body = 'TODO';
     },
 
     // article ////////////////////////////////////////////////////////////////
@@ -84,7 +83,7 @@ module.exports = {
     'GET /manage/article/create_article': async (ctx, next) => {
         ctx.render('manage/article/article_form.html', await _getModel({
             form: {
-                name: 'Create Article',
+                name: 'Create article',
                 action: '/api/articles',
                 redirect: 'article_list'
             }
@@ -96,7 +95,7 @@ module.exports = {
         ctx.render('manage/article/article_form.html', await _getModel({
             id: id,
             form: {
-                name: 'Edit Article',
+                name: 'Edit article',
                 action: '/api/articles/' + id,
                 redirect: 'article_list'
             }
@@ -106,7 +105,7 @@ module.exports = {
     'GET /manage/article/create_category': async (ctx, next) => {
         ctx.render('manage/article/category_form.html', await _getModel({
             form: {
-                name: 'Create Category',
+                name: 'Create category',
                 action: '/api/categories',
                 redirect: 'category_list'
             }
@@ -118,7 +117,7 @@ module.exports = {
         ctx.render('manage/article/category_form.html', await _getModel({
             id: id,
             form: {
-                name: 'Edit Category',
+                name: 'Edit category',
                 action: '/api/categories/' + id,
                 redirect: 'category_list'
             }
@@ -134,7 +133,7 @@ module.exports = {
     'GET /manage/webpage/create_webpage': async (ctx, next) => {
         ctx.render('manage/webpage/webpage_form.html', await _getModel({
             form: {
-                name: 'Create Web Page',
+                name: 'Create web page',
                 action: '/api/webpages',
                 redirect: 'webpage_list'
             },
@@ -296,7 +295,7 @@ module.exports = {
             ],
             group: g,
             form: {
-                name: 'Edit Settings',
+                name: 'Edit settings',
                 action: '/api/settings/' + g,
                 redirect: g
             }
