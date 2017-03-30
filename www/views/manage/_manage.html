@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/static/css/itranswarp.css" />
     <script src="/static/js/jquery.js"></script>
     <script src="/static/js/sha1.min.js"></script>
+    <script src="/static/js/qrcode.js"></script>
+    <script src="/static/js/jquery.qrcode.js"></script>
     <script src="/static/js/codemirror.js"></script>
     <script src="/static/js/marked.js"></script>
     <script src="/static/js/uikit/uikit.js"></script>
@@ -38,6 +40,31 @@
     };
 })();
 // END FIX
+
+// active nav-bar item:
+$(function () {
+    var p = location.pathname;
+    $('#ul-navbar>li>a').each(function (index, a) {
+        var href = $(a).attr('href');
+        if (p.startsWith(href)) {
+            $(a).parent().addClass('uk-active');
+        }
+    });
+});
+
+// wechat qrcode:
+$(function(){
+    $('#wechat-qrcode').qrcode({
+        width: 100,
+        height: 100,
+        text: 'http://weixin.qq.com/r/p0MOFu7EXbMirap19xa1'
+    });
+    $('#wechat-link').hover(function () {
+        $('#wechat').show();
+    }, function () {
+        $('#wechat').hide();
+    });
+});
 
 // find a jQuery form object that within a #vm scope:
 function findForm(vmId) {
@@ -280,9 +307,9 @@ function uploadImage(callback) {
     <div id="header" class="uk-navbar uk-navbar-attached">
         <div class="uk-container x-container">
             <div class="uk-navbar uk-navbar-attached">
-                {% if __show_navigations__ %}
                 <a href="/" target="_blank" class="uk-navbar-brand"><i class="uk-icon-home"></i></a>
                 <ul id="ul-navbar" class="uk-navbar-nav">
+                    <div class="uk-navbar-content">Management</div>
                     <li><a href="/manage/discuss/">{{ _('Discuss') }}</a></li>
                     <li><a href="/manage/article/">{{ _('Articles') }}</a></li>
                     <li><a href="/manage/webpage/">{{ _('Web Pages') }}</a></li>
@@ -298,9 +325,6 @@ function uploadImage(callback) {
                         <li><a href="/auth/signout"><i class="uk-icon-sign-out"></i> {{ _('Sign Out') }}</a></li>
                     </ul>
                 </div>
-                {% else %}
-                <a href="/" target="_blank" class="uk-navbar-brand"><i class="uk-icon-home"></i> {{ __website__.name }}</a>
-                {% endif %}
             </div>
         </div>
     </div><!-- // header -->
@@ -325,6 +349,7 @@ function uploadImage(callback) {
                         {% block content %}
                         <h3>Content</h3>
                         {% endblock %}
+
                     </div>
                 {% endblock %}
             </div>
@@ -344,7 +369,12 @@ function uploadImage(callback) {
                     </p>
                 </div>
                 <div class="uk-width-2-6">
-                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
+                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="Source code"></a>
+                    <a href="#0" id="wechat-link" target="_blank" class="uk-icon-button uk-icon-wechat" data-uk-tooltip title="Follow author on Wechat">
+                        <div id="wechat" class="uk-panel uk-panel-box">
+                            <div id="wechat-qrcode"></div>
+                        </div>
+                    </a>
                     <a href="https://twitter.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
                     <a href="http://www.weibo.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
                 </div>
