@@ -160,7 +160,7 @@ async function _getSettings(group) {
     }, {});
 }
 
-async function setSettings(group, settings) {
+async function _setSettings(group, settings) {
     await Setting.destroy({
         where: {
             'group': group
@@ -202,7 +202,7 @@ async function getWebsiteSettings() {
 }
 
 async function _setWebsiteSettings(settings) {
-    await setSettings('website', settings);
+    await _setSettings('website', settings);
     await cache.remove(KEY_WEBSITE);
 }
 
@@ -213,7 +213,7 @@ async function getSnippets() {
 }
 
 async function _setSnippets(settings) {
-    await setSettings('snippets', settings);
+    await _setSettings('snippets', settings);
     await cache.remove(KEY_SNIPPETS);
 }
 
