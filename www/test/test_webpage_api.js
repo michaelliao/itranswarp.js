@@ -315,4 +315,23 @@ describe('#webpage apis', () => {
         expect(wp.name).to.equal('About apple');
         expect(wp.content).to.equal('iOS is awesome.');
     });
+
+    it('test utf8mb4 encoding', async () => {
+        let response = await request($SERVER)
+                .post('/api/webpages')
+                .set('Authorization', auth($EDITOR))
+                .set('Content-Type', 'application/json')
+                .send({
+                    alias: 'utf8mb4',
+                    name: decodeURIComponent('Hello%E4%BD%A0%E5%A5%BD%F0%9F%91%8C%F0%9F%91%8B'),
+                    tags: 'js,node,v8',
+                    draft: false,
+                    content: 'blablabla...'
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.alias).to.equal('utf8mb4');
+        expect(response.body.name).to.equal(decodeURIComponent('Hello%E4%BD%A0%E5%A5%BD%F0%9F%91%8C%F0%9F%91%8B'));
+    });
+
 });

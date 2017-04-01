@@ -43,6 +43,9 @@ const sequelize = new Sequelize(
     config.db.password,
     {
         dialect: 'mysql',
+        dialectOptions: {
+            charset: 'utf8mb4'
+        },
         host: config.db.host,
         port: config.db.port,
         pool: {
@@ -110,6 +113,8 @@ function defineModel(modelName, tableName, attributes) {
     }, '  '));
     let model = sequelize.define(tableName, attrs, {
         tableName: tableName,
+        charset: 'utf8mb4',
+        collate: 'utf8mb4_general_ci',
         timestamps: false,
         hooks: {
             beforeValidate: function (obj) {
