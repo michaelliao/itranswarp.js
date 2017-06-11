@@ -167,8 +167,6 @@ async function getFeed(domain) {
     return rss.join('');
 }
 
-var RE_TIMESTAMP = /^\-?[0-9]{1,13}$/;
-
 module.exports = {
 
     getRecentArticles: getRecentArticles,

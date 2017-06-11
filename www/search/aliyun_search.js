@@ -2,19 +2,17 @@
 
 // aliyun_search.js
 
-var
+const
     _ = require('lodash'),
     crypto = require('crypto'),
     uuid = require('uuid/v4'),
-    request = require('request');
-
-var
+    request = require('request'),
     VERSION = 'v2',
     SIGNATURE_METHOD = 'HMAC-SHA1',
     SIGNATURE_VERSION = '1.0';
 
 function encode(s) {
-    var r = encodeURIComponent(s);
+    let r = encodeURIComponent(s);
     return r.replace(/\'/g, '%27').replace(/\*/g, '%2A').replace(/\!/g, '%21').replace(/\(/g, '%28').replace(/\)/g, '%29');
 }
 
@@ -30,7 +28,7 @@ function filter(f) {
 }
 
 function utcNow() {
-    var
+    let
         d = new Date(),
         YY = d.getUTCFullYear(),
         MM = d.getUTCMonth() + 1,
@@ -47,7 +45,7 @@ function utcNow() {
 }
 
 function createSearchEngine(cfg) {
-    var
+    let
         appName = cfg.app_name,
         tableName = cfg.table_name,
         baseSearchUrl = 'http://opensearch.aliyuncs.com/search',
@@ -56,7 +54,7 @@ function createSearchEngine(cfg) {
         accessKeySecret = cfg.access_key_secret + '&',
         makeSignature = function (method, query) {
             // create new query strings with attached signature info:
-            var qs, items, arr, stringToSign, hmac, signature;
+            let qs, items, arr, stringToSign, hmac, signature;
             qs = _.clone(query);
             qs.Version = VERSION;
             qs.AccessKeyId = accessKeyId;
@@ -87,7 +85,7 @@ function createSearchEngine(cfg) {
         },
         httpRequest = function (method, uri, query, callback) {
             // send http request:
-            var
+            let
                 qs = makeSignature(method, query),
                 opt = {
                     method: method,
@@ -115,7 +113,7 @@ function createSearchEngine(cfg) {
                     callback && callback(new Error('Bad response code: ' + res.statusCode));
                     return;
                 }
-                var r = null;
+                let r = null;
                 try {
                     r = JSON.parse(body);
                 }
@@ -140,7 +138,7 @@ function createSearchEngine(cfg) {
             if (! Array.isArray(docs)) {
                 docs = [docs];
             }
-            var qs = {
+            let qs = {
                 sign_mode: '1',
                 action: 'push',
                 table_name: tableName,
@@ -155,7 +153,7 @@ function createSearchEngine(cfg) {
             if (! Array.isArray(docs)) {
                 docs = [docs];
             }
-            var qs = {
+            let qs = {
                 sign_mode: '1',
                 action: 'push',
                 table_name: tableName,
@@ -170,7 +168,7 @@ function createSearchEngine(cfg) {
                 callback = options;
                 options = undefined;
             }
-            var
+            let
                 qs,
                 config,
                 index = options && options.index || 'default',

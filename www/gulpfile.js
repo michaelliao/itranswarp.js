@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
     _ = require('lodash'),
     fs = require('fs'),
     less = require('gulp-less'),
@@ -10,10 +10,10 @@ var
     minifyCSS = require('gulp-minify-css'),
     gulp = require('gulp');
 
-var theme = 'default';
+let theme = 'default';
 
 function getJavaScriptFiles(file) {
-    var
+    let
         re = /^.*\<script\s+src\=\"(.*)\"\>.*$/,
         data = fs.readFileSync(file, { encoding: 'utf-8' }),
         begin = data.indexOf('<!-- BEGIN JAVASCRIPT COMPRESS -->'),
@@ -24,7 +24,7 @@ function getJavaScriptFiles(file) {
     }
     lines = data.substring(begin, end).split('\n');
     lines = _.map(lines, function (line) {
-        var m = re.exec(line);
+        let m = re.exec(line);
         if (m) {
             return m[1].replace(/\{\{\s*\_\_theme\_\_\s*\}\}/, theme);
         }
@@ -57,7 +57,7 @@ gulp.task('jslint', function () {
 });
 
 gulp.task('uglify', function () {
-    var jsfiles = getJavaScriptFiles('./views/themes/' + theme + '/_base.html');
+    let jsfiles = getJavaScriptFiles('./views/themes/' + theme + '/_base.html');
     return gulp.src(jsfiles)
         .pipe(concat('all.js'))
         .pipe(uglify())

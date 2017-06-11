@@ -75,11 +75,10 @@ async function getWikiPage(id, includeContent=false) {
 }
 
 function treeIterate(nodes, root) {
-    var rid, removes;
-
-    rid = root.id;
+    let
+        rid = root.id,
+        removes = [];
     root.children = [];
-    removes = [];
     _.each(nodes, function (node, nid) {
         if (node.parent_id === rid) {
             root.children.push(node);
@@ -108,7 +107,7 @@ function flatten(arr, depth, children) {
 }
 
 async function getWikiPages(wiki_id, returnAsDict=false) {
-    var
+    let
         proot,
         pdict = {},
         pages = await WikiPage.findAll({
@@ -130,7 +129,7 @@ async function getWikiPages(wiki_id, returnAsDict=false) {
 }
 
 async function getWikiTree(id, isFlatten=false) {
-    var
+    let
         arr,
         wiki = await getWiki(id),
         children = await getWikiPages(id);
@@ -211,7 +210,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createWiki');
-        var
+        let
             wiki,
             text,
             wiki_id = nextId(),

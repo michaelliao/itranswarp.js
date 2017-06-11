@@ -31,7 +31,7 @@ let app = new Koa();
 // log request URL:
 app.use(async (ctx, next) => {
     logger.info(`will process request: ${ctx.request.method} ${ctx.request.url}...`);
-    var
+    let
         start = Date.now(),
         execTime;
     try {
@@ -55,7 +55,7 @@ if (! isProduction) {
 app.use(bodyParser());
 
 // set filter:
-var filters = {
+let filters = {
     json: (input) => {
         return JSON.stringify(input);
     },
@@ -66,7 +66,7 @@ var filters = {
         if (input <= 60) {
             return input + ' minutes';
         }
-        var
+        let
             h = parseInt(input / 60),
             m = input % 60;
         return h + ' hours ' + m + ' minutes';

@@ -20,7 +20,7 @@ const METHODS = {
 
 // add url-route in /controllers:
 function _addMapping(rt, mapping) {
-    var url, method, path;
+    let url, method, path;
     for (url in mapping) {
         for (method in METHODS) {
             if (url.startsWith(method + ' ')) {

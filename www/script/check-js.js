@@ -48,7 +48,7 @@ function scanDir(dir) {
         if (d.startsWith('.')) {
             return false;
         }
-        var st = fs.statSync(`${pwd}/${d}`);
+        let st = fs.statSync(`${pwd}/${d}`);
         if (st.isDirectory()) {
             if (dir===webdir && excludes.indexOf(d) >= 0) {
                 return false;

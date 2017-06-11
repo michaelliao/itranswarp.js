@@ -14,14 +14,14 @@ const
     DB_USER = config.db.username,
     DB_PASS = config.db.password;
 
-var rl = readline.createInterface({
+let rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-var info = {};
+let info = {};
 
-var prompt = [
+let prompt = [
     '\x1b[31m',
     '----------------------------------------------------------------------',
     '  WARNING:',
@@ -39,7 +39,7 @@ function skip() {
 }
 
 function generatePassword(localId, email, passwd) {
-    var hashedPasswd = crypto.createHash('sha1').update(email + ':' + passwd).digest('hex');
+    let hashedPasswd = crypto.createHash('sha1').update(email + ':' + passwd).digest('hex');
     return crypto.createHash('sha1').update(localId + ':' + hashedPasswd).digest('hex');
 }
 
@@ -50,7 +50,7 @@ function initTables() {
     config.db.maxConnections = 1;
     config.db.maxIdleTime = 1000;
     (async () => {
-        var
+        let
             db = require('../db'),
             userId = db.nextId(),
             localId = db.nextId(),

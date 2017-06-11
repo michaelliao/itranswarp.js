@@ -21,7 +21,7 @@ module.exports = {
     type: 'heading',
     plugin: 'video',
     render: function (text) {
-        var sources = text.split(SPLIT).map((s) => {
+        let sources = text.split(SPLIT).map((s) => {
             return s && s.trim();
         }).filter((s) => {
             return s && s.trim();

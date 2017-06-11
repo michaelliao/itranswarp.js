@@ -42,7 +42,7 @@ function translateMessage(field, invalids) {
     if (invalids.length === 0) {
         return 'Invalid value of field: ' + field;
     }
-    var msg = code2Message[invalids[0]];
+    let msg = code2Message[invalids[0]];
     if (msg) {
         return msg;
     }
@@ -53,7 +53,7 @@ function createApiError(errors) {
     if (!errors.validation) {
         return api.invalidRequest('json', 'Invalid JSON request.');
     }
-    var err = null;
+    let err = null;
     logger.debug('>>> ' + JSON.stringify(errors.validation));
     _.each(errors.validation, function (v, k) {
         if (err === null) {
@@ -448,7 +448,7 @@ _.each(schemas, function (v, k) {
 
 module.exports = {
     validate: (schemaName, data) => {
-        var errors = env.validate(schemaName, data);
+        let errors = env.validate(schemaName, data);
         if (errors !== null) {
             logger.warn('api:check schema failed.');
             throw createApiError(errors);

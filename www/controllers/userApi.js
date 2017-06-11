@@ -25,7 +25,7 @@ logger.info('set secure: ' + SECURE);
 
 // init oauth2 providers:
 
-var oauth2_providers = {};
+let oauth2_providers = {};
 
 _.each(config.oauth2, (cfg, name) => {
     let provider = oauth2.createProvider(
@@ -44,7 +44,7 @@ async function getUsers(page) {
     if (page.isEmpty) {
         return [];
     }
-    var users = await User.findAll({
+    let users = await User.findAll({
         offset: page.offset,
         limit: page.limit,
         order: 'created_at DESC'

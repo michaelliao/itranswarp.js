@@ -15,9 +15,6 @@ const
     helper = require('../helper'),
     logger = require('../logger'),
     constants = require('../constants'),
-    User = db.User,
-    Article = db.Article,
-    Category = db.Category,
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
@@ -27,14 +24,17 @@ const
     categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi'),
     navigationApi = require('./navigationApi'),
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
     apisList = [categoryApi, articleApi, webpageApi, wikiApi, discussApi, attachmentApi, navigationApi, userApi, settingApi];
 
 // do management console
 
-var KEY_WEBSITE = constants.cache.WEBSITE;
+const KEY_WEBSITE = constants.cache.WEBSITE;
 
 function _getId(ctx) {
-    var id = ctx.request.query.id;
+    let id = ctx.request.query.id;
     if (id) {
         return id;
     }
@@ -62,7 +62,7 @@ module.exports = {
     // overview ///////////////////////////////////////////////////////////////
 
     'GET /manage/overview/(index)?': async (ctx, next) => {
-        var page = helper.getPage(ctx.request);
+        let page = helper.getPage(ctx.request);
         ctx.body = 'TODO';
     },
 
@@ -218,7 +218,7 @@ module.exports = {
     },
 
     'GET /manage/discuss/edit_board': async (ctx, next) => {
-        var id = _getId(ctx);
+        let id = _getId(ctx);
         ctx.render('manage/discuss/board_form.html', await _getModel({
             id: id,
             form: {

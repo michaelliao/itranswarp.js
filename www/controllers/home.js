@@ -17,10 +17,6 @@ const
     logger = require('../logger'),
     constants = require('../constants'),
     searchEngine = require('../search/search').engine,
-    User = db.User,
-    Article = db.Article,
-    Category = db.Category,
-    Text = db.Text,
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     settingApi = require('./settingApi'),
@@ -28,9 +24,13 @@ const
     webpageApi = require('./webpageApi'),
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
-    navigationApi = require('./navigationApi');
+    navigationApi = require('./navigationApi'),
+    User = db.User,
+    Article = db.Article,
+    Category = db.Category,
+    Text = db.Text;
 
-var
+let
     signins = _.reduce(config.oauth2, function (results, conf, oauthId) {
         results.push({
             id: oauthId,
@@ -40,7 +40,7 @@ var
         return results;
     }, []);
 
-var
+let
     searchTypes = [
         {
             label: 'All',
@@ -64,7 +64,7 @@ var
         return r;
     }, {});
 
-var
+let
     WRITE_VIEWS_BACK = 100,
     THEME = config.theme,
     PRODUCTION = process.productionMode;
@@ -93,7 +93,7 @@ function getView(view) {
 }
 
 async function getIndexModel() {
-    var
+    let
         i, a, hotArticles,
         categories = await categoryApi.getCategories(),
         recentArticles = await articleApi.getRecentArticles(20),
@@ -101,7 +101,7 @@ async function getIndexModel() {
             return a.id;
         })),
         getCategoryName = function (cid) {
-            var c, i;
+            let c, i;
             for (i = 0; i < categories.length; i++) {
                 c = categories[i];
                 if (c.id === cid) {
@@ -126,12 +126,12 @@ async function getIndexModel() {
 module.exports = {
 
     'GET /': async (ctx, next) => {
-        var model = await cache.get('INDEX-MODEL', getIndexModel);
+        let model = await cache.get('INDEX-MODEL', getIndexModel);
         ctx.render('index.html', await getModel(model));
     },
 
     'GET /category/:id': async (ctx, next) => {
-        var
+        let
             a,
             page = helper.getPage(this.request, 10),
             model = {
@@ -151,7 +151,7 @@ module.exports = {
     },
 
     'GET /article/:id': async (ctx, next) => {
-        var
+        let
             article = await articleApi.getArticle(id, true),
             num = await cache.incr(id),
             category = await categoryApi.getCategory(article.category_id),
@@ -168,7 +168,7 @@ module.exports = {
     },
 
     'GET /webpage/:alias': async (ctx, next) => {
-        var
+        let
             alias = ctx.params.alias,
             webpage = await webpageApi.getWebpageByAliasWithContent(alias);
         if (webpage.draft) {
@@ -182,14 +182,14 @@ module.exports = {
     },
 
     'GET /wikipage/:id': async (ctx, next) => {
-        var
+        let
             id = ctx.params.id,
             wp = await wikiApi.getWikiPage(id);
         ctx.response.redirect('/wiki/' + wp.wiki_id + '/' + wp.id);
     },
 
     'GET /wiki/:id': async (ctx, next) => {
-        var
+        let
             id = ctx.params.id,
             wiki = await wikiApi.getWiki(id, true),
             num = await cache.incr(wiki.id),
@@ -208,7 +208,7 @@ module.exports = {
     },
 
     'GET /wiki/:wid/:pid': async (ctx, next) => {
-        var
+        let
             wid = ctx.params.wid,
             pid = ctx.params.pid,
             wiki, tree, num,
@@ -261,14 +261,14 @@ module.exports = {
     },
 
     'GET /discuss': async (ctx, next) => {
-        var boards = await discussApi.getBoards();
+        let boards = await discussApi.getBoards();
         ctx.render('discuss/boards.html', await getModel({
             boards: boards
         }));
     },
 
     'GET /discuss/:id': async (ctx, next) => {
-        var
+        let
             id = ctx.params.id,
             page = helper.getPage(ctx.request),
             board = await discussApi.getBoard(id),
@@ -284,7 +284,7 @@ module.exports = {
     },
 
     'GET /discuss/:bid/:tid': async (ctx, next) => {
-        var
+        let
             bid = ctx.params.bid,
             tid = ctx.params.tid,
             topic = await discussApi.getTopic(tid),
@@ -317,7 +317,7 @@ module.exports = {
             ctx.response.redirect('/auth/signin');
             return;
         }
-        var
+        let
             board = await discussApi.getBoard(bid),
             model = {
                 board: board
@@ -326,14 +326,14 @@ module.exports = {
     },
 
     'GET /discuss/topic/:tid/find/:rid': async (ctx, next) => {
-        var
+        let
             topic = await discussApi.getTopic(tid),
             p = await discussApi.getReplyPageIndex(tid, rid);
         ctx.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
     },
 
     'GET /user/:id': async (ctx, next) => {
-        var
+        let
             user = await userApi.getUser(id),
             model = {
                 user: user
@@ -342,7 +342,7 @@ module.exports = {
     },
 
     'GET /me/profile': async (ctx, next) => {
-        var
+        let
             user = ctx.state.__user__,
             model = {
                 user: user
@@ -355,7 +355,7 @@ module.exports = {
     },
 
     'GET /auth/signin': async (ctx, next) => {
-        var
+        let
             referer = ctx.request.get('referer') || '/',
             user = ctx.state.__user__;
         logger.info('Referer: ' + referer);
@@ -367,7 +367,7 @@ module.exports = {
 
     'GET /search': async (ctx, next) => {
         ctx.response.body = 'blank';
-        // var
+        // let
         //     page,
         //     q = req.query.q || '',
         //     type = req.query.type,
@@ -397,7 +397,7 @@ module.exports = {
         //         return res.send(500);
         //     }
         //     page.totalItems = r.result.total;
-        //     var model = {
+        //     let model = {
         //         searchTypes: searchTypes,
         //         type: type,
         //         page: page,

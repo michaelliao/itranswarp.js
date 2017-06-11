@@ -22,7 +22,7 @@ config.db.database = TEST_DB;
  * Export global variable: $ALL
  */
 async function dbsetup() {
-    var db = require('../db');
+    let db = require('../db');
     await db.sync();
     global.$ALL = {
         where: {

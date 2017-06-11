@@ -26,7 +26,7 @@ describe('#schema', () => {
     });
 
     it('extra prop but schema is ok', () => {
-        var data = {
+        let data = {
             email: 'test@example.com',
             passwd: '0000000000111111111122222222223333333333',
             extra: true
