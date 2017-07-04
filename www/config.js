@@ -3,11 +3,11 @@
 /*
 read config files from:
   * config_default.js
-  * /srv/itranswarp/config/override.js if file exist
+  * /srv/itranswarp/conf/config_override.js (if file exist)
 
-You should override some configurations in /srv/itranswarp/config/override.js:
+You should override some configurations in /srv/itranswarp/conf/config_override.js:
 
-    // override.js:
+    // config_override.js:
     exports = module.exports = {
         "db": {
             "host": "192.168.0.101", // a specific IP of mysql server
@@ -17,7 +17,7 @@ You should override some configurations in /srv/itranswarp/config/override.js:
 */
 
 const
-    overrideConfigPath = '/srv/itranswarp/config/override.js',
+    overrideConfigPath = '/srv/itranswarp/conf/config_override.js',
     _ = require('lodash'),
     fs = require('fs'),
     logger = require('./logger');
