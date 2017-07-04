@@ -21,7 +21,7 @@ const
     COOKIE_EXPIRED_DATE = new Date(0),
     LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
-logger.info('set secure: ' + SECURE);
+logger.info('set secure cookie: ' + SECURE);
 
 // init oauth2 providers:
 
@@ -93,7 +93,7 @@ async function processOAuthAuthentication(provider_name, authentication) {
         auth_id = provider_name + ':' + authentication.auth_id,
         user,
         user_id,
-        auth_user = await AuthUser.findById({
+        auth_user = await AuthUser.findOne({
             where: {
                 auth_id: auth_id
             }
@@ -279,6 +279,7 @@ module.exports = {
          * Process callback from OAuth2 provider.
          */
         let
+            name = ctx.params.name,
             provider = oauth2_providers[name],
             code = ctx.request.query.code,
             jscallback = ctx.request.query.jscallback || '',
@@ -288,7 +289,7 @@ module.exports = {
             ctx.response.body = 'Invalid URL';
             return;
         }
-        if (!code) {
+        if (! code) {
             logger.warn('OAuth2 callback error: code is not found.');
             ctx.response.body = '<html><body>Invalid code.</body></html>';
             return;
@@ -314,10 +315,10 @@ module.exports = {
         }
         // make session cookie:
         cookieStr = auth.makeSessionCookie(name, auth_user.id, auth_user.auth_token, auth_user.expires_at);
-        ctx.response.cookies.set(config.session.cookie, cookieStr, {
+        ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secure: SECURE,
+            secureProxy: SECURE,
             expires: new Date(auth_user.expires_at)
         });
         logger.info('set session cookie for user: ' + user.email);
