@@ -25,5 +25,6 @@ module.exports = {
         tags: {
             type: dbtypes.STRING(1000)
         }
-    }
+    },
+    extraFields: ['content']
 };

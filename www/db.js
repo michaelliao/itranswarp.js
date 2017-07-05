@@ -60,7 +60,7 @@ const sequelize = new Sequelize(
         }
     });
 
-function defineModel(modelName, tableName, attributes) {
+function defineModel(modelName, tableName, attributes, extraFields) {
     let attrs = {
         id: {
             type: dbtypes.ID,
@@ -111,7 +111,7 @@ function defineModel(modelName, tableName, attributes) {
         }
         return v;
     }, '  '));
-    let model = sequelize.define(tableName, attrs, {
+    let options = {
         tableName: tableName,
         charset: 'utf8mb4',
         collate: 'utf8mb4_general_ci',
@@ -135,7 +135,23 @@ function defineModel(modelName, tableName, attributes) {
                 obj.version ++;
             }
         }
-    });
+    };
+    if (Array.isArray(extraFields)) {
+        let
+            getters = {},
+            setters = {};
+        for (let extraField of extraFields) {
+            getters[extraField] = function () {
+                return this['_' + extraField];
+            };
+            setters[extraField] = function (value) {
+                this['_' + extraField] = value;
+            }
+        }
+        options.getterMethods = getters;
+        options.setterMethods = setters;
+    }
+    let model = sequelize.define(tableName, attrs, options);
     return model;
 }
 
@@ -170,7 +186,7 @@ files.filter((f) => { return re.test(f); }).map((f) => {
     return f.substring(0, f.length - 3);
 }).forEach((modelName) => {
     let modelDefinition = require('./models/' + modelName);
-    exp[modelDefinition.name] = defineModel(modelDefinition.name, modelDefinition.table, modelDefinition.fields);
+    exp[modelDefinition.name] = defineModel(modelDefinition.name, modelDefinition.table, modelDefinition.fields, modelDefinition.extraFields);
 });
 
 logger.info('db exports: ' + Object.getOwnPropertyNames(exp).join(', '));

@@ -44,5 +44,6 @@ module.exports = {
             defaultValue: Date.now,
             index: true
         }
-    }
+    },
+    extraFields: ['content']
 };

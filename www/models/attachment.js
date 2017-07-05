@@ -7,7 +7,7 @@ const dbtypes = require('../dbtypes');
 module.exports = {
     name: 'Attachment',
     table: 'attachments',
-    fields:{
+    fields: {
         user_id: {
             type: dbtypes.ID
         },
