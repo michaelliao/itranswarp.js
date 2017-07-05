@@ -57,9 +57,7 @@ async function _getWebpageByAlias(alias) {
 
 async function _attachContent(entity) {
     let text = await Text.findById(entity.content_id);
-    entity = entity.toJSON();
     entity.content = text.value;
-    return entity;
 }
 
 module.exports = {
@@ -78,7 +76,8 @@ module.exports = {
 
     getWebpageByAliasWithContent: async (alias) => {
         let p = await _getWebpageByAlias(alias);
-        return _attachContent(p);
+        await _attachContent(p);
+        return p;
     },
 
     'GET /api/webpages/:id': async (ctx, next) => {
@@ -92,7 +91,8 @@ module.exports = {
         let
             id = ctx.params.id,
             p = await _getWebpage(id);
-        ctx.rest(await _attachContent(p));
+        await _attachContent(p);
+        ctx.rest(p);
     },
 
     'GET /api/webpages': async (ctx, next) => {
@@ -153,7 +153,6 @@ module.exports = {
             draft: data.draft
         });
         // attach content:
-        webpage = webpage.toJSON();
         webpage.content = data.content;
         ctx.rest(webpage);
     },
@@ -204,7 +203,6 @@ module.exports = {
         }
         await webpage.save();
         // attach content:
-        webpage = webpage.toJSON();
         if (content_id) {
             webpage.content = data.content;
         }

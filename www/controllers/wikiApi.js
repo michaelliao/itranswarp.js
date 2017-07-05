@@ -116,7 +116,7 @@ async function getWikiPages(wiki_id, returnAsDict=false) {
             }
         });
     pages.forEach((p) => {
-        pdict[p.id] = p.toJSON();
+        pdict[p.id] = p;
     });
     if (returnAsDict) {
         return pdict;

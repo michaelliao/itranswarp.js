@@ -115,7 +115,6 @@ async function getArticle(id, includeContent) {
         if (text === null) {
             throw api.notFound('Text');
         }
-        article = article.toJSON();
         article.content = text.value;
     }
     return article;
@@ -281,7 +280,6 @@ module.exports = {
             publish_at: (data.publish_at === undefined ? Date.now() : data.publish_at)
         });
         // associate content:
-        article = article.toJSON();
         article.content = data.content;
         // index:
         indexArticle(article);
@@ -351,7 +349,6 @@ module.exports = {
         }
         await article.save();
         // attach content:
-        article = article.toJSON();
         if (data.content) {
             article.content = data.content;
         } else {

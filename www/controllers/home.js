@@ -97,6 +97,7 @@ async function getIndexModel() {
         i, a, hotArticles,
         categories = await categoryApi.getCategories(),
         recentArticles = await articleApi.getRecentArticles(20),
+        recentTopics = await discussApi.getRecentTopics(20),
         nums = await cache.counts(_.map(recentArticles, function (a) {
             return a.id;
         })),
@@ -119,6 +120,7 @@ async function getIndexModel() {
     }), 5);
     return {
         recentArticles: recentArticles,
+        recentTopics: recentTopics,
         hotArticles: hotArticles
     };
 }
@@ -164,7 +166,7 @@ module.exports = {
             await updateEntityViews(article);
         }
         article.content = md.systemMarkdownToHtml(article.content);
-        this.render(getView('article/article.html'), await getModel(model));
+        ctx.render(getView('article/article.html'), await getModel(model));
     },
 
     'GET /webpage/:alias': async (ctx, next) => {
@@ -213,20 +215,21 @@ module.exports = {
             pid = ctx.params.pid,
             wiki, tree, num,
             wikipage = await wikiApi.getWikiPage(pid, true);
-        if (wikipage.wiki_id !== id) {
-            this.throw(404);
+        if (wikipage.wiki_id !== wid) {
+            ctx.status = 404;
+            return;
         }
         num = await cache.incr(wikipage.id);
-        wiki = await wikiApi.getWiki(id);
-        tree = await wikiApi.getWikiTree(id, true);
+        wiki = await wikiApi.getWiki(wid);
+        tree = await wikiApi.getWikiTree(wid, true);
         wikipage.type = 'wikipage';
         wikipage.views = wikipage.views + num;
         if (num > WRITE_VIEWS_BACK) {
             await updateEntityViews(wikipage);
         }
-        wikipage.content = helper.md2html(wikipage.content, true);
+        wikipage.content = md.systemMarkdownToHtml(wikipage.content, true);
         ctx.render('wiki/wiki.html', await getModel({
-            wiki: await wikiApi.getWiki(id),
+            wiki: wiki,
             current: wikipage,
             tree: tree.children
         }));
@@ -309,7 +312,7 @@ module.exports = {
             topic: topic,
             replies: replies
         };
-        this.render('discuss/topic.html', await getModel(model));
+        ctx.render('discuss/topic.html', await getModel(model));
     },
 
     'GET /discuss/:bid/topics/create': async (ctx, next) => {

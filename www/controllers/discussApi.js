@@ -113,6 +113,7 @@ async function getAllTopics(page) {
     if (page.isEmpty) {
         return [];
     }
+
     return await Topic.findAll({
         attributes: {
             exclude: ['content']
@@ -120,6 +121,17 @@ async function getAllTopics(page) {
         order: 'id DESC',
         offset: page.offset,
         limit: page.limit
+    });
+}
+
+async function getRecentTopics(max) {
+    return await Topic.findAll({
+        attributes: {
+            exclude: ['content']
+        },
+        order: 'updated_at DESC',
+        offset: 0,
+        limit: max
     });
 }
 
@@ -321,6 +333,8 @@ module.exports = {
     getTopic: getTopic,
 
     getTopics: getTopics,
+
+    getRecentTopics: getRecentTopics,
 
     getTopicsByRef: getTopicsByRef,
 
