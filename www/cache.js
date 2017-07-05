@@ -16,7 +16,7 @@ const
 logger.info('init memcache:\n' + JSON.stringify(config.cache, null, ' '));
 
 const
-    DEFAULT_LIFETIME = 86400, // 24h
+    DEFAULT_LIFETIME = 600, // 10 min
     CACHE_PREFIX = config.cache.prefix,
     memcached = new Memcached(config.cache.host + ':' + config.cache.port, {
         'timeout': config.cache.timeout,
