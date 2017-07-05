@@ -27,5 +27,6 @@ module.exports = {
         description: {
             type: dbtypes.STRING(1000)
         }
-    }
+    },
+    extraFields: ['content', 'children']
 };

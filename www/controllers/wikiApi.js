@@ -15,6 +15,7 @@ const
     search = require('../search/search'),
     constants = require('../constants'),
     attachmentApi = require('./attachmentApi'),
+    textApi = require('./textApi'),
     User = db.User,
     Wiki = db.Wiki,
     WikiPage = db.WikiPage,
@@ -45,13 +46,6 @@ function unindexWiki(r) {
     // });
 }
 
-async function _attachContent(entity) {
-    let text = await Text.findById(entity.content_id);
-    entity = entity.toJSON();
-    entity.content = text.value;
-    return entity;
-}
-
 async function _getWikis() {
     return await Wiki.findAll({
         order: 'name'
@@ -63,7 +57,10 @@ async function getWiki(id, includeContent=false) {
     if (wiki === null) {
         throw api.notFound('Wiki');
     }
-    return includeContent ? _attachContent(wiki) : wiki;
+    if (includeContent) {
+        await textApi.attachContent(wiki);
+    }
+    return wiki;
 }
 
 async function getWikiPage(id, includeContent=false) {
@@ -71,7 +68,10 @@ async function getWikiPage(id, includeContent=false) {
     if (wp === null) {
         throw api.notFound('WikiPage');
     }
-    return includeContent ? _attachContent(wp) : wp;
+    if (includeContent) {
+        await textApi.attachContent(wp);
+    }
+    return wp;
 }
 
 function treeIterate(nodes, root) {
@@ -133,7 +133,6 @@ async function getWikiTree(id, isFlatten=false) {
         arr,
         wiki = await getWiki(id),
         children = await getWikiPages(id);
-    wiki = wiki.toJSON();
     if (isFlatten) {
         arr = [];
         flatten(arr, 0, children);
@@ -243,7 +242,6 @@ module.exports = {
             tag: (data.tag || '').trim()
         });
         // attach content:
-        wiki = wiki.toJSON();
         wiki.content = data.content;
         ctx.rest(wiki);
     },
@@ -266,7 +264,6 @@ module.exports = {
         let
             id = ctx.params.id,
             wiki = await getWiki(id),
-            text,
             wiki_id,
             content_id,
             attachment,
@@ -292,19 +289,16 @@ module.exports = {
             wiki.cover_id = attachment.id;
         }
         if (data.content) {
-            text = await Text.create({
-                ref_id: wiki.id,
-                value: data.content
-            });
-            wiki.content_id = text.id;
+            let
+                content_id = nextId(),
+                text = await textApi.createText(wiki.id, content_id, data.content);
+            wiki.content_id = content_id;
         }
         await wiki.save();
-        wiki = wiki.toJSON();
         if (data.content) {
             wiki.content = data.content;
         } else {
-            text = await Text.findById(wiki.content_id);
-            wiki.content = text.value;
+            await textApi.attachContent(wiki);
         }
         ctx.rest(wiki);
     },
@@ -358,7 +352,6 @@ module.exports = {
             name: data.name.trim(),
             display_order: isNaN(num) ? 0 : num + 1
         });
-        wikipage = wikipage.toJSON();
         wikipage.content = data.content;
         indexWiki(wikipage);
         ctx.rest(wikipage);
@@ -392,12 +385,10 @@ module.exports = {
             wikipage.content_id = text.id;
         }
         await wikipage.save();
-        wikipage = wikipage.toJSON();
         if (data.content) {
             wikipage.content = data.content;
         } else {
-            text = await Text.findById(wikipage.content_id);
-            wikipage.content = text.value;
+            await textApi.attachContent(wikipage);
         }
         indexWiki(wikipage);
         ctx.rest(wikipage);

@@ -259,6 +259,7 @@ async function createReply(user, topic_id, data) {
 }
 
 async function createTopic(user, board_id, ref_type, ref_id, data) {
+    console.log(JSON.stringify(data, null, '  '))
     let
         board = await getBoard(board_id),
         topic = await Topic.create({

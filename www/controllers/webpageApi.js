@@ -13,6 +13,7 @@ const
     helper = require('../helper'),
     logger = require('../logger'),
     constants = require('../constants'),
+    textApi = require('./textApi'),
     User = db.User,
     Webpage = db.Webpage,
     Text = db.Text,
@@ -55,11 +56,6 @@ async function _getWebpageByAlias(alias) {
     return p;
 }
 
-async function _attachContent(entity) {
-    let text = await Text.findById(entity.content_id);
-    entity.content = text.value;
-}
-
 module.exports = {
 
     getNavigationMenus: async () => {
@@ -76,8 +72,7 @@ module.exports = {
 
     getWebpageByAliasWithContent: async (alias) => {
         let p = await _getWebpageByAlias(alias);
-        await _attachContent(p);
-        return p;
+        return await textApi.attachContent(p);
     },
 
     'GET /api/webpages/:id': async (ctx, next) => {
@@ -91,8 +86,7 @@ module.exports = {
         let
             id = ctx.params.id,
             p = await _getWebpage(id);
-        await _attachContent(p);
-        ctx.rest(p);
+        ctx.rest(await textApi.attachContent(p));
     },
 
     'GET /api/webpages': async (ctx, next) => {
