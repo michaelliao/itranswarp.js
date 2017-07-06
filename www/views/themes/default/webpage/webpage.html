@@ -1,5 +1,7 @@
 {% extends '../_base.html' %}
 
+{% set __sidebar_right__ = true %}
+
 {% block nav %}
     /webpage/{{ webpage.alias }}"
 {% endblock %}
@@ -7,7 +9,6 @@
 {% block title %}{{ webpage.name }}{% endblock %}
 
 {% block head %}
-    {% set __sidebar_right__ = true %}
 
 <style>
 .x-webpage-visible {

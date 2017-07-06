@@ -1,5 +1,8 @@
 {% extends '../_base.html' %}
 
+<!-- display sidebar on right -->
+{% set __sidebar_right__ = true %}
+
 {% block nav %} /category/{{ category.id }} {% endblock %}
 
 {% block title %}
