@@ -186,7 +186,7 @@ module.exports = {
         }
         await webpage.save();
         // attach content:
-        if (content_id) {
+        if (data.content) {
             webpage.content = data.content;
         }
         else {
