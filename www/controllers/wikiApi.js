@@ -210,8 +210,6 @@ module.exports = {
         ctx.checkPermission(constants.role.EDITOR);
         ctx.validate('createWiki');
         let
-            wiki,
-            text,
             wiki_id = nextId(),
             content_id = nextId(),
             data = ctx.request.body,
@@ -224,16 +222,10 @@ module.exports = {
                 null,
                 true
             );
-
         // create text:
-        text = await Text.create({
-            id: content_id,
-            ref_id: wiki_id,
-            value: data.content
-        });
-
+        await textApi.createText(wiki_id, content_id, data.content);
         // create wiki:
-        wiki = await Wiki.create({
+        let wiki = await Wiki.create({
             id: wiki_id,
             content_id: content_id,
             cover_id: attachment.id,
@@ -322,28 +314,22 @@ module.exports = {
             wp_id = nextId(),
             content_id = nextId(),
             wiki = await getWiki(wiki_id),
-            wikipage,
-            text,
-            num,
             data = ctx.request.body;
         // check parent id:
         if (data.parent_id) {
             await getWikiPage(data.parent_id);
         }
         // count:
-        num = await WikiPage.max('display_order', {
+        let num = await WikiPage.max('display_order', {
             where: {
                 'wiki_id': wiki_id,
                 'parent_id': data.parent_id
             }
         });
-        text = await Text.create({
-            id: content_id,
-            ref_id: wp_id,
-            value: data.content
-        });
+        // create text:
+        await textApi.createText(wp_id, content_id, data.content);
         // create wiki page:
-        wikipage = await WikiPage.create({
+        let wikipage = await WikiPage.create({
             id: wp_id,
             wiki_id: wiki_id,
             content_id: content_id,

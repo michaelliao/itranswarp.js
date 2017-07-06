@@ -127,17 +127,12 @@ module.exports = {
         let
             content_id = nextId(),
             webpage_id = nextId(),
-            text,
             webpage,
             data = ctx.request.body;
         data.name = data.name.trim();
         data.tags = helper.formatTags(data.tags);
         await _checkAliasAvailable(data.alias);
-        text = await Text.create({
-            id: content_id,
-            ref_id: webpage_id,
-            value: data.content
-        });
+        await textApi.createText(webpage_id, content_id, data.content);
         webpage = await Webpage.create({
             id: webpage_id,
             alias: data.alias,
@@ -168,8 +163,6 @@ module.exports = {
         ctx.validate('updateWebpage');
         let
             id = ctx.params.id,
-            content_id = null,
-            text,
             data = ctx.request.body,
             webpage = await _getWebpage(id);
         if (data.alias && data.alias !== webpage.alias) {
@@ -186,14 +179,10 @@ module.exports = {
             webpage.draft = data.draft;
         }
         if (data.content) {
-            content_id = nextId();
+            let content_id = nextId();
             webpage.content_id = content_id;
             // update content
-            await Text.create({
-                id: content_id,
-                ref_id: id,
-                value: data.content
-            });
+            await textApi.createText(id, content_id, data.content);
         }
         await webpage.save();
         // attach content:
@@ -201,7 +190,7 @@ module.exports = {
             webpage.content = data.content;
         }
         else {
-            text = await Text.findById(webpage.content_id);
+            let text = await Text.findById(webpage.content_id);
             webpage.content = text.value;
         }
         ctx.rest(webpage);
