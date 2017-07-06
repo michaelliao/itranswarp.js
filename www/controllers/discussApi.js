@@ -125,7 +125,7 @@ async function getAllTopics(page) {
 }
 
 async function getRecentTopics(max) {
-    return await Topic.findAll({
+    let topics = await Topic.findAll({
         attributes: {
             exclude: ['content']
         },
@@ -133,6 +133,8 @@ async function getRecentTopics(max) {
         offset: 0,
         limit: max
     });
+    await userApi.bindUsers(topics);
+    return topics;
 }
 
 async function getTopics(board_id, page) {

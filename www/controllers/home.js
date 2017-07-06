@@ -83,20 +83,16 @@ async function getModel(model) {
 }
 
 async function updateEntityViews(entity) {
-    console.log('Update views to: ' + entity.views);
+    logger.info('Update views to: ' + entity.views);
     await cache.set(entity.id, 0);
     await entity.update(['views']);
 }
 
-function getView(view) {
-    return 'themes/default/' + view;
-}
-
 async function getIndexModel() {
     let
-        i, a, hotArticles,
+        hotArticles,
         categories = await categoryApi.getCategories(),
-        recentArticles = await articleApi.getRecentArticles(20),
+        recentArticles = await articleApi.getRecentArticles(10),
         recentTopics = await discussApi.getRecentTopics(20),
         nums = await cache.counts(_.map(recentArticles, function (a) {
             return a.id;
@@ -111,13 +107,13 @@ async function getIndexModel() {
             }
             return '';
         };
-    for (i = 0; i < recentArticles.length; i++) {
-        a = recentArticles[i];
+    for (let i = 0; i < recentArticles.length; i++) {
+        let a = recentArticles[i];
         a.views = a.views + nums[i];
     }
     hotArticles = _.take(_.sortBy(recentArticles, function (a) {
         return 0 - a.views;
-    }), 5);
+    }), 3);
     return {
         recentArticles: recentArticles,
         recentTopics: recentTopics,
@@ -134,8 +130,8 @@ module.exports = {
 
     'GET /category/:id': async (ctx, next) => {
         let
-            a,
-            page = helper.getPage(this.request, 10),
+            id = ctx.params.id,
+            page = helper.getPage(ctx.request),
             model = {
                 page: page,
                 category: await categoryApi.getCategory(id),
@@ -143,10 +139,9 @@ module.exports = {
             },
             nums = await cache.counts(_.map(model.articles, function (a) {
                 return a.id;
-            })),
-            i;
-        for (i = 0; i < nums.length; i++) {
-            a = model.articles[i];
+            }));
+        for (let i = 0; i < nums.length; i++) {
+            let a = model.articles[i];
             a.views = a.views + nums[i];
         }
         ctx.render('article/category.html', await getModel(model));
@@ -154,6 +149,7 @@ module.exports = {
 
     'GET /article/:id': async (ctx, next) => {
         let
+            id = ctx.params.id,
             article = await articleApi.getArticle(id, true),
             num = await cache.incr(id),
             category = await categoryApi.getCategory(article.category_id),
@@ -166,7 +162,7 @@ module.exports = {
             await updateEntityViews(article);
         }
         article.content = md.systemMarkdownToHtml(article.content);
-        ctx.render(getView('article/article.html'), await getModel(model));
+        ctx.render('article/article.html', await getModel(model));
     },
 
     'GET /webpage/:alias': async (ctx, next) => {
@@ -291,7 +287,6 @@ module.exports = {
             bid = ctx.params.bid,
             tid = ctx.params.tid,
             topic = await discussApi.getTopic(tid),
-            page,
             board,
             replies,
             model;
@@ -299,7 +294,7 @@ module.exports = {
             ctx.response.status = 404;
             return;
         }
-        page = helper.getPage(ctx.request);
+        let page = helper.getPage(ctx.request);
         board = await discussApi.getBoard(bid);
         replies = await discussApi.getReplies(tid, page);
         if (page.index === 1) {
