@@ -2,7 +2,7 @@
 
 /*
 read config files from:
-  * config_default.js
+  * config_default.js (built-in)
   * /srv/itranswarp/conf/config_override.js (if file exist)
 
 You should override some configurations in /srv/itranswarp/conf/config_override.js:
