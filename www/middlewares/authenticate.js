@@ -13,6 +13,7 @@ const
     api = require('../api'),
     db = require('../db'),
     auth = require('../auth'),
+    SECURE = config.session.https,
     COOKIE_NAME = config.session.cookie,
     COOKIE_SALT = config.session.salt,
     COOKIE_EXPIRES_IN_MS = config.session.expires * 1000,
@@ -93,7 +94,7 @@ module.exports = async (ctx, next) => {
             ctx.cookies.set(COOKIE_NAME, 'deleted', {
                 path: '/',
                 httpOnly: true,
-                secureProxy: true,
+                secureProxy: SECURE,
                 expires: new Date(0)
             });
         }

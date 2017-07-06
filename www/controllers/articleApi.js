@@ -18,6 +18,7 @@ const
     Category = db.Category,
     Text = db.Text,
     nextId = db.nextId,
+    textApi = require('./textApi'),
     settingApi = require('./settingApi'),
     categoryApi = require('./categoryApi'),
     attachmentApi = require('./attachmentApi');
@@ -261,11 +262,7 @@ module.exports = {
             null,
             true);
         // create text:
-        let text = await Text.create({
-            id: content_id,
-            ref_id: article_id,
-            value: data.content
-        });
+        await textApi.createText(article_id, content_id, data.content);
         // create article:
         let article = await Article.create({
             id: article_id,
@@ -341,11 +338,9 @@ module.exports = {
             article.cover_id = attachment.id;
         }
         if (data.content) {
-            let text = await Text.create({
-                ref_id: article.id,
-                value: data.content
-            });
-            article.content_id = text.id;
+            let content_id = nextId();
+            await textApi.createText(article.id, content_id, data.content);
+            article.content_id = content_id;
         }
         await article.save();
         // attach content:

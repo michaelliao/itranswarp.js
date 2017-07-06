@@ -6,7 +6,10 @@
  * author: Michael Liao
  */
 
-const nunjucks = require('nunjucks');
+const
+    nunjucks = require('nunjucks'),
+    config = require('../config'),
+    SECURE = config.session.https;
 
 function createEnv(path, opts) {
     let
@@ -40,6 +43,9 @@ module.exports = (path, opts) => {
                 path = ctx.request.path;
             if (! path.startsWith('/manage/')) {
                 viewPath = 'themes/' + ctx.state.__theme__ + '/' + view;
+            }
+            if (SECURE) {
+                ctx.response.set('Content-Security-Policy', 'upgrade-insecure-requests');
             }
             ctx.response.type = 'text/html';
             ctx.response.body = env.render(viewPath, Object.assign({}, ctx.state || {}, model || {}));

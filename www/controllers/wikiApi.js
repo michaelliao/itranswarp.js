@@ -289,9 +289,8 @@ module.exports = {
             wiki.cover_id = attachment.id;
         }
         if (data.content) {
-            let
-                content_id = nextId(),
-                text = await textApi.createText(wiki.id, content_id, data.content);
+            let content_id = nextId();
+            await textApi.createText(wiki.id, content_id, data.content);
             wiki.content_id = content_id;
         }
         await wiki.save();
@@ -372,17 +371,14 @@ module.exports = {
         let
             id = ctx.params.id,
             wikipage = await getWikiPage(id),
-            text,
             data = ctx.request.body;
         if (data.name) {
             wikipage.name = data.name.trim();
         }
         if (data.content) {
-            text = await Text.create({
-                ref_id: wikipage.id,
-                value: data.content
-            });
-            wikipage.content_id = text.id;
+            let content_id = nextId();
+            await textApi.createText(wikipage.id, content_id, data.content);
+            wikipage.content_id = content_id;
         }
         await wikipage.save();
         if (data.content) {
