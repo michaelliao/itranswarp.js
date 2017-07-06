@@ -1,5 +1,8 @@
 {% extends '../_base.html' %}
 
+<!-- display sidebar on right -->
+{% set __sidebar_right__ = true %}
+
 {% block nav %} /discuss {% endblock %}
 
 {% block title %}{{ _('Discuss') }}{% endblock %}
@@ -12,7 +15,6 @@
 {% endblock %}
 
 {% block head %}
-    {% set __sidebar_right__ = true %}
 
 <style>
 .x-topic-visible {

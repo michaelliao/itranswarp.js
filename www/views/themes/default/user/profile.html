@@ -1,11 +1,13 @@
 {% extends '../_base.html' %}
 
+<!-- display sidebar on left -->
+{% set __sidebar_left__ = true %}
+
 {% block nav %} /user/ {% endblock %}
 
 {% block title %}{{ user.name }}{% endblock %}
 
 {% block head %}
-    {% set __sidebar_left__ = true %}
 
 <style>
 .x-user-visible {
