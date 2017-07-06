@@ -466,11 +466,11 @@ if (typeof(Vue)!=='undefined') {
         if (page.pages === 2) {
             return [1, 2];
         }
-        let
+        var
             i,
             list = [1],
-            start = Math.max(2, index - 4),
-            end = Math.min(page.pages-1, index + 4);
+            start = Math.max(2, page.index - 4),
+            end = Math.min(page.pages-1, page.index + 4);
         if (start > 2) {
             list.push('...');
         }
