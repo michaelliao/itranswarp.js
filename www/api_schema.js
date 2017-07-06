@@ -429,6 +429,8 @@ const schemas = {
             sidebar_right_bottom: PROPERTY.SETTING,
             content_top: PROPERTY.SETTING,
             content_bottom: PROPERTY.SETTING,
+            index_top: PROPERTY.SETTING,
+            index_bottom: PROPERTY.SETTING,
         }
     },
     createComment: {

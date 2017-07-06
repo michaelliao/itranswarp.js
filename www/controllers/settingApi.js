@@ -72,49 +72,63 @@ const defaultSettingDefinitions = {
             key: 'body_bottom',
             label: 'Bottom of the body',
             description: 'Snippet on bottom of the body',
-            value: '',
+            value: '<!-- body_bottom -->',
             type: 'textarea'
         },
         {
             key: 'sidebar_left_top',
             label: 'Top of the left sidebar',
             description: 'Snippet on top of the left sidebar',
-            value: '',
+            value: '<!-- sidebar_left_top -->',
             type: 'textarea'
         },
         {
             key: 'sidebar_left_bottom',
             label: 'Bottom of the left sidebar',
             description: 'Snippet on bottom of the left sidebar',
-            value: '',
+            value: '<!-- sidebar_left_bottom -->',
             type: 'textarea'
         },
         {
             key: 'sidebar_right_top',
             label: 'Top of the right sidebar',
             description: 'Snippet on top of the right sidebar',
-            value: '',
+            value: '<!-- sidebar_right_top -->',
             type: 'textarea'
         },
         {
             key: 'sidebar_right_bottom',
             label: 'Bottom of the right sidebar',
             description: 'Snippet on bottom of the right sidebar',
-            value: '',
+            value: '<!-- sidebar_right_bottom -->',
             type: 'textarea'
         },
         {
             key: 'content_top',
             label: 'Top of the content',
             description: 'Snippet on top of the content',
-            value: '',
+            value: '<!-- content_top -->',
             type: 'textarea'
         },
         {
             key: 'content_bottom',
             label: 'Bottom of the content',
             description: 'Snippet on bottom of the content',
-            value: '',
+            value: '<!-- content_bottom -->',
+            type: 'textarea'
+        },
+        {
+            key: 'index_top',
+            label: 'Top of the index page',
+            description: 'Snippet on top of the index page',
+            value: '<!-- index_top -->',
+            type: 'textarea'
+        },
+        {
+            key: 'index_bottom',
+            label: 'Bottom of the index page',
+            description: 'Snippet on bottom of the index page',
+            value: '<!-- index_bottom -->',
             type: 'textarea'
         }
     ]
@@ -176,6 +190,7 @@ async function _setSettings(group, settings) {
             });
         }
     }
+    logger.info(`setting group ${group} saved.`);
 }
 
 async function _getSettingsFillWithDefaultsIfMissing(name, defaults) {
