@@ -316,6 +316,7 @@ module.exports = {
             return;
         }
         let
+            bid = ctx.params.bid,
             board = await discussApi.getBoard(bid),
             model = {
                 board: board
@@ -325,13 +326,16 @@ module.exports = {
 
     'GET /discuss/topic/:tid/find/:rid': async (ctx, next) => {
         let
+            tid = ctx.params.tid,
+            rid = ctx.params.rid,
             topic = await discussApi.getTopic(tid),
             p = await discussApi.getReplyPageIndex(tid, rid);
-        ctx.response.redirect('/discuss/' + topic.board_id + '/' + tid + '?page=' + p + '#' + rid);
+        ctx.response.redirect(`/discuss/${topic.board_id}/${tid}?page=${p}#${rid}`);
     },
 
     'GET /user/:id': async (ctx, next) => {
         let
+            id = ctx.params.id,
             user = await userApi.getUser(id),
             model = {
                 user: user
