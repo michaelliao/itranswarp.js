@@ -56,7 +56,8 @@
     "License": "使用许可",
     "Loading": "正在加载",
 
-    "Make a Comment": "发表评论",
+    "Make a comment": "发表评论",
+    "Make a reply": "发表回复",
     "March": "三月",
     "May": "五月",
     "Mon": "周一",
@@ -90,6 +91,7 @@
     "Recent Articles": "最新发表",
     "Recent Topics": "最新问答",
     "Refresh": "刷新",
+    "Registration Date": "注册日期",
     "Replies": "回复",
     "Reply": "回复",
 
@@ -102,6 +104,8 @@
     "Setting": "设置",
     "Settings": "设置",
     "Sign In": "登录",
+    "Sign in to make a comment": "登录后发表评论",
+    "Sign in to make a reply": "登录后发表回复",
     "Sign Out": "登出",
     "Snippets": "片段",
     "Sun": "周日",
@@ -120,6 +124,8 @@
 
     "User": "用户",
     "Users": "用户",
+
+    "Full discussion": "全部讨论",
 
     "Web Pages": "页面",
     "Website": "网站",

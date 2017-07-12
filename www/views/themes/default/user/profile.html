@@ -22,11 +22,16 @@
     <div class="uk-clearfix">
         <img src="{{ user.image_url }}" class="uk-comment-avatar uk-border-circle x-avatar">
     </div>
+
+    <h3>{{ _('Registration Date') }}</h3>
+    <p><span class="x-smartdate" date="{{ user.created_at }}"></span></p>
+
 {% endblock %}
 
 {% block content %}
 
-    <h3>注册日期</h3>
-    <p><span class="x-smartdate" date="{{ user.created_at }}"></span></p>
+    <h3>{{ _('Recent Posts') }}</h3>
+
+    <h3>{{ _('Recent Replies') }}</h3>
 
 {% endblock %}

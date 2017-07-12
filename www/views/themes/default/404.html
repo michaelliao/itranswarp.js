@@ -4,6 +4,10 @@
 
 {% block content %}
 
-    <h3>404</h3>
+    <div class="uk-grid">
+        <div class="uk-width-1-1">
+            {{ __snippets__.http_404|safe }}
+        </div>
+    </div>
 
 {% endblock %}

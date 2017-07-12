@@ -83,16 +83,16 @@
         <li>
             <div class="x-comment-info">
                 <hr>
-                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }"><i class="uk-icon-list-ul"></i> {{ _('View Full Discuss') }}</a>
+                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }"><i class="uk-icon-list-ul"></i> {{ _('Full discussion') }}</a>
                 &nbsp;
-                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }#reply"><i class="uk-icon-reply"></i> {{ _('Reply This Topic') }}</a>
+                <a target="_blank" class="uk-button uk-button-small" href="/discuss/{ board_id }/{ id }#reply"><i class="uk-icon-reply"></i> {{ _('Reply') }}</a>
             </div>
         </li>
     </script>
 
     <script id="tplCommentArea" type="text/plain">
         <div class="x-display-if-signin">
-            <p><button id="comment-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i> {{ _('Make a Comment') }}</button></p>
+            <p><button id="comment-make-button" type="button" class="uk-button uk-button-primary"><i class="uk-icon-comment"></i> {{ _('Make a comment') }}</button></p>
             <form id="comment-form" class="uk-form" style="display:none;">
                 <fieldset>
                     <div class="uk-alert uk-alert-danger" style="display:none"></div>
