@@ -431,6 +431,7 @@ const schemas = {
             content_bottom: PROPERTY.SETTING,
             index_top: PROPERTY.SETTING,
             index_bottom: PROPERTY.SETTING,
+            http_404: PROPERTY.SETTING
         }
     },
     createComment: {

@@ -123,6 +123,10 @@ async function getIndexModel() {
 
 module.exports = {
 
+    'GET /404': async (ctx, next) => {
+        ctx.render('404.html', await getModel({}));
+    },
+
     'GET /': async (ctx, next) => {
         let model = await cache.get('INDEX-MODEL', getIndexModel);
         ctx.render('index.html', await getModel(model));

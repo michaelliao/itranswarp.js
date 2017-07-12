@@ -130,6 +130,13 @@ const defaultSettingDefinitions = {
             description: 'Snippet on bottom of the index page',
             value: '<!-- index_bottom -->',
             type: 'textarea'
+        },
+        {
+            key: 'http_404',
+            label: 'Http 404 message',
+            description: 'Snippet on http 404 page',
+            value: '<h1>404 Not Found</h1>',
+            type: 'textarea'
         }
     ]
 };

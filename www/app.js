@@ -109,6 +109,9 @@ app.use(async (ctx, next) => {
         ctx.state.__request__ = request;
     }
     await next();
+    if (ctx.status === 404) {
+        response.redirect('/404');
+    }
 });
 
 // add controller:
