@@ -12,6 +12,7 @@ module.exports = {
         ADMIN:       0,
         EDITOR:      10,
         CONTRIBUTOR: 100,
+        SPONSOR:     1000,
         SUBSCRIBER:  10000,
         GUEST:       100000000
     },
