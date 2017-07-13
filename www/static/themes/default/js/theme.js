@@ -1,5 +1,15 @@
 // itranswarp.js
 
+function add_sponsor(selector, width, height, name, img_src, link) {
+    var
+        stl = 'width:' + width + 'px;height:' + height + 'px;',
+        s = '<div style="float:left;margin:0 1px 1px 0;' + stl + '">';
+    s = s + '<a target="_blank" href="' + link + '">';
+    s = s + '<img src="' + img_src + '" style="' + stl + '">';
+    s = s + '</a></div>';
+    $(selector).append(s);
+}
+
 function message(title, msg, isHtml, autoClose) {
     if ($('#modal-message').length==0) {
         $('body').append('<div id="modal-message" class="uk-modal"><div class="uk-modal-dialog">' +
