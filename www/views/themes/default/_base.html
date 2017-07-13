@@ -238,11 +238,9 @@
         <div class="x-placeholder"><!-- placeholder --></div>
         <div class="uk-container x-container">
             <div class="uk-grid">
-                <div class="x-body-before uk-width-1-1">
-                    {% block body_before %}{{ __snippets__.body_top|safe }}{% endblock %}
+                <div class="x-body-top uk-width-1-1">
+                    {% block body_top %}{{ __snippets__.body_top|safe }}{% endblock %}
                 </div>
-            </div>
-            <div class="uk-grid">
                 <div class="uk-width-1-1">
                 {% if __sidebar_left__ %}
                     <div class="x-sidebar-left">
@@ -255,6 +253,7 @@
                         <div class="x-sidebar-left-bottom">
                             {% block sidebar_left_bottom %}{{ __snippets__.sidebar_left_bottom|safe }}{% endblock %}
                         </div>
+                        <div class="x-sponsor-b"><!-- sponsor B --></div>
                     </div>
                 {% endif %}
                 {% if __sidebar_right__ %}
@@ -268,24 +267,23 @@
                         <div class="x-sidebar-right-bottom">
                             {% block sidebar_right_bottom %}{{ __snippets__.sidebar_right_bottom|safe }}{% endblock %}
                         </div>
+                        <div class="x-sponsor-b"><!-- sponsor B --></div>
                     </div>
                 {% endif %}
 
                     <div class="x-center">
-                        <div>
+                        <div class="x-content-top">
                             {% block content_top %}{{ __snippets__.content_top|safe }}{% endblock %}
                         </div>
                         <div class="x-content" style="width:100%">
-                            {% block content %}<h3>override block "content"</h3>{% endblock %}
+                            {% block content %}<p>TODO: override block <em>content</em></p>{% endblock %}
                         </div>
-                        <div>
+                        <div class="x-content-bottom">
                             {% block content_bottom %}{{ __snippets__.content_bottom|safe }}{% endblock %}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="uk-grid">
                 <div class="x-body-bottom uk-width-1-1">
                     {% block body_bottom %}{{ __snippets__.body_bottom|safe }}{% endblock %}
                 </div>
@@ -297,7 +295,7 @@
     <div id="x-offcanvas-left" class="uk-offcanvas">
         <div class="uk-offcanvas-bar">
             <div class="uk-panel">
-                {% block offcanvas_left %}override block "offcanvas_left"{% endblock %}
+                {% block offcanvas_left %}<p>TODO: override block <em>offcanvas_left</em></p>{% endblock %}
             </div>
         </div>
     </div>

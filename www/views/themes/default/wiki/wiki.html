@@ -2,6 +2,7 @@
 
 <!-- display sidebar on left -->
 {% set __sidebar_left__ = true %}
+{% set __offcanvas_left__ = true %}
 
 {% block nav %} /wiki/{{ wiki.id }} {% endblock %}
 
@@ -104,13 +105,17 @@ $(function () {
 {% block content %}
     <h4>{{ current.name }}</h4>
     <div class="x-wiki-info"><span>{{ _('Reads') }}: {{ current.views }}</span></div>
+
     <hr>
-    <div class="x-wiki-content">
-        {{ current.content|safe }}
-    </div>
+
+    <div class="x-wiki-content x-main-content">{{ current.content|safe }}</div>
+
+    <div class="x-sponsor-a"><!-- sponsor A --></div>
+
     <hr>
-    <div id="x-wiki-prev-next" class="uk-clearfix uk-margin-left uk-margin-right">
-    </div>
+
+    <div id="x-wiki-prev-next" class="uk-clearfix uk-margin-left uk-margin-right"></div>
+
     <hr>
 
     <div class="x-anchor"><a name="comments"></a></div>
