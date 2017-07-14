@@ -323,7 +323,6 @@ $(function() {
 // extends jQuery.form:
 
 $(function () {
-    console.log('Extends $form...');
     $.fn.extend({
         showFormError: function (err) {
             return this.each(function () {
@@ -455,10 +454,10 @@ function postJSON(url, data, callback) {
     }
     _httpJSON('POST', url, data, callback);
 }
+
 // register custom filters for Vue:
 
 if (typeof(Vue)!=='undefined') {
-    console.log('init Vue global settings...');
     var createPageList = function (page) {
         if (page.pages <= 1) {
             return [1];

@@ -44,7 +44,6 @@ function run_js(tid, btn) {
         }
         catch (e) {
             message('错误', '<p>JavaScript代码执行出错：</p><pre>' + String(e) + '</pre>', true, true);
-            console.log(e);
         }
     };
     fn();
@@ -340,11 +339,9 @@ function loadComments(ref_id) {
                 if (!isCommentsLoaded && (window.pageYOffset + window.innerHeight >= targetOffset)) {
                     isCommentsLoaded = true;
                     $window.off('scroll', checkOffset);
-                    console.log('loading comments...');
                     ajaxLoadComments('x-comment-list', ref_id, 1);
                 }
             };
-        console.log('will load comments at offset: ' + targetOffset);
         $window.scroll(checkOffset);
         checkOffset();
     });
