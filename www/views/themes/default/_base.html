@@ -31,7 +31,7 @@
     <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
     {% block meta %}<!-- meta here -->{% endblock %}
     {% if __production__ %}
-    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/all.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/all.css?v={{__version__}}" />
     {% else %}
     <!-- BEGIN CSS COMPRESS -->
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
@@ -40,10 +40,10 @@
     <!-- END CSS COMPRESS -->
     {% endif %}
     <!--[if lt IE 9]>
-    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css?v={{__version__}}" />
     <![endif]-->
     {% if __production__ %}
-    <script src="/static/themes/{{ __theme__ }}/js/all.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/all.js?v={{__version__}}"></script>
     {% else %}
     <!-- BEGIN JAVASCRIPT COMPRESS -->
     <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>

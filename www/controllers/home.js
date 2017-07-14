@@ -67,6 +67,7 @@ let
 let
     WRITE_VIEWS_BACK = 100,
     THEME = config.theme,
+    VERSION = process.appVersion,
     PRODUCTION = process.isProduction;
 
 async function getNavigations() {
@@ -74,6 +75,7 @@ async function getNavigations() {
 };
 
 async function getModel(model) {
+    model.__version__ = VERSION;
     model.__production__ = PRODUCTION;
     model.__navigations__ = await getNavigations();
     model.__website__ = await settingApi.getWebsiteSettings();

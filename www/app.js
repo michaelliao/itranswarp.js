@@ -29,10 +29,21 @@ const
     static_prefix = config.cdn.static_prefix,
     ACTIVE_THEME = config.theme;
 
+function loadVersion() {
+    try {
+        let ver = require('./version');
+        return ver;
+    } catch (e) {
+        logger.warn('failed to load version.');
+        return Date.now();
+    }
+}
+
 // global app:
 let app = new Koa();
 
 process.isProduction = isProduction;
+process.appVersion = loadVersion();
 
 // log request URL:
 app.use(async (ctx, next) => {

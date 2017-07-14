@@ -11,4 +11,4 @@ const
 
 app.listen(PORT);
 
-logger.info(`application start in ${process.isProduction ? 'production' : 'development'} mode at ${PORT}...`);
+logger.info(`application version:${process.appVersion} start in ${process.isProduction ? 'production' : 'development'} mode at ${PORT}...`);
