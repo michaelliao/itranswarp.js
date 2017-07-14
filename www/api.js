@@ -3,9 +3,11 @@
 /**
  * APIError object definition.
  * 
- * @param {string} err_code 
- * @param {string} err_data 
- * @param {string} err_message 
+ * @param {string} err_code The error code.
+ * @param {string} err_data The error data, e.g. invalid field name in form.
+ * @param {string} err_message The error message.
+ * 
+ * @author: Michael Liao
  */
 function APIError(err_code, err_data, err_message) {
     this.error = err_code;

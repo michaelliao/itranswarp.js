@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Draw picture of the author.
+ * 
+ * @author: Michael Liao
+ */
 let
     fs = require('fs'),
     s = fs.readFileSync('./author', 'utf-8'),

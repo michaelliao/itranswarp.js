@@ -6,6 +6,8 @@
  * const logger = require('./logger');
  * logger.info('blablabla...');
  * 
+ * this logger is a wrapper for winston logger.
+ * 
  * author: Michael Liao
  */
 const

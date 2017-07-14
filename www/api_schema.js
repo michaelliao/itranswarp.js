@@ -3,7 +3,7 @@
 /**
  * Validate JSON using schema.
  * 
- * author: Michael Liao
+ * @author: Michael Liao
  */
 
 const

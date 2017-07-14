@@ -163,7 +163,6 @@ async function getFeed(domain) {
         rss.push(']]></description></item>');
     }
     rss.push('</channel></rss>');
-    console.log(rss.join('\n'));
     return rss.join('');
 }
 

@@ -1,6 +1,10 @@
 'use strict';
 
-// application:
+/**
+ * Application object.
+ * 
+ * @author Michael Liao
+ */
 
 const
     isProduction = (process.env.NODE_ENV === 'production'),

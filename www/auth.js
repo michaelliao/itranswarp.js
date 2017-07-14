@@ -17,6 +17,8 @@
  * authenticated = db_password === sha1(user_id + ':' + 'fa54b4176373caef36be50474880541de1894428')
  * 
  * that means, there are 2 sha1-hash for user's original password, and the salt is user's email and id.
+ * 
+ * @author: Michael Liao
  */
 
 const
