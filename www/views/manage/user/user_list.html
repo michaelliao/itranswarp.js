@@ -8,7 +8,7 @@ var g_currentTime = parseInt('{{ currentTime }}');
 
 $(function() {
     getJSON('/api/users', {
-        page: {{ pageIndex }}
+        page: parseInt('{{ pageIndex }}')
     }, function (err, data) {
         if (err) {
             return showError(err);
@@ -28,10 +28,11 @@ function initVM(data) {
         methods: {
             getRoleName: function (u) {
                 return {
-                    '0': 'admin',
-                    '10': 'editor',
-                    '100': 'contributor',
-                    '10000': 'subscriber'
+                    "0": "{{ _('Admin') }}",
+                    "10": "{{ _('Editor') }}",
+                    "100": "{{ _('Contributor') }}",
+                    "1000": "{{ _('Sponsor') }}",
+                    "10000": "{{ _('Subscriber') }}"
                 }[String(u.role)] || 'unknown';
             },
             isLocked: function (u) {
@@ -39,7 +40,6 @@ function initVM(data) {
             },
             getLockTime: function (u) {
                 var t = u.locked_until - g_currentTime;
-                console.log('t >>> ' + t);
                 if (t < 3600000) {
                     return 'Less in 1 hour';
                 }

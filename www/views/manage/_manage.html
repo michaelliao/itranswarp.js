@@ -320,9 +320,17 @@ function uploadImage(callback) {
                     <li><a href="/manage/setting/">{{ _('Settings') }}</a></li>
                     <!-- <li><a href="/manage/api/">API</a></li> -->
                 </ul>
+
                 <div class="uk-navbar-flip">
                     <ul class="uk-navbar-nav">
-                        <li><a href="/auth/signout"><i class="uk-icon-sign-out"></i> {{ _('Sign Out') }}</a></li>
+                        <li class="uk-parent" data-uk-dropdown>
+                            <a href="#0"><i class="uk-icon-user"></i><span>&nbsp;</span><span class="x-user-name">{{ __user__.name }}</span></a>
+                            <div class="uk-dropdown uk-dropdown-navbar">
+                                <ul class="uk-nav uk-nav-navbar">
+                                    <li><a href="/auth/signout"><i class="uk-icon-power-off"></i> {{ _('Sign Out') }}</a></li>
+                                </ul>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>

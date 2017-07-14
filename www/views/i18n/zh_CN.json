@@ -1,4 +1,5 @@
 {
+    "Admin": "管理员",
     "Alias": "别名",
     "All": "所有",
     "All Articles": "所有文章",
@@ -24,6 +25,7 @@
     "Comment": "评论",
     "Comments": "评论",
     "Content": "内容",
+    "Contributor": "贡献者",
     "Cover": "封面",
     "Created at": "创建时间",
 
@@ -36,6 +38,7 @@
     "Draft": "草稿",
 
     "Edit": "编辑",
+    "Editor": "编辑",
     "Email": "电子邮件",
 
     "February": "二月",
@@ -108,6 +111,8 @@
     "Sign in to make a reply": "登录后发表回复",
     "Sign Out": "登出",
     "Snippets": "片段",
+    "Sponsor": "赞助商",
+    "Subscriber": "订阅用户",
     "Sun": "周日",
 
     "Tag": "标签",
