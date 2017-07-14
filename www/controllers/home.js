@@ -67,7 +67,7 @@ let
 let
     WRITE_VIEWS_BACK = 100,
     THEME = config.theme,
-    PRODUCTION = process.productionMode;
+    PRODUCTION = process.isProduction;
 
 async function getNavigations() {
     return await cache.get(constants.cache.NAVIGATIONS, navigationApi.getNavigations);

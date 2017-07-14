@@ -30,11 +30,15 @@
     <meta property="x-nav" content="{% block nav %}/{% endblock %}" />
     <link rel="alternate" href="/feed" title="{{ __website__.name }}" type="application/rss+xml" />
     {% block meta %}<!-- meta here -->{% endblock %}
+    {% if __production__ %}
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/all.css" />
+    {% else %}
     <!-- BEGIN CSS COMPRESS -->
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/highlight.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
     <!-- END CSS COMPRESS -->
+    {% endif %}
     <!--[if lt IE 9]>
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/ie.css" />
     <![endif]-->

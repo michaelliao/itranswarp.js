@@ -32,6 +32,8 @@ const
 // global app:
 let app = new Koa();
 
+process.isProduction = isProduction;
+
 // log request URL:
 app.use(async (ctx, next) => {
     logger.info(`will process request: ${ctx.request.method} ${ctx.request.url}...`);
