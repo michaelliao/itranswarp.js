@@ -81,7 +81,6 @@ describe('#image', () => {
                 expected_h = arr[6],
                 resized = arr[7],
                 r = image.calcScaleSize(ori_w, ori_h, res_w, res_h, keepAspect);
-            //console.log(ori_w + 'x' + ori_h + ' > ' + res_w + 'x' + res_h + ' ===> ' + r.width + 'x' + r.height);
             expect(r).to.be.ok;
             expect(r.width).to.equal(expected_w);
             expect(r.height).to.equal(expected_h);
