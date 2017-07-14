@@ -29,6 +29,7 @@ backup/*.sql
 all.js
 all.css
 itranswarp.css
+version.js
 
 # temp output dir:
 output
