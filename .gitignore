@@ -25,15 +25,10 @@ backup/*.sql
 *.crt
 *.csr
 
-# private config files:
-config_production.js
-config_development.js
-
-# generated css:
+# generated js add css:
+all.js
+all.css
 itranswarp.css
-
-# generated js:
-www/static/js/all.js
 
 # temp output dir:
 output
