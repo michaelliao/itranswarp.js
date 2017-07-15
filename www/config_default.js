@@ -35,7 +35,7 @@ module.exports = {
         // database name:
         database: 'itranswarp',
         // log sql:
-        showSql: true,
+        showSql: false,
         // pool settings:
         maxConnections: 20,
         minConnections: 1,
