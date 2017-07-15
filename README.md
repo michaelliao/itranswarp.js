@@ -1,15 +1,21 @@
-itranswarp.js
-=============
+# itranswarp.js
 
 A nodejs powered website containing blog, wiki, discuss and search engine.
 
-  [![NPM version][npm-image]][npm-url]
+[![Build Status](https://travis-ci.org/michaelliao/itranswarp.js.svg?branch=master)](https://travis-ci.org/michaelliao/itranswarp.js)
+
+* based on koa2 with ES7 async/await
+* OAuth2 integration (weibo, QQ, facebook, etc.)
+* SEO support
+* REST api
+* customized css with uikit 2
+* fully tested (using mocha)
 
 ### Environment
 
-Nodejs: >= 6.x
+Nodejs: >= 8.x
 
-MySQL: 5.1 ~ 5.7
+MySQL: 5.6 ~ 5.7
 
 Memcache
 
@@ -17,7 +23,9 @@ Nginx
 
 ### Configurations
 
-You should make a copy of 'config_default.js' to 'config_production.js', and override some of the settings you needed:
+You should make a copy of `config_default.js` to `config_<NODE_ENV>.js`, and override some of the settings you needed.
+
+For example, if NODE_ENV=production, you need create `config_production.js`:
 
     $ cp www/config_default.js www/config_production.js
 
@@ -39,10 +47,36 @@ You will get `init_db.sql` file in current directory. Run this SQL script by:
 
 NOTE: re-run this SQL file will remove all existing data.
 
+### Test
+
+iTranswarp.js is fully tested. To run tests, make sure:
+
+* run MySQL in localhost and set root password as `password`.
+* run Memcache in localhost.
+
+Then run:
+
+    $ mocha
+
+Schema will be created in MySQL `test` database before run tests.
+
 ### Run
 
-    $ node --harmony app.js
+    $ node start.js
 
-You should able to see the home page in the browser with address `http://localhost:2015/`.
+You should able to see the home page in the browser with address `http://localhost:2017/`.
 
-If you want to sign in to management console, go to `http://localhost:2015/manage/signin`, and sign in using the email and password you entered when running `node schema`.
+If you want to sign in to management console, go to `http://localhost:2017/manage/signin`, and sign in using the email and password you entered when running `node schema`.
+
+### Changelog
+
+2.0 - 15 Jul 2017
+
+* fully async/await support
+* markdown plugin support
+* based on koa 2.x
+
+1.11 - 21 Jul 2015
+
+* support article, wiki, discuss.
+* based on koa 1.x
