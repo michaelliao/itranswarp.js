@@ -3,11 +3,13 @@
 /*
 read config files from:
   * config_default.js (built-in)
-  * config_override.js (if file exist)
+  * config_<NODE_ENV>.js (if file exist)
 
-You should override some configurations in config_override.js:
+You should override some configurations in config_<NODE_ENV>.js.
 
-    // config_override.js:
+For example, suppose NODE_ENV=production, the override file is config_production.js:
+
+    // config_production.js:
     exports = module.exports = {
         "db": {
             "host": "192.168.0.101", // a specific IP of mysql server
@@ -18,16 +20,21 @@ You should override some configurations in config_override.js:
 
 const
     _ = require('lodash'),
-    logger = require('./logger');
+    logger = require('./logger'),
+    env = process.env.NODE_ENV;
 
 let cfg = require('./config_default');
 
-try {
-    let ovr = require('./config_override');
-    cfg = _.merge(cfg, ovr);
-    logger.warn('loaded config_override.');
-} catch (e) {
-    logger.warn('Cannot read config_override.');
+if (env) {
+    let overrideFile = 'config_' + env;
+    logger.info(`will load override config: ${overrideFile}...`);
+    try {
+        let ovr = require('./' + overrideFile);
+        cfg = _.merge(cfg, ovr);
+        logger.info(`override config ${overrideFile} loaded ok.`);
+    } catch (e) {
+        logger.warn(`failed to load override config ${overrideFile}.`, e);
+    }
 }
 
 logger.debug('configuration loaded: ' + JSON.stringify(cfg, null, '  '));

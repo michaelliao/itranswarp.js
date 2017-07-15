@@ -25,7 +25,7 @@ backup/*.sql
 *.crt
 *.csr
 
-config_override.js
+config_*.js
 
 # generated js add css:
 all.js
