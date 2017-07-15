@@ -1,133 +1,140 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__author__ = 'Michael Liao'
+from fabric.api import task, run
 
-'''
-Build release package.
-'''
-
-import os, re
+import re, os
 
 from datetime import datetime
 from fabric.api import *
 
-# linux user:
-env.user = 'root'
-
-# linux hosts:
-# env.hosts = ['www.liaoxuefeng.com', 'www.liaoxuefeng.com:23']
-
-# linux mysql user and password:
-db_user = 'www'
-db_password = 'www'
-
-_TAR_FILE = 'dist-itranswarp.tar.gz'
-
-_REMOTE_TMP_TAR = '/tmp/%s' % _TAR_FILE
-
-_REMOTE_BASE_DIR = '/srv/itranswarp'
-
-def _current_path():
-    return os.path.abspath('.')
-
 def _now():
-    return datetime.now().strftime('%y-%m-%d_%H.%M.%S')
+    return datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
 
-##########
-# backup #
-##########
+def _pwd():
+    return os.path.dirname(os.path.abspath(__file__))
 
-def backup():
-    ' backup mysql database to local file '
-    dt = _now()
-    f = 'backup-itranswarp-%s.sql' % dt
-    with cd('/tmp'):
-        run('mysqldump --user=%s --password=%s --skip-opt --add-drop-table --default-character-set=utf8 --quick itranswarp > %s' % (db_user, db_password, f))
-        run('tar -czvf %s.tar.gz %s' % (f, f))
-        get('%s.tar.gz' % f, '%s/backup/' % _current_path())
-        run('rm -f %s' % f)
-        run('rm -f %s.tar.gz' % f)
+@task
+def update_db(sqlFile=None):
+    'update db by execute sql file.'
+    if not sqlFile:
+        print('SQL file not specified.')
+        exit(1)
+    pass
 
-def build():
-    ' build deploy package '
-    with lcd('www'):
-        local('gulp')
-    includes = ['*']
-    excludes = ['config_development.js', 'gulpfile.js', 'schema.*', '.*', '*.psd', 'static/css/*.less', 'node_modules/gulp', 'node_modules/gulp-*', 'node_modules/should', 'node_modules/mocha']
-    local('rm -f dist/%s' % _TAR_FILE)
-    with lcd('www'):
-        cmd = ['tar', '--dereference', '-czvf', '../dist/%s' % _TAR_FILE]
+@task
+def deploy():
+    'deploy new version to target platform.'
+
+    print('start deploy...')
+
+    pwd = _pwd()
+    now = _now()
+
+    with lcd('%s/www' % pwd):
+        excludes = ['.*', 'test', 'script', '*.sh', 'node_modules', 'package-lock.json']
+        cmd = ['tar', '--dereference', '-czvf', '../itranswarp.tar.gz']
         cmd.extend(['--exclude=\'%s\'' % ex for ex in excludes])
-        cmd.extend(includes)
+        cmd.append('*')
         local(' '.join(cmd))
 
-def scp():
-    ' deploy tar file to server '
-    newdir = 'www-%s' % _now()
-    run('rm -f %s' % _REMOTE_TMP_TAR)
-    put('dist/%s' % _TAR_FILE, _REMOTE_TMP_TAR)
-    with cd(_REMOTE_BASE_DIR):
-        run('mkdir %s' % newdir)
-    with cd('%s/%s' % (_REMOTE_BASE_DIR, newdir)):
-        run('tar -xzvf %s' % _REMOTE_TMP_TAR)
-    with cd(_REMOTE_BASE_DIR):
+    # will deploy to /srv/itranswarp/www-<now>
+
+    run('mkdir -p /srv/itranswarp/www-%s' % now)
+
+    # unzip tar.gz file to /srv/itranswarp/www-<now>
+
+    with cd('/srv/itranswarp/www-%s' % now):
+        print('unzip tar.gz...')
+        run('tar zxvf itranswarp.tar.gz')
+        print('remove tar.gz...')
+        run('rm itranswarp.tar.gz')
+
+        # run npm install:
+        run('npm install')
+
+    exit(1)
+
+    # update owner and create symbol link: /srv/itranswarp/www -> /srv/itranswarp/www-<now>
+
+    with cd('/srv/itranswarp'):
+        run('chown -R www-data:www-data www-%s' % now)
+        print('updating symbol link...')
         run('rm -f www')
-        run('ln -s %s www' % newdir)
-        run('chown www-data:www-data www')
-        run('chown -R www-data:www-data %s' % newdir)
+        run('ln -s www-%s www' % now)
+
+    # restart supervisor:
+
+    print('restarting itranswarp...')
     with settings(warn_only=True):
         run('supervisorctl stop itranswarp')
         run('supervisorctl start itranswarp')
-        #run('/etc/init.d/nginx reload')
+    # done:
+    print('deploy ok.')
 
-RE_FILES = re.compile('\r?\n')
-
+@task
 def rollback():
-    ' rollback to previous version '
-    with cd(_REMOTE_BASE_DIR):
+    'rollback to previous version'
+
+    print('start rollback...')
+    RE_FILES = re.compile('\r?\n')
+    with cd('/srv/itranswarp'):
+        print('finding all versions under /srv/itranswarp...')
         r = run('ls -p -1')
         files = [s[:-1] for s in RE_FILES.split(r) if s.startswith('www-') and s.endswith('/')]
         files.sort(cmp=lambda s1, s2: 1 if s1 < s2 else -1)
+        for f in files:
+            print('  found: %s.' % f);
         r = run('ls -l www')
         ss = r.split(' -> ')
         if len(ss) != 2:
-            print ('ERROR: \'www\' is not a symbol link.')
-            return
+            print('ERROR: \'www\' is not a symbol link.')
+            exit(1)
         current = ss[1]
-        print ('Found current symbol link points to: %s\n' % current)
+        print('found current symbol link \'www\' points to: \'%s\'\n' % current)
+        print('check symbol link...')
         try:
             index = files.index(current)
-        except ValueError, e:
-            print ('ERROR: symbol link is invalid.')
-            return
+        except ValueError as e:
+            print('ERROR: symbol link is invalid.')
+            exit(1)
         if len(files) == index + 1:
-            print ('ERROR: already the oldest version.')
+            print('ERROR: already the oldest version.')
+            exit(1)
         old = files[index + 1]
-        print ('==================================================')
+        print('information about rollback:')
         for f in files:
             if f == current:
-                print ('      Current ---> %s' % current)
+                print('      current -> %s' % current)
             elif f == old:
-                print ('  Rollback to ---> %s' % old)
+                print('  rollback to -> %s' % old)
             else:
-                print ('                   %s' % f)
-        print ('==================================================')
-        print ('')
-        yn = raw_input ('continue? y/N ')
-        if yn != 'y' and yn != 'Y':
-            print ('Rollback cancelled.')
-            return
-        print ('Start rollback...')
+                print('                 %s' % f)
+        print('rollback now...')
         run('rm -f www')
         run('ln -s %s www' % old)
         run('chown www-data:www-data www')
-        with settings(warn_only=True):
-            run('supervisorctl stop itranswarp')
-            run('supervisorctl start itranswarp')
-            run('/etc/init.d/nginx reload')
-        print ('ROLLBACKED OK.')
+    print('restarting itranswarp...')
+    with settings(warn_only=True):
+        run('supervisorctl stop itranswarp')
+        run('supervisorctl start itranswarp')
+    print('rollback ok.')
 
+@task
+def backup(db_password):
+    ' backup mysql database to local file '
+    db_host = '2.liaoxuefeng.local'
+    db_user = root
+    dt = _now()
+    f = 'backup-itranswarp-%s.sql' % dt
+    with cd('/tmp'):
+        run('mysqldump --host=%s --user=%s --password=%s --skip-opt --add-drop-table --default-character-set=utf8mb4 --quick itranswarp > %s' % (db_host, db_user, db_password, f))
+        run('tar -czvf %s.tar.gz %s' % (f, f))
+        run('rm -f %s' % f)
+        get('%s.tar.gz' % f, '%s/backup/' % _current_path())
+        run('rm -f %s.tar.gz' % f)
+
+@task
 def restore2local():
     ' restore database file to local mysql '
     backup_dir = os.path.join(_current_path(), 'backup')
@@ -135,7 +142,7 @@ def restore2local():
     files = [f for f in fs if f.startswith('backup-') and f.endswith('.sql.tar.gz')]
     files.sort(cmp=lambda s1, s2: 1 if s1 < s2 else -1)
     if len(files)==0:
-        print 'No backup files found.'
+        print('No backup files found.')
         return
     print ('Found %s backup files:' % len(files))
     print ('==================================================')
@@ -169,8 +176,3 @@ def restore2local():
     local(r'mysql -uroot -p%s itranswarp < backup/%s' % (p, restore_file[:-7]))
     with lcd(backup_dir):
         local('rm -f %s' % restore_file[:-7])
-
-def deploy():
-    ' build and deploy '
-    build()
-    scp()
