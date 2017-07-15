@@ -37,6 +37,7 @@ def deploy():
         cmd.extend(['--exclude=\'%s\'' % ex for ex in excludes])
         cmd.append('*')
         local(' '.join(cmd))
+        put('../itranswarp.tar.gz', '/tmp/itranswarp.tar.gz')
 
     # will deploy to /srv/itranswarp/www-<now>
 
@@ -46,14 +47,10 @@ def deploy():
 
     with cd('/srv/itranswarp/www-%s' % now):
         print('unzip tar.gz...')
-        run('tar zxvf itranswarp.tar.gz')
+        run('tar zxvf /tmp/itranswarp.tar.gz')
         print('remove tar.gz...')
-        run('rm itranswarp.tar.gz')
-
         # run npm install:
         run('npm install')
-
-    exit(1)
 
     # update owner and create symbol link: /srv/itranswarp/www -> /srv/itranswarp/www-<now>
 
