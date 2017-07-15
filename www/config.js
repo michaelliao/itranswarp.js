@@ -3,9 +3,9 @@
 /*
 read config files from:
   * config_default.js (built-in)
-  * /srv/itranswarp/conf/config_override.js (if file exist)
+  * config_override.js (if file exist)
 
-You should override some configurations in /srv/itranswarp/conf/config_override.js:
+You should override some configurations in config_override.js:
 
     // config_override.js:
     exports = module.exports = {
@@ -17,22 +17,18 @@ You should override some configurations in /srv/itranswarp/conf/config_override.
 */
 
 const
-    overrideConfigPath = '/srv/itranswarp/conf/config_override.js',
     _ = require('lodash'),
-    fs = require('fs'),
     logger = require('./logger');
 
 let cfg = require('./config_default');
 
-if (fs.existsSync(overrideConfigPath)) {
-    logger.info(`load ${overrideConfigPath}...`);
-    let ovr = require(overrideConfigPath);
+try {
+    let ovr = require('./config_override');
     cfg = _.merge(cfg, ovr);
+    logger.warn('loaded config_override.');
+} catch (e) {
+    logger.warn('Cannot read config_override.');
 }
-
-cfg.version = '1.0';
-// replace by deployment:
-cfg.build = '$BUILD$';
 
 logger.debug('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
 
