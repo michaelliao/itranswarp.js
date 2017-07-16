@@ -1,5 +1,7 @@
 # itranswarp.js
 
+![icon](https://raw.githubusercontent.com/michaelliao/itranswarp.js/master/resource/icon-64x64.png)
+
 A nodejs powered website containing blog, wiki, discuss and search engine.
 
 [![Build Status](https://travis-ci.org/michaelliao/itranswarp.js.svg?branch=master)](https://travis-ci.org/michaelliao/itranswarp.js)
