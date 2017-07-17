@@ -135,9 +135,6 @@ async function parseSessionCookie(s) {
     let
         secure = [provider, theId, expiresStr, auth.passwd, COOKIE_SALT].join(':'),
         expected = crypto.createHash('sha1').update(secure).digest('hex');
-    logger.debug('>>> secure: ' + secure);
-    logger.debug('>>> sha1: ' + sha1);
-    logger.debug('>>> expected: ' + expected);
     if (sha1 !== expected) {
         return null;
     }
