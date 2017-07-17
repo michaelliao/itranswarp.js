@@ -54,7 +54,6 @@ function createApiError(errors) {
         return api.invalidRequest('json', 'Invalid JSON request.');
     }
     let err = null;
-    logger.debug('>>> ' + JSON.stringify(errors.validation));
     _.each(errors.validation, function (v, k) {
         if (err === null) {
             err = api.invalidParam(k, translateMessage(k, Object.getOwnPropertyNames(v)));
