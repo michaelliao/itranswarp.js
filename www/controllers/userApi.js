@@ -28,11 +28,12 @@ logger.info('set secure cookie: ' + SECURE);
 let oauth2_providers = {};
 
 _.each(config.oauth2, (cfg, name) => {
+    let redirect_uri = (SECURE ? 'https' : 'http') + '://' + config.domain + '/auth/callback/' + name;
     let provider = oauth2.createProvider(
         name,
         cfg.app_key,
         cfg.app_secret,
-        cfg.redirect_uri
+        redirect_uri
     );
     provider.getAuthentication = bluebird.promisify(provider.getAuthentication, { context: provider });
     oauth2_providers[name] = provider;
@@ -252,23 +253,20 @@ module.exports = {
         let
             name = ctx.params.name,
             provider = oauth2_providers[name],
-            redirect_uri,
             jscallback = ctx.request.query.jscallback;
         if (! provider) {
             ctx.response.status = 404;
             ctx.response.body = 'Invalid URL';
             return;
         }
-        redirect_uri = provider.redirect_uri;
-        if (redirect_uri.indexOf('http://') !== 0 || redirect_uri.indexOf('https://') !== 0) {
-            redirect_uri = (SECURE ? 'https://' : 'http://') + ctx.request.host + '/auth/callback/' + name;
-        }
+        let redirect_uri = (SECURE ? 'https://' : 'http://') + ctx.request.host + '/auth/callback/' + name;
         if (jscallback) {
             redirect_uri = redirect_uri + '?jscallback=' + jscallback;
         }
         else {
             redirect_uri = redirect_uri + '?redirect=' + encodeURIComponent(_getReferer(ctx.request));
         }
+        logger.info('send OAuth2 redirect uri: ' + redirect_uri);
         ctx.response.redirect(provider.getAuthenticateURL({
             redirect_uri: redirect_uri
         }));

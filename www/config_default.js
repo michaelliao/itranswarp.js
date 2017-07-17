@@ -83,7 +83,6 @@ module.exports = {
         //     'name': 'Sign in with Facebook',
         //     'app_key': 'your-app-id',
         //     'app_secret': 'your-app-secret',
-        //     'redirect_uri': 'http://your-redirect-uri/config/in/facebook'
         // }
     }
 };
