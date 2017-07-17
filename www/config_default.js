@@ -53,9 +53,9 @@ module.exports = {
         // retries when failed:
         retries: 3
     },
-    // NOT USED NOW:
+    // cdn url prefix, e.g. 'http://cdn.example.com'
     cdn: {
-        static_prefix: ''
+        url_prefix: ''
     },
     // NOT USED NOW:
     queue: {

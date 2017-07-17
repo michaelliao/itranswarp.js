@@ -25,6 +25,7 @@ const
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
     navigationApi = require('./navigationApi'),
+    CDN_URL_PREFIX = config.cdn.url_prefix,
     User = db.User,
     Article = db.Article,
     Category = db.Category,
@@ -77,6 +78,7 @@ async function getNavigations() {
 async function getModel(model) {
     model.__version__ = VERSION;
     model.__production__ = PRODUCTION;
+    model.__cdn__ = CDN_URL_PREFIX;
     model.__navigations__ = await getNavigations();
     model.__website__ = await settingApi.getWebsiteSettings();
     model.__snippets__ = await settingApi.getSnippets();

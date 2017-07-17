@@ -30,7 +30,7 @@
         <ul class="uk-slideshow uk-overlay-active">
             {% for a in hotArticles %}
             <li>
-                <img src="/files/attachments/{{ a.cover_id }}/l" width="640" height="360">
+                <img src="{{ __cdn__ }}/files/attachments/{{ a.cover_id }}/l" width="640" height="360">
                 <div onclick="window.open('/article/{{ a.id }}')" style="cursor:pointer" class="uk-overlay-panel uk-overlay-background uk-overlay-bottom uk-overlay-slide-bottom">
                     <h3>{{ a.name }}</h3>
                     <p>{{ a.description }}</p>
@@ -46,7 +46,7 @@
     {% for a in recentArticles %}
     <div class="uk-margin uk-clearfix">
         <div style="float:left">
-            <a href="/article/{{ a.id }}" target="_blank"><img src="/files/attachments/{{ a.cover_id }}/s" /></a>
+            <a href="/article/{{ a.id }}" target="_blank"><img src="{{ __cdn__ }}/files/attachments/{{ a.cover_id }}/s" /></a>
         </div>
         <div class="uk-margin" style="margin-left:180px;">
             <h3><a href="/article/{{ a.id }}" target="_blank">{{ a.name }}</a></h3>
