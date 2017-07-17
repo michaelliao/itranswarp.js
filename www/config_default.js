@@ -3,8 +3,9 @@
 /*
  * This is the default configuration for iTranswarp.js.
  * 
- * DO NOT change it. Instead, make a copy and put to:
- * "/srv/itranswarp/config/override.js"
+ * DO NOT change it. Instead, make a copy and rename to: config_<NODE_ENV>.js
+ * 
+ * For development, the target file is config_development.js.
  * 
  * Then edit settings you needed.
  */
