@@ -91,7 +91,7 @@ let filters = {
 };
 
 // add nunjucks as view:
-app.use(templating('view', {
+app.use(templating('views', {
     noCache: !isProduction,
     watch: !isProduction,
     filters: filters
