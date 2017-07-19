@@ -21,6 +21,10 @@ module.exports = {
     type: 'heading',
     plugin: 'video',
     render: function (text) {
+        text = text.trim();
+        if (text.indexOf('//www.bilibili.com/html/html5player.html') >= 0) {
+            return '<iframe style="width:100%; height:600px; border: 0" src="' + text + '"></iframe>';
+        }
         let sources = text.split(SPLIT).map((s) => {
             return s && s.trim();
         }).filter((s) => {
