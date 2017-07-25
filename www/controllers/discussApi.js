@@ -243,9 +243,9 @@ async function createReply(user, topic_id, data) {
         user_id: user.id,
         content: md.ugcMarkdownToHtml(data.content)
     });
-    // FIXME: updated_at = Date.now()?
     await Topic.update({
-        replies: db.sequelize.literal('replies + 1')
+        replies: db.sequelize.literal('replies + 1'),
+        updated_at: Date.now()
     }, {
         where: {
             id: topic_id
