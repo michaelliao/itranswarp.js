@@ -43,9 +43,9 @@
                     <div style="margin-left:70px;">
                         <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ board.id }}/{{ t.id }}">{{ t.name}}</a></div>
                         <div>
-                            <a href="/user/{{ t.user.id }}" target="_blank">{{ t.user.name }}</a> posted at <span class="x-smartdate" date="{{ t.created_at }}">...</span>
+                            <a href="/user/{{ t.user.id }}" target="_blank">{{ t.user.name }}</a> {{ _('posted at') }} <span class="x-smartdate" date="{{ t.created_at }}">...</span>
                             {% if t.updated_at > t.created_at %}
-                            Last updated at <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
+                            {{ _('last replied at') }} <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
                             {% endif %}
                         </div>
                     </div>
