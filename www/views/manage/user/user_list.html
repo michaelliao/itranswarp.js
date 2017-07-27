@@ -21,7 +21,11 @@ function initVM(data) {
     var vm = new Vue({
         el: '#vm',
         data: {
-            users: data.users,
+            users: _.map(data.users, function (u) {
+                u.lockAction = 0;
+                u.unlockAction = 0;
+                return u;
+            }),
             page: data.page,
             days: 1
         },
@@ -60,32 +64,55 @@ function initVM(data) {
                 }
                 return 'in ' + parseInt(t / 86400000, 10) + ' days';
             },
-            lockUser: function (u) {
+            updateUserRole: function (u) {
                 var that = this;
-                UIkit.modal.confirm('User \"' + u.name + '\" will be locked for ' + $('option[value=' + that.days + ']').text() + '. Continue?', function() {
-                    that.$resource('/api/users/' + u.id + '/lock').save({
-                        locked_until: that.days * 3600000 * 24 + g_currentTime
+                var role = u.role;
+                UIkit.modal.confirm('The role of user \"' + u.name + '\" will be set to ' + $('option.x-role[value=' + role + ']').first().text() + '. Continue?', function() {
+                    that.$resource('/api/users/' + u.id + '/role').save({
+                        role: role
                     }).then(function(resp) {
                         resp.json().then(function (result) {
                             refresh();
                         });
                     }, onJsonError);
+                }, function () {
+                    refresh();
+                });
+            },
+            lockUser: function (u) {
+                var that = this;
+                var days = u.lockAction;
+                UIkit.modal.confirm('User \"' + u.name + '\" will be locked for ' + $('option.x-lock[value=' + days + ']').first().text() + '. Continue?', function() {
+                    that.$resource('/api/users/' + u.id + '/lock').save({
+                        locked_until: days * 3600000 * 24 + g_currentTime
+                    }).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                }, function () {
+                    u.lockAction = 0;
                 });
             },
             unlockUser: function (u) {
                 var that = this;
                 UIkit.modal.confirm('User \"' + u.name + '\" will be unlocked. Continue?', function() {
-                    that.$resource('/api/users/' + u.id + '/unlock').save({}).then(function (resp) {
+                    that.$resource('/api/users/' + u.id + '/lock').save({
+                        locked_until: 0
+                    }).then(function (resp) {
                         resp.json().then(function (result) {
                             refresh();
                         });
                     }, onJsonError);
+                }, function () {
+                    u.unlockAction = 0;
                 });
             }
         }
     });
     $('#loading').hide();
     $('#vm').show();
+    g_vm = vm;
 }
 </script>
 {% endblock %}
@@ -101,30 +128,17 @@ function initVM(data) {
 
         <div class="uk-margin uk-clearfix">
             <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
-            <a href="create_user" class="uk-button uk-button-primary"><i class="uk-icon-plus"></i> {{ _('New User') }}</a>
-            <select id="days" v-model="days" class="uk-float-right">
-                <option value="1">1 day</option>
-                <option value="2">2 days</option>
-                <option value="3">3 days</option>
-                <option value="7">1 week</option>
-                <option value="14">2 weeks</option>
-                <option value="30">1 month</option>
-                <option value="60">2 months</option>
-                <option value="90">3 months</option>
-                <option value="180">6 months</option>
-                <option value="365">1 year</option>
-                <option value="40000">forever</option>
-            </select>
         </div>
 
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th width="10%">{{ _('Name') }}</th>
-                    <th width="15%">{{ _('Name') }}</th>
-                    <th width="45%">{{ _('Email') }}</th>
+                    <th width="8%">{{ _('Name') }}</th>
+                    <th width="17%">{{ _('Name') }}</th>
+                    <th width="40%">{{ _('Email') }}</th>
                     <th width="15%">{{ _('Created at') }}</th>
-                    <th width="15%">{{ _('Lock') }}</th>
+                    <th width="10%">{{ _('Status') }}</th>
+                    <th width="10%">{{ _('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -135,14 +149,40 @@ function initVM(data) {
                     <td>
                         <a v-bind:href="'/user/'+u.id" target="_blank"><span v-text="u.name"></span></a>
                         <br>
-                        <span v-text="getRoleName(u)"></span>
+                        <span v-if="u.role==0">{{ _('Admin') }}</span>
+                        <select v-if="u.role>0" v-model.number="u.role" v-on:change="updateUserRole(u)">
+                            <option value="10" class="x-role">{{ _('Editor') }}</option>
+                            <option value="100" class="x-role">{{ _('Contributor') }}</option>
+                            <option value="1000" class="x-role">{{ _('Sponsor') }}</option>
+                            <option value="10000" class="x-role">{{ _('Subscriber') }}</option>
+                        </select>
                     </td>
                     <td><span v-text="u.email"></span></td>
                     <td><span v-text="u.created_at.toDateTime()"></span></td>
                     <td>
-                        <a v-if="! isLocked(u)" v-on:click="lockUser(u)" title="Lock User" href="#0" class="x-btn"><i class="uk-icon-ban"></i></a>
-                        <a href="#0" v-if="isLocked(u)" v-on:click="unlockUser(u)"><i class="uk-icon-circle-o"></i></a>
+                        <i v-if="! isLocked(u)" class="uk-icon-check-square-o"></i>
+                        <i v-if="isLocked(u)" class="uk-icon-ban"></i>
                         <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
+                    </td>
+                    <td>
+                        <select v-if="isLocked(u)" v-model.number="u.unlockAction" v-on:change="unlockUser(u)">
+                            <option value="0">-- Unlock --</option>
+                            <option value="1">Unlock</option>
+                        </select>
+                        <select v-if="! isLocked(u)" v-model.number="u.lockAction" v-on:change="lockUser(u)">
+                            <option value="0" class="x-lock">-- Lock for --</option>
+                            <option value="1" class="x-lock">1 day</option>
+                            <option value="2" class="x-lock">2 days</option>
+                            <option value="3" class="x-lock">3 days</option>
+                            <option value="7" class="x-lock">1 week</option>
+                            <option value="14" class="x-lock">2 weeks</option>
+                            <option value="30" class="x-lock">1 month</option>
+                            <option value="60" class="x-lock">2 months</option>
+                            <option value="90" class="x-lock">3 months</option>
+                            <option value="180" class="x-lock">6 months</option>
+                            <option value="365" class="x-lock">1 year</option>
+                            <option value="40000" class="x-lock">forever</option>
+                        </select>
                     </td>
                 </tr>
             </tbody>
