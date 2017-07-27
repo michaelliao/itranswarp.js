@@ -176,7 +176,7 @@ module.exports = {
 
     getArticle: getArticle,
 
-    'GET /feed/articles': async (ctx, next) => {
+    'GET /feed': async (ctx, next) => {
         let rss = await cache.get(constants.cache.ARTICLE_FEED, async () => {
             return await getFeed(ctx.request.host);
         });
