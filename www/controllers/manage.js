@@ -56,7 +56,7 @@ module.exports = {
 
     // redirect:
     'GET /manage/': async (ctx, next) => {
-        ctx.response.redirect('/manage/article/');
+        ctx.response.redirect('/manage/discuss/topic_list');
     },
 
     // overview ///////////////////////////////////////////////////////////////
