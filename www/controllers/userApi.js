@@ -334,6 +334,27 @@ module.exports = {
         }
     },
 
+    'POST /api/users/:id/role': async (ctx, next) => {
+        /**
+         * Set user role.
+         * 
+         * @param role(number): set new role.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.validate('updateUserRole');
+        let
+            id = ctx.params.id,
+            user = await getUser(id),
+            role = ctx.request.body.role;
+        if (user.role === constants.role.ADMIN) {
+            throw api.notAllowed('Cannot change role of admin user.');
+        }
+        await user.update({
+            role: role
+        });
+        ctx.rest(user);
+    },
+
     'POST /api/users/:id/lock': async (ctx, next) => {
         /**
          * Set user lock time. Set to 0 to unlock user.

@@ -176,6 +176,65 @@ describe('#user', () => {
         expect(response.body.data).to.equal('locked');
     });
 
+    it('set user role by editor failed', async () => {
+        // set by editor:
+        let response = await request($SERVER)
+                .post(`/api/users/${$CONTRIB.id}/role`)
+                .set('Authorization', auth($EDITOR))
+                .send({
+                    role: 10 // editor
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+    });
+
+    it('change admin role by admin failed', async () => {
+        // set by admin:
+        let response = await request($SERVER)
+                .post(`/api/users/${$ADMIN.id}/role`)
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    role: 10 // editor
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+    });
+
+    it('change user role by admin ok', async () => {
+        let response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: 'subs@itranswarp.com',
+                    passwd: crypto.createHash('sha1').update('subs@itranswarp.com:password').digest('hex')
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.name).to.equal('subs');
+        expect(response.body.role).to.equal(constants.role.SUBSCRIBER);
+        // set role to editor by admin:
+        response = await request($SERVER)
+                .post(`/api/users/${$SUBS.id}/role`)
+                .set('Authorization', auth($ADMIN))
+                .send({
+                    role: 10 // editor
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        // login again as editor:
+        response = await request($SERVER)
+                .post('/api/authenticate')
+                .send({
+                    email: 'subs@itranswarp.com',
+                    passwd: crypto.createHash('sha1').update('subs@itranswarp.com:password').digest('hex')
+                })
+                .expect('Content-Type', /application\/json/)
+                .expect(200);
+        expect(response.body.name).to.equal('subs');
+        expect(response.body.role).to.equal(constants.role.EDITOR);
+    });
+
     it('lock user and its cookie should be invalid', async () => {
         // authenticate ok:
         let response = await request($SERVER)

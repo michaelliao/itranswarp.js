@@ -87,6 +87,11 @@ const PROPERTY = {
         pattern: '^(?:[\\w\\!\\#\\$\\%\\&\\\'\\*\\+\\-\\/\\=\\?\\^\\\`\\{\\|\\}\\~]+\\.)*[\\w\\!\\#\\$\\%\\&\\\'\\*\\+\\-\\/\\=\\?\\^\\\`\\{\\|\\}\\~]+@(?:(?:(?:[a-z0-9](?:[a-z0-9\\-](?!\\.)){0,61}[a-z0-9]?\\.)+[a-z0-9](?:[a-z0-9\\-](?!$)){0,61}[a-z0-9]?)|(?:\\[(?:(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}(?:[01]?\\d{1,2}|2[0-4]\\d|25[0-5])\\]))$',
     },
 
+    ROLE: {
+        type: 'integer',
+        enum: [10, 100, 1000, 10000]
+    },
+
     URL: {
         type: 'string',
         minLength: 1,
@@ -203,6 +208,13 @@ const schemas = {
             passwd: PROPERTY.PASSWD
         },
         required: ['email', 'passwd']
+    },
+    updateUserRole: {
+        type: 'object',
+        properties: {
+            role: PROPERTY.ROLE
+        },
+        required: ['role']
     },
     lockUser: {
         type: 'object',
