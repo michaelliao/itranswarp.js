@@ -181,7 +181,7 @@
             <div class="uk-navbar uk-navbar-attached">
                 {% if __offcanvas_left__ %}
                 <ul class="uk-navbar-nav uk-visible-small">
-                    <li><a href="#0" onclick="UIkit.offcanvas.show('#x-offcanvas-left')"><i class="uk-icon-chevron-right"></i></a></li>
+                    <li><a href="#0" onclick="UIkit.offcanvas.show('#x-offcanvas-left')">{{ _('Index') }}</a></li>
                 </ul>
                 {% endif %}
                 <a href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
@@ -227,6 +227,10 @@
                                     <li class="uk-nav-divider"></li>
                                 {% if __user__ and __user__.role <= 100 %}
                                     <li><a target="_blank" href="/manage/"><i class="uk-icon-cogs"></i> {{ _('Manage') }}</a></li>
+                                    <li class="uk-nav-divider"></li>
+                                {% endif %}
+                                {% if __user__ and __user__.role == 1000 %}
+                                    <li><a target="_blank" href="/sponsor/"><i class="uk-icon-photo"></i> {{ _('Sponsor') }}</a></li>
                                     <li class="uk-nav-divider"></li>
                                 {% endif %}
                                     <li><a href="/auth/signout"><i class="uk-icon-power-off"></i> {{ _('Sign Out') }}</a></li>
