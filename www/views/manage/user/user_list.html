@@ -160,9 +160,14 @@ function initVM(data) {
                     <td><span v-text="u.email"></span></td>
                     <td><span v-text="u.created_at.toDateTime()"></span></td>
                     <td>
-                        <i v-if="! isLocked(u)" class="uk-icon-check-square-o"></i>
-                        <i v-if="isLocked(u)" class="uk-icon-ban"></i>
-                        <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
+                        <div v-if="! isLocked(u)">
+                            <i class="uk-icon-check-square-o"></i>
+                            Active
+                        </div>
+                        <div v-if="isLocked(u)" class="uk-text-danger">
+                            <i class="uk-icon-ban"></i>
+                            <span v-if="isLocked(u)" v-text="getLockTime(u)"></span>
+                        </div>
                     </td>
                     <td>
                         <select v-if="isLocked(u)" v-model.number="u.unlockAction" v-on:change="unlockUser(u)">
@@ -170,7 +175,7 @@ function initVM(data) {
                             <option value="1">Unlock</option>
                         </select>
                         <select v-if="! isLocked(u)" v-model.number="u.lockAction" v-on:change="lockUser(u)">
-                            <option value="0" class="x-lock">-- Lock for --</option>
+                            <option value="0" class="x-lock">-- Lock --</option>
                             <option value="1" class="x-lock">1 day</option>
                             <option value="2" class="x-lock">2 days</option>
                             <option value="3" class="x-lock">3 days</option>
