@@ -58,6 +58,15 @@ module.exports = {
     cdn: {
         url_prefix: ''
     },
+    // smtp for sending email:
+    smtp: {
+        host: 'smtp.email.example',
+        port: 465,
+        secure: true, // secure:true for port 465, secure:false for port 587
+        from: 'noreply@email.example',
+        user: 'noreply@email.example',
+        password: 'p123456'
+    },
     // NOT USED NOW:
     queue: {
         // host or ip address of redis:
