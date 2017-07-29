@@ -520,7 +520,11 @@ const schemas = {
     createAdMaterial: {
         type: 'object',
         properties: {
-            image: PROPERTY.IMAGE
+            url: PROPERTY.URL,
+            weight: PROPERTY.INTEGER,
+            start_at: PROPERTY.DATE,
+            end_at: PROPERTY.DATE,
+            image: PROPERTY.FILE
         }
     }
 }
