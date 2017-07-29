@@ -318,7 +318,7 @@ module.exports = {
         }
         adperiod.end_at = _addMonths(adperiod.end_at, months);
         await adperiod.save();
-        return adperiod;
+        ctx.rest(adperiod);
     },
 
     'POST /api/adperiods/:id/admaterials': async (ctx, next) => {
