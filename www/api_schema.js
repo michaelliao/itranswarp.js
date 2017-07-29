@@ -178,7 +178,7 @@ const PROPERTY = {
 
     DATE: {
         type: 'string',
-        pattern: '^[1-2][0-9]{3}\\-[0-1][0-9]\\-[1-3][0-9]$'
+        pattern: '^[1-2][0-9]{3}\\-[0-1][0-9]\\-[0-3][0-9]$'
     },
 
     MIME: {
@@ -492,13 +492,14 @@ const schemas = {
     updateAdSlot: {
         type: 'object',
         properties: {
+            name: PROPERTY.NAME,
             description: PROPERTY.DESCRIPTION,
             price: PROPERTY.PRICE,
             num_slots: PROPERTY.NUM_OF_ADSLOT,
             num_auto_fill: PROPERTY.NUM_OF_ADSLOT,
             auto_fill: PROPERTY.TEXT
         },
-        required: ['description', 'price', 'num_slots', 'num_auto_fill', 'auto_fill']
+        required: []
     },
     createAdPeriod: {
         type: 'object',
