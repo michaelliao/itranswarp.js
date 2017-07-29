@@ -5,27 +5,38 @@
 const dbtypes = require('../dbtypes');
 
 module.exports = {
-    name: 'AdPeriod',
-    table: 'adperiods',
+    name: 'AdMaterial',
+    table: 'admaterials',
     fields: {
         user_id: {
             type: dbtypes.ID,
             index: true
         },
-        adslot_id: {
+        adperiod_id: {
             type: dbtypes.ID,
             index: true
         },
-        display_order: {
-            type: dbtypes.BIGINT
+        weight: {
+            type: dbtypes.BIGINT,
+            default: () => 100
         },
         start_at: {
             type: dbtypes.STRING(10), // ISO date format: YYYY-MM-DD
-            index: true
+            default: () => ''
         },
         end_at: {
             type: dbtypes.STRING(10), // ISO date format: YYYY-MM-DD
-            index: true
+            default: () => ''
+        },
+        geo: {
+            type: dbtypes.STRING(100),
+            default: () => ''
+        },
+        cover_id: {
+            type: dbtypes.ID
+        },
+        url: {
+            type: dbtypes.STRING(1000)
         }
     },
     extraFields: ['html']

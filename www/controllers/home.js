@@ -351,6 +351,56 @@ module.exports = {
         ctx.render('user/profile.html', await getModel(model));
     },
 
+    // TODO: test
+    'POST /api/geo': async (ctx, next) => {
+        ctx.rest([
+            { "value": "Beijing" },
+            { "value": "Shanghai" },
+            { "value": "Shenzhen" },
+            { "value": "Guangdong" },
+            { "value": "Zhejiang" }
+        ]);
+    },
+
+    'GET /sponsor/': async (ctx, next) => {
+        let
+            user = ctx.state.__user__,
+            model = {
+                user: user
+            };
+        if (user === null || user.role !== constants.role.SPONSOR) {
+            ctx.response.redirect('/auth/signin');
+            return;
+        }
+        ctx.render('user/sponsor.html', await getModel(model));
+    },
+
+    'POST /sponsor/adslots': async (ctx, next) => {
+        let
+            user = ctx.state.__user__,
+            model = {
+                user: user
+            };
+        if (user === null || user.role !== constants.role.SPONSOR) {
+            ctx.response.redirect('/auth/signin');
+            return;
+        }
+        ctx.render('user/sponsor.html', await getModel(model));
+    },
+
+    'POST /sponsor/adslots/upload': async (ctx, next) => {
+        let
+            user = ctx.state.__user__,
+            model = {
+                user: user
+            };
+        if (user === null || user.role !== constants.role.SPONSOR) {
+            ctx.response.redirect('/auth/signin');
+            return;
+        }
+        ctx.render('user/sponsor.html', await getModel(model));
+    },
+
     'GET /me/profile': async (ctx, next) => {
         let
             user = ctx.state.__user__,

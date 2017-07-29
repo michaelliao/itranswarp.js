@@ -9,10 +9,11 @@ module.exports = {
     table: 'adslots',
     fields: {
         name: {
-            type: dbtypes.STRING(100)
+            type: dbtypes.STRING(100),
+            unique: 'uni_adslot_name'
         },
-        type: {
-            type: dbtypes.STRING(100)
+        description: {
+            type: dbtypes.STRING(1000)
         },
         price: {
             type: dbtypes.BIGINT
@@ -23,11 +24,15 @@ module.exports = {
         height: {
             type: dbtypes.BIGINT
         },
-        num: {
+        num_slots: {
+            type: dbtypes.BIGINT
+        },
+        num_auto_fill: {
             type: dbtypes.BIGINT
         },
         auto_fill: {
-            type: dbtypes.TEXT // auto fill with html if available
+            type: dbtypes.TEXT, // auto fill with html if available
+            defaultValue: () => ''
         }
     },
     extraFields: ['html']

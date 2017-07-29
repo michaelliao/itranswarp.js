@@ -176,6 +176,11 @@ const PROPERTY = {
         uniqueItems: true
     },
 
+    DATE: {
+        type: 'string',
+        pattern: '^[1-2][0-9]{3}\\-[0-1][0-9]\\-[1-3][0-9]$'
+    },
+
     MIME: {
         type: 'string',
         pattern: '^[0-9a-z]{1,15}\\/[0-9a-z\\.\\-]{1,24}$'
@@ -183,8 +188,8 @@ const PROPERTY = {
 
     FILE: {
         type: 'string',
-        minLength: 1,
-        maxLength: 1400000 // 1 MB binary, 1.33 M with base64
+        minLength: 10,
+        maxLength: 1400000 // 1MB before base64, 1.33M after base64
     },
 
     TIMESTAMP: {
@@ -193,10 +198,26 @@ const PROPERTY = {
         maximum: 32506358400000 // 3000-1-1 0:0:0 UTC
     },
 
-    IMAGE: {
-        type: 'string',
-        minLength: 1,
-        maxLength: 1400000 // 1MB before base64, 1.33M after base64
+    PRICE: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 1000000
+    },
+
+    INTEGER: {
+        type: 'integer'
+    },
+
+    NUM_OF_ADSLOT: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 10
+    },
+
+    WIDTH_OR_HEIGHT: {
+        type: 'integer',
+        minimum: 10,
+        maximum: 1024
     }
 };
 
@@ -453,6 +474,54 @@ const schemas = {
             content: PROPERTY.TEXT
         },
         required: ['name', 'tag', 'content']
+    },
+    createAdSlot: {
+        type: 'object',
+        properties: {
+            name: PROPERTY.NAME,
+            description: PROPERTY.DESCRIPTION,
+            price: PROPERTY.PRICE,
+            width: PROPERTY.WIDTH_OR_HEIGHT,
+            height: PROPERTY.WIDTH_OR_HEIGHT,
+            num_slots: PROPERTY.NUM_OF_ADSLOT,
+            num_auto_fill: PROPERTY.NUM_OF_ADSLOT,
+            auto_fill: PROPERTY.TEXT
+        },
+        required: ['name', 'description', 'price', 'width', 'height', 'num_slots', 'num_auto_fill', 'auto_fill']
+    },
+    updateAdSlot: {
+        type: 'object',
+        properties: {
+            description: PROPERTY.DESCRIPTION,
+            price: PROPERTY.PRICE,
+            num_slots: PROPERTY.NUM_OF_ADSLOT,
+            num_auto_fill: PROPERTY.NUM_OF_ADSLOT,
+            auto_fill: PROPERTY.TEXT
+        },
+        required: ['description', 'price', 'num_slots', 'num_auto_fill', 'auto_fill']
+    },
+    createAdPeriod: {
+        type: 'object',
+        properties: {
+            user_id: PROPERTY.ID,
+            adslot_id: PROPERTY.ID,
+            start_at: PROPERTY.DATE,
+            months: PROPERTY.INTEGER
+        },
+        required: ['user_id', 'adslot_id', 'start_at', 'months']
+    },
+    extendAdPeriod: {
+        type: 'object',
+        properties: {
+            months: PROPERTY.INTEGER
+        },
+        required: ['months']
+    },
+    createAdMaterial: {
+        type: 'object',
+        properties: {
+            image: PROPERTY.IMAGE
+        }
     }
 }
 
