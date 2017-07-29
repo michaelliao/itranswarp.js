@@ -40,6 +40,7 @@ async function appsetup() {
             ['$ADMIN',   'admin@itranswarp.com',   constants.role.ADMIN,       false],
             ['$EDITOR',  'editor@itranswarp.com',  constants.role.EDITOR,      false],
             ['$CONTRIB', 'contrib@itranswarp.com', constants.role.CONTRIBUTOR, false],
+            ['$SPONSOR', 'sponsor@itranswarp.com', constants.role.SPONSOR,     false],
             ['$SUBS',    'subs@itranswarp.com',    constants.role.SUBSCRIBER,  false],
             ['$LOCKED',  'locked@itranswarp.com',  constants.role.SUBSCRIBER,  true]
         ];
