@@ -51,10 +51,10 @@ async function _getActiveAdPeriods() {
     return await AdPeriod.findAll({
         where: {
             start_at: {
-                $gte: today
+                $lte: today
             },
             end_at: {
-                $lt: today
+                $gt: today
             }
         },
         order: 'display_order'
@@ -113,33 +113,9 @@ function _today() {
     return moment().format('YYYY-MM-DD');
 }
 
-// async function getArticlesByCategory(categoryId, page) {
-//     let now = Date.now();
-//     page.total = await Article.count({
-//         where: {
-//             publish_at: {
-//                 $lt: now
-//             },
-//             category_id: categoryId
-//         }
-//     });
-//     if (page.isEmpty) {
-//         return [];
-//     }
-//     return await Article.findAll({
-//         where: {
-//             publish_at: {
-//                 $lt: now
-//             },
-//             category_id: categoryId
-//         },
-//         order: 'publish_at DESC',
-//         offset: page.offset,
-//         limit: page.limit
-//     });
-// }
-
 module.exports = {
+
+    getActiveAdPeriods: _getActiveAdPeriods,
 
     'GET /api/adslots': async function (ctx, next) {
         /**
@@ -149,7 +125,9 @@ module.exports = {
          * @return {object} AdSlot object.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        ctx.rest(_getAdSlots());
+        ctx.rest({
+            adSlots: await _getAdSlots()
+        });
     },
 
     'POST /api/adslots': async (ctx, next) => {
@@ -200,6 +178,7 @@ module.exports = {
          * Update adslot object.
          * 
          * @name Update AdSlot object
+         * @param {string} name: Name of adslots.
          * @param {string} description: Description of adslots.
          * @param {number} price: Price of adslots.
          * @param {number} num_slots: Number of adslots.
@@ -216,6 +195,9 @@ module.exports = {
             data = ctx.request.body,
             adslot = await _getAdSlot(id);
         // update:
+        if (data.name) {
+            adslot.name = data.name.trim();
+        }
         if (data.description) {
             adslot.description = data.description.trim();
         }
@@ -284,13 +266,13 @@ module.exports = {
             adperiods = await _getUnexpiredAdPeriods(adslot.id);
         let startAtDate = moment(start_at);
         if (! startAtDate.isValid()) {
-            throw api.invalidParam('start_at');
+            throw api.invalidParam('start_at', 'Invalid format of start_at.');
         }
-        if (startAtDate > 28) {
+        if (startAtDate.date() > 28) {
             throw api.invalidParam('start_at', 'Please specify start day 1~28.');
         }
         if (months < 1 || months > 12) {
-            throw api.invalidParam('months');
+            throw api.invalidParam('months', 'Must be 1~12.');
         }
         if (user.role !== constants.role.SPONSOR) {
             throw api.invalidParam('user_id', 'Not a sponsor user.');
@@ -358,6 +340,24 @@ module.exports = {
     'POST /api/admaterials/:id/delete': async (ctx, next) => {
         /**
          * Delete an AdMaterial.
+         * 
+         * @param {string} id The AdMaterial id.
          */
+        // special check permission:
+        if (ctx.state.__user__ === null || (ctx.state.__user__.role !== constants.role.ADMIN && ctx.state.__user__.role !== constants.role.SPONSOR)) {
+            logger.warn('check permission failed: expected = ADMIN or SPONSOR, actual = ' + (ctx.state.__user__ ? ctx.state.__user__.role : 'null'));
+            throw api.notAllowed('Do not have permission.');
+        }
+        let
+            id = ctx.params.id,
+            admaterial = await AdMaterial.findById(id);
+        if (admaterial === null) {
+            throw api.notFound('AdMaterial');
+        }
+        if (admaterial.user_id !== ctx.state.__user__.id) {
+            throw api.notAllowed('Do not have permission.');
+        }
+        await admaterial.destroy();
+        ctx.rest({ id: id });
     }
 };
