@@ -601,7 +601,7 @@ describe('#ad api', () => {
                 start_at: start.format('YYYY-MM-DD'),
                 end_at: end.format('YYYY-MM-DD'),
                 // image too large:
-                image: fs.readFileSync(__dirname + '/res-image-2.html').toString('base64')
+                image: fs.readFileSync(__dirname + '/res-image-2.jpg').toString('base64')
             })
             .expect('Content-Type', /application\/json/)
             .expect(400);
