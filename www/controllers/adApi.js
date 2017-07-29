@@ -325,16 +325,73 @@ module.exports = {
         /**
          * Create a new AdMaterial.
          */
-        ctx.checkPermission(constants.role.ADMIN);
+        // special check permission:
+        if (ctx.state.__user__ === null || (ctx.state.__user__.role !== constants.role.ADMIN && ctx.state.__user__.role !== constants.role.SPONSOR)) {
+            logger.warn('check permission failed: expected = ADMIN or SPONSOR, actual = ' + (ctx.state.__user__ ? ctx.state.__user__.role : 'null'));
+            throw api.notAllowed('Do not have permission.');
+        }
         ctx.validate('createAdMaterial');
         let
             id = ctx.params.id,
             data = ctx.request.body,
-            months = data.months,
-            adperiod = await _getAdPeriod(id);
+            url = data.url.trim(),
+            weight = data.weight || 100,
+            start_at = data.start_at || '',
+            end_at = data.end_at || '',
+            geo = data.geo || '',
+            adperiod = await _getAdPeriod(id),
+            adslot = await _getAdSlot(adperiod.adslot_id),
+            user = ctx.state.__user__;
+        if (user.id !== adperiod.user_id) {
+            logger.warn('check permission failed: not owner sponsor');
+            throw api.notAllowed('Do not have permission.');
+        }
         if (_isExpired(adperiod)) {
             throw api.invalidParam('id', 'AdPeriod is expired.');
         }
+        // check
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            throw api.invalidParam('url', 'Must be start with http:// or https://');
+        }
+        if (weight < 0 || weight > 100) {
+            throw api.invalidParam('weight');
+        }
+        // check image:
+        let
+            maxSize = adslot.width * adslot.height / 2,
+            imageBuffer = new Buffer(data.image, 'base64');
+        if (imageBuffer.length > maxSize) {
+            throw api.invalidParam('image', 'Image is too large.');
+        }
+        // check if reached the maximum number:
+        let count = await AdMaterial.count({
+            where: {
+                adperiod_id: id
+            }
+        });
+        if (count >= 10) {
+            throw api.error('maximum:reached', 'Too many AdMaterial: 10');
+        }
+        // create:
+        let imageName = user.name;
+        let attachment = await attachmentApi.createAttachment(
+            user.id,
+            imageName,
+            imageName,
+            imageBuffer,
+            null,
+            true);
+        let admaterial = await AdMaterial.create({
+            user_id: user.id,
+            adperiod_id: adperiod.id,
+            weight: weight,
+            start_at: start_at,
+            end_at: end_at,
+            geo: geo,
+            url: url,
+            cover_id: attachment.id
+        });
+        ctx.rest(admaterial);
     },
 
     'POST /api/admaterials/:id/delete': async (ctx, next) => {

@@ -36,13 +36,14 @@ async function appsetup() {
     // create default users:
     const
         userParams = [
-            // key,      email,                    role,                       locked
-            ['$ADMIN',   'admin@itranswarp.com',   constants.role.ADMIN,       false],
-            ['$EDITOR',  'editor@itranswarp.com',  constants.role.EDITOR,      false],
-            ['$CONTRIB', 'contrib@itranswarp.com', constants.role.CONTRIBUTOR, false],
-            ['$SPONSOR', 'sponsor@itranswarp.com', constants.role.SPONSOR,     false],
-            ['$SUBS',    'subs@itranswarp.com',    constants.role.SUBSCRIBER,  false],
-            ['$LOCKED',  'locked@itranswarp.com',  constants.role.SUBSCRIBER,  true]
+            // key,        email,                     role,                       locked
+            ['$ADMIN',     'admin@itranswarp.com',    constants.role.ADMIN,       false],
+            ['$EDITOR',    'editor@itranswarp.com',   constants.role.EDITOR,      false],
+            ['$CONTRIB',   'contrib@itranswarp.com',  constants.role.CONTRIBUTOR, false],
+            ['$SPONSOR',   'sponsor@itranswarp.com',  constants.role.SPONSOR,     false],
+            ['$SPONSOR_2', 'sponsor2@itranswarp.com', constants.role.SPONSOR,     false],
+            ['$SUBS',      'subs@itranswarp.com',     constants.role.SUBSCRIBER,  false],
+            ['$LOCKED',    'locked@itranswarp.com',   constants.role.SUBSCRIBER,  true]
         ];
     for (let param of userParams) {
         let

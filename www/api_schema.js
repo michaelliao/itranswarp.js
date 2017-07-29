@@ -104,6 +104,12 @@ const PROPERTY = {
         pattern: '^[a-f0-9]{40}$'
     },
 
+    GEO: {
+        type: 'string',
+        minLength: 0,
+        maxLength: 100
+    },
+
     NAME: {
         type: 'string',
         minLength: 1,
@@ -523,10 +529,12 @@ const schemas = {
         properties: {
             url: PROPERTY.URL,
             weight: PROPERTY.INTEGER,
+            geo: PROPERTY.GEO,
             start_at: PROPERTY.DATE,
             end_at: PROPERTY.DATE,
             image: PROPERTY.FILE
-        }
+        },
+        required: ['url', 'image']
     }
 }
 
