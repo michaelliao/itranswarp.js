@@ -16,6 +16,9 @@ module.exports = {
             type: dbtypes.ID,
             index: true
         },
+        cover_id: {
+            type: dbtypes.ID
+        },
         weight: {
             type: dbtypes.BIGINT,
             default: () => 100
@@ -31,9 +34,6 @@ module.exports = {
         geo: {
             type: dbtypes.STRING(100),
             default: () => ''
-        },
-        cover_id: {
-            type: dbtypes.ID
         },
         url: {
             type: dbtypes.STRING(1000)

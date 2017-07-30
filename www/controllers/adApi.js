@@ -342,7 +342,7 @@ module.exports = {
             adperiod = await _getAdPeriod(id),
             adslot = await _getAdSlot(adperiod.adslot_id),
             user = ctx.state.__user__;
-        if (user.id !== adperiod.user_id) {
+        if (user.role !== constants.role.ADMIN && user.id !== adperiod.user_id) {
             logger.warn('check permission failed: not owner sponsor');
             throw api.notAllowed('Do not have permission.');
         }
@@ -391,6 +391,7 @@ module.exports = {
             url: url,
             cover_id: attachment.id
         });
+        console.log(JSON.stringify(admaterial))
         ctx.rest(admaterial);
     },
 
@@ -407,14 +408,17 @@ module.exports = {
         }
         let
             id = ctx.params.id,
-            admaterial = await AdMaterial.findById(id);
+            admaterial = await AdMaterial.findById(id),
+            user = ctx.state.__user__;
         if (admaterial === null) {
             throw api.notFound('AdMaterial');
         }
-        if (admaterial.user_id !== ctx.state.__user__.id) {
+        if (user.role !== constants.role.ADMIN && user.id !== admaterial.user_id) {
+            logger.warn('check permission failed: not owner sponsor');
             throw api.notAllowed('Do not have permission.');
         }
         await admaterial.destroy();
+        await attachmentApi.deleteAttachment(ctx, admaterial.cover_id);
         ctx.rest({ id: id });
     }
 };
