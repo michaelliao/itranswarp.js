@@ -137,9 +137,28 @@ async function _downloadAttachment(ctx, next) {
     ctx.response.body = data;
 }
 
+async function deleteAttachment(ctx, attaId) {
+    let
+        user = ctx.state.__user__,
+        atta = await _getAttachment(attaId);
+    if (user.role !== constants.role.ADMIN && user.id !== atta.user_id) {
+        throw api.notAllowed('Permission denied.');
+    }
+    // delete:
+    await atta.destroy();
+    // delete all resources:
+    await Resource.destroy({
+        where: {
+            'ref_id': attaId
+        }
+    });
+}
+
 module.exports = {
 
     createAttachment: createAttachment,
+
+    deleteAttachment: deleteAttachment,
 
     'GET /files/attachments/:id': _downloadAttachment,
 
@@ -188,20 +207,8 @@ module.exports = {
          * @error {permission:denied} If current user has no permission.
          */
         ctx.checkPermission(constants.role.CONTRIBUTOR);
-        let
-            id = ctx.params.id,
-            atta = await _getAttachment(id);
-        if (ctx.state.__user__.role !== constants.role.ADMIN && ctx.state.__user__.id !== atta.user_id) {
-            throw api.notAllowed('Permission denied.');
-        }
-        // delete:
-        await atta.destroy();
-        // delete all resources:
-        await Resource.destroy({
-            where: {
-                'ref_id': id
-            }
-        });
+        let id = ctx.params.id;
+        await deleteAttachment(ctx, id);
         ctx.rest({ 'id': id });
     },
 
