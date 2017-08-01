@@ -47,24 +47,37 @@ async function _getAdPeriod(adperiodId) {
 }
 
 async function _getActiveAdPeriods() {
-    let today = _today();
-    return await AdPeriod.findAll({
-        where: {
-            start_at: {
-                $lte: today
+    let
+        today = _today(),
+        adperiods = await AdPeriod.findAll({
+            where: {
+                start_at: {
+                    $lte: today
+                },
+                end_at: {
+                    $gt: today
+                }
             },
-            end_at: {
-                $gt: today
-            }
-        },
+            order: 'end_at DESC'
+        });
+    await userApi.bindUsers(adperiods);
+    return adperiods;
+}
+
+async function _getAllAdPeriods() {
+    let adperiods = await AdPeriod.findAll({
         order: 'end_at DESC'
     });
+    await userApi.bindUsers(adperiods);
+    return adperiods;
 }
 
 async function _getUnexpiredAdPeriods(adslotId=null) {
-    let today = _today();
+    let
+        adperiods,
+        today = _today();
     if (adslotId) {
-        return await AdPeriod.findAll({
+        adperiods = await AdPeriod.findAll({
             where: {
                 adslot_id: adslotId,
                 end_at: {
@@ -74,7 +87,7 @@ async function _getUnexpiredAdPeriods(adslotId=null) {
             order: 'end_at DESC'
         });
     } else {
-        return await AdPeriod.findAll({
+        adperiods = await AdPeriod.findAll({
             where: {
                 end_at: {
                     $gt: today
@@ -83,6 +96,8 @@ async function _getUnexpiredAdPeriods(adslotId=null) {
             order: 'end_at DESC'
         });
     }
+    await userApi.bindUsers(adperiods);
+    return adperiods;
 }
 
 async function _getActiveAdPeriod(adperiodId) {
@@ -268,21 +283,12 @@ module.exports = {
 
     'GET /api/adperiods': async (ctx, next) => {
         /**
-         * Get AdPeriods.
+         * Get all AdPeriods.
          * 
-         * @name Get AdPeriods.
+         * @name Get all AdPeriods.
          */
         ctx.checkPermission(constants.role.ADMIN);
-        let
-            all = ctx.request.query.all || '',
-            adperiods;
-        if (all) {
-            adperiods = await AdPeriod.findAll({
-                order: 'end_at DESC'
-            });
-        } else {
-            adperiods = await _getUnexpiredAdPeriods()
-        }
+        let adperiods = await _getAllAdPeriods();
         ctx.rest({
             adperiods: adperiods
         });
@@ -339,6 +345,29 @@ module.exports = {
             display_order: isNaN(max_display_order) ? 0 : max_display_order + 1
         });
         ctx.rest(adperiod);
+    },
+
+    'POST /api/adperiods/:id/delete': async (ctx, next) => {
+        /**
+         * Delete an AdPeriod.
+         * 
+         * @name Delete an AdPeriod.
+         * @param {string} id The AdPeriod id.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        let
+            id = ctx.params.id,
+            adperiod = await _getAdPeriod(id);
+        if (! _isExpired(adperiod)) {
+            throw api.invalidParam('id', 'AdPeriod is not expired.');
+        }
+        // delete AdPeriod:
+        await adperiod.destroy();
+        // TODO:
+        // delete all AdMaterials
+        ctx.rest({
+            id: id
+        });
     },
 
     'POST /api/adperiods/:id/extend': async (ctx, next) => {

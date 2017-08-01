@@ -6,7 +6,6 @@
 <script>
 
 var TODAY = '{{ today }}';
-var ALL = true;
 
 $(function() {
     getJSON('/api/adslots', function (err, data) {
@@ -23,7 +22,7 @@ $(function() {
             }
             throw 'Logic error: cannot find adslot id!';
         }
-        getJSON('/api/adperiods', { 'all': ALL }, function (err, data) {
+        getJSON('/api/adperiods', function (err, data) {
             if (err) {
                 return showError(err);
             }
@@ -69,7 +68,7 @@ function initVM(adperiods) {
             deleteAdPeriod: function (id) {
                 var p = this.adperiods[this.find(id)];
                 var that = this;
-                UIkit.modal.confirm('Ad Period \"' + p.name + '\" will be deleted. Continue?', function() {
+                UIkit.modal.confirm('Ad Period (' + p.adslot.name + ' ' + p.adslot.width + ' x ' + p.adslot.height + ') of user \"' + p.user.name + '\" will be deleted. Continue?', function() {
                     that.$resource('/api/adperiods/' + p.id + '/delete').save({}).then(function(resp) {
                         resp.json().then(function (result) {
                             refresh();
@@ -95,7 +94,7 @@ function initVM(adperiods) {
 
     <div id="vm" class="uk-width-1-1">
         <ul class="uk-tab" data-uk-tab>
-            <li><a href="#0" onclick="location.assign('adslots_list')">{{ _('Ad Slots') }}</a></li>
+            <li><a href="#0" onclick="location.assign('adslot_list')">{{ _('Ad Slots') }}</a></li>
             <li class="uk-active"><a href="#0">{{ _('Ad Periods') }}</a></li>
             <li><a href="#0" onclick="location.assign('admaterial_list')">{{ _('Ad Materials') }}</a></li>
         </ul>
@@ -108,8 +107,9 @@ function initVM(adperiods) {
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
+                    <th width="5%">{{ _('Image') }}</th>
                     <th width="20%">{{ _('User') }}</th>
-                    <th width="20%">{{ _('Ad Slot Name') }}</th>
+                    <th width="15%">{{ _('Ad Slot Name') }}</th>
                     <th width="10%">{{ _('Ad Slot Size') }}</th>
                     <th width="10%">{{ _('Display Order') }}</th>
                     <th width="10%">{{ _('Start At') }}</th>
@@ -120,7 +120,12 @@ function initVM(adperiods) {
             </thead>
             <tbody>
                 <tr v-for="p in adperiods">
-                    <td v-text="p.user"></td>
+                    <td>
+                        <a v-bind:href="'/user/' + p.user.id" target="_blank"><img v-bind:src="p.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width: 50px; height: 50px;"></a>
+                    </td>
+                    <td>
+                        <a v-bind:href="'/user/' + p.user.id" v-text="p.user.name" target="_blank"></a>
+                    </td>
                     <td v-text="p.adslot.name"></td>
                     <td>
                         <span v-text="p.adslot.width"></span>

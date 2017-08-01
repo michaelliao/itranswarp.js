@@ -307,8 +307,7 @@ module.exports = {
     'GET /manage/ad/adperiod_list': async (ctx, next) => {
         let today = moment().format('YYYY-MM-DD');
         ctx.render('manage/ad/adperiod_list.html', await _getModel({
-            today: today,
-            all: ctx.request.query.all || ''
+            today: today
         }));
     },
 

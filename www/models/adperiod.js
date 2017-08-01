@@ -28,5 +28,5 @@ module.exports = {
             index: true
         }
     },
-    extraFields: ['html']
+    extraFields: ['user']
 };
