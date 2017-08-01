@@ -10,7 +10,7 @@ $(function() {
             return showError(err);
         }
         getJSON('/api/topics', {
-            page: {{ pageIndex }}
+            page: parseInt('{{ pageIndex }}')
         }, function (err, data) {
             if (err) {
                 return showError(err);
@@ -57,6 +57,7 @@ function initVM(topics, page) {
                 UIkit.modal.alert('unsupported yet.');
             },
             deleteTopic: function (t) {
+                var that = this;
                 UIkit.modal.confirm('Topic \"' + t.name + '\" will be deleted. Continue?', function() {
                     that.$resource('/api/topics/' + t.id + '/delete').save({}).then(function(resp) {
                         resp.json().then(function (result) {
@@ -120,8 +121,8 @@ function initVM(topics, page) {
                         <span v-text="t.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span>
                     </td>
                     <td>
-                        <a v-on:click="lockTopic(obj)" title="Lock Topic" href="#0" class="x-btn"><i class="uk-icon-lock"></i></a>
-                        <a v-on:click="deleteTopic(obj)" title="Delete Topic" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <a v-on:click="lockTopic(t)" title="Lock Topic" href="#0" class="x-btn"><i class="uk-icon-lock"></i></a>
+                        <a v-on:click="deleteTopic(t)" title="Delete Topic" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
             </tbody>
