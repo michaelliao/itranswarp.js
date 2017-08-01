@@ -1,0 +1,115 @@
+{% extends '../_manage.html' %}
+
+{% block title %} {{ ('All Ad Slots') }} {% endblock %}
+
+{% block head %}
+<script>
+
+$(function() {
+    getJSON('/api/adslots', function (err, data) {
+        if (err) {
+            return showError(err);
+        }
+        initVM(data.adslots);
+    });
+});
+
+function initVM(adslots) {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            adslots: adslots
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
+        methods: {
+            find: function (id) {
+                for (var i = 0; i < this.adslots.length; i ++) {
+                    var p = this.adslots[i];
+                    if (p.id===id) {
+                        return i;
+                    }
+                }
+                throw 'logic error';
+            },
+            editAdSlot: function (id) {
+                location.assign('edit_adslot?id=' + id);
+            },
+            deleteAdSlot: function (id) {
+                var p = this.adslots[this.find(id)];
+                var that = this;
+                UIkit.modal.confirm('AdSlot \"' + p.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/adslots/' + p.id + '/delete').save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
+            }
+        }
+    });
+};
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li class="uk-active"><a href="#0">{{ _('Ad Slots') }}</a></li>
+            <li><a href="#0" onclick="location.assign('adperiod_list')">{{ _('Ad Periods') }}</a></li>
+            <li><a href="#0" onclick="location.assign('admaterial_list')">{{ _('Ad Materials') }}</a></li>
+        </ul>
+
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_adslot" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Ad Slot') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="35%">{{ _('Name') }}</th>
+                    <th width="20%">{{ _('Alias') }}</th>
+                    <th width="10%">{{ _('Size') }}</th>
+                    <th width="10%">{{ _('Number') }} / Auto fill</th>
+                    <th width="15%">{{ _('Created At') }}</th>
+                    <th width="10%">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="p in adslots">
+                    <td v-text="p.name"></td>
+                    <td v-text="p.alias"></td>
+                    <td>
+                        <span v-text="p.width"></span>x<span v-text="p.height"></span>
+                    </td>
+                    <td>
+                        <span v-text="p.num_slots"></span>
+                        /
+                        <span v-text="p.num_auto_fill"></span>
+                    </td>
+                    <td><span v-text="p.created_at.toDateTime()"></span></td>
+                    <td>
+                        <a v-on:click="editAdSlot(p.id)" title="Edit Ad Slot" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on:click="deleteAdSlot(p.id)" title="Delete Ad Slot" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div v-if="adslots.length===0" class="x-empty-list">
+            <p>No ad slot found.</p>
+        </div>
+    </div>
+
+{% endblock%}

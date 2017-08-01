@@ -42,6 +42,7 @@ describe('#ad api', () => {
             .set('Authorization', auth($ADMIN))
             .send({
                 name: 'A',
+                alias: 'a',
                 description: 'slot-A',
                 price: 100,
                 width: 336,
@@ -58,6 +59,7 @@ describe('#ad api', () => {
             .set('Authorization', auth($ADMIN))
             .send({
                 name: 'B',
+                alias: 'b',
                 description: 'slot-B',
                 price: 200,
                 width: 300,
@@ -76,6 +78,15 @@ describe('#ad api', () => {
         await cache.remove(constants.cache.ADS);
     });
 
+    it('get adslots by editor failed.', async () => {
+        let response = await request($SERVER)
+            .get('/api/adslots')
+            .set('Authorization', auth($EDITOR))
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('permission:denied');
+    });
+
     it('should get 2 adslots', async () => {
         let response = await request($SERVER)
             .get('/api/adslots')
@@ -83,11 +94,23 @@ describe('#ad api', () => {
             .expect('Content-Type', /application\/json/)
             .expect(200);
         expect(response.body).to.a('object');
-        expect(response.body.adSlots).to.a('array').and.to.have.lengthOf(2);
-        expect(response.body.adSlots[0]).to.a('object');
-        expect(response.body.adSlots[0].name).to.equal('A');
-        expect(response.body.adSlots[1]).to.a('object');
-        expect(response.body.adSlots[1].name).to.equal('B');
+        expect(response.body.adslots).to.a('array').and.to.have.lengthOf(2);
+        expect(response.body.adslots[0]).to.a('object');
+        expect(response.body.adslots[0].name).to.equal('A');
+        expect(response.body.adslots[0].alias).to.equal('a');
+        expect(response.body.adslots[1]).to.a('object');
+        expect(response.body.adslots[1].name).to.equal('B');
+        expect(response.body.adslots[1].alias).to.equal('b');
+        // get ad slot A:
+        let id = response.body.adslots[0].id;
+        response = await request($SERVER)
+            .get('/api/adslots/' + id)
+            .set('Authorization', auth($ADMIN))
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        expect(response.body).to.a('object');
+        expect(response.body.name).to.equal('A');
+        expect(response.body.alias).to.equal('a');
     });
 
     it('create and should get 3 adslots', async () => {
@@ -96,6 +119,7 @@ describe('#ad api', () => {
             .set('Authorization', auth($ADMIN))
             .send({
                 name: 'C',
+                alias: 'c',
                 description: 'slot-C',
                 price: 300,
                 width: 640,
@@ -114,13 +138,14 @@ describe('#ad api', () => {
             .expect('Content-Type', /application\/json/)
             .expect(200);
         expect(response.body).to.a('object');
-        expect(response.body.adSlots).to.a('array').and.to.have.lengthOf(3);
-        expect(response.body.adSlots[0]).to.a('object');
-        expect(response.body.adSlots[0].name).to.equal('A');
-        expect(response.body.adSlots[1]).to.a('object');
-        expect(response.body.adSlots[1].name).to.equal('B');
-        expect(response.body.adSlots[2]).to.a('object');
-        expect(response.body.adSlots[2].name).to.equal('C');
+        expect(response.body.adslots).to.a('array').and.to.have.lengthOf(3);
+        expect(response.body.adslots[0]).to.a('object');
+        expect(response.body.adslots[0].name).to.equal('A');
+        expect(response.body.adslots[1]).to.a('object');
+        expect(response.body.adslots[1].name).to.equal('B');
+        expect(response.body.adslots[2]).to.a('object');
+        expect(response.body.adslots[2].name).to.equal('C');
+        expect(response.body.adslots[2].alias).to.equal('c');
     });
 
     it('create adslots failed by editor failed', async () => {
@@ -129,6 +154,7 @@ describe('#ad api', () => {
             .set('Authorization', auth($EDITOR))
             .send({
                 name: 'C',
+                alias: 'c',
                 description: 'slot-C',
                 price: 300,
                 width: 640,
@@ -184,7 +210,7 @@ describe('#ad api', () => {
             .set('Authorization', auth($ADMIN))
             .expect('Content-Type', /application\/json/)
             .expect(200);
-        let adslot = response.body.adSlots[0];
+        let adslot = response.body.adslots[0];
         expect(adslot.name).to.equal('A-changed');
         expect(adslot.description).to.equal('slot-changed');
         expect(adslot.price).to.equal(999);
@@ -223,7 +249,7 @@ describe('#ad api', () => {
             .expect('Content-Type', /application\/json/)
             .expect(200);
         expect(response.body).to.a('object');
-        expect(response.body.adSlots).to.a('array').and.to.have.lengthOf(1);
+        expect(response.body.adslots).to.a('array').and.to.have.lengthOf(1);
     });
 
     it('should get empty active adperiods', async () => {

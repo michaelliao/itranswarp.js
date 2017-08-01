@@ -9,12 +9,14 @@
 const
     _ = require('lodash'),
     fs = require('fs'),
+    moment = require('moment'),
     db = require('../db'),
     api = require('../api'),
     cache = require('../cache'),
     helper = require('../helper'),
     logger = require('../logger'),
     constants = require('../constants'),
+    adApi = require('./adApi'),
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     discussApi = require('./discussApi'),
@@ -272,6 +274,75 @@ module.exports = {
                 redirect: 'navigation_list'
             }
         }));
+    },
+
+    // ad /////////////////////////////////////////////////////////////////////
+
+    'GET /manage/ad/(adslot_list)?': async (ctx, next) => {
+        ctx.render('manage/ad/adslot_list.html', await _getModel({}));
+    },
+
+    'GET /manage/ad/create_adslot': async (ctx, next) => {
+        ctx.render('manage/ad/adslot_form.html', await _getModel({
+            form: {
+                name: 'Create ad slot',
+                action: '/api/adslots',
+                redirect: 'adslot_list'
+            },
+        }));
+    },
+
+    'GET /manage/ad/edit_adslot': async (ctx, next) => {
+        let id = _getId(ctx);
+        ctx.render('manage/ad/adslot_form.html', await _getModel({
+            id: id,
+            form: {
+                name: 'Edit ad slot',
+                action: '/api/adslots/' + id,
+                redirect: 'adslot_list'
+            },
+        }));
+    },
+
+    'GET /manage/ad/adperiod_list': async (ctx, next) => {
+        let today = moment().format('YYYY-MM-DD');
+        ctx.render('manage/ad/adperiod_list.html', await _getModel({
+            today: today,
+            all: ctx.request.query.all || ''
+        }));
+    },
+
+    'GET /manage/ad/create_adperiod': async (ctx, next) => {
+        let sponsors = await User.findAll({
+            where: {
+                role: constants.role.SPONSOR
+            },
+            order: 'name'
+        });
+        ctx.render('manage/ad/adperiod_form.html', await _getModel({
+            sponsors: sponsors,
+            form: {
+                name: 'Create Ad Period',
+                action: '/api/adperiods',
+                redirect: 'adperiod_list'
+            },
+        }));
+    },
+
+    'GET /manage/ad/extend_adperiod': async (ctx, next) => {
+        let id = _getId(ctx);
+        ctx.render('manage/ad/adperiod_extend.html', await _getModel({
+            id: id,
+            form: {
+                name: 'Extend ad period',
+                action: '/api/adperiods/' + id + '/extend',
+                redirect: 'adperiod_list'
+            },
+        }));
+    },
+
+    'GET /manage/ad/admaterial_list': async (ctx, next) => {
+        ctx.render('manage/ad/admaterial_list.html', await _getModel({}));
     },
 
     // setting ////////////////////////////////////////////////////////////////

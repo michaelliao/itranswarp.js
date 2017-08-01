@@ -220,6 +220,12 @@ const PROPERTY = {
         maximum: 10
     },
 
+    NUM_OF_AUTO_FILL: {
+        type: 'integer',
+        minimum: 0,
+        maximum: 10
+    },
+
     WIDTH_OR_HEIGHT: {
         type: 'integer',
         minimum: 10,
@@ -485,15 +491,16 @@ const schemas = {
         type: 'object',
         properties: {
             name: PROPERTY.NAME,
+            alias: PROPERTY.ALIAS,
             description: PROPERTY.DESCRIPTION,
             price: PROPERTY.PRICE,
             width: PROPERTY.WIDTH_OR_HEIGHT,
             height: PROPERTY.WIDTH_OR_HEIGHT,
             num_slots: PROPERTY.NUM_OF_ADSLOT,
-            num_auto_fill: PROPERTY.NUM_OF_ADSLOT,
-            auto_fill: PROPERTY.TEXT
+            num_auto_fill: PROPERTY.NUM_OF_AUTO_FILL,
+            auto_fill: PROPERTY.TEXT_OPTIONAL
         },
-        required: ['name', 'description', 'price', 'width', 'height', 'num_slots', 'num_auto_fill', 'auto_fill']
+        required: ['name', 'alias', 'description', 'price', 'width', 'height', 'num_slots', 'num_auto_fill', 'auto_fill']
     },
     updateAdSlot: {
         type: 'object',
@@ -502,8 +509,8 @@ const schemas = {
             description: PROPERTY.DESCRIPTION,
             price: PROPERTY.PRICE,
             num_slots: PROPERTY.NUM_OF_ADSLOT,
-            num_auto_fill: PROPERTY.NUM_OF_ADSLOT,
-            auto_fill: PROPERTY.TEXT
+            num_auto_fill: PROPERTY.NUM_OF_AUTO_FILL,
+            auto_fill: PROPERTY.TEXT_OPTIONAL
         },
         required: []
     },

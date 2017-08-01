@@ -57,21 +57,32 @@ async function _getActiveAdPeriods() {
                 $gt: today
             }
         },
-        order: 'display_order'
+        order: 'end_at DESC'
     });
 }
 
-async function _getUnexpiredAdPeriods(adslotId) {
+async function _getUnexpiredAdPeriods(adslotId=null) {
     let today = _today();
-    return await AdPeriod.findAll({
-        where: {
-            adslot_id: adslotId,
-            end_at: {
-                $lt: today
-            }
-        },
-        order: 'display_order'
-    });
+    if (adslotId) {
+        return await AdPeriod.findAll({
+            where: {
+                adslot_id: adslotId,
+                end_at: {
+                    $gt: today
+                }
+            },
+            order: 'end_at DESC'
+        });
+    } else {
+        return await AdPeriod.findAll({
+            where: {
+                end_at: {
+                    $gt: today
+                }
+            },
+            order: 'end_at DESC'
+        });
+    }
 }
 
 async function _getActiveAdPeriod(adperiodId) {
@@ -126,8 +137,19 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.rest({
-            adSlots: await _getAdSlots()
+            adslots: await _getAdSlots()
         });
+    },
+
+    'GET /api/adslots/:id': async function (ctx, next) {
+        /**
+         * Get ad slot by id.
+         * 
+         * @name Get ad slot by id.
+         * @return {object} AdSlot object.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.rest(await _getAdSlot(ctx.params.id));
     },
 
     'POST /api/adslots': async (ctx, next) => {
@@ -152,6 +174,7 @@ module.exports = {
         let
             data = ctx.request.body,
             name = data.name.trim(),
+            alias = data.alias,
             adslots = await _getAdSlots(),
             filtered = adslots.filter((ad) => {
                 return ad.name === name;
@@ -162,6 +185,7 @@ module.exports = {
         // create adslot:
         let adslot = await AdSlot.create({
             name: name,
+            alias: alias,
             description: data.description.trim(),
             price: data.price,
             width: data.width,
@@ -240,6 +264,28 @@ module.exports = {
         }
         await adslot.destroy();
         ctx.rest({ id: id });
+    },
+
+    'GET /api/adperiods': async (ctx, next) => {
+        /**
+         * Get AdPeriods.
+         * 
+         * @name Get AdPeriods.
+         */
+        ctx.checkPermission(constants.role.ADMIN);
+        let
+            all = ctx.request.query.all || '',
+            adperiods;
+        if (all) {
+            adperiods = await AdPeriod.findAll({
+                order: 'end_at DESC'
+            });
+        } else {
+            adperiods = await _getUnexpiredAdPeriods()
+        }
+        ctx.rest({
+            adperiods: adperiods
+        });
     },
 
     'POST /api/adperiods': async (ctx, next) => {

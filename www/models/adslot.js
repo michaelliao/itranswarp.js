@@ -8,9 +8,12 @@ module.exports = {
     name: 'AdSlot',
     table: 'adslots',
     fields: {
+        alias: {
+            type: dbtypes.STRING(50),
+            unique: 'uni_adslot_alias'
+        },
         name: {
-            type: dbtypes.STRING(100),
-            unique: 'uni_adslot_name'
+            type: dbtypes.STRING(100)
         },
         description: {
             type: dbtypes.STRING(1000)

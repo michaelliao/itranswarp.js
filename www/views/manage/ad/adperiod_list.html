@@ -1,0 +1,150 @@
+{% extends '../_manage.html' %}
+
+{% block title %} {{ ('All Ad Periods') }} {% endblock %}
+
+{% block head %}
+<script>
+
+var TODAY = '{{ today }}';
+var ALL = true;
+
+$(function() {
+    getJSON('/api/adslots', function (err, data) {
+        if (err) {
+            return showError(err);
+        }
+        var adslots = data.adslots;
+        var findAdSlotById = function (id) {
+            var i;
+            for (i=0; i<adslots.length; i++) {
+                if (adslots[i].id === id) {
+                    return adslots[i];
+                }
+            }
+            throw 'Logic error: cannot find adslot id!';
+        }
+        getJSON('/api/adperiods', { 'all': ALL }, function (err, data) {
+            if (err) {
+                return showError(err);
+            }
+            var
+                i,
+                adperiod,
+                adperiods = data.adperiods;
+            for (i=0; i<adperiods.length; i++) {
+                adperiod = adperiods[i];
+                adperiod.adslot = findAdSlotById(adperiods[i].adslot_id);
+                adperiod.isActive = adperiod.start_at <= TODAY && TODAY < adperiod.end_at;
+                adperiod.isExpired = adperiod.end_at <= TODAY;
+                adperiod.isPreActive = TODAY < adperiod.start_at;
+            }
+            initVM(adperiods);
+        });
+    });
+});
+
+function initVM(adperiods) {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            adperiods: adperiods
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
+        methods: {
+            find: function (id) {
+                for (var i = 0; i < this.adperiods.length; i ++) {
+                    var p = this.adperiods[i];
+                    if (p.id===id) {
+                        return i;
+                    }
+                }
+                throw 'logic error';
+            },
+            extendAdPeriod: function (id) {
+                location.assign('edit_adperiod?id=' + id);
+            },
+            deleteAdPeriod: function (id) {
+                var p = this.adperiods[this.find(id)];
+                var that = this;
+                UIkit.modal.confirm('Ad Period \"' + p.name + '\" will be deleted. Continue?', function() {
+                    that.$resource('/api/adperiods/' + p.id + '/delete').save({}).then(function(resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                });
+            }
+        }
+    });
+};
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li><a href="#0" onclick="location.assign('adslots_list')">{{ _('Ad Slots') }}</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Ad Periods') }}</a></li>
+            <li><a href="#0" onclick="location.assign('admaterial_list')">{{ _('Ad Materials') }}</a></li>
+        </ul>
+
+        <div class="uk-margin">
+            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            <a href="create_adperiod" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Ad Period') }}</a>
+        </div>
+
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th width="20%">{{ _('User') }}</th>
+                    <th width="20%">{{ _('Ad Slot Name') }}</th>
+                    <th width="10%">{{ _('Ad Slot Size') }}</th>
+                    <th width="10%">{{ _('Display Order') }}</th>
+                    <th width="10%">{{ _('Start At') }}</th>
+                    <th width="10%">{{ _('End At') }} (Exclusive)</th>
+                    <th width="10%">{{ _('Status') }}</th>
+                    <th width="10%">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="p in adperiods">
+                    <td v-text="p.user"></td>
+                    <td v-text="p.adslot.name"></td>
+                    <td>
+                        <span v-text="p.adslot.width"></span>
+                        x
+                        <span v-text="p.adslot.height"></span>
+                    </td>
+                    <td v-text="p.display_order"></td>
+                    <td><span v-text="p.start_at"></span></td>
+                    <td><span v-text="p.end_at"></span></td>
+                    <td>
+                        <span v-if="p.isActive" class="uk-text-success">Active</span>
+                        <span v-if="p.isExpired" class="uk-text-danger">Expired</span>
+                        <span v-if="p.isPreActive" class="uk-text-warning">Pre-Active</span>
+                    </td>
+                    <td>
+                        <a v-on:click="editAdPeriod(p.id)" title="Edit Ad Period" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
+                        <a v-on:click="deleteAdPeriod(p.id)" title="Delete Ad Period" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div v-if="adperiods.length===0" class="x-empty-list">
+            <p>No ad period found.</p>
+        </div>
+    </div>
+
+{% endblock%}

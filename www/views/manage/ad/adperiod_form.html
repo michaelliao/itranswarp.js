@@ -1,0 +1,136 @@
+{% extends '../_manage.html' %}
+
+{% block title %} {{ form.name }} {% endblock %}
+
+{% block head %}
+
+<script>
+
+var SPONSORS = JSON.parse('{{ sponsors|json|safe }}');
+
+var ADSLOTS;
+
+$(function() {
+    getJSON('/api/adslots', function (err, data) {
+        if (err) {
+            return showError(err);
+        }
+        ADSLOTS = data.adslots;
+        initVM({
+        });
+    });
+});
+
+function initVM() {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            sponsors: SPONSORS,
+            adslots: ADSLOTS,
+            user_id: '',
+            adslot_id: '',
+            start_at: '',
+            months: 1
+        },
+        created: function () {
+            $('#loading').hide();
+            $('#vm').show();
+        },
+        methods: {
+            submit: function() {
+                var that = this;
+                clearFormError();
+                var data = {
+                    user_id: that.user_id,
+                    adslot_id: that.adslot_id,
+                    months: that.months,
+                    start_at: findForm().find('input[name=start_at]').val().trim()
+                };
+                that.$resource('{{ form.action }}').save(data).then(function (resp) {
+                    resp.json().then(function (result) {
+                        location.assign('{{ form.redirect }}');
+                    });
+                }, onJsonFormError);
+            }
+        }
+    });
+}
+</script>
+
+{% endblock %}
+
+{% block main %}
+
+    <div id="loading" class="uk-width-1-1">
+        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+    </div>
+
+    <div id="vm" class="uk-width-1-1">
+        <ul class="uk-tab" data-uk-tab>
+            <li><a href="#0" onclick="location.assign('adslots_list')">{{ _('Ad Slots') }}</a></li>
+            <li class="uk-active"><a href="#0">{{ _('Ad Periods') }}</a></li>
+            <li><a href="#0" onclick="location.assign('admaterial_list')">{{ _('Ad Materials') }}</a></li>
+        </ul>
+
+        <form v-on:submit.prevent="submit" class="uk-margin uk-form uk-form-stacked">
+            <legend>{{ form.name }}</legend>
+            <fieldset>
+                <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">{{ _('User') }}:</label>
+                    <div class="uk-form-controls">
+                        <select v-model="user_id" name="user_id" class="uk-form-width-medium">
+                            <option value="">-- Select a sponsor --</option>
+                            {% raw %}
+                            <option v-for="u in sponsors" v-bind:value="u.id" v-text="u.name"></option>
+                            {% endraw %}
+                        </select>
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">{{ _('Ad Slot') }}:</label>
+                    <div class="uk-form-controls">
+                        <select v-model="adslot_id" name="adslot_id" class="uk-form-width-medium">
+                            <option value="">-- Select a slot --</option>
+                            {% raw %}
+                            <option v-for="s in adslots" v-bind:value="s.id" v-text="s.name + ' ' + s.width + ' x ' + s.height"></option>
+                            {% endraw %}
+                        </select>
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">{{ _('Start at') }}:</label>
+                    <div class="uk-form-controls">
+                        <input v-once v-model="start_at" name="start_at" type="text" class="uk-form-width-medium" data-uk-datepicker="{format:'YYYY-MM-DD', i18n:{ months:['{{ _('January') }}' , '{{ _('February') }}' , '{{ _('March') }}' , '{{ _('April') }}' , '{{ _('May') }}' , '{{ _('June') }}' , '{{ _('July') }}' , '{{ _('August') }}' , '{{ _('September') }}' , '{{ _('October') }}' , '{{ _('November') }}' , '{{ _('December') }}'], weekdays:['{{ _('Sun') }}' , '{{ _('Mon') }}' , '{{ _('Tue') }}' , '{{ _('Wed') }}' , '{{ _('Thu') }}' , '{{ _('Fri') }}' , '{{ _('Sat') }}'] } }">
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <label class="uk-form-label">{{ _('Months') }}:</label>
+                    <div class="uk-form-controls">
+                        <select v-model.number="months" name="months" class="uk-form-width-medium">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    <div class="uk-form-controls">
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+
+{% endblock %}
