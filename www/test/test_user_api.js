@@ -41,8 +41,8 @@ describe('#user', () => {
                 .expect('Content-Type', /application\/json/)
                 .expect(200);
         expect(response.body.page).to.a('object');
-        expect(response.body.page.total).to.equal(5);
-        expect(response.body.users).to.a('array').and.to.have.lengthOf(5);
+        expect(response.body.page.total).to.equal(7);
+        expect(response.body.users).to.a('array').and.to.have.lengthOf(7);
         // get user by contributor:
         response = await request($SERVER)
                 .get(`/api/users/${$CONTRIB.id}`)
