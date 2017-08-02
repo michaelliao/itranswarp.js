@@ -344,7 +344,7 @@ describe('#article api', () => {
         let response, xml;
         // get rss: empty
         response = await request($SERVER)
-            .get('/feed/articles')
+            .get('/feed')
             .expect('Content-Type', /text\/xml/)
             .expect(200);
         xml = response.text;
@@ -363,7 +363,7 @@ describe('#article api', () => {
         // create 20 articles:
         for (let i=0; i<20; i++) {
             response = await request($SERVER)
-                .post('/api/articles')
+                .post('/api')
                 .set('Authorization', auth($EDITOR))
                 .send({
                     category_id: $CATEGORY_1.id,
