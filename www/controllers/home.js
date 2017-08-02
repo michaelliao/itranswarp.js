@@ -7,6 +7,7 @@
  */
 const
     _ = require('lodash'),
+    moment = require('moment'),
     api = require('../api'),
     db = require('../db'),
     md = require('../md'),
@@ -17,6 +18,7 @@ const
     logger = require('../logger'),
     constants = require('../constants'),
     searchEngine = require('../search/search').engine,
+    adApi = require('./adApi'),
     userApi = require('./userApi'),
     wikiApi = require('./wikiApi'),
     settingApi = require('./settingApi'),
@@ -123,6 +125,16 @@ async function getIndexModel() {
         recentTopics: recentTopics,
         hotArticles: hotArticles
     };
+}
+
+function _bindAdSlots(adperiods, adslots) {
+    let map = {};
+    for (let adslot of adslots) {
+        map[adslot.id] = adslot;
+    }
+    for (let adperiod of adperiods) {
+        adperiod.adslot = map[adperiod.adslot_id];
+    }
 }
 
 module.exports = {
@@ -362,17 +374,48 @@ module.exports = {
         ]);
     },
 
-    'GET /sponsor/': async (ctx, next) => {
-        let
-            user = ctx.state.__user__,
-            model = {
-                user: user
-            };
+    'GET /sponsor/adperiod/:id': async (ctx, next) => {
+        let user = ctx.state.__user__;
         if (user === null || user.role !== constants.role.SPONSOR) {
-            ctx.response.redirect('/auth/signin');
+            ctx.response.status = 403;
             return;
         }
-        ctx.render('user/sponsor.html', await getModel(model));
+        let
+            id = ctx.params.id,
+            today = moment().format('YYYY-MM-DD'),
+            adslots = await adApi.getAdSlots(),
+            adperiods = await adApi.getAllAdPeriods(user.id);
+        _bindAdSlots(adperiods, adslots);
+        let filtered = adperiods.filter((p) => {
+            return p.id === id;
+        });
+        if (filtered.length === 0) {
+            ctx.response.status = 404;
+            return;
+        }
+        let adperiod = filtered[0];
+        ctx.render('user/sponsor.html', await getModel({
+            adslots: adslots,
+            adperiods: adperiods,
+            adperiod: adperiod,
+            admaterials: await adApi.getAdMaterials(id)
+        }));
+    },
+
+    'GET /sponsor/': async (ctx, next) => {
+        let user = ctx.state.__user__;
+        if (user === null || user.role !== constants.role.SPONSOR) {
+            ctx.response.status = 403;
+            return;
+        }
+        let
+            adslots = await adApi.getAdSlots(),
+            adperiods = await adApi.getAllAdPeriods(user.id);
+        _bindAdSlots(adperiods, adslots);
+        ctx.render('user/sponsor.html', await getModel({
+            adslots: adslots,
+            adperiods: adperiods
+        }));
     },
 
     'POST /sponsor/adslots': async (ctx, next) => {

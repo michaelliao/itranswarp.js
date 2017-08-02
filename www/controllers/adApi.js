@@ -64,10 +64,20 @@ async function _getActiveAdPeriods() {
     return adperiods;
 }
 
-async function _getAllAdPeriods() {
-    let adperiods = await AdPeriod.findAll({
-        order: 'end_at DESC'
-    });
+async function _getAllAdPeriods(userId=null) {
+    let adperiods;
+    if (userId) {
+        adperiods = await AdPeriod.findAll({
+            where: {
+                user_id: userId
+            },
+            order: 'end_at DESC'
+        });
+    } else {
+        adperiods = await AdPeriod.findAll({
+            order: 'end_at DESC'
+        });
+    }
     await userApi.bindUsers(adperiods);
     return adperiods;
 }
@@ -111,6 +121,14 @@ async function _getActiveAdPeriod(adperiodId) {
     return adperiod;
 }
 
+async function _getAdMaterials(adperiodId) {
+    return await AdMaterial.findAll({
+        where: {
+            adperiod_id: adperiodId
+        }
+    });
+}
+
 function _isActive(adperiod) {
     /**
      * Check if start <= now < end.
@@ -141,7 +159,13 @@ function _today() {
 
 module.exports = {
 
+    getAdSlots: _getAdSlots,
+
+    getAllAdPeriods: _getAllAdPeriods,
+
     getActiveAdPeriods: _getActiveAdPeriods,
+
+    getAdMaterials: _getAdMaterials,
 
     'GET /api/adslots': async function (ctx, next) {
         /**
