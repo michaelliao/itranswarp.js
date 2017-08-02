@@ -270,12 +270,9 @@ module.exports = {
         let
             id = ctx.params.id,
             adslot = await _getAdSlot(id),
-            adperiods = await _getUnexpiredAdPeriods(adslot.id),
-            filtered = adperiods.filter((ap) => {
-                return ap.adslot_id === id;
-            });
-        if (filtered.length > 0) {
-            throw api.conflictError('AdPeriod', 'Cannot delete AdSlot because there are some active associated AdPeriods');
+            adperiods = await _getUnexpiredAdPeriods(adslot.id);
+        if (adperiods.length > 0) {
+            throw api.conflictError('AdPeriod', 'Cannot delete AdSlot because there are some unexpired associated AdPeriods');
         }
         await adslot.destroy();
         ctx.rest({ id: id });
