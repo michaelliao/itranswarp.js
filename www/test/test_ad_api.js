@@ -252,6 +252,33 @@ describe('#ad api', () => {
         expect(response.body.adslots).to.a('array').and.to.have.lengthOf(1);
     });
 
+    it('delete adslot failed by admin for unexpired adperiod', async () => {
+        // create active adperiod:
+        let
+            start = moment().startOf('month'),
+            end = start.clone().add(2, 'months');
+        let response = await request($SERVER)
+            .post('/api/adperiods')
+            .set('Authorization', auth($ADMIN))
+            .send({
+                user_id: $SPONSOR.id,
+                adslot_id: $ADSLOT_1.id,
+                start_at: start.format('YYYY-MM-DD'),
+                months: 2
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200);
+        let id = $ADSLOT_1.id;
+        response = await request($SERVER)
+            .post('/api/adslots/' + id + '/delete')
+            .set('Authorization', auth($ADMIN))
+            .send({})
+            .expect('Content-Type', /application\/json/)
+            .expect(400);
+        expect(response.body.error).to.equal('entity:conflict');
+        
+    });
+
     it('should get empty active adperiods', async () => {
         let adperiods = await adApi.getActiveAdPeriods();
         expect(adperiods).to.a('array').and.to.have.lengthOf(0);
