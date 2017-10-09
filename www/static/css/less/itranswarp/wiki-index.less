@@ -1,0 +1,25 @@
+// wiki index:
+
+a.x-wiki-index-item {
+    color: @nav-side-color;
+    display: block;
+    text-decoration: none;
+    padding: @nav-padding-vertical @nav-padding-horizontal @nav-padding-vertical 5px;
+}
+
+.uk-nav-side div > a:hover,
+.uk-nav-side div > a:focus {
+    background: @nav-side-hover-background;
+    color: @nav-side-hover-color;
+    /* 2 */
+    outline: none;
+}
+
+.uk-nav-side div > i {
+    cursor: pointer;
+}
+
+div.uk-active > a.x-wiki-index-item {
+    background: @nav-side-active-background;
+    color: @nav-side-active-color;
+}
