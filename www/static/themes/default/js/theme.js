@@ -5,7 +5,7 @@ function add_sponsor(selector, width, height, name, img_src, link) {
         stl = 'width:' + width + 'px;height:' + height + 'px;',
         s = '<div style="float:left;margin:0 1px 1px 0;' + stl + '">';
     s = s + '<a target="_blank" href="' + link + '">';
-    s = s + '<img src="' + img_src + '" style="' + stl + '">';
+    s = s + '<img src="' + img_src + '">';
     s = s + '</a></div>';
     $(selector).append(s);
 }
@@ -311,7 +311,6 @@ function makeCollapsable(obj, max_height) {
     var aName = 'COLLAPSE-' + tmp_collapse;
     tmp_collapse ++;
     $o.parent().before('<div class="x-anchor"><a name="' + aName + '"></a></div>')
-    console.log($o.next().html());
     var $p = $o.next();
     var $aDown = $p.find('a:first');
     var $aUp = $p.find('a:last');
