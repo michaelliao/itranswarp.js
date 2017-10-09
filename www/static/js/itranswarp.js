@@ -494,7 +494,6 @@ if (typeof(Vue)!=='undefined') {
     Vue.component('pagination', {
         props: ['page'],
         data: function () {
-            console.log('init page list: ' + createPageList(this.page));
             return {
                 list: createPageList(this.page)
             }
