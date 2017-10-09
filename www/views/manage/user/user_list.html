@@ -161,7 +161,7 @@ function initVM(data) {
                     <td><span v-text="u.created_at.toDateTime()"></span></td>
                     <td>
                         <div v-if="! isLocked(u)">
-                            <i class="uk-icon-check-square-o"></i>
+                            <i class="uk-icon-check"></i>
                             Active
                         </div>
                         <div v-if="isLocked(u)" class="uk-text-danger">
