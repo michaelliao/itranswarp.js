@@ -1,4 +1,7 @@
 {
+    "AD": "广告",
+    "Action": "操作",
+    "Active": "正常",
     "Admin": "管理员",
     "Alias": "别名",
     "All": "所有",
@@ -40,6 +43,8 @@
     "Edit": "编辑",
     "Editor": "编辑",
     "Email": "电子邮件",
+    "Expired": "过期",
+    "Expires at": "截止日期",
 
     "February": "二月",
     "Feedback": "意见反馈",
@@ -50,6 +55,7 @@
     "Hot Articles": "热门文章",
     "Hot Topics": "热门话题",
 
+    "Image": "图片",
     "Index": "目录",
 
     "January": "一月",
@@ -85,6 +91,7 @@
     "Page": "页面",
     "Pages": "页面",
     "Password": "口令",
+    "Pending": "等待",
     "Please sign in": "请登录",
     "Popular Articles": "热门推荐",
     "Post": "发布",
@@ -115,6 +122,8 @@
     "Sign Out": "登出",
     "Snippets": "片段",
     "Sponsor": "赞助商",
+    "Started at": "开始日期",
+    "Status": "状态",
     "Subscriber": "订阅用户",
     "Sun": "周日",
 
@@ -131,6 +140,7 @@
     "Tue": "周二",
     "Type": "类型",
 
+    "URL": "链接",
     "User": "用户",
     "Users": "用户",
 
