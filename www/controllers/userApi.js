@@ -178,8 +178,35 @@ module.exports = {
     'GET /api/users': async (ctx, next) => {
         ctx.checkPermission(constants.role.EDITOR);
         let
+            q = (ctx.request.query.q || '').trim(),
             page = helper.getPage(ctx.request),
+            users;
+        if (q === '') {
             users = await getUsers(page);
+        } else {
+            let user = await User.findById(q);
+            if (user === null) {
+                user = await User.findOne({
+                    where: {
+                        'name': q
+                    }
+                });
+            }
+            if (user === null) {
+                users = await User.findAll({
+                    where: {
+                        name: {
+                            $like: q + '%'
+                        }
+                    },
+                    limit: 10
+                });
+            }
+            if (user !== null) {
+                users = [user];
+            }
+            page.total = users.length;
+        }
         ctx.rest({
             page: page,
             users: users

@@ -4,10 +4,12 @@
 
 {% block head %}
 <script>
+
 var g_currentTime = parseInt('{{ currentTime }}');
 
 $(function() {
     getJSON('/api/users', {
+        q: '{{ q }}',
         page: parseInt('{{ pageIndex }}')
     }, function (err, data) {
         if (err) {
@@ -127,7 +129,13 @@ function initVM(data) {
         <h3>{{ _('All Users') }}</h3>
 
         <div class="uk-margin uk-clearfix">
-            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+            
+            <form class="uk-form">
+                <button onclick="refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input name="q" value="{{ q }}" maxlength="100" placeholder="user id or name" class="uk-form-width-large">
+                <button class="uk-button"><i class="uk-icon-search"></i> Search</button>
+            </form>
         </div>
 
         <table class="uk-table uk-table-hover">

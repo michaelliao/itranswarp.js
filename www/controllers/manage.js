@@ -255,6 +255,7 @@ module.exports = {
 
     'GET /manage/user/(user_list)?': async (ctx, next) => {
         ctx.render('manage/user/user_list.html', await _getModel({
+            q: ctx.request.query.q || '',
             currentTime: Date.now(),
             pageIndex: helper.getPageIndex(ctx.request)
         }));
@@ -323,18 +324,6 @@ module.exports = {
             form: {
                 name: 'Create Ad Period',
                 action: '/api/adperiods',
-                redirect: 'adperiod_list'
-            },
-        }));
-    },
-
-    'GET /manage/ad/extend_adperiod': async (ctx, next) => {
-        let id = _getId(ctx);
-        ctx.render('manage/ad/adperiod_extend.html', await _getModel({
-            id: id,
-            form: {
-                name: 'Extend ad period',
-                action: '/api/adperiods/' + id + '/extend',
                 redirect: 'adperiod_list'
             },
         }));
