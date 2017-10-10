@@ -77,6 +77,21 @@ async function getNavigations() {
     return await cache.get(constants.cache.NAVIGATIONS, navigationApi.getNavigations);
 };
 
+function getTodayCacheTime() {
+    let
+        now = moment(),
+        today = now.startOf('day'),
+        elapse = Math.floor((now.toDate().getTime() - today.toDate().getTime()) / 1000);
+    if (elapse < 60) {
+        return 60;
+    }
+    return 86400 - elapse;
+}
+
+async function getAds() {
+    return await cache.get(constants.cache.ADS, adApi.getAds, getTodayCacheTime());
+}
+
 async function getModel(model) {
     model.__version__ = VERSION;
     model.__production__ = PRODUCTION;
@@ -84,6 +99,7 @@ async function getModel(model) {
     model.__navigations__ = await getNavigations();
     model.__website__ = await settingApi.getWebsiteSettings();
     model.__snippets__ = await settingApi.getSnippets();
+    model.__ads__ = await getAds();
     model.__signins__ = signins;
     return model;
 }
@@ -211,7 +227,7 @@ module.exports = {
             id = ctx.params.id,
             wiki = await wikiApi.getWiki(id, true),
             num = await cache.incr(wiki.id),
-            tree = await wikiApi.getWikiTree(wiki.id, true);
+            tree = await wikiApi.getWikiTree(wiki.id, false);
         wiki.type = 'wiki';
         wiki.content = md.systemMarkdownToHtml(wiki.content, true);
         wiki.views = wiki.views + num;
@@ -221,7 +237,7 @@ module.exports = {
         ctx.render('wiki/wiki.html', await getModel({
             wiki: wiki,
             current: wiki,
-            tree: tree.children
+            tree: tree
         }));
     },
 
@@ -237,7 +253,7 @@ module.exports = {
         }
         num = await cache.incr(wikipage.id);
         wiki = await wikiApi.getWiki(wid);
-        tree = await wikiApi.getWikiTree(wid, true);
+        tree = await wikiApi.getWikiTree(wid, false);
         wikipage.type = 'wikipage';
         wikipage.views = wikipage.views + num;
         if (num > WRITE_VIEWS_BACK) {
@@ -247,7 +263,7 @@ module.exports = {
         ctx.render('wiki/wiki.html', await getModel({
             wiki: wiki,
             current: wikipage,
-            tree: tree.children
+            tree: tree
         }));
     },
 
@@ -376,72 +392,61 @@ module.exports = {
 
     'GET /sponsor/adperiod/:id': async (ctx, next) => {
         let user = ctx.state.__user__;
-        if (user === null || user.role !== constants.role.SPONSOR) {
+        if (user === null) {
+            ctx.response.redirect('/');
+            return;
+        }
+        if (user.role !== constants.role.SPONSOR) {
             ctx.response.status = 403;
             return;
         }
         let
             id = ctx.params.id,
             today = moment().format('YYYY-MM-DD'),
-            adslots = await adApi.getAdSlots(),
-            adperiods = await adApi.getAllAdPeriods(user.id);
-        _bindAdSlots(adperiods, adslots);
-        let filtered = adperiods.filter((p) => {
-            return p.id === id;
+            getStatus = (start, end) => {
+                if (start === '') {
+                    start = '0000-00-00';
+                }
+                if (end === '') {
+                    end = '9999-99-99';
+                }
+                if (today < start) {
+                    return 'PENDING';
+                }
+                if (today >= end) {
+                    return 'EXPIRED';
+                }
+                return 'ACTIVE';
+            },
+            adperiods = await adApi.getAllAdPeriods(user.id),
+            adslots = await adApi.getAdSlots();
+        adperiods.map((p) => {
+            p.status = getStatus(p.start_at, p.end_at);
         });
-        if (filtered.length === 0) {
-            ctx.response.status = 404;
+        adperiods = adperiods.filter((p) => {
+            return p.status !== 'EXPIRED';
+        });
+        if (adperiods.length === 0) {
+            ctx.render('user/sponsor-empty.html', await getModel({}));
             return;
         }
-        let adperiod = filtered[0];
+        _bindAdSlots(adperiods, adslots);
+        let
+            filtered = adperiods.filter((p) => {
+                return p.id === id;
+            }),
+            adperiod = filtered.length === 0 ? adperiods[0] : filtered[0],
+            admaterials = await adApi.getAdMaterials(adperiod.id);
+        admaterials.map((m) => {
+            m.status = getStatus(m.start_at, m.end_at);
+        });
         ctx.render('user/sponsor.html', await getModel({
+            today: today,
             adslots: adslots,
             adperiods: adperiods,
             adperiod: adperiod,
-            admaterials: await adApi.getAdMaterials(id)
+            admaterials: admaterials
         }));
-    },
-
-    'GET /sponsor/': async (ctx, next) => {
-        let user = ctx.state.__user__;
-        if (user === null || user.role !== constants.role.SPONSOR) {
-            ctx.response.status = 403;
-            return;
-        }
-        let
-            adslots = await adApi.getAdSlots(),
-            adperiods = await adApi.getAllAdPeriods(user.id);
-        _bindAdSlots(adperiods, adslots);
-        ctx.render('user/sponsor.html', await getModel({
-            adslots: adslots,
-            adperiods: adperiods
-        }));
-    },
-
-    'POST /sponsor/adslots': async (ctx, next) => {
-        let
-            user = ctx.state.__user__,
-            model = {
-                user: user
-            };
-        if (user === null || user.role !== constants.role.SPONSOR) {
-            ctx.response.redirect('/auth/signin');
-            return;
-        }
-        ctx.render('user/sponsor.html', await getModel(model));
-    },
-
-    'POST /sponsor/adslots/upload': async (ctx, next) => {
-        let
-            user = ctx.state.__user__,
-            model = {
-                user: user
-            };
-        if (user === null || user.role !== constants.role.SPONSOR) {
-            ctx.response.redirect('/auth/signin');
-            return;
-        }
-        ctx.render('user/sponsor.html', await getModel(model));
     },
 
     'GET /me/profile': async (ctx, next) => {
