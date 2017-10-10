@@ -195,7 +195,7 @@ function _buildAd(today, slot, periods, materials) {
         }),
         adperiods = _.map(ps, (p) => {
             return {
-                user: p.user.name.replace(/</g, '&lt;'), // make sure encode "<script ..."
+                user: p.user.name,
                 admaterials: _.map(_.filter(materials, (m) => {
                     return m.adperiod_id === p.id && _isActiveAdMaterial(m);
                 }), (m) => {
