@@ -125,7 +125,7 @@ function _toRssDate(dt) {
     return new Date(dt).toGMTString();
 }
 
-async function getFeed(domain) {
+async function _getFeed(domain) {
     logger.info('generate rss...');
     let
         url_prefix = (config.session.https ? 'https://' : 'http://') + domain + '/article/',
@@ -177,8 +177,12 @@ module.exports = {
     getArticle: getArticle,
 
     'GET /feed': async (ctx, next) => {
+        ctx.response.redirect('/feed/articles');
+    },
+
+    'GET /feed/articles': async (ctx, next) => {
         let rss = await cache.get(constants.cache.ARTICLE_FEED, async () => {
-            return await getFeed(ctx.request.host);
+            return await _getFeed(ctx.request.host);
         });
         ctx.response.set('Cache-Control', 'max-age: 3600');
         ctx.response.type = 'text/xml';

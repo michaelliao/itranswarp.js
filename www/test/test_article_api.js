@@ -363,7 +363,7 @@ describe('#article api', () => {
         // create 20 articles:
         for (let i=0; i<20; i++) {
             response = await request($SERVER)
-                .post('/api')
+                .post('/api/articles')
                 .set('Authorization', auth($EDITOR))
                 .send({
                     category_id: $CATEGORY_1.id,
