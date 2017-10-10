@@ -344,7 +344,7 @@ describe('#article api', () => {
         let response, xml;
         // get rss: empty
         response = await request($SERVER)
-            .get('/feed')
+            .get('/feed/articles')
             .expect('Content-Type', /text\/xml/)
             .expect(200);
         xml = response.text;
