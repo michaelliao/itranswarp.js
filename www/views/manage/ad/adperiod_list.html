@@ -35,7 +35,8 @@ $(function() {
                 adperiod.adslot = findAdSlotById(adperiods[i].adslot_id);
                 adperiod.isActive = adperiod.start_at <= TODAY && TODAY < adperiod.end_at;
                 adperiod.isExpired = adperiod.end_at <= TODAY;
-                adperiod.isPreActive = TODAY < adperiod.start_at;
+                adperiod.isPending = TODAY < adperiod.start_at;
+                adperiod.extendMonths = 0;
             }
             initVM(adperiods);
         });
@@ -63,7 +64,19 @@ function initVM(adperiods) {
                 throw 'logic error';
             },
             extendAdPeriod: function (id) {
-                location.assign('edit_adperiod?id=' + id);
+                var p = this.adperiods[this.find(id)];
+                var that = this;
+                UIkit.modal.confirm('Ad period \"' + p.adslot.name + '\" of user \"' + p.user.name + '\" will be extended ' + p.extendMonths + ' months. Continue?', function() {
+                    that.$resource('/api/adperiods/' + p.id + '/extend').save({
+                        months: p.extendMonths
+                    }).then(function (resp) {
+                        resp.json().then(function (result) {
+                            refresh();
+                        });
+                    }, onJsonError);
+                }, function () {
+                    p.extendMonths = 0;
+                });
             },
             deleteAdPeriod: function (id) {
                 var p = this.adperiods[this.find(id)];
@@ -115,7 +128,7 @@ function initVM(adperiods) {
                     <th width="10%">{{ _('Start At') }}</th>
                     <th width="10%">{{ _('End At') }} (Exclusive)</th>
                     <th width="10%">{{ _('Status') }}</th>
-                    <th width="10%">&nbsp;</th>
+                    <th width="10%">{{ _('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -136,13 +149,27 @@ function initVM(adperiods) {
                     <td><span v-text="p.start_at"></span></td>
                     <td><span v-text="p.end_at"></span></td>
                     <td>
-                        <span v-if="p.isActive" class="uk-text-success">Active</span>
-                        <span v-if="p.isExpired" class="uk-text-danger">Expired</span>
-                        <span v-if="p.isPreActive" class="uk-text-warning">Pre-Active</span>
+                        <span v-if="p.isActive" class="uk-text-success"><i class="uk-icon-play-circle-o"></i> Active</span>
+                        <span v-if="p.isExpired" class="uk-text-danger"><i class="uk-icon-stop-circle-o"></i> Expired</span>
+                        <span v-if="p.isPending" class="uk-text-warning"><i class="uk-icon-pause-circle-o"></i> Pending</span>
                     </td>
                     <td>
-                        <a v-on:click="editAdPeriod(p.id)" title="Edit Ad Period" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-on:click="deleteAdPeriod(p.id)" title="Delete Ad Period" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
+                        <select v-if="!p.isExpired" v-model.number="p.extendMonths" v-on:change="extendAdPeriod(p.id)">
+                            <option value="0">-- Extend --</option>
+                            <option value="1">1 month</option>
+                            <option value="2">2 months</option>
+                            <option value="3">3 months</option>
+                            <option value="4">4 months</option>
+                            <option value="5">5 months</option>
+                            <option value="6">6 months</option>
+                            <option value="7">7 months</option>
+                            <option value="8">8 months</option>
+                            <option value="9">9 months</option>
+                            <option value="10">10 months</option>
+                            <option value="11">11 months</option>
+                            <option value="12">12 months</option>
+                        </select>
+                        <a v-if="p.isExpired" v-on:click="deleteAdPeriod(p.id)" title="Delete Ad Period" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
                     </td>
                 </tr>
             </tbody>

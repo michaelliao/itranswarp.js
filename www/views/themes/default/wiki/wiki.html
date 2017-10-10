@@ -44,48 +44,114 @@ $(function () {
 });
 
 $(function () {
-    var
-        current = $('#{{ current.id }}'),
-        prev = current.prev().find('a'),
-        next = current.next().find('a'),
-        L = [];
-    current.addClass('uk-active');
+    $('#{{ current.id }}').addClass('uk-active');
     $('#off-{{ current.id }}').addClass('uk-active');
-    L.push('<div class="uk-clearfix uk-margin-left uk-margin-right">');
-    if (prev.length > 0) {
-        L.push('<span class="uk-float-left"><i class="uk-icon-chevron-left"></i> <a href="');
-        L.push(prev.attr('href'));
-        L.push('">');
-        L.push(encodeHtml(prev.text()));
-        L.push('</a></span>');
-    }
-    if (next.length > 0) {
-        L.push('<span class="uk-float-right"><a href="');
-        L.push(next.attr('href'));
-        L.push('">');
-        L.push(encodeHtml(next.text()));
-        L.push('</a> <i class="uk-icon-chevron-right"></i></span>')
-    }
-    L.push('</div>');
-    $('#x-wiki-prev-next').html(L.join(''));
+    // expand current:
+    expandCurrentNode();
 });
+
+function expandCurrentNode() {
+    var current = $('#{{ current.id }}');
+    for (;;) {
+        i = current.find('i').get(0);
+        if (i) {
+            expandWikiNode(i);
+        }
+        current = current.parent();
+        if (! current.is('div')) {
+            break;
+        }
+    }
+}
+
+function toggleWikiNode(icon) {
+    var
+        $i = $(icon),
+        $div = $i.parent(),
+        expand = $div.attr('expand');
+    if (expand === 'true') {
+        collapseWikiNode(icon);
+    } else {
+        expandWikiNode(icon);
+    }
+}
+
+function collapseWikiNode(icon, rec) {
+    var
+        $i = $(icon),
+        $div = $i.parent();
+    $div.attr('expand', 'false');
+    $i.removeClass('uk-icon-minus-square-o');
+    $i.addClass('uk-icon-plus-square-o');
+    $div.find('>div').hide();
+    if (rec) {
+        $div.find('>div>i').each(function () {
+            collapseWikiNode(this, rec);
+        });
+    }
+}
+
+function expandWikiNode(icon, rec) {
+    var
+        $i = $(icon),
+        $div = $i.parent();
+    $div.attr('expand', 'true');
+    $i.removeClass('uk-icon-plus-square-o');
+    $i.addClass('uk-icon-minus-square-o');
+    $div.find('>div').show();
+    if (rec) {
+        $div.find('>div>i').each(function () {
+            expandWikiNode(this, rec);
+        });
+    }
+}
+
 </script>
 {% endblock %}
 
+{% macro createNodes(node, depth) %}
+    {% for n in node.children %}
+        <div id="{{ n.id }}" depth="{{ depth }}" style="display:none;position:relative;margin-left:15px;">
+            {% if n.children.length > 0 %}
+            <i onclick="toggleWikiNode(this)" class="uk-icon-plus-square-o" style="position:absolute;margin-left:-1em;padding-top:8px;"></i>
+            <a href="/wiki/{{ wiki.id }}/{{ n.id }}" class="x-wiki-index-item">{{ n.name }}</a>
+            {{ createNodes(n, depth + 1) }}
+            {% else %}
+            <a href="/wiki/{{ wiki.id }}/{{ n.id }}" class="x-wiki-index-item">{{ n.name }}</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endmacro %}
+
 {% block sidebar_left_content %}
+    <div class="uk-float-right" style="padding-top:5px">
+        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true);expandCurrentNode()" style="margin-left:5px"><i class="uk-icon-check-square"></i></a>
+        <a href="#0" onclick="expandWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-minus-square"></i></a>
+        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-plus-square"></i></a>
+    </div>
     <ul class="uk-nav uk-nav-side">
         <li class="uk-nav-header">{{ _('Index') }}</li>
     </ul>
-    <ul class="uk-nav uk-nav-side" style="margin-right:-15px;">
-        <li id="{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
-    {% for n in tree %}
-        <li id="{{ n.id }}" style="margin-left:{{ n.depth + 1 }}em;">
-            <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
-        </li>
-    {% endfor %}
+    <ul id="x-wiki-index" class="uk-nav uk-nav-side" style="margin-right:-15px;">
+        <div id="{{ wiki.id }}" depth="0" style="position:relative;margin-left:15px;">
+            <i onclick="toggleWikiNode(this)" class="uk-icon-plus-square-o" style="position:absolute;margin-left:-1em;padding-top:8px;"></i>
+            <a href="/wiki/{{ wiki.id }}" class="x-wiki-index-item">{{ wiki.name }}</a>
+            {{ createNodes(tree, 1) }}
+        </div>
     </ul>
     <div class="x-placeholder"></div>
 {% endblock %}
+
+{% macro createOffcanvasNodes(node, depth) %}
+    {% for n in node.children %}
+    <li id="off-{{ n.id }}" style="margin-left:{{ depth }}em;">
+        <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
+    </li>
+    {% if n.children.length > 0 %}
+        {{ createOffcanvasNodes(n, depth + 1) }}
+    {% endif %}
+    {% endfor %}
+{% endmacro %}
 
 {% block offcanvas_left %}
     <ul class="uk-nav uk-nav-side">
@@ -93,11 +159,7 @@ $(function () {
     </ul>
     <ul class="uk-nav uk-nav-side">
         <li id="off-{{ wiki.id }}"><a href="/wiki/{{ wiki.id }}">{{ wiki.name }}</a></li>
-    {% for n in tree %}
-        <li id="off-{{ n.id }}" style="margin-left:{{ n.depth + 1 }}em;">
-            <a href="/wiki/{{ wiki.id }}/{{ n.id }}">{{ n.name }}</a>
-        </li>
-    {% endfor %}
+        {{ createOffcanvasNodes(tree, 1) }}
     </ul>
     <div class="x-placeholder"></div>
 {% endblock %}
@@ -111,12 +173,6 @@ $(function () {
     <div class="x-wiki-content x-main-content">{{ current.content|safe }}</div>
 
     <div class="x-sponsor-a uk-clearfix"><!-- sponsor A --></div>
-
-    <hr>
-
-    <div id="x-wiki-prev-next" class="uk-clearfix uk-margin-left uk-margin-right"></div>
-
-    <hr>
 
     <div class="x-anchor"><a name="comments"></a></div>
 

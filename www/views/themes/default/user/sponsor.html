@@ -23,6 +23,11 @@ $(function () {
 
 var TODAY = '{{ today }}';
 
+function showMaterialForm() {
+    $('#x-add-material').hide();
+    $('#x-material-form').show();
+}
+
 function _showLarge(url) {
     var lightbox = UIkit.lightbox.create([{
         source: url,
@@ -31,38 +36,26 @@ function _showLarge(url) {
     lightbox.show();
 }
 
-function _getStatus(start, end) {
-    if (start === '' && end === '') {
-        return 'Active';
-    }
-    if (start !== '' && end !== '') {
-        if (start <= TODAY && TODAY < end) {
-            return 'Active';
-        }
-        if (TODAY < start) {
-            return 'Pre-Active';
-        }
-        if (end <= TODAY) {
-            return 'Expired';
-        }
-    }
-    if (start !== '') {
-        if (start <= TODAY) {
-            return 'Active';
-        }
-        if (TODAY < start) {
-            return 'Pre-Active';
-        }
-    }
-    if (end !== '') {
-        if (TODAY < end) {
-            return 'Active';
-        }
-        if (end <= TODAY) {
-            return 'Expired';
-        }
-    }
-    return 'ERROR';
+function deleteAdMaterial(admId) {
+    UIkit.modal.confirm('Are you sure you want to delete it?', function() {
+        postJSON('/api/admaterials/' + admId + '/delete', {}, function (err) {
+            if (err) {
+                _alert(err.message || err);
+            } else {
+                refresh();
+            }
+        });
+    });
+}
+
+var g_status = {
+    "ACTIVE": "<span class=\"uk-text-success\"><i class=\"uk-icon-play-circle-o\"></i> " + "{{ _('Active') }}" + "</span>",
+    "PENDING": "<span class=\"uk-text-warning\"><i class=\"uk-icon-pause-circle-o\"></i> " + "{{ _('Pending') }}" + "</span>",
+    "EXPIRED": "<span class=\"uk-text-danger\"><i class=\"uk-icon-stop-circle-o\"></i> " + "{{ _('Expired') }}" + "</span>"
+}
+
+function _getStatus(status) {
+    return g_status[status];
 }
 
 var IMAGE_WIDTH = parseInt('{{ adperiod.adslot.width }}');
@@ -118,7 +111,7 @@ function _processImageFile(file, callback) {
 $(function () {
     var
         $preview = $('#image-preview'),
-        $form = $('#ad-material-form'),
+        $form = $('#x-material-form'),
         $file = $form.find('input[name=file]'),
         $url = $form.find('input[name=url]'),
         $start_at = $form.find('input[name=start_at]'),
@@ -168,7 +161,7 @@ $(function () {
         if (data.start_at !== '' && data.end_at !== '' && data.start_at >= data.end_at) {
             return _alert('End date must be greater than start date.');
         }
-        if (isNaN(data.weight) || data.weight < 0 || data.weight > 100) {
+        if (isNaN(data.weight) || data.weight <= 0 || data.weight > 100) {
             return _alert('Invalid weight.');
         }
         if (data.start_at === '') {
@@ -203,9 +196,11 @@ $(function () {
             <a href="/sponsor/adperiod/{{ p.id }}"><i class="uk-icon-photo"></i> {{ p.adslot.name }} ({{ p.adslot.width }} x {{ p.adslot.height }})</a>
         </li>
         {% endfor %}
+        <!--
         <li id="buyAdPeriod">
             <a href="/sponsor/buy"><i class="uk-icon-plus"></i> New Subscription</a>
         </li>
+        -->
     </ul>
     <div class="x-placeholder"></div>
 {% endblock %}
@@ -217,8 +212,16 @@ $(function () {
         <hr>
         <p>Ad slot: {{ adperiod.adslot.name }}</p>
         <p>Ad size: {{ adperiod.adslot.width }} x {{ adperiod.adslot.height }}</p>
-        <p>Started at: {{ adperiod.start_at }}</p>
-        <p>Expires at: {{ adperiod.end_at }}</p>
+        <p>{{ _('Started at') }}: {{ adperiod.start_at }}</p>
+        <p>{{ _('Expires at') }}: <span id="x-adperiod-expires"></span></p>
+        <script>
+            var m = moment('{{ adperiod.end_at }}');
+            $('#x-adperiod-expires').text(m.subtract(1, 'days').format('YYYY-MM-DD'));
+        </script>
+        <p>{{ _('Status') }}: <span id="x-adperiod-status"></span></p>
+        <script>
+            $('#x-adperiod-status').html(_getStatus('{{ adperiod.status }}'));
+        </script>
     </div>
 
     <div class="x-placeholder"></div>
@@ -249,33 +252,42 @@ $(function () {
                 <td>{{ m.weight }}</td>
                 <td>
                     <script>
-                        document.write(_getStatus('{{ m.start_at }}', '{{ m.end_at }}'));
+                        document.write(_getStatus('{{ m.status }}'));
                     </script>
                 </td>
                 <td>
-                    <a href="#0" title="Delete"><i class="uk-icon-trash"></i></a>
+                    <a href="javascript:deleteAdMaterial('{{ m.id }}')" title="Delete"><i class="uk-icon-trash"></i></a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <form id="ad-material-form" class="uk-form uk-form-stacked">
-        <legend>{{ _('Create New Ad Material') }}</legend>
+    <div id="x-add-material">
+        <button class="uk-button uk-button-primary" onclick="showMaterialForm()"
+            {% if admaterials.length >= 10 %}
+            disabled
+            {% endif %}
+        >Add Ad Material</button></div>
+
+    <div class="x-placeholder"></div>
+
+    <form id="x-material-form" class="uk-form uk-form-stacked" style="display: none">
+        <legend>{{ _('Add New Ad Material') }}</legend>
         <fieldset>
             <div class="uk-alert uk-alert-danger uk-hidden"></div>
             <div class="uk-form-row">
-                <label class="uk-form-label">Image:</label>
+                <label class="uk-form-label">{{ _('Image') }}:</label>
                 <div class="uk-form-controls">
                     <div id="image-preview" style="border: 1px solid #ccc; width:{{ adperiod.adslot.width }}px; height:{{ adperiod.adslot.height }}px; background-size:cover;"></div>
                 </div>
                 <div class="uk-form-controls">
                     <input id="file" name="file" type="file">
-                    <p>The uploaded image must be JPG format, less than 50 kb.</p>
+                    <p>The uploaded image must be JPG format.</p>
                 </div>
             </div>
             <div class="uk-form-row">
-                <label class="uk-form-label">URL:</label>
+                <label class="uk-form-label">{{ _('URL') }}:</label>
                 <div class="uk-form-controls">
                     <div class="uk-form-icon">
                         <i class="uk-icon-link"></i>
@@ -311,7 +323,7 @@ $(function () {
                         <i class="uk-icon-sliders"></i>
                         <input name="weight" type="text" placeholder="100" class="uk-form-width-medium">
                     </div>
-                    <p>Optional: the weight of the AD: 0 ~ 100.</p>
+                    <p>Optional: the weight of the AD: 1 ~ 100.</p>
                 </div>
             </div>
             <!--

@@ -46,7 +46,7 @@ async function _getAdPeriod(adperiodId) {
     return adperiod;
 }
 
-async function _getActiveAdPeriods() {
+async function _getActiveAdPeriods(orderBy='end_at DESC') {
     let
         today = _today(),
         adperiods = await AdPeriod.findAll({
@@ -58,7 +58,7 @@ async function _getActiveAdPeriods() {
                     $gt: today
                 }
             },
-            order: 'end_at DESC'
+            order: orderBy
         });
     await userApi.bindUsers(adperiods);
     return adperiods;
@@ -121,12 +121,36 @@ async function _getActiveAdPeriod(adperiodId) {
     return adperiod;
 }
 
-async function _getAdMaterials(adperiodId) {
-    return await AdMaterial.findAll({
+async function _deleteAdMaterials(ctx, adperiod_id) {
+    let ms = await AdMaterial.findAll({
         where: {
-            adperiod_id: adperiodId
+            adperiod_id: adperiod_id
         }
     });
+    for (let m of ms) {
+        await attachmentApi.deleteAttachment(ctx, m.cover_id);
+        await m.destroy();
+    }
+    await AdMaterial.destroy({
+        where: {
+            adperiod_id: adperiod_id
+        }
+    });
+}
+
+async function _getAdMaterials(adperiodId) {
+    if (adperiodId) {
+        return await AdMaterial.findAll({
+            where: {
+                adperiod_id: adperiodId
+            },
+            order: 'created_at'
+        });
+    } else {
+        return await AdMaterial.findAll({
+            order: 'created_at'
+        });
+    }
 }
 
 function _isActive(adperiod) {
@@ -157,6 +181,63 @@ function _today() {
     return moment().format('YYYY-MM-DD');
 }
 
+function _buildAd(today, slot, periods, materials) {
+    logger.info('build ad...' + JSON.stringify(slot));
+    let
+        _isActiveAdMaterial = (adm) => {
+            let
+                start_at = adm.start_at === '' ? '0000-00-00' : adm.start_at,
+                end_at = adm.end_at === '' ? '9999-99-99' : adm.end_at;
+            return (today >= start_at) && (today < end_at);
+        },
+        ps = _.filter(periods, (p) => {
+            return p.adslot_id === slot.id;
+        }),
+        adperiods = _.map(ps, (p) => {
+            return {
+                user: p.user.name.replace(/</g, '&lt;'), // make sure encode "<script ..."
+                admaterials: _.map(_.filter(materials, (m) => {
+                    return m.adperiod_id === p.id && _isActiveAdMaterial(m);
+                }), (m) => {
+                    return {
+                        image: '/files/attachments/' + m.cover_id + '/0',
+                        weight: m.weight,
+                        url: m.url
+                    }
+                })
+            };
+        });
+    let num_auto_fill = slot.num_slots - adperiods.length;
+    num_auto_fill = Math.max(num_auto_fill, 0);
+    num_auto_fill = Math.min(num_auto_fill, slot.num_auto_fill);
+    return {
+        name: slot.name,
+        width: slot.width,
+        height: slot.height,
+        auto_fill: slot.auto_fill,
+        num_auto_fill: num_auto_fill,
+        adperiods: adperiods
+    };
+}
+
+async function _getAds() {
+    let
+        today = _today(),
+        slots = await _getAdSlots(),
+        periods = await _getActiveAdPeriods('display_order'),
+        materials = await _getAdMaterials(),
+        slot,
+        results = {};
+    for (slot of slots) {
+        results[slot.alias] = _buildAd(today, slot, periods, materials);
+    }
+    return results;
+}
+
+async function _clearCache() {
+    await cache.remove(constants.cache.ADS);
+}
+
 module.exports = {
 
     getAdSlots: _getAdSlots,
@@ -166,6 +247,8 @@ module.exports = {
     getActiveAdPeriods: _getActiveAdPeriods,
 
     getAdMaterials: _getAdMaterials,
+
+    getAds: _getAds,
 
     'GET /api/adslots': async function (ctx, next) {
         /**
@@ -233,6 +316,7 @@ module.exports = {
             num_auto_fill: data.num_auto_fill,
             auto_fill: data.auto_fill.trim()
         });
+        await _clearCache();
         ctx.rest(adslot);
     },
 
@@ -273,10 +357,11 @@ module.exports = {
         if (data.num_auto_fill) {
             adslot.num_auto_fill = data.num_auto_fill;
         }
-        if (data.auto_fill) {
+        if (data.auto_fill !== undefined) {
             adslot.auto_fill = data.auto_fill.trim();
         }
         await adslot.save();
+        await _clearCache();
         ctx.rest(adslot);
     },
 
@@ -299,6 +384,7 @@ module.exports = {
             throw api.conflictError('AdPeriod', 'Cannot delete AdSlot because there are some unexpired associated AdPeriods');
         }
         await adslot.destroy();
+        await _clearCache();
         ctx.rest({ id: id });
     },
 
@@ -365,6 +451,7 @@ module.exports = {
             end_at: end_at,
             display_order: isNaN(max_display_order) ? 0 : max_display_order + 1
         });
+        await _clearCache();
         ctx.rest(adperiod);
     },
 
@@ -384,8 +471,9 @@ module.exports = {
         }
         // delete AdPeriod:
         await adperiod.destroy();
-        // TODO:
         // delete all AdMaterials
+        await _deleteAdMaterials(ctx, id);
+        await _clearCache();
         ctx.rest({
             id: id
         });
@@ -414,6 +502,7 @@ module.exports = {
         }
         adperiod.end_at = _addMonths(adperiod.end_at, months);
         await adperiod.save();
+        await _clearCache();
         ctx.rest(adperiod);
     },
 
@@ -435,6 +524,7 @@ module.exports = {
             start_at = data.start_at || '',
             end_at = data.end_at || '',
             geo = data.geo || '',
+            keywords = data.keywords || '',
             adperiod = await _getAdPeriod(id),
             adslot = await _getAdSlot(adperiod.adslot_id),
             user = ctx.state.__user__;
@@ -448,9 +538,6 @@ module.exports = {
         // check
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             throw api.invalidParam('url', 'Must be start with http:// or https://');
-        }
-        if (weight < 0 || weight > 100) {
-            throw api.invalidParam('weight');
         }
         // check image:
         let
@@ -484,11 +571,19 @@ module.exports = {
             start_at: start_at,
             end_at: end_at,
             geo: geo,
+            keywords: keywords,
             url: url,
             cover_id: attachment.id
         });
-        console.log(JSON.stringify(admaterial))
+        await _clearCache();
         ctx.rest(admaterial);
+    },
+
+    'GET /api/admaterials': async (ctx, next) => {
+        ctx.checkPermission(constants.role.ADMIN);
+        ctx.rest({
+            admaterials: await _getAdMaterials()
+        });
     },
 
     'POST /api/admaterials/:id/delete': async (ctx, next) => {
@@ -515,6 +610,7 @@ module.exports = {
         }
         await admaterial.destroy();
         await attachmentApi.deleteAttachment(ctx, admaterial.cover_id);
+        await _clearCache();
         ctx.rest({ id: id });
     }
 };

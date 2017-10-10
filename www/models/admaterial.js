@@ -35,6 +35,10 @@ module.exports = {
             type: dbtypes.STRING(100),
             default: () => ''
         },
+        keywords: {
+            type: dbtypes.STRING(100),
+            default: () => ''
+        },
         url: {
             type: dbtypes.STRING(1000)
         }

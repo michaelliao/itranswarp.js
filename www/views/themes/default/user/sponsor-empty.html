@@ -1,0 +1,44 @@
+{% extends '../_base.html' %}
+
+<!-- display sidebar on left -->
+{% set __sidebar_left__ = true %}
+
+{% block nav %} /user/ {% endblock %}
+
+{% block title %}{{ _('Sponsor') }}{% endblock %}
+
+{% block head %}
+
+<style>
+.x-discuss-visible {
+    display: block;
+}
+</style>
+
+<script>
+
+$(function () {
+});
+
+</script>
+{% endblock %}
+
+{% block sidebar_left_content %}
+    <h3>Subscriptions</h3>
+    <ul class="uk-nav uk-nav-side">
+        <li class="uk-nav-header">No subscription</li>
+    </ul>
+    <div class="x-placeholder"></div>
+{% endblock %}
+
+{% block content %}
+
+    <div class="uk-panel uk-panel-box">
+        <h3 class="uk-panel-title">Ad Subscription Info</h3>
+        <hr>
+        <p>No subscription.</p>
+    </div>
+
+    <div class="x-placeholder"></div>
+
+{% endblock %}
