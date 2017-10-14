@@ -76,9 +76,6 @@ let filters = {
     json: (input) => {
         return JSON.stringify(input);
     },
-    addslashes: (input) => {
-        return input;
-    },
     min: function (input) {
         if (input <= 60) {
             return input + ' minutes';
