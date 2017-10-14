@@ -11,11 +11,14 @@ module.exports = {
     name: 'Random',
     table: 'randoms',
     fields: {
+        name: {
+            type: dbtypes.STRING(50)
+        },
         value: {
-            type: dbtypes.STRING(100),
+            type: dbtypes.STRING(50),
             unique: 'uni_rnd_value'
         },
-        expires_time: {
+        expired_at: {
             type: dbtypes.BIGINT,
             defaultValue: () => {
                 return Date.now + EXP_TIME
