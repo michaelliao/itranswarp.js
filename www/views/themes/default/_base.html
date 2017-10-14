@@ -47,6 +47,8 @@
     {% else %}
     <!-- BEGIN JAVASCRIPT COMPRESS -->
     <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/underscore.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/moment.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/marked.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/uikit.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/uikit/tooltip.js"></script>
@@ -133,16 +135,47 @@
     </style>
     <script>
         var g_time = parseFloat('{{ __time__ }}');
-        var g_signins = {{ __signins__|json|safe }};
+        var g_signins = JSON.parse('{{ __signins__|dump|safe }}');
 //{% if __user__ %}
         var g_user = {
             id: '{{ __user__.id }}',
-            name: '{{ __user__.name|addslashes }}',
+            name: JSON.parse(decodeURIComponent('{{ __user__.name|dump|urlencode|safe }}')),
             image_url: '{{ __user__.image_url }}'
         };
 //{% else %}
         var g_user = null;
 //{% endif %}
+        var g_ads = JSON.parse(decodeURIComponent('{{ __ads__|dump|urlencode|safe }}'));
+        $(function () {
+            _.mapObject(g_ads, function (ad, k) {
+                _.map(ad.adperiods, function (adp) {
+                    if (adp.admaterials.length === 0) {
+                        add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAkCAMAAAB2bcIBAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjE0NDhCRDA3QTM3MjExRTc4QjI0RjRCQjQzOTgwRDc3IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjE0NDhCRDA4QTM3MjExRTc4QjI0RjRCQjQzOTgwRDc3Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6MTQ0OEJEMDVBMzcyMTFFNzhCMjRGNEJCNDM5ODBENzciIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6MTQ0OEJEMDZBMzcyMTFFNzhCMjRGNEJCNDM5ODBENzciLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5Adyw0AAAADFBMVEXm5uazs7NdXV3///8WehxTAAAABHRSTlP///8AQCqp9AAAAaVJREFUeNrslsuWwyAMQyXy//88LX7JhEw7q9mQRQ8QEBcjO8X1zw8OwAE4AAdA2xzvh7Nj7eq/RuYQ+STl71PR1ayPlBt4AkCbUgBGgBwwySLjsoCLGheAwT0A7Hz0GZwdOxVCoPpXncUA2F+L2pTD6HobAAor8lwxzlgHV2yXhYoI6zXiIjiXse/zCFA7CgCK25sVzABw2dew8FrzbwAgNQJzqa6ydnOLATkw2XeZbwoATwDoFu8RUEE4AJluCQ+gbarAX0QgjEo2ALtDiiBmTN8/Qy+LS45cewA+mjAzOc+VTxe8IgJuh4DLRFVHRMS+SEOFYANQR8gVjLoe9FqGbQT2lUhMSGqIow6Q68UxI2DJNwHMueqZmweyDjxEoKCpgVUoNZgNTF2fri4XYPQswMdC5Dt0gF55x5W3TA8qxq1u1IZrIcJzGkbRvc/z/ICU4iCrNHQTsLISVco/Afxiu2vzcWofHbSvDe9q3xQiWYM7qOzAbplI7MxCbtQ6QHPXkoMMN2dD/y/IYCZNzUQmzU1tvlvnn79kB+AAHIADMJ8fAQYAbSgvpXjD4xEAAAAASUVORK5CYII=', '/');
+                        return;
+                    }
+                    var
+                        adms = adp.admaterials,
+                        weights = _.map(adms, function (m) {
+                            return m.weight;
+                        }),
+                        total_weights = _.reduce(weights, function (ax, w) {
+                            return ax + w;
+                        }, 0),
+                        rnd = Math.random(),
+                        i,
+                        ws = 0,
+                        hit;
+                    for (i=0; i<weights.length; i++) {
+                        ws = ws + weights[i];
+                        if (rnd < ws / total_weights) {
+                            hit = adms[i];
+                            break;
+                        }
+                    }
+                    add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, hit.image, hit.url);
+                });
+            });
+        });
     </script>
 
 {% block head %}<!-- head  -->{% endblock %}
@@ -233,7 +266,7 @@
                                     <li class="uk-nav-divider"></li>
                                 {% endif %}
                                 {% if __user__ and __user__.role == 1000 %}
-                                    <li><a target="_blank" href="/sponsor/"><i class="uk-icon-photo"></i> {{ _('Sponsor') }}</a></li>
+                                    <li><a target="_blank" href="/sponsor/adperiod/default"><i class="uk-icon-photo"></i> {{ _('Sponsor') }}</a></li>
                                     <li class="uk-nav-divider"></li>
                                 {% endif %}
                                     <li><a href="/auth/signout"><i class="uk-icon-power-off"></i> {{ _('Sign Out') }}</a></li>
