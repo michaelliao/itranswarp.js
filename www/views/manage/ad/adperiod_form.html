@@ -6,7 +6,7 @@
 
 <script>
 
-var SPONSORS = JSON.parse('{{ sponsors|json|safe }}');
+var SPONSORS = JSON.parse(decodeURIComponent('{{ sponsors|dump|urlencode|safe }}'));
 
 var ADSLOTS;
 
