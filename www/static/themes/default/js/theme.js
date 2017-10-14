@@ -149,7 +149,6 @@ $(function() {
 });
 
 function initCommentArea(ref_type, ref_id, tag) {
-    console.log('auth success, display comment form...');
     $('#x-comment-area').html($('#tplCommentArea').html());
     var $makeComment = $('#comment-make-button');
     var $commentForm = $('#comment-form');
