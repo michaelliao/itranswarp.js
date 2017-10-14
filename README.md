@@ -72,6 +72,77 @@ If you want to sign in to management console, go to `http://localhost:2017/manag
 
 ### Changelog
 
+2.1 - 14 Oct 2017
+
+* collapsable tree view for wiki
+* AD support
+
+Database schema update:
+
+```
+DROP TABLE `randoms`;
+
+CREATE TABLE `randoms` (
+  `id` varchar(50) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `value` varchar(50) NOT NULL,
+  `expired_at` bigint(20) NOT NULL,
+  `created_at` bigint(20) NOT NULL,
+  `updated_at` bigint(20) NOT NULL,
+  `version` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uni_rnd_value` (`value`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `adslots` (
+  `id` varchar(50) NOT NULL,
+  `alias` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(1000) NOT NULL,
+  `price` bigint(20) NOT NULL,
+  `width` bigint(20) NOT NULL,
+  `height` bigint(20) NOT NULL,
+  `num_slots` bigint(20) NOT NULL,
+  `num_auto_fill` bigint(20) NOT NULL,
+  `auto_fill` text NOT NULL,
+  `created_at` bigint(20) NOT NULL,
+  `updated_at` bigint(20) NOT NULL,
+  `version` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uni_adslot_alias` (`alias`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `adperiods` (
+  `id` varchar(50) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `adslot_id` varchar(50) NOT NULL,
+  `display_order` bigint(20) NOT NULL,
+  `start_at` varchar(10) NOT NULL,
+  `end_at` varchar(10) NOT NULL,
+  `created_at` bigint(20) NOT NULL,
+  `updated_at` bigint(20) NOT NULL,
+  `version` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `admaterials` (
+  `id` varchar(50) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `adperiod_id` varchar(50) NOT NULL,
+  `cover_id` varchar(50) NOT NULL,
+  `weight` bigint(20) NOT NULL,
+  `start_at` varchar(10) NOT NULL,
+  `end_at` varchar(10) NOT NULL,
+  `geo` varchar(100) NOT NULL,
+  `keywords` varchar(100) NOT NULL,
+  `url` varchar(1000) NOT NULL,
+  `created_at` bigint(20) NOT NULL,
+  `updated_at` bigint(20) NOT NULL,
+  `version` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
 2.0 - 15 Jul 2017
 
 * fully async/await support
