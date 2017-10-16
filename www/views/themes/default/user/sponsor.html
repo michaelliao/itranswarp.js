@@ -186,9 +186,9 @@ $(function () {
 {% endblock %}
 
 {% block sidebar_left_content %}
-    <h3>Subscriptions</h3>
+    <h3>{{ _('AD Subscriptions') }}</h3>
     <ul class="uk-nav uk-nav-side">
-        <li class="uk-nav-header">Active Ad Slots</li>
+        <li class="uk-nav-header">Active AD Slots</li>
     </ul>
     <ul class="uk-nav uk-nav-side" style="margin-right:-15px;">
         {% for p in adperiods %}
@@ -208,10 +208,10 @@ $(function () {
 {% block content %}
 
     <div class="uk-panel uk-panel-box">
-        <h3 class="uk-panel-title">Ad Subscription Info</h3>
+        <h3 class="uk-panel-title">AD Subscription Info</h3>
         <hr>
-        <p>Ad slot: {{ adperiod.adslot.name }}</p>
-        <p>Ad size: {{ adperiod.adslot.width }} x {{ adperiod.adslot.height }}</p>
+        <p>AD slot: {{ adperiod.adslot.name }}</p>
+        <p>AD size: {{ adperiod.adslot.width }} x {{ adperiod.adslot.height }}</p>
         <p>{{ _('Started at') }}: {{ adperiod.start_at }}</p>
         <p>{{ _('Expires at') }}: <span id="x-adperiod-expires"></span></p>
         <script>
@@ -226,15 +226,15 @@ $(function () {
 
     <div class="x-placeholder"></div>
 
-    <h3>Ad Materials</h3>
+    <h3>AD Materials</h3>
 
     <table class="uk-table uk-table-hover">
         <thead>
             <tr>
                 <th width="20%">{{ _('Image') }}</th>
                 <th width="35%">{{ _('URL') }}</th>
-                <th width="10%">{{ _('Start at') }}</th>
-                <th width="10%">{{ _('End at') }}</th>
+                <th width="10%">{{ _('Start from') }}</th>
+                <th width="10%">{{ _('End at') }} ({{ _('Exclusive') }})</th>
                 <th width="10%">{{ _('Weight') }}</th>
                 <th width="10%">{{ _('Status') }}</th>
                 <th width="5%">{{ _('Action') }}</th>
@@ -273,7 +273,7 @@ $(function () {
     <div class="x-placeholder"></div>
 
     <form id="x-material-form" class="uk-form uk-form-stacked" style="display: none">
-        <legend>{{ _('Add New Ad Material') }}</legend>
+        <legend>{{ _('Add New AD Material') }}</legend>
         <fieldset>
             <div class="uk-alert uk-alert-danger uk-hidden"></div>
             <div class="uk-form-row">
@@ -293,11 +293,11 @@ $(function () {
                         <i class="uk-icon-link"></i>
                         <input name="url" type="text" placeholder="https://" class="uk-form-width-large">
                     </div>
-                    <p>The AD will display from the specific date. https is preferred.</p>
+                    <p>The landing page URL. https is preferred.</p>
                 </div>
             </div>
             <div class="uk-form-row">
-                <label class="uk-form-label">Starts:</label>
+                <label class="uk-form-label">{{ _('Start from') }}:</label>
                 <div class="uk-form-controls">
                     <div class="uk-form-icon">
                         <i class="uk-icon-calendar"></i>
@@ -307,7 +307,7 @@ $(function () {
                 </div>
             </div>
             <div class="uk-form-row">
-                <label class="uk-form-label">Ends (Exclusive):</label>
+                <label class="uk-form-label">{{ _('End at') }} ({{ _('Exclusive') }}):</label>
                 <div class="uk-form-controls">
                     <div class="uk-form-icon">
                         <i class="uk-icon-calendar"></i>
@@ -317,7 +317,7 @@ $(function () {
                 </div>
             </div>
             <div class="uk-form-row">
-                <label class="uk-form-label">Weight:</label>
+                <label class="uk-form-label">{{ _('Weight') }}:</label>
                 <div class="uk-form-controls">
                     <div class="uk-form-icon">
                         <i class="uk-icon-sliders"></i>
@@ -340,9 +340,9 @@ $(function () {
             -->
             <div class="uk-form-row">
                 <div class="uk-form-controls">
-                    <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
+                    <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> {{ _('Save') }}</button>
                     &nbsp;
-                    <button type="button" class="uk-button x-cancel"><i class="uk-icon-times"></i> Cancel</button>
+                    <button type="button" class="uk-button x-cancel"><i class="uk-icon-times"></i> {{ _('Cancel') }}</button>
                 </div>
             </div>
         </fieldset>
