@@ -43,6 +43,8 @@
     "Edit": "编辑",
     "Editor": "编辑",
     "Email": "电子邮件",
+    "End at": "结束日期",
+    "Exclusive": "不包含",
     "Expired": "过期",
     "Expires at": "截止日期",
 
@@ -50,6 +52,7 @@
     "Feedback": "意见反馈",
     "Forgot password": "忘记口令",
     "Fri": "周五",
+    "Full discussion": "全部讨论",
 
     "Home": "首页",
     "Hot Articles": "热门文章",
@@ -122,6 +125,7 @@
     "Sign Out": "登出",
     "Snippets": "片段",
     "Sponsor": "赞助商",
+    "Start from": "开始日期",
     "Started at": "开始日期",
     "Status": "状态",
     "Subscriber": "订阅用户",
@@ -144,11 +148,10 @@
     "User": "用户",
     "Users": "用户",
 
-    "Full discussion": "全部讨论",
-
     "Web Pages": "页面",
     "Website": "网站",
     "Wed": "周三",
+    "Weight": "权重",
     "Welcome": "欢迎",
     "Wiki": "维基",
     "Wikis": "维基",
