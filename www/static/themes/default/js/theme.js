@@ -4,9 +4,14 @@ function add_sponsor(selector, width, height, name, img_src, link) {
     var
         stl = 'width:' + width + 'px;height:' + height + 'px;',
         s = '<div style="float:left;margin:0 1px 1px 0;' + stl + '">';
-    s = s + '<a target="_blank" href="' + link + '">';
-    s = s + '<img src="' + img_src + '">';
-    s = s + '</a></div>';
+    if (arguments.length === 4) {
+        s = s + name;
+    } else {
+        s = s + '<a target="_blank" href="' + link + '">';
+        s = s + '<img src="' + img_src + '">';
+        s = s + '</a>';
+    }
+    s = s + '</div>';
     $(selector).append(s);
 }
 
