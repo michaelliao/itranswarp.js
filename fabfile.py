@@ -50,7 +50,7 @@ def deploy():
         run('tar zxvf /tmp/itranswarp.tar.gz')
         print('remove tar.gz...')
         # run npm install:
-        run('npm install')
+        run('npm --registry=https://registry.npm.taobao.org/ install')
 
     # update owner and create symbol link: /srv/itranswarp/www -> /srv/itranswarp/www-<now>
 
