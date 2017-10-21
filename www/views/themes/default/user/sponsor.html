@@ -21,7 +21,9 @@ $(function () {
     $('#{{ adperiod.id }}').addClass('uk-active');
 });
 
-var TODAY = '{{ today }}';
+var
+    END_DAY = '{{ adperiod.end_at }}',
+    TODAY = '{{ today }}';
 
 function showMaterialForm() {
     $('#x-add-material').hide();
@@ -207,7 +209,7 @@ $(function () {
 
 {% block content %}
 
-    <div class="uk-panel uk-panel-box">
+    <div class="x-ad-subscription uk-panel uk-panel-box">
         <h3 class="uk-panel-title">AD Subscription Info</h3>
         <hr>
         <p>AD slot: {{ adperiod.adslot.name }}</p>
