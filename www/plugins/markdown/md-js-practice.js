@@ -68,7 +68,7 @@ function generateForm(prefixCode, editableCode, postfixCode) {
     if (prefixCode) {
         s += `<pre class="js-practice-prefix" style="font-size: 14px; margin-bottom: 0; border-bottom: none; padding: 6px; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">${encodePre(prefixCode)}</pre>`;
     }
-    s += `<textarea class="uk-width-1-1" rows="10" style="resize: none; font-size: 14px; font-family: Consolas, monospace, serif; overflow: scroll;${prefixCode ? TEXT_AREA_STYLE_1 : ''}${postfixCode ? TEXT_AREA_STYLE_2 : ''}"></textarea>`;
+    s += `<textarea class="uk-width-1-1 x-codearea" rows="10" style="overflow: scroll;${prefixCode ? TEXT_AREA_STYLE_1 : ''}${postfixCode ? TEXT_AREA_STYLE_2 : ''}"></textarea>`;
     if (postfixCode) {
         s += `<pre class="js-practice-postfix" style="font-size: 14px; margin-top: 0; border-top: none; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;">${encodePre(postfixCode)}</pre>`;
     }
