@@ -137,7 +137,7 @@ function initVM(wiki) {
             <fieldset>
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Image:</label>
+                    <label class="uk-form-label">{{ _('Image') }}:</label>
                     <div class="uk-form-controls">
                         <div id="image-preview" style="border: 1px solid #ccc; width:642px; height:362px; background-size:cover;"></div>
                     </div>
@@ -146,33 +146,33 @@ function initVM(wiki) {
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Name:</label>
+                    <label class="uk-form-label">{{ _('Name') }}:</label>
                     <div class="uk-form-controls">
-                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
+                        <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="{{ _('Name') }}">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="control-label">Tag:</label>
+                    <label class="control-label">{{ _('Tags') }}:</label>
                     <div class="controls">
-                        <input v-model="tag" name="tag" type="text" class="uk-width-1-1" placeholder="tag">
+                        <input v-model="tag" name="tag" type="text" class="uk-width-1-1" placeholder="tags seperated by ,">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Description:</label>
+                    <label class="uk-form-label">{{ _('Description') }}:</label>
                     <div class="uk-form-controls">
                         <textarea v-model="description" name="description" rows="6" class="uk-width-1-1" style="resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <label class="control-label">Content:</label>
+                    <label class="control-label">{{ _('Content') }}:</label>
                     <div class="controls">
                         <textarea id="content-editor" rows="20" style="width:100%; resize:none;"></textarea>
                     </div>
                 </div>
                 <div class="uk-form-row">
                     <div class="controls">
-                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
-                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> {{ _('Save') }}</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> {{ _('Cancel') }}</button>
                     </div>
                 </div>
             </fieldset>

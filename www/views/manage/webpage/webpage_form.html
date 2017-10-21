@@ -87,14 +87,14 @@ function initVM(webpage) {
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
 
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Name:</label>
+                    <label class="uk-form-label">{{ _('Name') }}:</label>
                     <div class="uk-form-controls">
                         <input v-model="name" name="name" type="text" maxlength="100" class="uk-width-1-1" placeholder="name">
                     </div>
                 </div>
 
                 <div class="uk-form-row">
-                    <label class="uk-form-label">Alias:</label>
+                    <label class="uk-form-label">{{ _('Alias') }}:</label>
                     <div class="uk-form-controls">
                         <input v-model="alias" name="alias" type="text" class="uk-width-1-1" placeholder="alias" />
                     </div>
@@ -124,8 +124,8 @@ function initVM(webpage) {
                 </div>
                 <div class="uk-form-row">
                     <div class="controls">
-                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> Save</button>
-                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> Cancel</button>
+                        <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-check"></i> {{ _('Save') }}</button>
+                        <button type="button" class="uk-button" onclick="location.assign('{{ form.redirect }}')"><i class="uk-icon-times"></i> {{ _('Cancel') }}</button>
                     </div>
                 </div>
         </fieldset>
