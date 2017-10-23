@@ -304,7 +304,6 @@ function makeCollapsable(obj, max_height) {
         $o.show();
         return;
     }
-    console.log('detect height: ' + $o.height());
     var maxHeight = max_height + 'px';
     $o.css('max-height', maxHeight);
     $o.css('overflow', 'hidden');
@@ -657,7 +656,7 @@ function postJSON(url, data, callback) {
 }
 
 $(function() {
-    // activate nav:
+    // activate navigation menu:
     var xnav = $('meta[property="x-nav"]').attr('content');
     xnav && xnav.trim() && $('#ul-navbar li a[href="' + xnav.trim() + '"]').parent().addClass('uk-active');
 
