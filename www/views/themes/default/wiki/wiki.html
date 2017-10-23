@@ -47,18 +47,73 @@ $(function () {
     $('#{{ current.id }}').addClass('uk-active');
     $('#off-{{ current.id }}').addClass('uk-active');
     // expand current:
-    expandCurrentNode();
+    expandActiveNode();
+    // add prev, next:
+    $('div.x-wiki-prev-next').css('padding-left', '15px').css('padding-right', '15px');
+    var prev = getPrevNode();
+    var next = getNextNode();
+    if (prev) {
+        $('div.x-wiki-prev-next').append("<a href=\"" + prev.find("a").attr("href") + "\"><i class=\"uk-icon-chevron-left\"></i> {{ _('Previous Page') }}</a>");
+    }
+    if (next) {
+        $('div.x-wiki-prev-next').append("<a href=\"" + next.find("a").attr("href") + "\" class=\"uk-float-right\">{{ _('Next Page') }} <i class=\"uk-icon-chevron-right\"></i></a>");
+    }
+    $('div.x-wiki-prev-next').after('<hr>');
 });
 
-function expandCurrentNode() {
-    var current = $('#{{ current.id }}');
+function getPrevNode() {
+    var activeNode = $('#{{ current.id }}');
+    var prev = activeNode.prev('div');
+    var lastChild;
+    if (prev.get(0)) {
+        lastChild = prev.find('div:last');
+        if (lastChild.get(0)) {
+            return lastChild;
+        }
+        return prev;
+    }
+    prev = activeNode.parent('div');
+    if (prev.get(0)) {
+        return prev;
+    }
+    return null;
+}
+
+function getNextNode() {
+    var activeNode = $('#{{ current.id }}');
+    var next = activeNode.find('div:first');
+    var node;
+    if (next.get(0)) {
+        return next;
+    }
+    next = activeNode.next('div');
+    if (next.get(0)) {
+        return next;
+    }
+    node = activeNode;
     for (;;) {
-        i = current.find('i').get(0);
+        node = node.parent('div');
+        if (node.get(0)) {
+            next = node.next('div');
+            if (next.get(0)) {
+                return next;
+            }
+        } else {
+            break;
+        }
+    }
+    return null;
+}
+
+function expandActiveNode() {
+    var activeNode = $('#{{ current.id }}');
+    for (;;) {
+        i = activeNode.find('i').get(0);
         if (i) {
             expandWikiNode(i);
         }
-        current = current.parent();
-        if (! current.is('div')) {
+        activeNode = activeNode.parent();
+        if (! activeNode.is('div')) {
             break;
         }
     }
@@ -125,7 +180,7 @@ function expandWikiNode(icon, rec) {
 
 {% block sidebar_left_content %}
     <div class="uk-float-right" style="padding-top:5px">
-        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true);expandCurrentNode()" style="margin-left:5px"><i class="uk-icon-check-square"></i></a>
+        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true);expandActiveNode()" style="margin-left:5px"><i class="uk-icon-check-square"></i></a>
         <a href="#0" onclick="expandWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-minus-square"></i></a>
         <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-plus-square"></i></a>
     </div>
@@ -172,9 +227,13 @@ function expandWikiNode(icon, rec) {
 
     <div class="x-wiki-content x-main-content">{{ current.content|safe }}</div>
 
+    <hr>
+
+    <div class="x-wiki-prev-next uk-clearfix"></div>
+
     <div id="x-sponsor-a" class="uk-clearfix"><!-- sponsor A --></div>
 
-    <div class="x-anchor"><a name="comments"></a></div>
+    <div class="x-anchor x-comment-anchor"><a name="comments"></a></div>
 
     <h3>{{ _('Comments') }}</h3>
 
