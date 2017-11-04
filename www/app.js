@@ -68,7 +68,7 @@ function getRequestIp(ctx) {
 
 function isBot(ua, headers) {
     for (let bot of SPIDER_WHITELIST) {
-        if (ua.indexOf(bot) > 0) {
+        if (ua.indexOf(bot) >= 0) {
             logger.info(`detect bot: ${ua} headers: ${JSON.stringify(headers)}`);
             return true;
         }
