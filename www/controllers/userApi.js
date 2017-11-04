@@ -251,7 +251,7 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: new Date(expires)
         });
         logger.info('set session cookie for user: ' + user.email);
@@ -266,7 +266,7 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: COOKIE_EXPIRED_DATE
         });
         logger.info('Signout, goodbye!');
@@ -343,7 +343,7 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: new Date(auth_user.expires_at)
         });
         logger.info('set session cookie for user: ' + user.email);

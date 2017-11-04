@@ -94,7 +94,7 @@ module.exports = async (ctx, next) => {
             ctx.cookies.set(COOKIE_NAME, 'deleted', {
                 path: '/',
                 httpOnly: true,
-                secureProxy: SECURE,
+                secure: SECURE,
                 expires: new Date(0)
             });
         }
