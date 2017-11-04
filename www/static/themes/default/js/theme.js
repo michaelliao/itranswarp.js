@@ -15,6 +15,16 @@ function add_sponsor(selector, width, height, name, img_src, link) {
     $(selector).append(s);
 }
 
+function getCookie(key) {
+    var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+    return keyValue ? keyValue[2] : null;
+}
+
+function setCookie(key, value, maxAgeInSec) {
+    var date = new Date(new Date().getTime() + maxAgeInSec * 1000);
+    document.cookie = key + '=' + value + '; expires=' + date.toGMTString();
+}
+
 function message(title, msg, isHtml, autoClose) {
     if ($('#modal-message').length==0) {
         $('body').append('<div id="modal-message" class="uk-modal"><div class="uk-modal-dialog">' +
@@ -35,23 +45,117 @@ function message(title, msg, isHtml, autoClose) {
     modal.show();
 }
 
-function run_js(tid, btn) {
+function _get_code(tid) {
     var
         $pre = $('#pre-' + tid),
         $post = $('#post-' + tid),
-        $textarea = $('#textarea-' + tid),
-        $button = $(btn),
-        $i = $button.find('i'),
-        code = $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
-    var fn = function () {
+        $textarea = $('#textarea-' + tid);
+    return $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
+}
+
+function run_javascript(tid, btn) {
+    var code = _get_code(tid);
+    (function () {
         try {
             eval('(function() {\n' + code + '\n})();');
         }
         catch (e) {
             message('错误', '<p>JavaScript代码执行出错：</p><pre>' + String(e) + '</pre>', true, true);
         }
+    })();
+}
+
+function run_html(tid, btn) {
+    var code = _get_code(tid);
+    (function () {
+        var w = window.open('about:blank', 'Online Practice', 'width=640,height=480,resizeable=1,scrollbars=1');
+        w.document.write(code);
+        w.document.close();
+    })();
+}
+
+function run_sql(tid, btn) {
+    if (typeof alasql === undefined) {
+        message('错误', '<p>JavaScript嵌入式SQL引擎尚未加载完成，请稍后再试或者刷新页面！</p>', true, true);
+        return;
+    }
+    var code = _get_code(tid);
+    var genTable = function (arr) {
+        if (arr.length === 0) {
+            return 'Empty result set';
+        }
+        var ths = _.keys(arr[0]);
+        var trs = _.map(arr, function (obj) {
+            return _.map(ths, function (key) {
+                return obj[key];
+            });
+        });
+        return '<table class="uk-table"><thead><tr>'
+            + $.map(ths, function (th) {
+                return '<th>' + encodeHtml(th) + '</th>';
+            }).join('') + '</tr></thead><tbody>'
+            + $.map(trs, function (tr) {
+                return '<tr>' + $.map(tr, function (td) {
+                    return '<td>' + encodeHtml(td) + '</td>';
+                }).join('') + '</tr>';
+            }).join('') + '</tbody></table>';
     };
-    fn();
+    var showSqlResult = function (result) {
+        var $r = $(btn).next('div.x-sql-result');
+        if ($r.get(0) === undefined) {
+            $(btn).after('<div class="x-sql-result x-code uk-alert"></div>');
+            $r = $(btn).next('div.x-sql-result');
+        }
+        $r.removeClass('uk-alert-danger');
+        if (Array.isArray(result)) {
+            $r.html(genTable(result));
+        } else if (result && result.error) {
+            $r.addClass('uk-alert-danger');
+            $r.html($.map(result.message.split('\n'), function (s) {
+                return '<p>' + encodeHtml(s) + '</p>';
+            }).join(''));
+        } else {
+            $r.text(result);
+        }
+    };
+    (function () {
+        var
+            i, result, s = '',
+            lines = code.split('\n');
+        lines = _.map(lines, function (line) {
+            var n = line.indexOf('--');
+            if (n >= 0) {
+                line = line.substring(0, n);
+            }
+            return line;
+        });
+        lines = _.filter(lines, function (line) {
+            return line.trim() !== '';
+        });
+        // join:
+        for (i=0; i<lines.length; i++) {
+            s = s + lines[i] + '\n';
+        }
+        // split by ;
+        lines = _.filter(s.trim().split(';'), function (line) {
+            return line.trim() !== '';
+        });
+        // run each sql:
+        result = null;
+        for (i=0; i<lines.length; i++) {
+            s = lines[i];
+            try {
+                result = alasql(s);
+            } catch (e) {
+                result = {
+                    error: true,
+                    message: 'ERROR when execute SQL: ' + s + '\n' + String(e)
+                }
+                break;
+            }
+        }
+        showSqlResult(result);
+    })();
 }
 
 function run_python3(tid, btn) {
@@ -146,7 +250,13 @@ $(function() {
 
     };
     $('pre.x-javascript').each(function () {
-        initPre(this, 'run_js');
+        initPre(this, 'run_javascript');
+    });
+    $('pre.x-html').each(function () {
+        initPre(this, 'run_html');
+    });
+    $('pre.x-sql').each(function () {
+        initPre(this, 'run_sql');
     });
     $('pre.x-python3').each(function () {
         initPre(this, 'run_python3');
