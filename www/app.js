@@ -23,10 +23,13 @@ const
     auth = require('./auth'),
     config = require('./config'),
     db = require('./db'),
+    cache = require('./cache'),
     constants = require('./constants'),
     i18n = require('./i18n'),
     i18nTranslators = i18n.loadI18NTranslators('./views/i18n'),
     static_prefix = config.cdn.static_prefix,
+    ANTI_SPIDER = config.spider.antiSpider,
+    SPIDER_WHITELIST = config.spider.whiteList,
     ACTIVE_THEME = config.theme;
 
 function loadVersion() {
@@ -42,22 +45,83 @@ function loadVersion() {
 // global app:
 let app = new Koa();
 
+app.proxy = config.proxy;
+
 process.isProduction = isProduction;
 process.appVersion = loadVersion();
 
+function getRequestIp(ctx) {
+    let ipAddr = ctx.headers['x-real-ip'];
+    if (ipAddr) {
+        return ipAddr;
+    }
+    ipAddr = ctx.headers['x-forwarded-for']
+    if (ipAddr) {
+        let n = ipAddr.indexOf(',');
+        if (n > 0) {
+            return ipAddr.substring(0, n);
+        }
+        return ipAddr;
+    }
+    return ctx.ip;
+}
+
+function isBot(ua, headers) {
+    for (let bot of SPIDER_WHITELIST) {
+        if (ua.indexOf(bot) > 0) {
+            logger.info(`Bot ${ua} headers: ${JSON.stringify(headers)}`);
+            return true;
+        }
+    }
+    return false;
+}
+
+function serviceUnavailable(ctx) {
+    ctx.response.status = 503;
+    ctx.response.body = '<html><body><h1>503 Service Unavailable</h1></body></html>';
+}
+
 // log request URL:
 app.use(async (ctx, next) => {
-    logger.info(`will process request: ${ctx.request.method} ${ctx.request.url}...`);
     let
         start = Date.now(),
-        execTime;
+        ipAddr = getRequestIp(ctx);
+    if (ANTI_SPIDER > 0) {
+        let
+            path = ctx.request.path,
+            ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
+        if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
+            if (! isBot(ua, ctx.request.headers)) {
+                if (ua.indexOf('mozilla') === (-1)) {
+                    logger.warn(`deny none-browser request: ${ua}`);
+                    return serviceUnavailable(ctx);
+                }
+                let atsp = ctx.cookies.get('atsp');
+                if (atsp) {
+                    let sp = parseInt(atsp);
+                    logger.info(`test atsp: ${sp} compare to: ${start}`);
+                    if (isNaN(sp) || sp < (start - 600000) || sp > (start + 60000)) {
+                        return serviceUnavailable(ctx);
+                    }
+                } else {
+                    let n = await cache.incr(ipAddr)
+                    logger.warn(`potential spider: n=${n}: ${ipAddr} ${ua}`);
+                    if (n > ANTI_SPIDER) {
+                        logger.warn(`deny spider: ${n} times: ${ipAddr} ${ua}`);
+                        return serviceUnavailable(ctx);
+                    }
+                }
+            }
+        }
+    }
+    logger.info(`will process request: ${ipAddr}, ${JSON.stringify(ctx.headers)} ${ctx.request.method} ${ctx.request.url}...`);
     try {
         await next();
     } catch (e) {
         logger.error('error process request.', e);
     }
     logger.info(`Response: ${ctx.response.status}`);
-    execTime = Date.now() - start;
+    let execTime = Date.now() - start;
     ctx.response.set('X-Response-Time', `${execTime}ms`);
     ctx.response.set('X-Host', HOSTNAME);
 });
