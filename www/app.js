@@ -90,6 +90,10 @@ app.use(async (ctx, next) => {
         let
             path = ctx.request.path,
             ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
+        if (path.startsWith('/blog/')) {
+            logger.warn(`deny bad bot: ${ipAddr} ${ua}`);
+            return serviceUnavailable(ctx);
+        }
         if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
             if (! isBot(ua, ctx.request.headers)) {
                 if (ua.indexOf('mozilla') === (-1)) {
@@ -99,12 +103,11 @@ app.use(async (ctx, next) => {
                 let atsp = ctx.cookies.get('atsp');
                 if (atsp) {
                     let sp = parseInt(atsp);
-                    logger.info(`test atsp: ${sp} compare to: ${start}`);
-                    if (isNaN(sp) || sp < (start - 600000) || sp > (start + 60000)) {
+                    if (isNaN(sp) || (sp < (start - 600000)) || (sp > (start + 60000))) {
                         return serviceUnavailable(ctx);
                     }
                 } else {
-                    let n = await cache.incr(ipAddr)
+                    let n = await cache.incr(ipAddr);
                     logger.warn(`potential spider: n=${n}: ${ipAddr} ${ua}`);
                     if (n > ANTI_SPIDER) {
                         logger.warn(`deny spider: ${n} times: ${ipAddr} ${ua}`);
