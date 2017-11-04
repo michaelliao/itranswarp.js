@@ -127,6 +127,7 @@
     </script>
 
     <style id="x-doc-style">
+        .x-display-none { display: none; }
 {% if __user__ %}
         .x-display-if-not-signin { display: none; }
 {% else %}
@@ -240,7 +241,7 @@
                     {% for nav in __navigations__ %}
                     <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                     {% endfor %}
-                    <li class="uk-hidden"><a href="/blog/">Blog</a></li>
+                    <li class="x-display-none"><a href="/blog/">Blog</a></li>
                 </ul>
                 {% if __navigations__ and __navigations__.length %}
                 <ul class="uk-navbar-nav uk-visible-small">
