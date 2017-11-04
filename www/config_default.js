@@ -12,8 +12,15 @@
 module.exports = {
     // server domain name:
     domain: 'local.itranswarp.com',
+    // behind a reverse proxy:
+    proxy: false,
     // the theme used, default to 'default':
     theme: 'default',
+    spider: {
+        // anti-spider = x hits / 10 min, 0=disabled:
+        antiSpider: 0,
+        whiteList: ['googlebot', 'baiduspider', 'bingbot']
+    },
     session: {
         // http session cookie name:
         cookie: 'isession',
