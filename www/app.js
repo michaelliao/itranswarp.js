@@ -69,7 +69,7 @@ function getRequestIp(ctx) {
 function isBot(ua, headers) {
     for (let bot of SPIDER_WHITELIST) {
         if (ua.indexOf(bot) > 0) {
-            logger.info(`Bot ${ua} headers: ${JSON.stringify(headers)}`);
+            logger.info(`detect bot: ${ua} headers: ${JSON.stringify(headers)}`);
             return true;
         }
     }
@@ -97,7 +97,7 @@ app.use(async (ctx, next) => {
         if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
             if (! isBot(ua, ctx.request.headers)) {
                 if (ua.indexOf('mozilla') === (-1)) {
-                    logger.warn(`deny none-browser request: ${ua}`);
+                    logger.warn(`deny bot without mozilla: ${ua}`);
                     return serviceUnavailable(ctx);
                 }
                 let atsp = ctx.cookies.get('atsp');
@@ -108,10 +108,12 @@ app.use(async (ctx, next) => {
                     }
                 } else {
                     let n = await cache.incr(ipAddr);
-                    logger.warn(`potential spider: n=${n}: ${ipAddr} ${ua}`);
-                    if (n > ANTI_SPIDER) {
-                        logger.warn(`deny spider: ${n} times: ${ipAddr} ${ua}`);
-                        return serviceUnavailable(ctx);
+                    if (n > 1) {
+                        logger.warn(`potential bot: n=${n}: ${ipAddr} ${ua}`);
+                        if (n > ANTI_SPIDER) {
+                            logger.warn(`deny bot: ${n} times: ${ipAddr} ${ua}`);
+                            return serviceUnavailable(ctx);
+                        }
                     }
                 }
             }
