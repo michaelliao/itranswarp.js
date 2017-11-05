@@ -59,7 +59,7 @@ async function getNavigationMenus() {
                 }
                 menus = menus.concat(results);
             } else {
-                logger.warn(`"${apiNames[i]}.getNavigationMenus" is invalid function.`);
+                logger.error(`"${apiNames[i]}.getNavigationMenus" is invalid function.`);
             }
         }
     }

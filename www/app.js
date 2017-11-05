@@ -42,6 +42,8 @@ function loadVersion() {
     }
 }
 
+logger.info(`init app: production mode = ${isProduction}`);
+
 // global app:
 let app = new Koa();
 

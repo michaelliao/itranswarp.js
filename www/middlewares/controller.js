@@ -27,7 +27,7 @@ function _addMapping(rt, mapping) {
                 path = url.substring(method.length).trim();
                 // GET -> rt.get():
                 rt[METHODS[method]](path, mapping[url]);
-                logger.info(`register URL mapping: GET ${path}`);
+                logger.info(`register URL mapping: ${method} ${path}`);
                 break;
             }
         }
