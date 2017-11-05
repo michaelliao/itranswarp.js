@@ -21,7 +21,9 @@ For example, suppose NODE_ENV=production, the override file is config_production
 const
     _ = require('lodash'),
     logger = require('./logger'),
-    env = process.env.NODE_ENV;
+    env = process.env.NODE_ENV || '';
+
+logger.info(`load config with env = ${env}...`)
 
 let cfg = require('./config_default');
 

@@ -76,7 +76,7 @@ describe('#user', () => {
         let cookies = response.get('Set-Cookie');
         expect(cookies).to.a('array').and.to.have.lengthOf(1);
         let cookie = cookies[0];
-        expect(cookie).to.a('string').and.to.contains('httponly').and.to.contains('secure');
+        expect(cookie).to.a('string').and.to.contains('httponly');
         logger.info('get cookie: ' + cookie);
         let pos = cookie.indexOf('isession=');
         expect(pos).to.gte(0);
