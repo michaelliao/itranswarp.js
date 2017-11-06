@@ -96,4 +96,21 @@ describe('#ip', () => {
         isIp('202.97.96.1', ['中国', '香港', '', '']);
     });
 
+    it('test speed', () => {
+        // generate random ip:
+        let
+            addrs = [],
+            randomIp = () => {
+                return parseInt(Math.random() * 256) + '.' + parseInt(Math.random() * 256) + '.' + parseInt(Math.random() * 256) + '.' + parseInt(Math.random() * 256);
+            };
+        for (let i=0; i<10000; i++) {
+            addrs.push(randomIp());
+        }
+        let start = Date.now();
+        for (let addr of addrs) {
+            ip.find(addr);
+        }
+        let last = Date.now() - start;
+        console.log(`get 10000 ip address in ${last} ms.\n\n\n`);
+    });
 });
