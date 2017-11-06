@@ -11,6 +11,7 @@
     <meta property="og:title" content="{{ article.name }}" />
     <meta property="og:description" content="{{ article.name }}" />
     <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ article.cover_id }}/l" />
+    <meta property="og:tag" content="{{ article.tags }}" />
 {% endblock %}
 
 {% block title %}{{ article.name }}{% endblock %}

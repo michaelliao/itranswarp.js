@@ -12,6 +12,7 @@
     <meta property="og:title" content="{{ current.name }}" />
     <meta property="og:description" content="{{ wiki.description }}" />
     <meta property="og:image" content="http://{{ __request__.host }}/files/attachments/{{ wiki.cover_id }}/l" />
+    <meta property="og:tag" content="{{ wiki.tag }}" />
 {% endblock %}
 
 {% block title %}{{ current.name }}{% endblock %}

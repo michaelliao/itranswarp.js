@@ -5,6 +5,14 @@
 
 {% block nav %} /category/{{ category.id }} {% endblock %}
 
+{% block meta %}
+    <meta property="og:type" content="webpage" />
+    <meta property="og:url" content="http://{{ __request__.host }}/category/{{ category.id }}" />
+    <meta property="og:title" content="{{ category.name }}" />
+    <meta property="og:description" content="{{ category.description }}" />
+    <meta property="og:tag" content="{{ category.tag }}" />
+{% endblock %}
+
 {% block title %}
     {{ category.name }}
 {% endblock %}

@@ -7,6 +7,12 @@
 
 {% block title %}{{ _('Discuss') }}{% endblock %}
 
+{% block meta %}
+    <meta property="og:type" content="webpage" />
+    <meta property="og:url" content="http://{{ __request__.host }}/discuss/" />
+    <meta property="og:title" content="{{ _('Discuss') }}" />
+{% endblock %}
+
 {% block head %}
 
 <style>

@@ -12,6 +12,7 @@
     <meta property="og:url" content="http://{{ __request__.host }}/discuss/{{ board.id }}/{{ topic.id }}" />
     <meta property="og:title" content="{{ topic.name }}" />
     <meta property="og:description" content="{{ topic.name }}" />
+    <meta property="og:tag" content="{{ board.tag }}" />
 {% endblock %}
 
 {% block head %}
