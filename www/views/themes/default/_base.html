@@ -147,6 +147,26 @@
         var g_user = null;
 //{% endif %}
         var g_ads = JSON.parse(decodeURIComponent('{{ __ads__|dump|urlencode|safe }}'));
+        var meta_keywords = $('meta[property="og:tag"]').attr('content');
+        if (meta_keywords) {
+            meta_keywords = meta_keywords.toLowerCase().split(',');
+            _.mapObject(g_ads, function (adslot, adkey) {
+                _.map(adslot.adperiods, function (adp) {
+                    var matched_adms = _.filter(adp.admaterials, function (adm) {
+                        var ks = adm.keywords.toLowerCase().split(',');
+                        // ad keywords = [a, b, c, d]
+                        // meta keywords = [b, c]
+                        var ms = _.filter(meta_keywords, function (mkey) {
+                            return ks.indexOf(mkey) >= 0;
+                        });
+                        return ms.length > 0;
+                    });
+                    if (matched_adms.length > 0) {
+                        adp.admaterials = matched_adms;
+                    }
+                });
+            });
+        }
         $(function () {
             var fnRandom = function (adms) {
                 if (adms.length === 1) {
