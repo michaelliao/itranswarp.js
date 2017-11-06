@@ -93,13 +93,13 @@ app.use(async (ctx, next) => {
             path = ctx.request.path,
             ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
         if (path.startsWith('/blog/')) {
-            logger.warn(`deny bad bot: ${ipAddr} ${ua}`);
+            logger.warn(`deny bad bot: ${ipAddr}: ${ua}`);
             return serviceUnavailable(ctx);
         }
         if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
             if (! isBot(ua, ctx.request.headers)) {
                 if (ua.indexOf('mozilla') === (-1)) {
-                    logger.warn(`deny bot without mozilla: ${ua}`);
+                    logger.warn(`deny bot without mozilla: ${ipAddr}: ${ua}`);
                     return serviceUnavailable(ctx);
                 }
                 let atsp = ctx.cookies.get('atsp');
