@@ -202,6 +202,7 @@ function _buildAd(today, slot, periods, materials) {
                     return {
                         image: '/files/attachments/' + m.cover_id + '/0',
                         weight: m.weight,
+                        keywords: m.keywords,
                         url: m.url
                     }
                 })
