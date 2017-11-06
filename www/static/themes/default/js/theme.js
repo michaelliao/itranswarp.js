@@ -15,6 +15,30 @@ function add_sponsor(selector, width, height, name, img_src, link) {
     $(selector).append(s);
 }
 
+function deleteTopic(id) {
+    if (confirm('Delete this topic?')) {
+        postJSON('/api/topics/' + id + '/delete', function (err, result) {
+            if (err) {
+                alert(err.message || err);
+            } else {
+                location.assign('/discuss');
+            }
+        });
+    }
+}
+
+function deleteReply(id) {
+    if (confirm('Delete this reply?')) {
+        postJSON('/api/replies/' + id + '/delete', function (err, result) {
+            if (err) {
+                alert(err.message || err);
+            } else {
+                refresh();
+            }
+        });
+    }
+}
+
 function getCookie(key) {
     var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
     return keyValue ? keyValue[2] : null;
