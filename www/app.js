@@ -94,6 +94,7 @@ app.use(async (ctx, next) => {
             ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
         if (path.startsWith('/blog/')) {
             logger.warn(`deny bad bot: ${ipAddr}: ${ua}`);
+            await cache.set(ipAddr, 9999);
             return serviceUnavailable(ctx);
         }
         if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {

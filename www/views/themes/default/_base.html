@@ -261,7 +261,7 @@
                     {% for nav in __navigations__ %}
                     <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                     {% endfor %}
-                    <li class="x-display-none"><a href="/blog/">Blog</a></li>
+                    <li class="x-display-none"><a href="/blog/{{ __time__ }}">Blog</a></li>
                 </ul>
                 {% if __navigations__ and __navigations__.length %}
                 <ul class="uk-navbar-nav uk-visible-small">
