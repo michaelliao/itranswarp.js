@@ -106,12 +106,13 @@ app.use(async (ctx, next) => {
                 let atsp = ctx.cookies.get('atsp');
                 if (atsp) {
                     let sp = parseInt(atsp);
-                    if (isNaN(sp) || (sp < (start - 600000)) || (sp > (start + 60000))) {
+                    if (isNaN(sp) || (sp < (start - 800000)) || (sp > (start + 60000))) {
+                        logger.warn(`deny bot with bad atsp: now=${start}, atsp=${atsp}: ${ipAddr}: ${ua}`);
                         return serviceUnavailable(ctx);
                     }
                 } else {
                     let n = await cache.incr(ipAddr);
-                    if (n > 1) {
+                    if (n > 2) {
                         logger.warn(`potential bot: n=${n}: ${ipAddr} ${ua}`);
                         if (n > ANTI_SPIDER) {
                             logger.warn(`deny bot: ${n} times: ${ipAddr} ${ua}`);
