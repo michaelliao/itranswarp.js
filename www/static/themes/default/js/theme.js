@@ -45,8 +45,13 @@ function getCookie(key) {
 }
 
 function setCookie(key, value, maxAgeInSec) {
-    var date = new Date(new Date().getTime() + maxAgeInSec * 1000);
-    document.cookie = key + '=' + value + ';path=/;expires=' + date.toGMTString();
+    var d = new Date(new Date().getTime() + maxAgeInSec * 1000);
+    document.cookie = key + '=' + value + ';path=/;expires=' + d.toGMTString() + (location.protocol === 'https' ? ';secure' : '');
+}
+
+function deleteCookie(key) {
+    var d = new Date(0);
+    document.cookie = key + '=deleted;path=/;expires=' + d.toGMTString() + (location.protocol === 'https' ? ';secure' : '');
 }
 
 function message(title, msg, isHtml, autoClose) {
