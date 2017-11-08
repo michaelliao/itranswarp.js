@@ -94,11 +94,11 @@ app.use(async (ctx, next) => {
             path = ctx.request.path,
             ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
         if (path.startsWith('/blog/')) {
-            logger.warn(`deny bad bot: ${ipAddr}: ${ua}`);
+            logger.warn(`deny bot do not follow robots: ${ipAddr}: ${ua}`);
             await cache.set(ipAddr, 9999);
             return serviceUnavailable(ctx);
         }
-        if (path === '/' || path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
+        if (path.startsWith('/wiki') || path.startsWith('/article') || path.startsWith('/discuss') || path.startsWith('/category') || path.startsWith('/webpage')) {
             if (! isBot(ua, ctx.request.headers)) {
                 if (ua.indexOf('mozilla') === (-1)) {
                     logger.warn(`deny bot without mozilla: ${ipAddr}: ${ua}`);
@@ -108,15 +108,19 @@ app.use(async (ctx, next) => {
                 if (atsp) {
                     let sp = parseInt(atsp);
                     logger.info(`check now=${start}, sp=${sp}, atsp=${atsp}...`);
-                    if (isNaN(sp) || (sp < (start - 800000)) || (sp > (start + 60000))) {
-                        logger.warn(`deny bot with bad atsp: now=${start}, atsp=${atsp}, diff=${(start-sp)/1000}: ${ipAddr}: ${ua}`);
+                    if (isNaN(sp) || (sp < (start - 800000)) || (sp > (start + 120000))) {
+                        logger.warn(`detect bad atsp: now=${start}, atsp=${atsp}, diff=${(start-sp)/1000}: ${ipAddr}: ${ua}`);
                         ctx.cookies.set('atsp', '0', {
                             path: '/',
                             httpOnly: false,
                             secure: SECURE,
                             expires: new Date(0)
                         });
-                        //return serviceUnavailable(ctx);
+                        let n = await cache.incr(ipAddr);
+                        if (n > ANTI_SPIDER) {
+                            logger.warn(`deny bot with bad atsp: ${n} times: atsp=${atsp}: ${ipAddr} ${ua}`);
+                            return serviceUnavailable(ctx);
+                        }
                     }
                 } else {
                     let n = await cache.incr(ipAddr);
