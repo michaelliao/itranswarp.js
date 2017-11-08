@@ -28,6 +28,7 @@ const
     i18n = require('./i18n'),
     i18nTranslators = i18n.loadI18NTranslators('./views/i18n'),
     static_prefix = config.cdn.static_prefix,
+    SECURE = config.session.https,
     ANTI_SPIDER = config.spider.antiSpider,
     SPIDER_WHITELIST = config.spider.whiteList,
     ACTIVE_THEME = config.theme;
@@ -106,9 +107,16 @@ app.use(async (ctx, next) => {
                 let atsp = ctx.cookies.get('atsp');
                 if (atsp) {
                     let sp = parseInt(atsp);
+                    logger.info(`check now=${start}, sp=${sp}, atsp=${atsp}...`);
                     if (isNaN(sp) || (sp < (start - 800000)) || (sp > (start + 60000))) {
-                        logger.warn(`deny bot with bad atsp: now=${start}, atsp=${atsp}: ${ipAddr}: ${ua}`);
-                        return serviceUnavailable(ctx);
+                        logger.warn(`deny bot with bad atsp: now=${start}, atsp=${atsp}, diff=${(start-sp)/1000}: ${ipAddr}: ${ua}`);
+                        ctx.cookies.set('atsp', '0', {
+                            path: '/',
+                            httpOnly: false,
+                            secure: SECURE,
+                            expires: new Date(0)
+                        });
+                        //return serviceUnavailable(ctx);
                     }
                 } else {
                     let n = await cache.incr(ipAddr);
