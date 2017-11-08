@@ -46,7 +46,7 @@ function getCookie(key) {
 
 function setCookie(key, value, maxAgeInSec) {
     var date = new Date(new Date().getTime() + maxAgeInSec * 1000);
-    document.cookie = key + '=' + value + '; expires=' + date.toGMTString();
+    document.cookie = key + '=' + value + ';path=/;expires=' + date.toGMTString();
 }
 
 function message(title, msg, isHtml, autoClose) {
