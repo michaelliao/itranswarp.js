@@ -116,7 +116,13 @@ function run_sql(tid, btn) {
         var ths = _.keys(arr[0]);
         var trs = _.map(arr, function (obj) {
             return _.map(ths, function (key) {
-                return obj[key];
+                var
+                    k = obj[key],
+                    n = k.indexOf('_');
+                if (n > 0) {
+                    k = k.substring(n + 1);
+                }
+                return k;
             });
         });
         return '<table class="uk-table"><thead><tr>'
@@ -125,6 +131,9 @@ function run_sql(tid, btn) {
             }).join('') + '</tr></thead><tbody>'
             + $.map(trs, function (tr) {
                 return '<tr>' + $.map(tr, function (td) {
+                    if (td === undefined) {
+                        td = 'NULL';
+                    }
                     return '<td>' + encodeHtml(td) + '</td>';
                 }).join('') + '</tr>';
             }).join('') + '</tbody></table>';
