@@ -113,16 +113,16 @@ function run_sql(tid, btn) {
         if (arr.length === 0) {
             return 'Empty result set';
         }
-        var ths = _.keys(arr[0]);
+        var ths = _.map(_.keys(arr[0]), function (th) {
+            var n = th.indexOf('_');
+            if (n > 0) {
+                th = th.substring(n + 1);
+            }
+            return th;
+        });
         var trs = _.map(arr, function (obj) {
             return _.map(ths, function (key) {
-                var
-                    k = obj[key],
-                    n = k.indexOf('_');
-                if (n > 0) {
-                    k = k.substring(n + 1);
-                }
-                return k;
+                return obj[key];
             });
         });
         return '<table class="uk-table"><thead><tr>'
