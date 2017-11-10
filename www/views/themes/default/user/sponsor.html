@@ -256,7 +256,7 @@ $(function () {
             {% for m in admaterials %}
             <tr>
                 <td>
-                    <a href="#0" onclick="_showLarge('/files/attachments/{{ m.cover_id }}')"><img src="/files/attachments/{{ m.cover_id }}/s"></a>
+                    <a href="#0" onclick="_showLarge('{{ __cdn__ }}/files/attachments/{{ m.cover_id }}')"><img src="{{ __cdn__ }}/files/attachments/{{ m.cover_id }}/s"></a>
                 </td>
                 <td><a href="{{ m.url }}" target="_blank">{{ m.url }}</a></td>
                 <td>{{ m.start_at }}</td>
