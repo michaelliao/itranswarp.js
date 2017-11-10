@@ -9,7 +9,9 @@ const
     fs = require('fs'),
     marked = require('marked'),
     htmlparser = require('htmlparser2'),
-    logger = require('./logger.js');
+    logger = require('./logger.js'),
+    config = require('./config'),
+    CDN = config.cdn.url_prefix;
 
 // add plugins:
 let
@@ -66,6 +68,16 @@ pluginRenderer.code = function (code, lang) {
 
 pluginRenderer.link = function (href, title, text) {
     return '<a target="_blank" href="' + href + '">' + text + '</a>';
+};
+
+pluginRenderer.image = function (href, title, text) {
+    if (href.startsWith('/files/')) {
+        href = CDN + href;
+    }
+    if (!text) {
+        text = '';
+    }
+    return `<img src="${href}" alt="${text}">`;
 };
 
 // for ugc:
