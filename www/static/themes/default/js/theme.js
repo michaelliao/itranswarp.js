@@ -113,13 +113,7 @@ function run_sql(tid, btn) {
         if (arr.length === 0) {
             return 'Empty result set';
         }
-        var ths = _.map(_.keys(arr[0]), function (th) {
-            var n = th.indexOf('_');
-            if (n > 0) {
-                th = th.substring(n + 1);
-            }
-            return th;
-        });
+        var ths = _.keys(arr[0]);
         var trs = _.map(arr, function (obj) {
             return _.map(ths, function (key) {
                 return obj[key];
@@ -127,6 +121,10 @@ function run_sql(tid, btn) {
         });
         return '<table class="uk-table"><thead><tr>'
             + $.map(ths, function (th) {
+                var n = th.indexOf('_');
+                if (n > 1) {
+                    th = th.substring(n+1);
+                }
                 return '<th>' + encodeHtml(th) + '</th>';
             }).join('') + '</tr></thead><tbody>'
             + $.map(trs, function (tr) {
