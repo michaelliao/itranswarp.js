@@ -11,7 +11,8 @@ const
     htmlparser = require('htmlparser2'),
     logger = require('./logger.js'),
     config = require('./config'),
-    CDN = config.cdn.url_prefix;
+    CDN = config.cdn.url_prefix,
+    LOADING = CDN + '/static/themes/' + config.theme + '/img/loading.gif';
 
 // add plugins:
 let
@@ -77,7 +78,7 @@ pluginRenderer.image = function (href, title, text) {
     if (!text) {
         text = '';
     }
-    return `<img src="${href}" alt="${text}">`;
+    return `<img src="${LOADING}" data-src="${href}" alt="${text}">`;
 };
 
 // for ugc:

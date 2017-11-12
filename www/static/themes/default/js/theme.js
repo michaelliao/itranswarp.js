@@ -810,15 +810,34 @@ $(function() {
     var $window = $(window);
     var $body = $('body');
     var $gotoTop = $('div.x-goto-top');
-    $window.scroll(function() {
-        var t = $window.scrollTop();
-        if (t > 1600) {
+    // lazy load:
+    var lazyImgs = _.map($('img[data-src]').get(), function (i) {
+        return $(i);
+    });
+    var onScroll = function() {
+        var wtop = $window.scrollTop();
+        if (wtop > 1600) {
             $gotoTop.show();
         }
         else {
             $gotoTop.hide();
         }
-    });
+        if (lazyImgs.length > 0) {
+            var wheight = $window.height();
+            var loadedIndex = [];
+            _.each(lazyImgs, function ($i, index) {
+                if ($i.offset().top - wtop < wheight) {
+                    $i.attr('src', $i.attr('data-src'));
+                    loadedIndex.unshift(index);
+                }
+            });
+            _.each(loadedIndex, function (index) {
+                lazyImgs.splice(index, 1);
+            });
+        }
+    };
+    $window.scroll(onScroll);
+    onScroll();
 
     // go-top:
     $gotoTop.click(function() {
