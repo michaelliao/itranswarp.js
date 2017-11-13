@@ -198,7 +198,7 @@
                         return;
                     }
                     var hit = fnRandom(adp.admaterials);
-                    add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, hit.image, hit.url);
+                    add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, '{{ __cdn__ }}'+ hit.image, hit.url);
                 });
                 var i;
                 for (i=0; i<ad.num_auto_fill; i++) {
