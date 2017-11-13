@@ -859,7 +859,11 @@ $(function() {
     //     input_search.animate({'width': old_width}, 500);
     // });
 
-    hljs.initHighlighting();
+    $('pre>code').each(function(i, block) {
+        if (! $(block).hasClass('lang-ascii')) {
+            hljs.highlightBlock(block);
+        }
+    });
 
     /*
      * set ascii style for markdown:
