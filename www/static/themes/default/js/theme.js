@@ -860,6 +860,15 @@ $(function() {
     // });
 
     hljs.initHighlighting();
+
+    /*
+     * set ascii style for markdown:
+     * 
+     * ```ascii
+     * bla bla bla...
+     * ```
+     */
+    $('code.lang-ascii').css('font-family', '"Courier New",Consolas,monospace').parent('pre').css('font-size', '12px').css('line-height', '12px').css('border', 'none').css('background-color', 'transparent');
     // END
 });
 
