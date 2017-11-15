@@ -135,6 +135,7 @@
 {% endif %}
     </style>
     <script>
+        // global variables:
         var g_time = parseFloat('{{ __time__ }}');
         var g_signins = JSON.parse('{{ __signins__|dump|safe }}');
 //{% if __user__ %}
