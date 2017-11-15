@@ -142,7 +142,11 @@ function _showCodeResult(btn, result, isHtml, isError) {
     if (isHtml) {
         $r.html(result);
     } else {
-        $r.text(result);
+        var ss = result.split('\n');
+        var htm = _.map(ss, function (s) {
+            return encodeHtml(s).replace(/ /g, '&nbsp;');
+        }).join('<br>');
+        $r.html(htm);
     }
 }
 
@@ -187,24 +191,6 @@ function run_sql(tid, btn) {
                 }).join('') + '</tr>';
             }).join('') + '</tbody></table>';
     };
-    var showSqlResult = function (result) {
-        var $r = $(btn).next('div.x-sql-result');
-        if ($r.get(0) === undefined) {
-            $(btn).after('<div class="x-sql-result x-code uk-alert"></div>');
-            $r = $(btn).next('div.x-sql-result');
-        }
-        $r.removeClass('uk-alert-danger');
-        if (Array.isArray(result)) {
-            $r.html(genTable(result));
-        } else if (result && result.error) {
-            $r.addClass('uk-alert-danger');
-            $r.html($.map(result.message.split('\n'), function (s) {
-                return '<p>' + encodeHtml(s) + '</p>';
-            }).join(''));
-        } else {
-            $r.text(result);
-        }
-    };
     (function () {
         var
             i, result, s = '',
@@ -240,7 +226,7 @@ function run_sql(tid, btn) {
             }
         }
         if (error) {
-            showCodeError(btn, 'ERROR when execute SQL: ' + s + '\n' + String(e));
+            showCodeError(btn, 'ERROR when execute SQL: ' + s + '\n' + String(error));
         } else {
             if (Array.isArray(result)) {
                 showCodeResult(btn, genTable(result), true);
@@ -262,13 +248,12 @@ function run_python(tid, btn) {
     $button.attr('disabled', 'disabled');
     $i.addClass('uk-icon-spinner');
     $i.addClass('uk-icon-spin');
-    $.post('http://local.liaoxuefeng.com:39093/run', $.param({
+    $.post('https://local.liaoxuefeng.com:39093/run', $.param({
         code: code
     })).done(function (r) {
-        var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></code>';
-        message(r.error || 'Result', output, true);
+        showCodeResult(btn, r.output);
     }).fail(function (r) {
-        message('错误', '无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。', true, true);
+        showCodeError(btn, '<p>无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。</p>', true);
     }).always(function () {
         $i.removeClass('uk-icon-spinner');
         $i.removeClass('uk-icon-spin');
