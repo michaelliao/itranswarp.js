@@ -85,11 +85,37 @@ function _get_code(tid) {
 function run_javascript(tid, btn) {
     var code = _get_code(tid);
     (function () {
+        // prepare console.log
+        var
+            buffer = '',
+            _log = function (s) {
+                console.log(s);
+                buffer = buffer + s + '\n';
+            },
+            _warn = function (s) {
+                console.warn(s);
+                buffer = buffer + s + '\n';
+            },
+            _error = function (s) {
+                console.error(s);
+                buffer = buffer + s + '\n';
+            },
+            _console = {
+                trace: _log,
+                debug: _log,
+                log: _log,
+                info: _log,
+                warn: _warn,
+                error: _error
+            };
         try {
-            eval('(function() {\n' + code + '\n})();');
+            eval('(function() {\n var console = _console; \n' + code + '\n})();');
+            if (buffer) {
+                showCodeResult(btn, buffer);
+            }
         }
         catch (e) {
-            message('错误', '<p>JavaScript代码执行出错：</p><pre>' + String(e) + '</pre>', true, true);
+            showCodeError(btn, String(e));
         }
     })();
 }
@@ -103,9 +129,34 @@ function run_html(tid, btn) {
     })();
 }
 
+function _showCodeResult(btn, result, isHtml, isError) {
+    var $r = $(btn).next('div.x-code-result');
+    if ($r.get(0) === undefined) {
+        $(btn).after('<div class="x-code-result x-code uk-alert"></div>');
+        $r = $(btn).next('div.x-code-result');
+    }
+    $r.removeClass('uk-alert-danger');
+    if (isError) {
+        $r.addClass('uk-alert-danger');
+    }
+    if (isHtml) {
+        $r.html(result);
+    } else {
+        $r.text(result);
+    }
+}
+
+function showCodeResult(btn, result, isHtml) {
+    _showCodeResult(btn, result, isHtml);
+}
+
+function showCodeError(btn, result, isHtml) {
+    _showCodeResult(btn, result, isHtml, true);
+}
+
 function run_sql(tid, btn) {
     if (typeof alasql === undefined) {
-        message('错误', '<p>JavaScript嵌入式SQL引擎尚未加载完成，请稍后再试或者刷新页面！</p>', true, true);
+        showCodeError(btn, '错误：JavaScript嵌入式SQL引擎尚未加载完成，请稍后再试或者刷新页面！');
         return;
     }
     var code = _get_code(tid);
@@ -178,23 +229,29 @@ function run_sql(tid, btn) {
         });
         // run each sql:
         result = null;
+        error = null;
         for (i=0; i<lines.length; i++) {
             s = lines[i];
             try {
                 result = alasql(s);
             } catch (e) {
-                result = {
-                    error: true,
-                    message: 'ERROR when execute SQL: ' + s + '\n' + String(e)
-                }
+                error = e;
                 break;
             }
         }
-        showSqlResult(result);
+        if (error) {
+            showCodeError(btn, 'ERROR when execute SQL: ' + s + '\n' + String(e));
+        } else {
+            if (Array.isArray(result)) {
+                showCodeResult(btn, genTable(result), true);
+            } else {
+                showCodeResult(btn, result || '(empty)');
+            }
+        }
     })();
 }
 
-function run_python3(tid, btn) {
+function run_python(tid, btn) {
     var
         $pre = $('#pre-' + tid),
         $post = $('#post-' + tid),
@@ -229,7 +286,7 @@ function adjustTextareaHeight(t) {
     $t.attr('rows', '' + (lines + 1));
 }
 
-$(function() {
+var initRunCode = (function() {
     var tid = 0;
     var trimCode = function (code) {
         var ch;
@@ -253,13 +310,14 @@ $(function() {
         }
         return code + '\n';
     };
-    var initPre = function (pre, fn_run) {
+    var initPre = function ($pre, fn_run) {
         tid ++;
         var
             theId = 'online-run-code-' + tid,
-            $pre = $(pre),
+            $code = $pre.children('code'),
             $post = null,
-            codes = $pre.text().split('----', 3);
+            codes = $code.text().split('----', 3);
+        $code.remove();
         $pre.attr('id', 'pre-' + theId);
         $pre.css('font-size', '14px');
         $pre.css('margin-bottom', '0');
@@ -269,35 +327,25 @@ $(function() {
         $pre.css('border-bottom-right-radius', '0');
         $pre.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
         $pre.after('<button type="button" onclick="' + fn_run + '(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button>');
-        if (codes.length > 1) {
-            $pre.text(trimCode(codes[0]))
-            if (codes.length === 3) {
-                // add post:
-                $pre.after('<pre id="post-' + theId + '" style="font-size: 14px; margin-top: 0; border-top: 0; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;"></pre>');
-                $post = $('#post-' + theId);
-                $post.text(trimCode(codes[2]));
-            }
+        if (codes.length === 1) {
+            codes.unshift('');
+            codes.push('');
+        } else if (codes.length === 2) {
+            codes.push('');
+        }
+        $pre.text(trimCode(codes[0]))
+        if (codes[2].trim()) {
+            // add post:
+            $pre.after('<pre id="post-' + theId + '" style="font-size: 14px; margin-top: 0; border-top: 0; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;"></pre>');
+            $post = $('#post-' + theId);
+            $post.text(trimCode(codes[2]));
         }
         $pre.after('<textarea id="textarea-' + theId + '" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1 x-codearea" rows="10" style="overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;' + ($post === null ? '' : 'border-bottom-left-radius: 0; border-bottom-right-radius: 0;') + '"></textarea>');
-        if (codes.length > 1) {
-            $('#textarea-' + theId).val(trimCode(codes[1]));
-            adjustTextareaHeight($('#textarea-' + theId).get(0));
-        }
-
+        $('#textarea-' + theId).val(trimCode(codes[1]));
+        adjustTextareaHeight($('#textarea-' + theId).get(0));
     };
-    $('pre.x-javascript').each(function () {
-        initPre(this, 'run_javascript');
-    });
-    $('pre.x-html').each(function () {
-        initPre(this, 'run_html');
-    });
-    $('pre.x-sql').each(function () {
-        initPre(this, 'run_sql');
-    });
-    $('pre.x-python3').each(function () {
-        initPre(this, 'run_python3');
-    });
-});
+    return initPre;
+})();
 
 function initCommentArea(ref_type, ref_id, tag) {
     $('#x-comment-area').html($('#tplCommentArea').html());
@@ -501,6 +549,8 @@ $(function() {
         makeCollapsable(this, 300);
     });
 });
+
+// patch:
 
 if (! window.console) {
     window.console = {
@@ -859,21 +909,27 @@ $(function() {
     //     input_search.animate({'width': old_width}, 500);
     // });
 
-    $('pre>code').each(function(i, block) {
-        if (! $(block).hasClass('lang-ascii')) {
-            hljs.highlightBlock(block);
+    $('pre>code').each(function(i, code) {
+        var
+            $code = $(code),
+            classes = ($code.attr('class') || '').split(' '),
+            x_run = (_.find(classes, function (s) { return s.indexOf('lang-x-')>=0; }) || '').trim();
+        if ($code.hasClass('lang-ascii')) {
+            // set ascii style for markdown:
+            $code.css('font-family', '"Courier New",Consolas,monospace')
+                 .parent('pre')
+                 .css('font-size', '12px')
+                 .css('line-height', '12px')
+                 .css('border', 'none')
+                 .css('background-color', 'transparent');
+        } else if (x_run) {
+            // run xxx:
+            var fn = 'run_' + x_run.substring(7);
+            initRunCode($code.parent(), fn);
+        } else {
+            hljs.highlightBlock(code);
         }
     });
-
-    /*
-     * set ascii style for markdown:
-     * 
-     * ```ascii
-     * bla bla bla...
-     * ```
-     */
-    $('code.lang-ascii').css('font-family', '"Courier New",Consolas,monospace').parent('pre').css('font-size', '12px').css('line-height', '12px').css('border', 'none').css('background-color', 'transparent');
-    // END
 });
 
 // signin with oauth:
