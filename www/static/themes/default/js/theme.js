@@ -898,6 +898,9 @@ $(function() {
         var
             $code = $(code),
             classes = ($code.attr('class') || '').split(' '),
+            nohightlight = (_.find(classes, function (s) { return s.indexOf('lang-nohightlight')>=0; }) || '').trim(),
+            warn = (_.find(classes, function (s) { return s.indexOf('lang-!')>=0; }) || '').trim(),
+            info = (_.find(classes, function (s) { return s.indexOf('lang-?')>=0; }) || '').trim(),
             x_run = (_.find(classes, function (s) { return s.indexOf('lang-x-')>=0; }) || '').trim();
         if ($code.hasClass('lang-ascii')) {
             // set ascii style for markdown:
@@ -907,11 +910,13 @@ $(function() {
                  .css('line-height', '12px')
                  .css('border', 'none')
                  .css('background-color', 'transparent');
+        } else if (warn || info) {
+            $code.parent().replaceWith('<div class="uk-alert ' + (warn ? 'uk-alert-danger' : '') + '"><i class="uk-icon-' + (warn ? 'warning' : 'info-circle') + '"></i> ' + encodeHtml($code.text()) + '</div>');
         } else if (x_run) {
             // run xxx:
             var fn = 'run_' + x_run.substring(7);
             initRunCode($code.parent(), fn);
-        } else {
+        } else if (! nohightlight) {
             hljs.highlightBlock(code);
         }
     });
