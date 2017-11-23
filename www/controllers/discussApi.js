@@ -137,6 +137,19 @@ async function getRecentTopics(max) {
     return topics;
 }
 
+async function getTopicsByUser(user_id, max=20) {
+    return await Topic.findAll({
+        attributes: {
+            exclude: ['content']
+        },
+        where: {
+            'user_id': user_id
+        },
+        order: 'created_at DESC',
+        limit: max
+    });
+}
+
 async function getTopics(board_id, page) {
     page.total = await Topic.count({
         where: {
@@ -335,6 +348,8 @@ module.exports = {
     getTopic: getTopic,
 
     getTopics: getTopics,
+
+    getTopicsByUser: getTopicsByUser,
 
     getRecentTopics: getRecentTopics,
 

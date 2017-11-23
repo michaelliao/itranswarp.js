@@ -118,6 +118,7 @@ $(function () {
         $url = $form.find('input[name=url]'),
         $start_at = $form.find('input[name=start_at]'),
         $end_at = $form.find('input[name=end_at]'),
+        $keywords = $form.find('input[name=keywords]'),
         $weight = $form.find('input[name=weight]'),
         $cancel = $form.find('button.x-cancel');
 
@@ -151,6 +152,7 @@ $(function () {
             url: $url.val().trim(),
             start_at: $start_at.val().trim(),
             end_at: $end_at.val().trim(),
+            keywords: $keywords.val().trim(),
             weight: parseInt($weight.val().trim() || '100')
         };
         // check:
@@ -172,6 +174,13 @@ $(function () {
         if (data.end_at === '') {
             delete data.end_at;
         }
+
+        data.keywords = _.filter(_.map(data.keywords.split(','), function (s) {
+            return s.trim();
+        }), function (s) {
+            return s !== '';
+        }).join(',');
+
         $form.postJSON('/api/adperiods/{{ adperiod.id }}/admaterials', data, function (err, r) {
             if (err) {
                 return _alert('Create material failed: ' + (err.message || err.error));
@@ -233,10 +242,11 @@ $(function () {
     <table class="uk-table uk-table-hover">
         <thead>
             <tr>
-                <th width="20%">{{ _('Image') }}</th>
-                <th width="35%">{{ _('URL') }}</th>
+                <th width="15%">{{ _('Image') }}</th>
+                <th width="30%">{{ _('URL') }}</th>
                 <th width="10%">{{ _('Start from') }}</th>
                 <th width="10%">{{ _('End at') }} ({{ _('Exclusive') }})</th>
+                <th width="10%">{{ _('Keywords') }}</th>
                 <th width="10%">{{ _('Weight') }}</th>
                 <th width="10%">{{ _('Status') }}</th>
                 <th width="5%">{{ _('Action') }}</th>
@@ -246,11 +256,12 @@ $(function () {
             {% for m in admaterials %}
             <tr>
                 <td>
-                    <a href="#0" onclick="_showLarge('/files/attachments/{{ m.cover_id }}')"><img src="/files/attachments/{{ m.cover_id }}/s"></a>
+                    <a href="#0" onclick="_showLarge('{{ __cdn__ }}/files/attachments/{{ m.cover_id }}')"><img src="{{ __cdn__ }}/files/attachments/{{ m.cover_id }}/s"></a>
                 </td>
                 <td><a href="{{ m.url }}" target="_blank">{{ m.url }}</a></td>
                 <td>{{ m.start_at }}</td>
                 <td>{{ m.end_at }}</td>
+                <td>{{ m.keywords }}</td>
                 <td>{{ m.weight }}</td>
                 <td>
                     <script>
@@ -316,6 +327,16 @@ $(function () {
                         <input name="end_at" type="text" placeholder="Forever" class="uk-form-width-medium" data-uk-datepicker="{format:'YYYY-MM-DD'}">
                     </div>
                     <p>Optional: the AD will display only before the specific date.</p>
+                </div>
+            </div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">{{ _('Keywords') }}:</label>
+                <div class="uk-form-controls">
+                    <div class="uk-form-icon">
+                        <i class="uk-icon-sliders"></i>
+                        <input name="keywords" type="text" placeholder="Keywords seperated by ," class="uk-form-width-medium">
+                    </div>
+                    <p>Optional: the keywords of the AD. Seperated by ,</p>
                 </div>
             </div>
             <div class="uk-form-row">

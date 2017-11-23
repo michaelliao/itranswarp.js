@@ -369,12 +369,26 @@ module.exports = {
         ctx.response.redirect(`/discuss/${topic.board_id}/${tid}?page=${p}#${rid}`);
     },
 
+    'GET /me/profile': async (ctx, next) => {
+        let user = ctx.state.__user__;
+        if (user === null) {
+            ctx.response.redirect('/auth/signin');
+            return;
+        }
+        let model = {
+            user: user,
+            topics: await discussApi.getTopicsByUser(user.id)
+        }
+        ctx.render('user/profile.html', await getModel(model));
+    },
+
     'GET /user/:id': async (ctx, next) => {
         let
             id = ctx.params.id,
             user = await userApi.getUser(id),
             model = {
-                user: user
+                user: user,
+                topics: await discussApi.getTopicsByUser(id)
             };
         ctx.render('user/profile.html', await getModel(model));
     },
@@ -447,19 +461,6 @@ module.exports = {
             adperiod: adperiod,
             admaterials: admaterials
         }));
-    },
-
-    'GET /me/profile': async (ctx, next) => {
-        let
-            user = ctx.state.__user__,
-            model = {
-                user: user
-            };
-        if (user === null) {
-            ctx.response.redirect('/auth/signin');
-            return;
-        }
-        ctx.render('user/profile.html', await getModel(model));
     },
 
     'GET /auth/signin': async (ctx, next) => {

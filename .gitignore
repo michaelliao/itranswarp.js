@@ -15,6 +15,7 @@ results
 npm-debug.log
 node_modules
 package-lock.json
+release.sh
 
 # backups:
 backup/*.sql

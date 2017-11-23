@@ -12,6 +12,7 @@
     <meta property="og:url" content="http://{{ __request__.host }}/discuss/{{ board.id }}/{{ topic.id }}" />
     <meta property="og:title" content="{{ topic.name }}" />
     <meta property="og:description" content="{{ topic.name }}" />
+    <meta property="og:tag" content="{{ board.tag }}" />
 {% endblock %}
 
 {% block head %}
@@ -19,6 +20,13 @@
 <style>
 .x-topic-visible {
     display: block;
+}
+.x-can-delete {
+    {% if __user__ and __user__.role <= 10 %}
+    display: inline;
+    {% else %}
+    display: none;
+    {% endif %}
 }
 </style>
 
@@ -125,11 +133,11 @@ $(function () {
         <div class="uk-comment-header">
             <a href="/user/{{ r.user.id }}"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{{ r.user.image_url }}" width="50" height="50" alt=""></a>
             <h4 class="uk-comment-title"><a href="/user/{{ r.user.id }}">{{ r.user.name }}</a></h4>
-            <div class="uk-comment-meta">#{{ index }} Created at <span class="x-smartdate" date="{{ r.created_at }}">...</span></div>
+            <div class="uk-comment-meta">#{{ index }} Created at <span class="x-smartdate" date="{{ r.created_at }}">...</span> <a href="javascript:{% if index == 1 %} deleteTopic {% else %} deleteReply {% endif %}('{{ r.id }}')" class="x-can-delete uk-text-danger">{{ _('Delete') }}</a></div>
         </div>
         <div class="uk-comment-body uk-margin">
             {% if r.deleted %}
-            <div class="alert alert-error">{{ _('This reply was deleted') }}</div>
+            <div class="uk-alert uk-alert-danger">{{ _('This reply was deleted') }}</div>
             {% else %}
             {{ r.content|safe }}
             {% endif %}

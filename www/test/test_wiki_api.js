@@ -661,6 +661,5 @@ describe('#wikis', () => {
         expect(tree.children[1].children[0].children[0]).to.a('object');
         expect(tree.children[1].children[0].children[0].name).to.equal('p3');
         expect(tree.children[1].children[0].children[0].children).to.a('array').and.to.have.lengthOf(0);
-        logger.info(JSON.stringify(tree, null, '  '));
     });
 });

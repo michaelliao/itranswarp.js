@@ -22,14 +22,14 @@ const
     AuthUser = db.AuthUser;
 
 function _verifyPassword(id, passwd, expectedHash) {
-    logger.info(`local id: ${id}, password: ${passwd}.`);
+    logger.debug(`local id: ${id}, password: ${passwd}.`);
     let actualHash = crypto.createHash('sha1').update(id + ':' + passwd).digest('hex');
     return actualHash === expectedHash;
 }
 
 // parse header 'Authorization: Basic xxxx'
 async function _parseAuthorization(auth) {
-    logger.info('try parse header: Authorization: ' + auth);
+    logger.debug(`try parse header: Authorization: ${auth}`);
     if ((auth.length < 6) || (auth.substring(0, 6) !== 'Basic ')) {
         return null;
     }
@@ -56,7 +56,7 @@ async function _parseAuthorization(auth) {
             }
         });
         if (luser && _verifyPassword(luser.id, p, luser.passwd)) {
-            logger.debug('binded user: ' + user.name);
+            logger.debug(`binded user: ${user.name}`);
             return user;
         }
     }
@@ -69,7 +69,7 @@ function _checkIsLocked(user) {
         return null;
     }
     if (user.locked_until > Date.now()) {
-        logger.warn('CANNOT signin: user ' + user.email + ' is still locked.');
+        logger.warn(`CANNOT signin: user ${user.email} is still locked.`);
         return null;
     }
     return user;
@@ -84,31 +84,31 @@ module.exports = async (ctx, next) => {
         path = request.path,
         cookie = ctx.cookies.get(COOKIE_NAME);
     if (cookie) {
-        logger.info('try to parse session cookie...');
+        logger.debug('try to parse session cookie...');
         user = await auth.parseSessionCookie(cookie);
         user = _checkIsLocked(user);
         if (user) {
-            logger.info('bind user from session cookie: ' + user.email)
+            logger.debug(`bind user from session cookie: ${user.email}`)
         } else {
-            logger.info('invalid session cookie. cleared.');
+            logger.warn(`invalid session cookie: ${cookie}`);
             ctx.cookies.set(COOKIE_NAME, 'deleted', {
                 path: '/',
                 httpOnly: true,
-                secureProxy: SECURE,
+                secure: SECURE,
                 expires: new Date(0)
             });
         }
     } else {
-        logger.info('cookie not found.');
+        logger.debug('cookie not found.');
     }
     if (user === null) {
         let authHdr = request.get('authorization');
         if (authHdr) {
-            logger.info('try to parse authorization header...');
+            logger.debug('try to parse authorization header...');
             user = await _parseAuthorization(authHdr);
             user = _checkIsLocked(user);
             if (user) {
-                logger.info('bind user from authorization: ' + user.email);
+                logger.debug(`bind user from authorization: ${user.email}`);
             } else {
                 logger.warn('invalid authorization header.');
             }
@@ -127,7 +127,7 @@ module.exports = async (ctx, next) => {
     }
     ctx.checkPermission = (expectedRole) => {
         if (ctx.state.__user__ === null || (ctx.state.__user__.role > expectedRole)) {
-            logger.warn('check permission failed: expected = ' + expectedRole + ', actual = ' + (ctx.state.__user__ ? ctx.state.__user__.role : 'null'));
+            logger.warn(`check permission failed: expected = ${expectedRole}, actual = ${ctx.state.__user__ ? ctx.state.__user__.role : 'null'}`);
             throw api.notAllowed('Do not have permission.');
         }
     };

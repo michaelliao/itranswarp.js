@@ -30,8 +30,32 @@
 
 {% block content %}
 
-    <h3>{{ _('Recent Posts') }}</h3>
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th>{{ _('Recent Posts') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in topics %}
+            <tr>
+                <td>
+                    <a href="/user/{{ user.id }}" target="_blank"><img class="uk-comment-avatar uk-border-circle x-avatar" src="{{ user.image_url }}" style="width:50px"></a>
+                    <div style="margin-left:70px;">
+                        <div class="uk-margin" style="font-size:16px;"><a href="/discuss/{{ t.board_id }}/{{ t.id }}">{{ t.name}}</a></div>
+                        <div>
+                            <a href="/user/{{ user.id }}" target="_blank">{{ user.name }}</a> {{ _('posted at') }} <span class="x-smartdate" date="{{ t.created_at }}">...</span>
+                            {% if t.updated_at > t.created_at %}
+                            {{ _('last replied at') }} <span class="x-smartdate" date="{{ t.updated_at }}">...</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
-    <h3>{{ _('Recent Replies') }}</h3>
+    <!-- <h3>{{ _('Recent Replies') }}</h3> -->
 
 {% endblock %}

@@ -162,8 +162,6 @@ const defaultSettingValues = _.reduce(defaultSettingDefinitions, function (r, v,
     return r;
 }, {});
 
-logger.info('default settings:\n' + JSON.stringify(defaultSettingValues, null, '  '));
-
 async function _getSettings(group) {
     // get settings by group, return object with key - value,
     // prefix of key has been removed:

@@ -10,8 +10,8 @@ A nodejs powered website containing blog, wiki, discuss and search engine.
 * OAuth2 integration (weibo, QQ, facebook, etc.)
 * SEO support
 * REST api
-* customized css with uikit 2
-* fully tested (using mocha)
+* customized css with uikit2
+* fully tested (using mocha/chai)
 
 ### Environment
 

@@ -7,6 +7,14 @@
 
 {% block title %}{{ _('New Topic') }}{% endblock %}
 
+{% block meta %}
+    <meta property="og:type" content="webpage" />
+    <meta property="og:url" content="http://{{ __request__.host }}/discuss/{{ board.id }}/topics/create" />
+    <meta property="og:title" content="{{ board.name }}" />
+    <meta property="og:description" content="{{ board.description }}" />
+    <meta property="og:tag" content="{{ board.tag }}" />
+{% endblock %}
+
 {% block head %}
 
 <style>

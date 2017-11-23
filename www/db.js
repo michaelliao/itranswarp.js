@@ -120,7 +120,7 @@ function defineModel(modelName, tableName, attributes, extraFields) {
             beforeValidate: function (obj) {
                 let now = Date.now();
                 if (obj.isNewRecord) {
-                    logger.info('will create entity: ' + obj);
+                    logger.debug('will create entity: ' + obj);
                     if (!obj.id) {
                         obj.id = nextId();
                     }
@@ -130,7 +130,7 @@ function defineModel(modelName, tableName, attributes, extraFields) {
                 }
             },
             beforeUpdate: function (obj) {
-                logger.info('will update entity: ' + obj.id);
+                logger.debug('will update entity: ' + obj.id);
                 obj.updated_at = Date.now();
                 obj.version ++;
             }

@@ -5,6 +5,14 @@
 
 {% block nav %} /category/{{ category.id }} {% endblock %}
 
+{% block meta %}
+    <meta property="og:type" content="webpage" />
+    <meta property="og:url" content="http://{{ __request__.host }}/category/{{ category.id }}" />
+    <meta property="og:title" content="{{ category.name }}" />
+    <meta property="og:description" content="{{ category.description }}" />
+    <meta property="og:tag" content="{{ category.tag }}" />
+{% endblock %}
+
 {% block title %}
     {{ category.name }}
 {% endblock %}
@@ -29,7 +37,7 @@
         <div>
             <h3><a href="/article/{{ a.id }}">{{ a.name }}</a></h3>
         </div>
-        <a class="x-cover-small" href="/article/{{ a.id }}"><img src="/files/attachments/{{ a.cover_id }}/s" alt="{{ a.name }}" style="width:160px"></a>
+        <a class="x-cover-small" href="/article/{{ a.id }}"><img src="{{ __cdn__}}/files/attachments/{{ a.cover_id }}/s" alt="{{ a.name }}" style="width:160px"></a>
         <div>
             <p><a href="/user/{{ a.user_id }}">{{ a.user_name }}</a> / <a href="/category/{{ a.category_id }}">{{ category.name }}</a> / <span class="x-smartdate" date="{{ a.publish_at }}">...</span> / {{ _('Reads') }}: {{ a.views }}</p>
             <p>{{ a.description }}</p>

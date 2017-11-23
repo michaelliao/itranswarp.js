@@ -127,6 +127,7 @@
     </script>
 
     <style id="x-doc-style">
+        .x-display-none { display: none; }
 {% if __user__ %}
         .x-display-if-not-signin { display: none; }
 {% else %}
@@ -134,6 +135,7 @@
 {% endif %}
     </style>
     <script>
+        // global variables:
         var g_time = parseFloat('{{ __time__ }}');
         var g_signins = JSON.parse('{{ __signins__|dump|safe }}');
 //{% if __user__ %}
@@ -146,6 +148,26 @@
         var g_user = null;
 //{% endif %}
         var g_ads = JSON.parse(decodeURIComponent('{{ __ads__|dump|urlencode|safe }}'));
+        var meta_keywords = $('meta[property="og:tag"]').attr('content');
+        if (meta_keywords) {
+            meta_keywords = meta_keywords.toLowerCase().split(',');
+            _.mapObject(g_ads, function (adslot, adkey) {
+                _.map(adslot.adperiods, function (adp) {
+                    var matched_adms = _.filter(adp.admaterials, function (adm) {
+                        var ks = adm.keywords.toLowerCase().split(',');
+                        // ad keywords = [a, b, c, d]
+                        // meta keywords = [b, c]
+                        var ms = _.filter(meta_keywords, function (mkey) {
+                            return ks.indexOf(mkey) >= 0;
+                        });
+                        return ms.length > 0;
+                    });
+                    if (matched_adms.length > 0) {
+                        adp.admaterials = matched_adms;
+                    }
+                });
+            });
+        }
         $(function () {
             var fnRandom = function (adms) {
                 if (adms.length === 1) {
@@ -177,7 +199,7 @@
                         return;
                     }
                     var hit = fnRandom(adp.admaterials);
-                    add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, hit.image, hit.url);
+                    add_sponsor('#x-sponsor-' + k, ad.width, ad.height, adp.user, '{{ __cdn__ }}'+ hit.image, hit.url);
                 });
                 var i;
                 for (i=0; i<ad.num_auto_fill; i++) {
@@ -185,6 +207,11 @@
                 }
             });
         });
+    </script>
+    <script>
+        (function () {
+            eval(decodeURIComponent('%69f%28%21get%43%6F%6F%6B%69%65(%27%61tsp%27))%73%65%74C%6F%6F%6B%69%65(%27%61tsp%27%2C%20%27{{ __time__ }}%5F%27%2Bnew%20Date%28%29.getTime%28%29%2C%20580%29%3B'));
+        })();
     </script>
 
 {% block head %}<!-- head  -->{% endblock %}
@@ -235,6 +262,7 @@
                     {% for nav in __navigations__ %}
                     <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                     {% endfor %}
+                    <li class="x-display-none"><a href="/blog/{{ __time__ }}">Blog</a></li>
                 </ul>
                 {% if __navigations__ and __navigations__.length %}
                 <ul class="uk-navbar-nav uk-visible-small">

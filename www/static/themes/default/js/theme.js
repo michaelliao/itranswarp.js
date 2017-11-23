@@ -15,6 +15,45 @@ function add_sponsor(selector, width, height, name, img_src, link) {
     $(selector).append(s);
 }
 
+function deleteTopic(id) {
+    if (confirm('Delete this topic?')) {
+        postJSON('/api/topics/' + id + '/delete', function (err, result) {
+            if (err) {
+                alert(err.message || err);
+            } else {
+                location.assign('/discuss');
+            }
+        });
+    }
+}
+
+function deleteReply(id) {
+    if (confirm('Delete this reply?')) {
+        postJSON('/api/replies/' + id + '/delete', function (err, result) {
+            if (err) {
+                alert(err.message || err);
+            } else {
+                refresh();
+            }
+        });
+    }
+}
+
+function getCookie(key) {
+    var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+    return keyValue ? keyValue[2] : null;
+}
+
+function setCookie(key, value, maxAgeInSec) {
+    var d = new Date(new Date().getTime() + maxAgeInSec * 1000);
+    document.cookie = key + '=' + value + ';path=/;expires=' + d.toGMTString() + (location.protocol === 'https' ? ';secure' : '');
+}
+
+function deleteCookie(key) {
+    var d = new Date(0);
+    document.cookie = key + '=deleted;path=/;expires=' + d.toGMTString() + (location.protocol === 'https' ? ';secure' : '');
+}
+
 function message(title, msg, isHtml, autoClose) {
     if ($('#modal-message').length==0) {
         $('body').append('<div id="modal-message" class="uk-modal"><div class="uk-modal-dialog">' +
@@ -35,26 +74,170 @@ function message(title, msg, isHtml, autoClose) {
     modal.show();
 }
 
-function run_js(tid, btn) {
+function _get_code(tid) {
     var
         $pre = $('#pre-' + tid),
         $post = $('#post-' + tid),
-        $textarea = $('#textarea-' + tid),
-        $button = $(btn),
-        $i = $button.find('i'),
-        code = $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
-    var fn = function () {
-        try {
-            eval('(function() {\n' + code + '\n})();');
-        }
-        catch (e) {
-            message('错误', '<p>JavaScript代码执行出错：</p><pre>' + String(e) + '</pre>', true, true);
-        }
-    };
-    fn();
+        $textarea = $('#textarea-' + tid);
+    return $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
 }
 
-function run_python3(tid, btn) {
+function run_javascript(tid, btn) {
+    var code = _get_code(tid);
+    (function () {
+        // prepare console.log
+        var
+            buffer = '',
+            _log = function (s) {
+                console.log(s);
+                buffer = buffer + s + '\n';
+            },
+            _warn = function (s) {
+                console.warn(s);
+                buffer = buffer + s + '\n';
+            },
+            _error = function (s) {
+                console.error(s);
+                buffer = buffer + s + '\n';
+            },
+            _console = {
+                trace: _log,
+                debug: _log,
+                log: _log,
+                info: _log,
+                warn: _warn,
+                error: _error
+            };
+        try {
+            eval('(function() {\n var console = _console; \n' + code + '\n})();');
+            if (buffer) {
+                showCodeResult(btn, buffer);
+            }
+        }
+        catch (e) {
+            showCodeError(btn, String(e));
+        }
+    })();
+}
+
+function run_html(tid, btn) {
+    var code = _get_code(tid);
+    (function () {
+        var w = window.open('about:blank', 'Online Practice', 'width=640,height=480,resizeable=1,scrollbars=1');
+        w.document.write(code);
+        w.document.close();
+    })();
+}
+
+function _showCodeResult(btn, result, isHtml, isError) {
+    var $r = $(btn).next('div.x-code-result');
+    if ($r.get(0) === undefined) {
+        $(btn).after('<div class="x-code-result x-code uk-alert"></div>');
+        $r = $(btn).next('div.x-code-result');
+    }
+    $r.removeClass('uk-alert-danger');
+    if (isError) {
+        $r.addClass('uk-alert-danger');
+    }
+    if (isHtml) {
+        $r.html(result);
+    } else {
+        var ss = result.split('\n');
+        var htm = _.map(ss, function (s) {
+            return encodeHtml(s).replace(/ /g, '&nbsp;');
+        }).join('<br>');
+        $r.html(htm);
+    }
+}
+
+function showCodeResult(btn, result, isHtml) {
+    _showCodeResult(btn, result, isHtml);
+}
+
+function showCodeError(btn, result, isHtml) {
+    _showCodeResult(btn, result, isHtml, true);
+}
+
+function run_sql(tid, btn) {
+    if (typeof alasql === undefined) {
+        showCodeError(btn, '错误：JavaScript嵌入式SQL引擎尚未加载完成，请稍后再试或者刷新页面！');
+        return;
+    }
+    var code = _get_code(tid);
+    var genTable = function (arr) {
+        if (arr.length === 0) {
+            return 'Empty result set';
+        }
+        var ths = _.keys(arr[0]);
+        var trs = _.map(arr, function (obj) {
+            return _.map(ths, function (key) {
+                return obj[key];
+            });
+        });
+        return '<table class="uk-table"><thead><tr>'
+            + $.map(ths, function (th) {
+                var n = th.indexOf('_');
+                if (n > 1) {
+                    th = th.substring(n+1);
+                }
+                return '<th>' + encodeHtml(th) + '</th>';
+            }).join('') + '</tr></thead><tbody>'
+            + $.map(trs, function (tr) {
+                return '<tr>' + $.map(tr, function (td) {
+                    if (td === undefined) {
+                        td = 'NULL';
+                    }
+                    return '<td>' + encodeHtml(td) + '</td>';
+                }).join('') + '</tr>';
+            }).join('') + '</tbody></table>';
+    };
+    (function () {
+        var
+            i, result, s = '',
+            lines = code.split('\n');
+        lines = _.map(lines, function (line) {
+            var n = line.indexOf('--');
+            if (n >= 0) {
+                line = line.substring(0, n);
+            }
+            return line;
+        });
+        lines = _.filter(lines, function (line) {
+            return line.trim() !== '';
+        });
+        // join:
+        for (i=0; i<lines.length; i++) {
+            s = s + lines[i] + '\n';
+        }
+        // split by ;
+        lines = _.filter(s.trim().split(';'), function (line) {
+            return line.trim() !== '';
+        });
+        // run each sql:
+        result = null;
+        error = null;
+        for (i=0; i<lines.length; i++) {
+            s = lines[i];
+            try {
+                result = alasql(s);
+            } catch (e) {
+                error = e;
+                break;
+            }
+        }
+        if (error) {
+            showCodeError(btn, 'ERROR when execute SQL: ' + s + '\n' + String(error));
+        } else {
+            if (Array.isArray(result)) {
+                showCodeResult(btn, genTable(result), true);
+            } else {
+                showCodeResult(btn, result || '(empty)');
+            }
+        }
+    })();
+}
+
+function run_python(tid, btn) {
     var
         $pre = $('#pre-' + tid),
         $post = $('#post-' + tid),
@@ -65,13 +248,12 @@ function run_python3(tid, btn) {
     $button.attr('disabled', 'disabled');
     $i.addClass('uk-icon-spinner');
     $i.addClass('uk-icon-spin');
-    $.post('http://local.liaoxuefeng.com:39093/run', $.param({
+    $.post('https://local.liaoxuefeng.com:39093/run', $.param({
         code: code
     })).done(function (r) {
-        var output = '<pre style="word-break: break-all; word-wrap: break-word; white-space: pre-wrap;"><code>' + (r.output || '(空)').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre></code>';
-        message(r.error || 'Result', output, true);
+        showCodeResult(btn, r.output);
     }).fail(function (r) {
-        message('错误', '无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。', true, true);
+        showCodeError(btn, '<p>无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。</p>', true);
     }).always(function () {
         $i.removeClass('uk-icon-spinner');
         $i.removeClass('uk-icon-spin');
@@ -89,7 +271,7 @@ function adjustTextareaHeight(t) {
     $t.attr('rows', '' + (lines + 1));
 }
 
-$(function() {
+var initRunCode = (function() {
     var tid = 0;
     var trimCode = function (code) {
         var ch;
@@ -113,13 +295,14 @@ $(function() {
         }
         return code + '\n';
     };
-    var initPre = function (pre, fn_run) {
+    var initPre = function ($pre, fn_run) {
         tid ++;
         var
             theId = 'online-run-code-' + tid,
-            $pre = $(pre),
+            $code = $pre.children('code'),
             $post = null,
-            codes = $pre.text().split('----', 3);
+            codes = $code.text().split('----', 3);
+        $code.remove();
         $pre.attr('id', 'pre-' + theId);
         $pre.css('font-size', '14px');
         $pre.css('margin-bottom', '0');
@@ -129,29 +312,25 @@ $(function() {
         $pre.css('border-bottom-right-radius', '0');
         $pre.wrap('<form class="uk-form uk-form-stack" action="#0"></form>');
         $pre.after('<button type="button" onclick="' + fn_run + '(\'' + theId + '\', this)" class="uk-button uk-button-primary" style="margin-top:15px;"><i class="uk-icon-play"></i> Run</button>');
-        if (codes.length > 1) {
-            $pre.text(trimCode(codes[0]))
-            if (codes.length === 3) {
-                // add post:
-                $pre.after('<pre id="post-' + theId + '" style="font-size: 14px; margin-top: 0; border-top: 0; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;"></pre>');
-                $post = $('#post-' + theId);
-                $post.text(trimCode(codes[2]));
-            }
+        if (codes.length === 1) {
+            codes.unshift('');
+            codes.push('');
+        } else if (codes.length === 2) {
+            codes.push('');
+        }
+        $pre.text(trimCode(codes[0]))
+        if (codes[2].trim()) {
+            // add post:
+            $pre.after('<pre id="post-' + theId + '" style="font-size: 14px; margin-top: 0; border-top: 0; padding: 6px; border-top-left-radius: 0; border-top-right-radius: 0;"></pre>');
+            $post = $('#post-' + theId);
+            $post.text(trimCode(codes[2]));
         }
         $pre.after('<textarea id="textarea-' + theId + '" onkeyup="adjustTextareaHeight(this)" class="uk-width-1-1 x-codearea" rows="10" style="overflow: scroll; border-top-left-radius: 0; border-top-right-radius: 0;' + ($post === null ? '' : 'border-bottom-left-radius: 0; border-bottom-right-radius: 0;') + '"></textarea>');
-        if (codes.length > 1) {
-            $('#textarea-' + theId).val(trimCode(codes[1]));
-            adjustTextareaHeight($('#textarea-' + theId).get(0));
-        }
-
+        $('#textarea-' + theId).val(trimCode(codes[1]));
+        adjustTextareaHeight($('#textarea-' + theId).get(0));
     };
-    $('pre.x-javascript').each(function () {
-        initPre(this, 'run_js');
-    });
-    $('pre.x-python3').each(function () {
-        initPre(this, 'run_python3');
-    });
-});
+    return initPre;
+})();
 
 function initCommentArea(ref_type, ref_id, tag) {
     $('#x-comment-area').html($('#tplCommentArea').html());
@@ -355,6 +534,8 @@ $(function() {
         makeCollapsable(this, 300);
     });
 });
+
+// patch:
 
 if (! window.console) {
     window.console = {
@@ -664,15 +845,34 @@ $(function() {
     var $window = $(window);
     var $body = $('body');
     var $gotoTop = $('div.x-goto-top');
-    $window.scroll(function() {
-        var t = $window.scrollTop();
-        if (t > 1600) {
+    // lazy load:
+    var lazyImgs = _.map($('img[data-src]').get(), function (i) {
+        return $(i);
+    });
+    var onScroll = function() {
+        var wtop = $window.scrollTop();
+        if (wtop > 1600) {
             $gotoTop.show();
         }
         else {
             $gotoTop.hide();
         }
-    });
+        if (lazyImgs.length > 0) {
+            var wheight = $window.height();
+            var loadedIndex = [];
+            _.each(lazyImgs, function ($i, index) {
+                if ($i.offset().top - wtop < wheight) {
+                    $i.attr('src', $i.attr('data-src'));
+                    loadedIndex.unshift(index);
+                }
+            });
+            _.each(loadedIndex, function (index) {
+                lazyImgs.splice(index, 1);
+            });
+        }
+    };
+    $window.scroll(onScroll);
+    onScroll();
 
     // go-top:
     $gotoTop.click(function() {
@@ -694,8 +894,32 @@ $(function() {
     //     input_search.animate({'width': old_width}, 500);
     // });
 
-    hljs.initHighlighting();
-    // END
+    $('pre>code').each(function(i, code) {
+        var
+            $code = $(code),
+            classes = ($code.attr('class') || '').split(' '),
+            nohightlight = (_.find(classes, function (s) { return s.indexOf('lang-nohightlight')>=0; }) || '').trim(),
+            warn = (_.find(classes, function (s) { return s.indexOf('lang-!')>=0; }) || '').trim(),
+            info = (_.find(classes, function (s) { return s.indexOf('lang-?')>=0; }) || '').trim(),
+            x_run = (_.find(classes, function (s) { return s.indexOf('lang-x-')>=0; }) || '').trim();
+        if ($code.hasClass('lang-ascii')) {
+            // set ascii style for markdown:
+            $code.css('font-family', '"Courier New",Consolas,monospace')
+                 .parent('pre')
+                 .css('font-size', '12px')
+                 .css('line-height', '12px')
+                 .css('border', 'none')
+                 .css('background-color', 'transparent');
+        } else if (warn || info) {
+            $code.parent().replaceWith('<div class="uk-alert ' + (warn ? 'uk-alert-danger' : '') + '"><i class="uk-icon-' + (warn ? 'warning' : 'info-circle') + '"></i> ' + encodeHtml($code.text()) + '</div>');
+        } else if (x_run) {
+            // run xxx:
+            var fn = 'run_' + x_run.substring(7);
+            initRunCode($code.parent(), fn);
+        } else if (! nohightlight) {
+            hljs.highlightBlock(code);
+        }
+    });
 });
 
 // signin with oauth:

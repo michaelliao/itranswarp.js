@@ -21,8 +21,6 @@ const
     COOKIE_EXPIRED_DATE = new Date(0),
     LOCAL_SIGNIN_EXPIRES_IN_MS = 1000 * config.session.expires;
 
-logger.info('set secure cookie: ' + SECURE);
-
 // init oauth2 providers:
 
 let oauth2_providers = {};
@@ -37,7 +35,7 @@ _.each(config.oauth2, (cfg, name) => {
     );
     provider.getAuthentication = bluebird.promisify(provider.getAuthentication, { context: provider });
     oauth2_providers[name] = provider;
-    logger.info('Init OAuth2: ' + name + ', redirect_uri = ' + provider.redirect_uri);
+    logger.info(`Init OAuth2: ${name}, redirect_uri: ${provider.redirect_uri}`);
 });
 
 async function getUsers(page) {
@@ -251,11 +249,10 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: new Date(expires)
         });
-        logger.info('set session cookie for user: ' + user.email);
-        logger.info('cookie: ' + cookieStr);
+        logger.debug(`set session cookie for user: ${user.email}: ${cookieStr}`);
         ctx.rest(user);
     },
 
@@ -266,7 +263,7 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, 'deleted', {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: COOKIE_EXPIRED_DATE
         });
         logger.info('Signout, goodbye!');
@@ -293,7 +290,7 @@ module.exports = {
         else {
             redirect_uri = redirect_uri + '?redirect=' + encodeURIComponent(_getReferer(ctx.request));
         }
-        logger.info('send OAuth2 redirect uri: ' + redirect_uri);
+        logger.info(`send OAuth2 redirect uri: ${redirect_uri}`);
         ctx.response.redirect(provider.getAuthenticateURL({
             redirect_uri: redirect_uri
         }));
@@ -329,7 +326,7 @@ module.exports = {
             ctx.response.body = '<html><body>Authenticate failed.</body></html>';
             return;
         }
-        logger.info('OAuth2 callback ok: ' + JSON.stringify(authentication));
+        logger.debug(`OAuth2 callback ok: ${JSON.stringify(authentication)}`);
         r = await processOAuthAuthentication(name, authentication);
         auth_user = r.auth_user;
         user = r.user;
@@ -343,10 +340,10 @@ module.exports = {
         ctx.cookies.set(config.session.cookie, cookieStr, {
             path: '/',
             httpOnly: true,
-            secureProxy: SECURE,
+            secure: SECURE,
             expires: new Date(auth_user.expires_at)
         });
-        logger.info('set session cookie for user: ' + user.email);
+        logger.debug(`set session cookie for user: ${user.email}`);
         if (jscallback) {
             ctx.response.body = '<html><body><script> window.opener.'
                       + jscallback
