@@ -34,9 +34,12 @@
     <link rel="stylesheet" href="{{ __cdn__ }}/static/themes/{{ __theme__ }}/css/all.css?v={{__version__}}" />
     {% else %}
     <!-- BEGIN CSS COMPRESS -->
-    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
+    <!--link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/codemirror.css" />
     <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/highlight.css" />
-    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" />
+    <link rel="stylesheet" href="/static/themes/{{ __theme__ }}/css/itranswarp.css" /-->
+    <link rel="stylesheet" href="/static/css/codemirror.css" />
+    <link rel="stylesheet" href="/static/css/highlight.css" />
+    <link rel="stylesheet" href="/static/css/itranswarp.css" />
     <!-- END CSS COMPRESS -->
     {% endif %}
     <!--[if lt IE 9]>
@@ -46,7 +49,7 @@
     <script src="{{ __cdn__ }}/static/themes/{{ __theme__ }}/js/all.js?v={{__version__}}"></script>
     {% else %}
     <!-- BEGIN JAVASCRIPT COMPRESS -->
-    <script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
+    <!--script src="/static/themes/{{ __theme__ }}/js/jquery.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/underscore.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/moment.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/marked.js"></script>
@@ -59,7 +62,21 @@
     <script src="/static/themes/{{ __theme__ }}/js/uikit/htmleditor.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/codemirror.js"></script>
     <script src="/static/themes/{{ __theme__ }}/js/highlight.js"></script>
-    <script src="/static/themes/{{ __theme__ }}/js/theme.js"></script>
+    <script src="/static/themes/{{ __theme__ }}/js/theme.js"></script-->
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/underscore.js"></script>
+    <script src="/static/js/moment.js"></script>
+    <script src="/static/js/marked.js"></script>
+    <script src="/static/js/uikit/uikit.js"></script>
+    <script src="/static/js/uikit/components/tooltip.js"></script>
+    <script src="/static/js/uikit/components/slideshow.js"></script>
+    <script src="/static/js/uikit/components/datepicker.js"></script>
+    <script src="/static/js/uikit/components/autocomplete.js"></script>
+    <script src="/static/js/uikit/components/lightbox.js"></script>
+    <script src="/static/js/uikit/components/htmleditor.js"></script>
+    <script src="/static/js/codemirror.js"></script>
+    <script src="/static/js/highlight.js"></script>
+    <script src="/static/js/theme.js"></script>
     <!-- END JAVASCRIPT COMPRESS -->
     {% endif %}
     <script id="tplComment" type="text/plain">
@@ -392,24 +409,27 @@
             <div class="uk-grid">
                 <div class="x-footer-copyright uk-width-small-1-2 uk-width-medium-1-3">
                     <p>
-                        <a href="/">{{ __website__.name }}</a>&copy;2017 v{{ __version__ }}
+                        <a href="/"> </a>
                         <br>
-                        Powered by <a href="https://github.com/michaelliao/itranswarp.js" target="_blank">iTranswarp.js</a>
+                        <a></a>
+                        <!--a href="/">{{ __website__.name }}</a>&copy;2017 v{{ __version__ }}
+                        <br>
+                        Powered by <a href="https://github.com/michaelliao/itranswarp.js" target="_blank">iTranswarp.js</a-->
                     </p>
                 </div>
                 <div class="uk-width-small-1-2 uk-width-medium-1-3 x-hidden-tiny">
                     <a href="/feed" target="_blank" class="uk-icon-button uk-icon-rss" data-uk-tooltip title="Subscribe the RSS"></a>
-                    <a href="https://github.com/michaelliao/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
-                    <a href="https://twitter.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
-                    <a href="https://www.weibo.com/liaoxuefeng" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
+                    <a href="https://github.com/zqfmaster/itranswarp.js" target="_blank" class="uk-icon-button uk-icon-github" data-uk-tooltip title="View source code on GitHub"></a>
+                    <a href="https://twitter.com/qifeng_zhu" target="_blank" class="uk-icon-button uk-icon-twitter" data-uk-tooltip title="Follow author on Twitter"></a>
+                    <a href="https://www.weibo.com/zqfmaster" target="_blank" class="uk-icon-button uk-icon-weibo uk-visible-large uk-hidden-medium" data-uk-tooltip title="Follow author on Weibo"></a>
                 </div>
-                <div class="uk-width-medium-1-3 uk-hidden-small">
+                <!--div class="uk-width-medium-1-3 uk-hidden-small">
                     <p>
                         <a href="https://github.com/michaelliao/itranswarp.js/issues" target="_blank">{{ _('Feedback') }}</a>
                         <br>
                         <a href="https://github.com/michaelliao/itranswarp.js/blob/master/LICENSE" target="_blank">{{ _('License') }}</a>
                     </p>
-                </div>
+                </div-->
             </div>
         </div>
     </div>
