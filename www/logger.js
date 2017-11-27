@@ -11,14 +11,21 @@
  * author: Michael Liao
  */
 const
+    moment = require('moment'),
+    stackTrace = require('stack-trace'),
     winston = require('winston'),
+
+    dateFormat = function () {
+        return moment().format('YYYY-MM-DD HH:mm:ss:SSS');
+    },
+
     logger = new winston.Logger({
         transports: [
             new winston.transports.Console({
                 name: 'console',
                 colorize: true,
                 level: 'info',
-                timestamp: true
+                timestamp: dateFormat
             }),
             new winston.transports.File({
                 name: 'info-file',
@@ -46,5 +53,11 @@ const
             })
         ]
     });
+
+    let originalMethod=logger.info;
+    logger.info=function(){
+        let cellSite=stackTrace.get()[1];
+        originalMethod.apply(logger,[arguments[0]+'\n'+'    ',{filePath:cellSite.getFileName(),lineNumber:cellSite.getLineNumber()}]);
+    };
 
 module.exports = logger;
