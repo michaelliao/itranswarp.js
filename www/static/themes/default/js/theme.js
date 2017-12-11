@@ -176,7 +176,7 @@ function run_sql(tid, btn) {
         });
         return '<table class="uk-table"><thead><tr>'
             + $.map(ths, function (th) {
-                var n = th.indexOf('_');
+                var n = th.indexOf('!');
                 if (n > 1) {
                     th = th.substring(n+1);
                 }
