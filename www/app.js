@@ -81,7 +81,7 @@ function isBot(ua, headers) {
 
 function serviceUnavailable(ctx) {
     ctx.response.status = 503;
-    ctx.response.body = '<html><body><h1>503 Service Unavailable</h1></body></html>';
+    ctx.response.body = '<html><body><h1>503 Service Unavailable for Bot</h1></body></html>';
 }
 
 // log request URL:
