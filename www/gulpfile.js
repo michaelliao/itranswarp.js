@@ -99,4 +99,10 @@ gulp.task('less', function () {
         .pipe(gulp.dest('./static/themes/' + theme + '/css'));
 });
 
-gulp.task('default', ['uglify', 'less']);
+gulp.task('lesscss', function () {
+    return gulp.src(['./static/css/less/itranswarp.less'])
+        .pipe(less())
+        .pipe(gulp.dest('./static/css'));
+});
+
+gulp.task('default', ['uglify', 'less', 'lesscss']);
