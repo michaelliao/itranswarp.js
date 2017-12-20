@@ -22,7 +22,7 @@ module.exports = {
     plugin: 'video',
     render: function (text) {
         text = text.trim();
-        if (text.indexOf('//www.bilibili.com/html/html5player.html') >= 0) {
+        if (text.indexOf('//www.bilibili.com/') >= 0 && text.indexOf('html5player') >= 0) {
             return '<iframe style="width:800px; height:600px; border: 0" src="' + text + '"></iframe>';
         }
         let sources = text.split(SPLIT).map((s) => {
