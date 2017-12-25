@@ -3,7 +3,7 @@
 function add_sponsor(selector, width, height, name, img_src, link) {
     var
         stl = 'width:' + width + 'px;height:' + height + 'px;',
-        s = '<div style="float:left;margin:0 1px 1px 0;' + stl + '">';
+        s = '<div style="float:left;margin:0 0 -1px -1px;border:solid 1px #ddd;' + stl + '">';
     if (arguments.length === 4) {
         s = s + name;
     } else {
