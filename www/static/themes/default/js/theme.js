@@ -909,6 +909,7 @@ $(function() {
                  .css('font-size', '12px')
                  .css('line-height', '12px')
                  .css('border', 'none')
+                 .css('white-space', 'pre')
                  .css('background-color', 'transparent');
         } else if (warn || info) {
             $code.parent().replaceWith('<div class="uk-alert ' + (warn ? 'uk-alert-danger' : '') + '"><i class="uk-icon-' + (warn ? 'warning' : 'info-circle') + '"></i> ' + encodeHtml($code.text()) + '</div>');
