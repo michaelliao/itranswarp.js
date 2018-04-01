@@ -24,6 +24,13 @@
 .x-wiki-visible {
     display: block;
 }
+.x-can-edit {
+    {% if __user__ and __user__.role <= 10 %}
+    display: inline;
+    {% else %}
+    display: none;
+    {% endif %}
+}
 </style>
 
 <script>
@@ -222,7 +229,7 @@ function expandWikiNode(icon, rec) {
 
 {% block content %}
     <h4>{{ current.name }}</h4>
-    <div class="x-wiki-info"><span>{{ _('Reads') }}: {{ current.views }}</span></div>
+    <div class="x-wiki-info"><span>{{ _('Reads') }}: {{ current.views }}</span> <a href="/manage/wiki/edit_{% if current.type == 'wikipage' %}wikipage{% else %}wiki{% endif %}?id={{ current.id }}" target="_blank" class="x-can-edit uk-text-danger">{{ _('Edit') }}</a></div>
 
     <hr>
 
