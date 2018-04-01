@@ -110,12 +110,14 @@ function run_javascript(tid, btn) {
             };
         try {
             eval('(function() {\n var console = _console; \n' + code + '\n})();');
-            if (buffer) {
-                showCodeResult(btn, buffer);
+            if (!buffer) {
+                buffer = '(no output)';
             }
+            showCodeResult(btn, buffer);
         }
         catch (e) {
-            showCodeError(btn, String(e));
+            buffer = buffer + String(e);
+            showCodeError(btn, buffer);
         }
     })();
 }
