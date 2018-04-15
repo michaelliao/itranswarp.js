@@ -27,6 +27,7 @@ module.exports = {
         CATEGORIES: '__categories__',
         ADS: '__ads__',
         BOARDS: '__boards__',
+        REDIRECTS: '__redirects__',
         ARTICLE_FEED: '__articlefeed__',
         WEBSITE: '__website__',
         SNIPPETS: '__snippet__'
