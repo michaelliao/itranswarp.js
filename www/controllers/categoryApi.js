@@ -19,7 +19,7 @@ const
     Text = db.Text,
     nextId = db.nextId;
 
-async function _clearCach() {
+async function _clearCache() {
     await cache.remove(CACHE_KEY);
 }
 
@@ -108,7 +108,7 @@ module.exports = {
                 description: data.description.trim(),
                 display_order: isNaN(num) ? 0 : num + 1
             });
-        await _clearCach();
+        await _clearCache();
         ctx.rest(cat);
     },
 
@@ -140,7 +140,7 @@ module.exports = {
         for (cat of categories) {
             await cat.save();
         }
-        await _clearCach();
+        await _clearCache();
         ctx.rest({
             ids: ids
         });
@@ -172,7 +172,7 @@ module.exports = {
             cat.description = data.description.trim();
         }
         await cat.save();
-        await _clearCach();
+        await _clearCache();
         ctx.rest(cat);
     },
 
@@ -201,7 +201,7 @@ module.exports = {
                 id: id
             }
         });
-        await _clearCach();
+        await _clearCache();
         ctx.rest({ 'id': id });
     }
 };
