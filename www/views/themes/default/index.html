@@ -5,6 +5,14 @@
 
 {% block title %}{{ _('Home') }}{% endblock %}
 
+{% block meta %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://{{ __request__.host }}/" />
+    <meta property="og:title" content="{{ __website__.name }}" />
+    <meta property="og:description" content="{{ __website__.name }}" />
+    <meta property="og:tag" content="index" />
+{% endblock %}
+
 {% block head %}
 
 {% set __sidebar_right__ = true %}
