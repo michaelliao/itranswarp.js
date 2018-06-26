@@ -188,8 +188,8 @@ function expandWikiNode(icon, rec) {
 
 {% block sidebar_left_content %}
     <div class="uk-float-right" style="padding-top:5px">
-        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true);expandActiveNode()" style="margin-left:5px"><i class="uk-icon-check-square"></i></a>
         <a href="#0" onclick="expandWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-expand"></i></a>
+        <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true);expandActiveNode()" style="margin-left:5px"><i class="uk-icon-check-square"></i></a>
         <a href="#0" onclick="collapseWikiNode($('#x-wiki-index>div>i').get(0), true)" style="margin-left:5px"><i class="uk-icon-compress"></i></a>
     </div>
     <ul class="uk-nav uk-nav-side">
