@@ -40,6 +40,7 @@
     "redis": "2.7.1",
     "request": "2.75.0",
     "sequelize": "3.30.2",
+    "string-similarity": "1.2.1",
     "thunkify": "2.1.2",
     "uuid": "3.1.0",
     "winston": "2.3.1"
