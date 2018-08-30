@@ -64,6 +64,15 @@ async function getUserByEmail(email) {
     });
 }
 
+async function lockUser(user, locked_until) {
+    if (user.role <= constants.role.ADMIN) {
+        throw api.notAllowed('Cannot lock admin user.');
+    }
+    await user.update({
+        locked_until: locked_until
+    });
+}
+
 async function getUser(id) {
     let user = await User.findById(id);
     if (user === null) {
@@ -158,6 +167,8 @@ module.exports = {
     getUsers: getUsers,
 
     bindUsers: bindUsers,
+
+    lockUser: lockUser,
 
     'GET /api/users/me': async (ctx, next) => {
         ctx.checkPermission(constants.role.SUBSCRIBER);
@@ -391,12 +402,7 @@ module.exports = {
             id = ctx.params.id,
             user = await getUser(id),
             locked_until = ctx.request.body.locked_until;
-        if (user.role <= constants.role.ADMIN) {
-            throw api.notAllowed('Cannot lock admin user.');
-        }
-        await user.update({
-            locked_until: locked_until
-        });
+        await lockUser(user, locked_until);
         ctx.rest(user);
     }
 };

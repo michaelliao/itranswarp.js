@@ -4,6 +4,7 @@
 
 const
     _ = require('lodash'),
+    stringSimilarity = require('string-similarity'),
     api = require('./api'),
     Page = require('./page'),
     re_int = /^[0-9]+$/;
@@ -16,6 +17,9 @@ function _str2int(s, defValue) {
 }
 
 module.exports = {
+    similarity: (s1, s2) => {
+        return stringSimilarity.compareTwoStrings(s1, s2);
+    },
 
     // ' A, B ; Ccc, ccc ' -> 'A,B,Ccc'
     formatTags: (tags) => {

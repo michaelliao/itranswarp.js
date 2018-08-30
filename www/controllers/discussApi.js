@@ -61,6 +61,24 @@ function unindexDiscussByIds(ids) {
     // });
 }
 
+const SIMILARITY = 0.7;
+
+async function checkSpam(userId, input) {
+    let recents = await Topic.findAll({
+        where: {
+            'user_id': user_id
+        },
+        order: 'created_at DESC',
+        limit: 3
+    });
+    for (let topic of recents) {
+        if (helper.similarity(input, topic.content) > SIMILARITY) {
+            return true;
+        }
+    }
+    return false;
+}
+
 async function getBoard(id) {
     let
         boards = await getBoards(),
@@ -135,6 +153,35 @@ async function getRecentTopics(max) {
     });
     await userApi.bindUsers(topics);
     return topics;
+}
+
+async function deleteTopic(id) {
+    let
+        topic = await getTopic(id),
+        reply_ids = await Reply.findAll({
+            attributes: ['id'],
+            where: {
+                topic_id: id
+            }
+        }).map((r) => {
+            return r.id;
+        });
+    await topic.destroy();
+    await Reply.destroy({
+        where: {
+            topic_id: id
+        }
+    });
+    // set topics - 1:
+    await Board.update({
+        topics: db.sequelize.literal('topics - 1')
+    }, {
+        where: {
+            id: topic.board_id
+        }
+    });
+    unindexDiscuss(topic);
+    unindexDiscussByIds(reply_ids);
 }
 
 async function getTopicsByUser(user_id, max=20) {
@@ -274,6 +321,20 @@ async function createReply(user, topic_id, data) {
 }
 
 async function createTopic(user, board_id, ref_type, ref_id, data) {
+    // spam check:
+    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content))) {
+        let recents = await Topic.findAll({
+            where: {
+                'user_id': user_id
+            },
+            order: 'created_at DESC',
+            limit: 3
+        });
+        for (let recent of recents) {
+            await deleteTopic(recent.id);
+        }
+        await userApi.lockUser(user, 5000000000000);
+    }
     let
         board = await getBoard(board_id),
         topic = await Topic.create({
@@ -568,34 +629,8 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         ctx.checkPermission(constants.role.EDITOR);
-        let
-            id = ctx.params.id,
-            topic = await getTopic(id),
-            reply_ids = await Reply.findAll({
-                attributes: ['id'],
-                where: {
-                    topic_id: id
-                }
-            }).map((r) => {
-                return r.id;
-            });
-        await topic.destroy();
-        await Reply.destroy({
-            where: {
-                topic_id: id
-            }
-        });
-        // set topics - 1:
-        await Board.update({
-            topics: db.sequelize.literal('topics - 1')
-        }, {
-            where: {
-                id: topic.board_id
-            }
-        });
-        unindexDiscuss(topic);
-        unindexDiscussByIds(reply_ids);
-        ctx.rest({ id: id });
+        await deleteTopic(ctx.params.id);
+        ctx.rest({ id: ctx.params.id });
     },
 
     'GET /api/replies': async (ctx, next) => {
