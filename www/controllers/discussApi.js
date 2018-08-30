@@ -66,7 +66,7 @@ const SIMILARITY = 0.7;
 async function checkSpam(userId, input) {
     let recents = await Topic.findAll({
         where: {
-            'user_id': user_id
+            'user_id': userId
         },
         order: 'created_at DESC',
         limit: 3
@@ -325,7 +325,7 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
     if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content))) {
         let recents = await Topic.findAll({
             where: {
-                'user_id': user_id
+                'user_id': user.id
             },
             order: 'created_at DESC',
             limit: 3
@@ -333,7 +333,8 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
         for (let recent of recents) {
             await deleteTopic(recent.id);
         }
-        await userApi.lockUser(user, 5000000000000);
+        await userApi.lockUser(user.id, 5000000000000);
+        throw api.notAllowed('Bad request');
     }
     let
         board = await getBoard(board_id),

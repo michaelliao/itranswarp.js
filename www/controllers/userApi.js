@@ -64,7 +64,8 @@ async function getUserByEmail(email) {
     });
 }
 
-async function lockUser(user, locked_until) {
+async function lockUser(userId, locked_until) {
+    let user = await getUser(userId);
     if (user.role <= constants.role.ADMIN) {
         throw api.notAllowed('Cannot lock admin user.');
     }
@@ -398,11 +399,7 @@ module.exports = {
          */
         ctx.checkPermission(constants.role.ADMIN);
         ctx.validate('lockUser');
-        let
-            id = ctx.params.id,
-            user = await getUser(id),
-            locked_until = ctx.request.body.locked_until;
-        await lockUser(user, locked_until);
-        ctx.rest(user);
+        await lockUser(ctx.params.id, ctx.request.body.locked_until);
+        ctx.rest({ id: ctx.params.id });
     }
 };
