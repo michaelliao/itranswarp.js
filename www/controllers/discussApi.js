@@ -63,17 +63,32 @@ function unindexDiscussByIds(ids) {
 
 const SIMILARITY = 0.7;
 
-async function checkSpam(userId, input) {
-    let recents = await Topic.findAll({
-        where: {
-            'user_id': userId
-        },
-        order: 'created_at DESC',
-        limit: 3
-    });
-    for (let topic of recents) {
-        if (helper.similarity(input, topic.content) > SIMILARITY) {
-            return true;
+async function checkSpam(userId, input, isTopic) {
+    if (isTopic) {
+        let recents = await Topic.findAll({
+            where: {
+                'user_id': userId
+            },
+            order: 'created_at DESC',
+            limit: 3
+        });
+        for (let topic of recents) {
+            if (helper.similarity(input, topic.content) > SIMILARITY) {
+                return true;
+            }
+        }
+    } else {
+        let recents = await Reply.findAll({
+            where: {
+                'user_id': userId
+            },
+            order: 'created_at DESC',
+            limit: 3
+        });
+        for (let reply of recents) {
+            if (helper.similarity(input, reply.content) > SIMILARITY) {
+                return true;
+            }
         }
     }
     return false;
@@ -182,6 +197,16 @@ async function deleteTopic(id) {
     });
     unindexDiscuss(topic);
     unindexDiscussByIds(reply_ids);
+}
+
+async function deleteReply(id) {
+    let reply = await Reply.findById(id);
+    if (reply === null) {
+        throw api.notFound('Reply');
+    }
+    reply.deleted = true;
+    await reply.save();
+    unindexDiscuss(reply);
 }
 
 async function getTopicsByUser(user_id, max=20) {
@@ -298,6 +323,20 @@ async function createReply(user, topic_id, data) {
     if (topic.locked) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
+    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content), false)) {
+        let recents = await Reply.findAll({
+            where: {
+                'user_id': user.id
+            },
+            order: 'created_at DESC',
+            limit: 3
+        });
+        for (let recent of recents) {
+            await deleteReply(recent.id);
+        }
+        await userApi.lockUser(user.id, 5000000000000);
+        throw api.notAllowed('Bad request');
+    }
     let reply = await Reply.create({
         topic_id: topic_id,
         user_id: user.id,
@@ -322,7 +361,7 @@ async function createReply(user, topic_id, data) {
 
 async function createTopic(user, board_id, ref_type, ref_id, data) {
     // spam check:
-    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content))) {
+    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content), true)) {
         let recents = await Topic.findAll({
             where: {
                 'user_id': user.id
@@ -658,16 +697,8 @@ module.exports = {
          * @return {object} Results contains deleted id. e.g. {"id": "12345"}
          */
         ctx.checkPermission(constants.role.EDITOR);
-        let
-            id = ctx.params.id,
-            reply = await Reply.findById(id);
-        if (reply === null) {
-            throw api.notFound('Reply');
-        }
-        reply.deleted = true;
-        await reply.save();
-        unindexDiscuss(reply);
-        ctx.rest({ id: id });
+        await deleteReply(ctx.params.id);
+        ctx.rest({ id: ctx.params.id });
     },
 
     'POST /api/topics/:id/replies': async (ctx, next) => {
