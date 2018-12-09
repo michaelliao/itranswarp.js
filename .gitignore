@@ -15,7 +15,6 @@ results
 npm-debug.log
 node_modules
 package-lock.json
-release.sh
 
 # backups:
 backup/*.sql
@@ -26,13 +25,7 @@ backup/*.sql
 *.crt
 *.csr
 
-config_*.js
-
 # generated js add css:
-all.js
-all.css
-itranswarp.css
-version.js
 
 # temp output dir:
 output
