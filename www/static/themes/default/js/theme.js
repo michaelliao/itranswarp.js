@@ -241,12 +241,9 @@ function run_sql(tid, btn) {
 
 function run_python(tid, btn) {
     var
-        $pre = $('#pre-' + tid),
-        $post = $('#post-' + tid),
-        $textarea = $('#textarea-' + tid),
+        code = _get_code(tid),
         $button = $(btn),
-        $i = $button.find('i'),
-        code = $pre.text() + $textarea.val() + '\n' + ($post.length === 0 ? '' : $post.text());
+        $i = $button.find('i');
     $button.attr('disabled', 'disabled');
     $i.addClass('uk-icon-spinner');
     $i.addClass('uk-icon-spin');
@@ -256,6 +253,31 @@ function run_python(tid, btn) {
         showCodeResult(btn, r.output);
     }).fail(function (r) {
         showCodeError(btn, '<p>无法连接到Python代码运行助手。请检查<a target="_blank" href="/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000/001432523496782e0946b0f454549c0888d05959b99860f000">本机的设置</a>。</p>', true);
+    }).always(function () {
+        $i.removeClass('uk-icon-spinner');
+        $i.removeClass('uk-icon-spin');
+        $button.removeAttr('disabled');
+    });
+}
+
+function run_java(tid, btn) {
+    var
+        code = _get_code(tid),
+        $button = $(btn),
+        $i = $button.find('i');
+    $button.attr('disabled', 'disabled');
+    $i.addClass('uk-icon-spinner');
+    $i.addClass('uk-icon-spin');
+    $.post('https://local.liaoxuefeng.com:39193/run', $.param({
+        code: code
+    })).done(function (r) {
+        if (r.exitCode === 0) {
+            showCodeResult(btn, r.output);
+        } else {
+            showCodeError(btn, r.output, false);
+        }
+    }).fail(function (r) {
+        showCodeError(btn, '<p>无法连接到Java代码运行助手。请检查<a target="_blank" href="/wiki/001543970808338ad98bbeaa6fc405c8df49d6a015b6e67000/001543970112198a66c30326d4c4ba38684767edcc16912000">本机的设置</a>。</p>', true);
     }).always(function () {
         $i.removeClass('uk-icon-spinner');
         $i.removeClass('uk-icon-spin');
@@ -880,6 +902,70 @@ $(function() {
     $gotoTop.click(function() {
         $('html, body').animate({scrollTop: 0}, 1000);
     });
+
+    // on resize:
+    var
+        $navbar = $('#navbar'),
+        $brand = $('#brand'),
+        $brand2 = $('#brand-small'),
+        $ul = $('#ul-navbar'),
+        $ulList = [],
+        $more = $('#navbar-more'),
+        $moreList = [],
+        $user = $('#navbar-user-info'),
+        minNavWidth = 0;
+    $ul.find('>li.x-nav').each(function () {
+        minNavWidth += $(this).outerWidth();
+        $ulList.push($(this));
+    });
+    $('#ul-navbar-more').find('>li.x-nav').each(function () {
+        $moreList.push($(this));
+    });
+    $window.resize(function () {
+        var total = $navbar.width() - 6;
+        if ($brand.is(':visible')) {
+            console.log('$brand: ' + $brand.outerWidth());
+            total -= $brand.outerWidth();
+        }
+        if ($brand2.is(':visible')) {
+            console.log('$brand2: ' + $brand2.outerWidth());
+            total -= $brand2.outerWidth();
+        }
+        total -= $user.outerWidth();
+        console.log('$navbar: ' + $navbar.width() + ' $user ' + $user.outerWidth() + ' >>>>> total = ' + total + ', ' + minNavWidth);
+        if (total >= minNavWidth) {
+            $more.hide();
+            $.each($ulList, function (index, nav) {
+                nav.show();
+            });
+        } else {
+            $more.show();
+            var
+                i,
+                skip = false,
+                actualW = 0,
+                maxW = total - $more.outerWidth();
+            for (i=0; i<$ulList.length; i++) {
+                var
+                    $t = $ulList[i],
+                    $m = $moreList[i],
+                    w = $t.outerWidth();
+                if (!skip && (actualW + w > maxW)) {
+                    skip = true;
+                } else {
+                    actualW += w;
+                }
+                if (skip) {
+                    $t.hide();
+                    $m.show();
+                } else {
+                    $t.show();
+                    $m.hide();
+                }
+            }
+        }
+    });
+    $window.trigger('resize');
 
     // smart date:
     $('.x-smartdate').each(function() {
