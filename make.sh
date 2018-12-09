@@ -1,12 +1,9 @@
 #!/bin/bash
 
-# a sample release script for fabric
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "working dir is set to: $CURRENT_DIR"
 
-# define gateway:
-GATEWAY=8.8.8.8
-
-# define hosts:
-HOSTS=172.16.0.1,172.16.0.2
+cd $CURRENT_DIR
 
 # update version.js:
 echo "update version.js..."
@@ -19,6 +16,3 @@ echo "module.exports = version;" >> www/version.js
 cd www
 gulp
 cd ..
-
-# fabric deply:
-fab --gateway=$GATEWAY --hosts=$HOSTS --user=root deploy
