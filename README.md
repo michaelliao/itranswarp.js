@@ -82,6 +82,10 @@ If you want to sign in to management console, go to `http://localhost:2017/manag
 
 ### Changelog
 
+9 Dec 2018
+
+Responsive navigation bar.
+
 2.1 - 14 Oct 2017
 
 * collapsable tree view for wiki
