@@ -27,10 +27,10 @@ const
     constants = require('./constants'),
     i18n = require('./i18n'),
     i18nTranslators = i18n.loadI18NTranslators('./views/i18n'),
-    static_prefix = config.cdn.static_prefix,
-    SECURE = config.session.https,
-    ANTI_SPIDER = config.spider.antiSpider,
-    SPIDER_WHITELIST = config.spider.whiteList,
+    static_prefix = config.cdn_url_prefix,
+    SECURE = config.session_https === 'true',
+    SPIDER_LIMIT = parseInt(config.spider_limit),
+    SPIDER_WHITELIST = config.spider_white_list.trim().split(/\s*,+\s*/),
     ACTIVE_THEME = config.theme;
 
 function loadVersion() {
@@ -48,7 +48,7 @@ logger.info(`init app: production mode = ${isProduction}`);
 // global app:
 let app = new Koa();
 
-app.proxy = config.proxy;
+app.proxy = config.proxy === 'true';
 
 process.isProduction = isProduction;
 process.appVersion = loadVersion();
@@ -89,7 +89,7 @@ app.use(async (ctx, next) => {
     let
         start = Date.now(),
         ipAddr = getRequestIp(ctx);
-    if (ANTI_SPIDER > 0) {
+    if (SPIDER_LIMIT > 0) {
         let
             path = ctx.request.path,
             ua = (ctx.request.headers['user-agent'] || '').toLowerCase();
@@ -117,7 +117,7 @@ app.use(async (ctx, next) => {
                             expires: new Date(0)
                         });
                         let n = await cache.incr(ipAddr);
-                        if (n > ANTI_SPIDER) {
+                        if (n > SPIDER_LIMIT) {
                             logger.warn(`deny bot with bad atsp: ${n} times: atsp=${atsp}: ${ipAddr} ${ua}`);
                             return serviceUnavailable(ctx);
                         }
@@ -126,7 +126,7 @@ app.use(async (ctx, next) => {
                     let n = await cache.incr(ipAddr);
                     if (n > 2) {
                         logger.warn(`potential bot: n=${n}: ${ipAddr} ${ua}`);
-                        if (n > ANTI_SPIDER) {
+                        if (n > SPIDER_LIMIT) {
                             logger.warn(`deny bot: ${n} times: ${ipAddr} ${ua}`);
                             return serviceUnavailable(ctx);
                         }

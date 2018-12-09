@@ -27,21 +27,23 @@ const
     articleApi = require('./articleApi'),
     categoryApi = require('./categoryApi'),
     navigationApi = require('./navigationApi'),
-    CDN_URL_PREFIX = config.cdn.url_prefix,
+    CDN_URL_PREFIX = config.cdn_url_prefix,
     User = db.User,
     Article = db.Article,
     Category = db.Category,
     Text = db.Text;
 
-let
-    signins = _.reduce(config.oauth2, function (results, conf, oauthId) {
-        results.push({
-            id: oauthId,
-            icon: conf.icon,
-            name: conf.name
-        });
-        return results;
-    }, []);
+let signins = [];
+
+// TODO: refactor:
+
+if (config.oauth2_weibo === 'true') {
+    signins.push({
+        id: 'weibo',
+        icon: config.oauth2_weibo_icon,
+        name: config.oauth2_weibo_name
+    });
+}
 
 let
     searchTypes = [

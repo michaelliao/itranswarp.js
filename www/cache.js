@@ -17,10 +17,10 @@ logger.info('init memcache:\n' + JSON.stringify(config.cache, null, ' '));
 
 const
     DEFAULT_LIFETIME = 600, // 10 min
-    CACHE_PREFIX = config.cache.prefix,
-    memcached = new Memcached(config.cache.host + ':' + config.cache.port, {
-        'timeout': config.cache.timeout,
-        'retries': config.cache.retries
+    CACHE_PREFIX = config.cache_prefix,
+    memcached = new Memcached(config.cache_host + ':' + config.cache_port, {
+        'timeout': parseInt(config.cache_connect_timeout) * 1000,
+        'retries': parseInt(config.cache_retries)
     }),
     _incr = bluebird.promisify(memcached.incr, { context: memcached }),
     _get = bluebird.promisify(memcached.get, { context: memcached }),

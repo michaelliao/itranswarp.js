@@ -26,7 +26,7 @@ const
                 filename: 'itranswarp-info.log',
                 level: 'info',
                 json: false,
-                maxsize: 100 * 1024 * 1024, // 100M
+                maxsize: 50 * 1024 * 1024, // 50M
                 maxFiles: 20,
                 timestamp: function () {
                     return new Date().toString();
@@ -38,8 +38,8 @@ const
                 filename: 'itranswarp-error.log',
                 level: 'error',
                 json: false,
-                maxsize: 100 * 1024 * 1024, // 100M
-                maxFiles: 50,
+                maxsize: 50 * 1024 * 1024, // 50M
+                maxFiles: 20,
                 timestamp: function () {
                     return new Date().toString();
                 }

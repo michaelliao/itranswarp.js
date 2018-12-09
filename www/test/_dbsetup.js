@@ -12,9 +12,9 @@ const TEST_DB = 'test';
 
 const config = require('../config');
 
-config.db.username = 'root';
-config.db.password = ROOT_PASSWORD;
-config.db.database = TEST_DB;
+config.db_username = 'root';
+config.db_password = ROOT_PASSWORD;
+config.db_database = TEST_DB;
 
 /**
  * will drop all tables in db.

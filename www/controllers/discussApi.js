@@ -405,7 +405,7 @@ async function loadTopicsByRefWithCache(ref_id, page) {
     if (page.index === 1) {
         let key = 'REF-TOPICS-' + ref_id;
         return await cache.get(key, async () => {
-            return await loadTopicsByRef(ref_id, page); 
+            return await loadTopicsByRef(ref_id, page);
         });
     }
     return await loadTopicsByRef(ref_id, page);

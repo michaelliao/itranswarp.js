@@ -11,7 +11,7 @@ const
     htmlparser = require('htmlparser2'),
     logger = require('./logger.js'),
     config = require('./config'),
-    CDN = config.cdn.url_prefix,
+    CDN = config.cdn_url_prefix,
     LOADING = CDN + '/static/themes/' + config.theme + '/img/loading.gif';
 
 // add plugins:

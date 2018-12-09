@@ -8,7 +8,7 @@ const
     config = require('../config');
 
 // set https mode:
-config.session.https = true;
+config.session_https = 'true';
 
 const
     crypto = require('crypto'),

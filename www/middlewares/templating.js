@@ -9,7 +9,7 @@
 const
     nunjucks = require('nunjucks'),
     config = require('../config'),
-    SECURE = config.session.https;
+    SECURE = config.session_https === 'true';
 
 function createEnv(path, opts) {
     let

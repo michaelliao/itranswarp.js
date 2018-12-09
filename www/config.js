@@ -25,20 +25,23 @@ const
 
 logger.info(`load config with env = ${env}...`)
 
-let cfg = require('./config_default');
+let defaultCfg = require('./config_default');
 
-if (env) {
-    let overrideFile = 'config_' + env;
-    logger.info(`will load override config: ${overrideFile}...`);
-    try {
-        let ovr = require('./' + overrideFile);
-        cfg = _.merge(cfg, ovr);
-        logger.info(`override config ${overrideFile} loaded ok.`);
-    } catch (e) {
-        logger.warn(`failed to load override config ${overrideFile}.`, e);
+function getEnvOrDefault(key, defaultValue) {
+    let value = process.env[key.toUpperCase()];
+    if (value === undefined) {
+        return defaultValue;
     }
+    return value;
 }
 
-logger.debug('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
+// override key with key = domain, value = getEnvOrDefault(DOMAIN, defaultValue)
+let cfg = {};
+
+_.each(defaultCfg, (value, key) => {
+    cfg[key] = getEnvOrDefault(key, value);
+});
+
+logger.info('configuration loaded: ' + JSON.stringify(cfg, null, '  '));
 
 module.exports = cfg;

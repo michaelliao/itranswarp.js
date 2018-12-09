@@ -128,7 +128,7 @@ function _toRssDate(dt) {
 async function _getFeed(domain) {
     logger.info('generate rss...');
     let
-        schema = (config.session.https ? 'https://' : 'http://'),
+        schema = (config.session_https === 'true' ? 'https://' : 'http://'),
         url_prefix = schema + domain + '/article/',
         articles = await getRecentArticles(20),
         last_publish_at = articles.length === 0 ? 0 : articles[0].publish_at,

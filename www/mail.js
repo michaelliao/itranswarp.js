@@ -10,12 +10,12 @@ const
     logger = require('./logger'),
     md = require('./md'),
     config = require('./config'),
-    SMTP_HOST = config.smtp.host,
-    SMTP_PORT = config.smtp.port,
-    SMTP_SECURE = config.smtp.secure,
-    SMTP_FROM = config.smtp.from,
-    SMTP_USER = config.smtp.user,
-    SMTP_PASSWORD = config.smtp.password;
+    SMTP_HOST = config.smtp_host,
+    SMTP_PORT = parseInt(config.smtp_port),
+    SMTP_SECURE = config.smtp_secure === 'true',
+    SMTP_FROM = config.smtp_from,
+    SMTP_USERNAME = config.smtp_username,
+    SMTP_PASSWORD = config.smtp_password;
 
 // create reusable transporter object using the default SMTP transport
 let transporter = nodemailer.createTransport({
@@ -23,7 +23,7 @@ let transporter = nodemailer.createTransport({
     port: SMTP_PORT,
     secure: SMTP_SECURE,
     auth: {
-        user: SMTP_USER,
+        user: SMTP_USERNAME,
         pass: SMTP_PASSWORD
     }
 });

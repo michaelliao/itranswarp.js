@@ -31,9 +31,9 @@ const
     LocalUser = db.LocalUser,
     AuthUser = db.AuthUser,
     constants = require('./constants'),
-    COOKIE_NAME = config.session.cookie,
-    COOKIE_SALT = config.session.salt,
-    COOKIE_EXPIRES_IN_MS = config.session.expires * 1000,
+    COOKIE_NAME = config.session_name,
+    COOKIE_SALT = config.session_salt,
+    COOKIE_EXPIRES_IN_MS = parseInt(config.session_expires) * 1000,
     // for safe base64 replacements:
     re_add = new RegExp(/\+/g),
     re_sla = new RegExp(/\//g),

@@ -35,23 +35,23 @@ function nextId() {
     return paddings[ID_LENGTH - id.length] + id;
 }
 
-const SHOW_SQL = config.db.showSql || false;
+const SHOW_SQL = config.db_show_sql === 'true';
 
 const sequelize = new Sequelize(
-    config.db.database,
-    config.db.username,
-    config.db.password,
+    config.db_database,
+    config.db_username,
+    config.db_password,
     {
         dialect: 'mysql',
         dialectOptions: {
             charset: 'utf8mb4'
         },
-        host: config.db.host,
-        port: config.db.port,
+        host: config.db_host,
+        port: parseInt(config.db_port),
         pool: {
-            maxConnections: config.db.maxConnections,
-            minConnections: config.db.minConnections,
-            maxIdleTime: config.db.maxIdleTime
+            maxConnections: parseInt(config.db_max_connections),
+            minConnections: parseInt(config.db_min_connections),
+            maxIdleTime: parseInt(config.db_max_idle_time) * 1000
         },
         logging: function (t) {
             if (SHOW_SQL) {

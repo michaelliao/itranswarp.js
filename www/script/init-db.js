@@ -9,10 +9,10 @@ const
     config = require('../config'),
     exec = require('child_process').exec,
     constants = require('../constants'),
-    DATABASE = config.db.database,
-    DB_HOST = config.db.host,
-    DB_USER = config.db.username,
-    DB_PASS = config.db.password;
+    DATABASE = config.db_database,
+    DB_HOST = config.db_host,
+    DB_USER = config.db_username,
+    DB_PASS = config.db_password;
 
 let rl = readline.createInterface({
     input: process.stdin,
@@ -45,10 +45,8 @@ function generatePassword(localId, email, passwd) {
 
 function initTables() {
     // set root for db operation:
-    config.db.username = 'root';
-    config.db.password = info.rootPassword;
-    config.db.maxConnections = 1;
-    config.db.maxIdleTime = 1000;
+    config.db_username = 'root';
+    config.db_password = info.rootPassword;
     (async () => {
         let
             db = require('../db'),
