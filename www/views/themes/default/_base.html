@@ -250,22 +250,32 @@
 
     <div id="header" class="uk-navbar uk-navbar-attached">
         <div class="uk-container x-container">
-            <div class="uk-navbar uk-navbar-attached">
+            <div id="navbar" class="uk-navbar uk-navbar-attached">
                 {% if __offcanvas_left__ %}
                 <ul class="uk-navbar-nav uk-visible-small">
                     <li><a href="#0" onclick="UIkit.offcanvas.show('#x-offcanvas-left')">{{ _('Index') }}</a></li>
                 </ul>
                 {% endif %}
-                <a href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
-                <a href="/" class="uk-navbar-brand uk-hidden-large"><i class="uk-icon-home"></i></a>
+                <a id="brand" href="/" class="uk-navbar-brand uk-visible-large">{{ __website__.name }}</a>
+                <a id="brand-small" href="/" class="uk-navbar-brand uk-hidden-large"><i class="uk-icon-home"></i></a>
+                <a class="uk-hidden" href="/blog/{{ __time__ }}">Blog</a>
                 <ul id="ul-navbar" class="uk-navbar-nav uk-hidden-small">
                     {% for nav in __navigations__ %}
-                    <li><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                    <li class="x-nav"><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
                     {% endfor %}
-                    <li class="uk-hidden"><a href="/blog/{{ __time__ }}">Blog</a></li>
+                    <li id="navbar-more" class="uk-parent" data-uk-dropdown style="display:none">
+                        <a href="#0"><i class="uk-icon-chevron-down"></i> {{ _('More') }}</a>
+                        <div class="uk-dropdown uk-dropdown-navbar">
+                            <ul id="ul-navbar-more" class="uk-nav uk-nav-navbar">
+                                {% for nav in __navigations__ %}
+                                <li class="x-nav"><a href="{{ nav.url }}">{{ nav.name|e }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
                 </ul>
                 {% if __navigations__ and __navigations__.length %}
-                <ul class="uk-navbar-nav uk-visible-small">
+                <ul id="ul-navbar-small" class="uk-navbar-nav uk-visible-small">
                     <li class="uk-parent" data-uk-dropdown>
                         <a href="#0"><i class="uk-icon-navicon"></i></a>
                         <div class="uk-dropdown uk-dropdown-navbar">
@@ -290,7 +300,7 @@
                 </div>
 -->
 
-                <div class="uk-navbar-flip">
+                <div id="navbar-user-info" class="uk-navbar-flip">
                     <ul class="uk-navbar-nav">
                         <li class="uk-parent x-display-if-signin" data-uk-dropdown>
                             <a href="#0"><i class="uk-icon-user"></i><span class="x-hidden-tiny">&nbsp;</span><span class="x-user-name x-hidden-tiny">{% if __user__ %}{{ __user__.name }}{% endif %}</span></a>
