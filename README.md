@@ -64,6 +64,16 @@ Schema will be created in MySQL `test` database before run tests.
 
 ### Run
 
+All settings can be override by environments:
+
+    export NODE_ENV=development
+    export DOMAIN=local.liaoxuefeng.com
+    export DB_PASSWORD=xxx
+
+Please check `config_default.js` for more settings.
+
+Then run:
+
     $ node start.js
 
 You should able to see the home page in the browser with address `http://localhost:2017/`.
