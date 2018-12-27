@@ -17,7 +17,7 @@ module.exports = {
     // the theme used, default to 'default':
     theme: 'default',
     // spider limit: x hits / 10 min, 0 = disabled:
-    spider_limit: '10',
+    spider_limit: '100',
     // spider ignore:
     spider_white_list: 'googlebot, mediapartners-google, baiduspider, bingbot, youdaobot, sogou, 360spider',
     // session cookie:
