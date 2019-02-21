@@ -458,6 +458,7 @@ const schemas = {
             description: PROPERTY.SETTING,
             keywords: PROPERTY.SETTING,
             xmlns: PROPERTY.SETTING,
+            antispam: PROPERTY.SETTING,
             custom_header: PROPERTY.SETTING,
             custom_footer: PROPERTY.SETTING
         }
