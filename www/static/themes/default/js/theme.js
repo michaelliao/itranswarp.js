@@ -901,7 +901,7 @@ function initChoice($pre) {
         console.log('init choice ' + c + '/' + x);
         h = h + '<div class="uk-form-row"><label><input type="checkbox" ' + (x ? 'x-data="x"' : '') + '> ' + encodeHtml(c) + '</label></div>';
     }
-    h = h + '<div class="uk-form-row"><button type="button" class="uk-button" onclick="checkChoice(\'' + id + '\')">Submit</button>&nbsp;&nbsp;&nbsp;';
+    h = h + '<div class="uk-form-row"><button type="button" class="uk-button uk-button-primary" onclick="checkChoice(\'' + id + '\')">Submit</button>&nbsp;&nbsp;&nbsp;';
     h = h + '<span class="uk-text-large uk-text-success" style="display:none"><i class="uk-icon-check"></i></span>';
     h = h + '<span class="uk-text-large uk-text-danger" style="display:none"><i class="uk-icon-times"></i></span></div></fieldset></form>';
     $pre.replaceWith(h);
