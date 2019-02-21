@@ -65,13 +65,15 @@ function unindexDiscussByIds(ids) {
 async function checkSpam(input) {
     let
         i, sum = 0,
-        antispam = await settingApi.getWebsiteSettings().antispam || '',
-        keywords = antispam.split(/\,/),
-        stopwords = /[\`\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\{\}\[\]\:\;\<\>\,\.\?\/\|\\\s\"\'\r\n\t\　\～\·\！\¥\…\（\）\—\、\；\：\。\，\《\》\【\】\「\」\“\”\‘\’\？]/g,
-        s = input.replace(stopwords, '').toLowerCase();
+        website = await settingApi.getWebsiteSettings(),
+        antispam = website.antispam || '';
     if (antispam === '') {
         return false;
     }
+    let
+        keywords = antispam.split(/\,/),
+        stopwords = /[\`\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\{\}\[\]\:\;\<\>\,\.\?\/\|\\\s\"\'\r\n\t\　\～\·\！\¥\…\（\）\—\、\；\：\。\，\《\》\【\】\「\」\“\”\‘\’\？]/g,
+        s = input.replace(stopwords, '').toLowerCase();
     for (i = 0; i < keywords.length; i++) {
         if (s.indexOf(keywords[i]) >= 0) {
             sum++;
@@ -310,16 +312,6 @@ async function createReply(user, topic_id, data) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
     if (await checkSpam(data.content)) {
-        let recents = await Reply.findAll({
-            where: {
-                'user_id': user.id
-            },
-            order: 'created_at DESC',
-            limit: 3
-        });
-        for (let recent of recents) {
-            await deleteReply(recent.id);
-        }
         await userApi.lockUser(user.id, 5000000000000);
         throw api.notAllowed('Bad request');
     }
@@ -348,16 +340,6 @@ async function createReply(user, topic_id, data) {
 async function createTopic(user, board_id, ref_type, ref_id, data) {
     // spam check:
     if (await checkSpam(data.name + data.content)) {
-        let recents = await Topic.findAll({
-            where: {
-                'user_id': user.id
-            },
-            order: 'created_at DESC',
-            limit: 3
-        });
-        for (let recent of recents) {
-            await deleteTopic(recent.id);
-        }
         await userApi.lockUser(user.id, 5000000000000);
         throw api.notAllowed('Bad request');
     }
