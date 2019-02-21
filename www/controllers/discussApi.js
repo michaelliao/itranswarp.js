@@ -12,6 +12,7 @@ const
     search = require('../search/search'),
     constants = require('../constants'),
     userApi = require('./userApi'),
+    settingApi = require('./settingApi'),
     Board = db.Board,
     Topic = db.Topic,
     Reply = db.Reply,
@@ -61,37 +62,19 @@ function unindexDiscussByIds(ids) {
     // });
 }
 
-const SIMILARITY = 0.7;
-
-async function checkSpam(userId, input, isTopic) {
-    if (isTopic) {
-        let recents = await Topic.findAll({
-            where: {
-                'user_id': userId
-            },
-            order: 'created_at DESC',
-            limit: 3
-        });
-        for (let topic of recents) {
-            if (helper.similarity(input, topic.content) > SIMILARITY) {
-                return true;
-            }
-        }
-    } else {
-        let recents = await Reply.findAll({
-            where: {
-                'user_id': userId
-            },
-            order: 'created_at DESC',
-            limit: 3
-        });
-        for (let reply of recents) {
-            if (helper.similarity(input, reply.content) > SIMILARITY) {
-                return true;
-            }
+async function checkSpam(input) {
+    let
+        i, sum = 0,
+        antispam = await settingApi.getWebsiteSettings().antispam || '',
+        keywords = antispam.split(/\,/),
+        stopwords = /[\`\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\{\}\[\]\:\;\<\>\,\.\?\/\|\\\s\"\'\r\n\t\　\～\·\！\¥\…\（\）\—\、\；\：\。\，\《\》\【\】\「\」\“\”\‘\’\？]/g,
+        s = input.replace(stopwords, '').toLowerCase();
+    for (i = 0; i < keywords.length; i++) {
+        if (s.indexOf(keywords[i]) >= 0) {
+            sum++;
         }
     }
-    return false;
+    return sum > 0 && sum > keywords.length / 4;
 }
 
 async function getBoard(id) {
@@ -191,10 +174,10 @@ async function deleteTopic(id) {
     await Board.update({
         topics: db.sequelize.literal('topics - 1')
     }, {
-        where: {
-            id: topic.board_id
-        }
-    });
+            where: {
+                id: topic.board_id
+            }
+        });
     unindexDiscuss(topic);
     unindexDiscussByIds(reply_ids);
 }
@@ -209,7 +192,7 @@ async function deleteReply(id) {
     unindexDiscuss(reply);
 }
 
-async function getTopicsByUser(user_id, max=20) {
+async function getTopicsByUser(user_id, max = 20) {
     return await Topic.findAll({
         attributes: {
             exclude: ['content']
@@ -308,13 +291,13 @@ async function getFirstReplies(topic_id, num) {
 
 async function getReplyPageIndex(topic, reply_id) {
     let num = await Reply.count({
-            where: {
-                'topic_id': topic.id,
-                'id': {
-                    $lt: reply_id
-                }
+        where: {
+            'topic_id': topic.id,
+            'id': {
+                $lt: reply_id
             }
-        });
+        }
+    });
     return Math.floor((num + 1) / 20) + 1;
 }
 
@@ -323,7 +306,7 @@ async function createReply(user, topic_id, data) {
     if (topic.locked) {
         throw api.conflictError('Topic', 'Topic is locked.');
     }
-    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content), false)) {
+    if (await checkSpam(data.content)) {
         let recents = await Reply.findAll({
             where: {
                 'user_id': user.id
@@ -346,10 +329,10 @@ async function createReply(user, topic_id, data) {
         replies: db.sequelize.literal('replies + 1'),
         updated_at: Date.now()
     }, {
-        where: {
-            id: topic_id
-        }
-    });
+            where: {
+                id: topic_id
+            }
+        });
     reply.name = 'Re:' + topic.name;
     indexDiscuss(reply);
     delete reply.name;
@@ -361,7 +344,7 @@ async function createReply(user, topic_id, data) {
 
 async function createTopic(user, board_id, ref_type, ref_id, data) {
     // spam check:
-    if (await checkSpam(user.id, md.ugcMarkdownToHtml(data.content), true)) {
+    if (await checkSpam(data.name + data.content)) {
         let recents = await Topic.findAll({
             where: {
                 'user_id': user.id
@@ -390,10 +373,10 @@ async function createTopic(user, board_id, ref_type, ref_id, data) {
     await Board.update({
         topics: db.sequelize.literal('topics + 1')
     }, {
-        where: {
-            id: board_id
-        }
-    });    
+            where: {
+                id: board_id
+            }
+        });
     indexDiscuss(topic);
     if (ref_id) {
         await cache.remove('REF-TOPICS-' + ref_id);
@@ -414,7 +397,7 @@ async function loadTopicsByRefWithCache(ref_id, page) {
 async function loadTopicsByRef(ref_id, page) {
     let topics = await getTopicsByRef(ref_id, page);
     await userApi.bindUsers(topics);
-    for (let i=0; i<topics.length; i++) {
+    for (let i = 0; i < topics.length; i++) {
         await bindReplies(topics[i]);
     }
     return topics;
@@ -572,7 +555,7 @@ module.exports = {
             }
             board.display_order = pos;
         });
-        for (let i=0; i<boards.length; i++) {
+        for (let i = 0; i < boards.length; i++) {
             await boards[i].save();
         }
         await cache.remove(constants.cache.BOARDS);

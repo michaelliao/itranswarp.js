@@ -46,6 +46,13 @@ const defaultSettingDefinitions = {
             type: 'text'
         },
         {
+            key: 'antispam',
+            label: 'Anti-spam Keywords',
+            description: 'Keywords seperated by ,',
+            value: '',
+            type: 'text'
+        },
+        {
             key: 'custom_header',
             label: 'Custom Header',
             description: 'Any HTML embeded in <head>...</head>',
