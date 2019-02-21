@@ -69,6 +69,9 @@ async function checkSpam(input) {
         keywords = antispam.split(/\,/),
         stopwords = /[\`\~\!\@\#\$\%\^\&\*\(\)\_\+\-\=\{\}\[\]\:\;\<\>\,\.\?\/\|\\\s\"\'\r\n\t\　\～\·\！\¥\…\（\）\—\、\；\：\。\，\《\》\【\】\「\」\“\”\‘\’\？]/g,
         s = input.replace(stopwords, '').toLowerCase();
+    if (antispam === '') {
+        return false;
+    }
     for (i = 0; i < keywords.length; i++) {
         if (s.indexOf(keywords[i]) >= 0) {
             sum++;
