@@ -136,9 +136,6 @@ async function getAllTopics(page) {
     }
 
     return await Topic.findAll({
-        attributes: {
-            exclude: ['content']
-        },
         order: 'id DESC',
         offset: page.offset,
         limit: page.limit

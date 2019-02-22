@@ -108,7 +108,7 @@
                         style="width:50px;height:50px;">
                 </td>
                 <td>
-                    <span v-text="t.user.name"></span>
+                    <a v-bind:href="'/manage/user/?q=' + t.user.name" v-text="t.user.name"></a>
                 </td>
                 <td>
                     <p>
