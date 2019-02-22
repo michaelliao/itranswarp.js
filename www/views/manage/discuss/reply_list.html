@@ -4,99 +4,105 @@
 
 {% block head %}
 <script>
-$(function() {
-    getJSON('/api/replies', {
-        page: {{ pageIndex }}
-    }, function (err, data) {
-        if (err) {
-            return showError(err);
-        }
-        initVM(data.replies, data.page)
+    $(function () {
+        getJSON('/api/replies', {
+            page: parseInt('{{ pageIndex }}')
+        }, function (err, data) {
+            if (err) {
+                return showError(err);
+            }
+            initVM(data.replies, data.page)
+        });
     });
-});
 
-function initVM(replies, page) {
-    var vm = new Vue({
-        el: '#vm',
-        data: {
-            replies: replies,
-            page: page
-        },
-        methods: {
-            deleteReply: function (r) {
-                if (confirm('Reply will be deleted. Continue?')) {
-                    postJSON('/api/replies/' + r.id + '/delete', function(err, result) {
-                        if (err) {
-                            return error(err);
-                        }
-                        refresh();
-                    });
+    function initVM(replies, page) {
+        var vm = new Vue({
+            el: '#vm',
+            data: {
+                replies: replies,
+                page: page
+            },
+            methods: {
+                deleteReply: function (r) {
+                    if (confirm('Reply will be deleted. Continue?')) {
+                        postJSON('/api/replies/' + r.id + '/delete', function (err, result) {
+                            if (err) {
+                                return error(err);
+                            }
+                            refresh();
+                        });
+                    }
                 }
             }
-        }
-    });
-    $('#loading').hide();
-    $('#vm').show();
-}
+        });
+        $('#loading').hide();
+        $('#vm').show();
+    }
 </script>
 {% endblock %}
 
 {% block main %}
 
-    <div id="error" class="uk-width-1-1">
+<div id="error" class="uk-width-1-1">
+</div>
+
+<div id="loading" class="uk-width-1-1">
+    <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+</div>
+
+<div id="vm" class="uk-width-1-1">
+    <ul class="uk-tab" data-uk-tab>
+        <li><a href="#0" onclick="location.assign('board_list')">{{ _('Boards') }}</a></li>
+        <li><a href="#0" onclick="location.assign('topic_list')">{{ _('Topics') }}</a></li>
+        <li class="uk-active"><a href="#0">{{ _('Replies') }}</a></li>
+    </ul>
+    <div class="uk-margin">
+        <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
     </div>
 
-    <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
-    </div>
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th width="10%">{{ _('Image') }}</th>
+                <th width="20%">{{ _('User') }}</th>
+                <th width="50%">{{ _('Content') }}</th>
+                <th width="15%">Created</th>
+                <th width="5%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="obj in replies">
+                <td>
+                    <img v-once v-bind:src="obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar"
+                        style="width:50px;height:50px;">
+                </td>
+                <td>
+                    <span v-text="obj.user.name"></span>
+                </td>
+                <td>
+                    <p>
+                        <a target="_blank" v-bind:href="'/discuss/topic/' + obj.topic_id + '/find/' + obj.id">Topic</a>
+                    </p>
+                    <div>
+                        <div v-if="obj.deleted" class="uk-alert uk-alert-danger">{{ _('Deleted') }}</div>
+                        <div v-html="obj.content"></div>
+                    </div>
+                </td>
+                <td>
+                    <span v-text="obj.created_at.toDateTime()"></span>
+                </td>
+                <td>
+                    <a v-if="!obj.deleted" v-on:click="deleteReply(obj)" title="Delete Reply" href="#0" class="x-btn"><i
+                            class="uk-icon-trash"></i></a>
+                </td>
+            </tr>
+            <tr v-if="page.totalItems===0">
+                <td colspan="6">No reply found.</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <div id="vm" class="uk-width-1-1">
-        <ul class="uk-tab" data-uk-tab>
-            <li><a href="#0" onclick="location.assign('board_list')">{{ _('Boards') }}</a></li>
-            <li><a href="#0" onclick="location.assign('topic_list')">{{ _('Topics') }}</a></li>
-            <li class="uk-active"><a href="#0">{{ _('Replies') }}</a></li>
-        </ul>
-        <div class="uk-margin">
-            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
-        </div>
-
-        <table class="uk-table uk-table-hover">
-            <thead>
-                <tr>
-                    <th width="10%">{{ _('Image') }}</th>
-                    <th width="20%">{{ _('User') }}</th>
-                    <th width="50%">{{ _('Content') }}</th>
-                    <th width="15%">Created</th>
-                    <th width="5%"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="obj in replies">
-                    <td>
-                        <img v-once v-bind:src="obj.user.image_url" class="uk-comment-avatar uk-border-circle x-avatar" style="width:50px;height:50px;">
-                    </td>
-                    <td>
-                        <span v-text="obj.user.name"></span>
-                    </td>
-                    <td>
-                        <p><a target="_blank" v-bind:href="'/discuss/topic/' + obj.topic_id + '/find/' + obj.id">Topic</a></p>
-                        <div v-if="!obj.deleted" v-html="obj.content"></div>
-                        <div v-if="obj.deleted"><div class="uk-alert uk-alert-danger">{{ _('Deleted') }}</div></div>
-                    </td>
-                    <td>
-                        <span v-text="obj.created_at.toDateTime()"></span>
-                    </td>
-                    <td>
-                        <a v-if="!obj.deleted" v-on:click="deleteReply(obj)" title="Delete Reply" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
-                    </td>
-                </tr>
-                <tr v-if="page.totalItems===0">
-                    <td colspan="6">No reply found.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div is="pagination" v-bind:page="page"></div>
-    </div>
+    <div is="pagination" v-bind:page="page"></div>
+</div>
 
 {% endblock%}
