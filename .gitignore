@@ -8,6 +8,8 @@ lib-cov
 *.gz
 *.pyc
 
+tmp-*
+
 pids
 logs
 results
