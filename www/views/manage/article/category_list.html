@@ -5,141 +5,146 @@
 {% block head %}
 <script>
 
-$(function() {
-    getJSON('/api/categories', function (err, data) {
-        if (err) {
-            return showError(err);
-        }
-        initVM(data);
+    $(function () {
+        getJSON('/api/categories', function (err, data) {
+            if (err) {
+                return showError(err);
+            }
+            initVM(data);
+        });
     });
-});
 
-function initVM(data) {
-    console.log('init vm...');
-    var vm = new Vue({
-        el: '#vm',
-        data: {
-            categories: data.categories
-        },
-        created: function () {
-            $('#loading').hide();
-            $('#vm').show();
-        },
-        methods: {
-            find: function(id) {
-                for (var i = 0; i < this.categories.length; i ++) {
-                    var c = this.categories[i];
-                    if (c.id===id) {
-                        return i;
+    function initVM(data) {
+        var vm = new Vue({
+            el: '#vm',
+            data: {
+                categories: data.categories
+            },
+            created: function () {
+                $('#loading').hide();
+                $('#vm').show();
+            },
+            methods: {
+                find: function (id) {
+                    for (var i = 0; i < this.categories.length; i++) {
+                        var c = this.categories[i];
+                        if (c.id === id) {
+                            return i;
+                        }
                     }
-                }
-                throw 'logic error';
-            },
-            swap: function(index1, index2) {
-                var obj = this.categories[index2];
-                this.categories.splice(index2, 1);
-                this.categories.splice(index1, 0, obj);
-                $('#sort').show();
-            },
-            moveUp: function(id) {
-                var index = this.find(id);
-                if (index===(-1) || index===0) {
-                    return;
-                }
-                this.swap(index - 1, index);
-            },
-            moveDown: function(id) {
-                var index = this.find(id);
-                if (index===(-1) || index===(this.categories.length-1)) {
-                    return;
-                }
-                this.swap(index, index + 1);
-            },
-            sort: function(event) {
-                var ids = [];
-                var that = this;
-                for (var i = 0; i < this.categories.length; i ++) {
-                    ids.push(this.categories[i].id);
-                }
-                that.$resource('/api/categories/all/sort').save({ ids: ids }).then(function (resp) {
-                    resp.json().then(function (result) {
-                        refresh();
-                    });
-                }, onJsonError);
-            },
-            editCategory: function (id) {
-                location.assign('edit_category?id=' + id);
-            },
-            deleteCategory: function(id) {
-                var c = this.categories[this.find(id)];
-                var that = this;
-                UIkit.modal.confirm('Category \"' + c.name + '\" will be deleted. Continue?', function() {
-                    that.$resource('/api/categories/' + c.id + '/delete').save({}).then(function(resp) {
+                    throw 'logic error';
+                },
+                swap: function (index1, index2) {
+                    var obj = this.categories[index2];
+                    this.categories.splice(index2, 1);
+                    this.categories.splice(index1, 0, obj);
+                    $('#sort').show();
+                },
+                moveUp: function (id) {
+                    var index = this.find(id);
+                    if (index === (-1) || index === 0) {
+                        return;
+                    }
+                    this.swap(index - 1, index);
+                },
+                moveDown: function (id) {
+                    var index = this.find(id);
+                    if (index === (-1) || index === (this.categories.length - 1)) {
+                        return;
+                    }
+                    this.swap(index, index + 1);
+                },
+                sort: function (event) {
+                    var ids = [];
+                    var that = this;
+                    for (var i = 0; i < this.categories.length; i++) {
+                        ids.push(this.categories[i].id);
+                    }
+                    that.$resource('/api/categories/all/sort').save({ ids: ids }).then(function (resp) {
                         resp.json().then(function (result) {
                             refresh();
                         });
                     }, onJsonError);
-                });
+                },
+                editCategory: function (id) {
+                    location.assign('edit_category?id=' + id);
+                },
+                deleteCategory: function (id) {
+                    var c = this.categories[this.find(id)];
+                    var that = this;
+                    UIkit.modal.confirm('Category \"' + c.name + '\" will be deleted. Continue?', function () {
+                        that.$resource('/api/categories/' + c.id + '/delete').save({}).then(function (resp) {
+                            resp.json().then(function (result) {
+                                refresh();
+                            });
+                        }, onJsonError);
+                    });
+                }
             }
-        }
-    });
-}
+        });
+    }
 </script>
 {% endblock %}
 
 {% block main %}
 
-    <div id="error" class="uk-width-1-1">
+<div id="error" class="uk-width-1-1">
+</div>
+
+<div id="loading" class="uk-width-1-1">
+    <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+</div>
+
+<div id="vm" class="uk-width-1-1">
+    <ul data-uk-tab class="uk-tab">
+        <li><a href="#0" onclick="location.assign('article_list')">{{ _('Articles') }}</a></li>
+        <li class="uk-active"><a href="#0">{{ _('Categories') }}</a></li>
+    </ul>
+    <div class="uk-margin">
+        <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+        <a href="create_category" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i>
+            {{ _('New Category') }}</a>
     </div>
 
-    <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th width="20%">{{ _('Name') }}</th>
+                <th width="20%">{{ _('Tag') }}</th>
+                <th width="30%">{{ _('Description') }}</th>
+                <th width="15%">{{ _('Created At') }}</th>
+                <th width="15%">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="c in categories">
+                <td>
+                    <a v-text="c.name" :href="'/category/'+c.id" target="_blank"></a>
+                </td>
+                <td><span v-text="c.tag"></span></td>
+                <td><span v-text="c.description"></span></td>
+                <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
+                <td>
+                    <a v-on:click="moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i
+                            class="uk-icon-arrow-up"></i></a>
+                    <a v-on:click="moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i
+                            class="uk-icon-arrow-down"></i></a>
+                    <a v-on:click="editCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i
+                            class="uk-icon-edit"></i></a>
+                    <a v-on:click="deleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i
+                            class="uk-icon-trash"></i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div v-if="categories.length===0" class="x-empty-list">
+        <p>No category found.</p>
     </div>
 
-    <div id="vm" class="uk-width-1-1">
-        <ul data-uk-tab class="uk-tab">
-            <li><a href="#0" onclick="location.assign('article_list')">{{ _('Articles') }}</a></li>
-            <li class="uk-active"><a href="#0">{{ _('Categories') }}</a></li>
-        </ul>
-        <div class="uk-margin">
-            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
-            <a href="create_category" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Category') }}</a>
-        </div>
-
-        <table class="uk-table uk-table-hover">
-            <thead>
-                <tr>
-                    <th width="20%">{{ _('Name') }}</th>
-                    <th width="20%">{{ _('Tag') }}</th>
-                    <th width="30%">{{ _('Description') }}</th>
-                    <th width="15%">{{ _('Created At') }}</th>
-                    <th width="15%">&nbsp;</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="c in categories">
-                    <td>
-                        <a v-text="c.name" :href="'/category/'+c.id" target="_blank"></a>
-                    </td>
-                    <td><span v-text="c.tag"></span></td>
-                    <td><span v-text="c.description"></span></td>
-                    <td><span v-text="c.created_at.toDateTime('yyyy-MM-dd hh:mm')"></span></td>
-                    <td>
-                        <a v-on:click="moveUp(c.id)" title="Move this category up" href="#0" class="x-btn"><i class="uk-icon-arrow-up"></i></a>
-                        <a v-on:click="moveDown(c.id)" title="Move this category down" href="#0" class="x-btn"><i class="uk-icon-arrow-down"></i></a>
-                        <a v-on:click="editCategory(c.id)" title="Edit this category" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-on:click="deleteCategory(c.id)" title="Delete this category" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <div v-if="categories.length===0" class="x-empty-list">
-            <p>No category found.</p>
-        </div>
-
-        <div id="sort" class="uk-margin" style="text-align:right; display:none">
-            <button v-on:click="sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i> {{ _('Save Orders') }}</button>
-        </div>
+    <div id="sort" class="uk-margin" style="text-align:right; display:none">
+        <button v-on:click="sort" type="button" class="uk-button uk-button-success"><i class="uk-icon-list"></i>
+            {{ _('Save Orders') }}</button>
     </div>
+</div>
 
 {% endblock %}

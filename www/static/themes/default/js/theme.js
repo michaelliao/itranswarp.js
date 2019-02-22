@@ -898,7 +898,6 @@ function initChoice($pre) {
         if (x) {
             c = c.substring(3);
         }
-        console.log('init choice ' + c + '/' + x);
         h = h + '<div class="uk-form-row"><label><input type="checkbox" ' + (x ? 'x-data="x"' : '') + '> ' + encodeHtml(c) + '</label></div>';
     }
     h = h + '<div class="uk-form-row"><button type="button" class="uk-button uk-button-primary" onclick="checkChoice(\'' + id + '\')">Submit</button>&nbsp;&nbsp;&nbsp;';
@@ -971,15 +970,12 @@ $(function () {
     $window.resize(function () {
         var total = $navbar.width() - 6;
         if ($brand.is(':visible')) {
-            console.log('$brand: ' + $brand.outerWidth());
             total -= $brand.outerWidth();
         }
         if ($brand2.is(':visible')) {
-            console.log('$brand2: ' + $brand2.outerWidth());
             total -= $brand2.outerWidth();
         }
         total -= $user.outerWidth();
-        console.log('$navbar: ' + $navbar.width() + ' $user ' + $user.outerWidth() + ' >>>>> total = ' + total + ', ' + minNavWidth);
         if (total >= minNavWidth) {
             $more.hide();
             $.each($ulList, function (index, nav) {

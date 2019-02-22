@@ -5,145 +5,149 @@
 {% block head %}
 <script>
 
-$(function() {
-    getJSON('/api/categories', function (err, d) {
-        if (err) {
-            return showError(err);
-        }
-        var categories = d.categories;
-        getJSON('/api/articles', {
-            page: '{{ pageIndex }}'
-        }, function (err, data) {
+    $(function () {
+        getJSON('/api/categories', function (err, d) {
             if (err) {
                 return showError(err);
             }
-            bindCategories(data.articles, categories);
-            initVM({
-                categories: categories,
-                articles: data.articles,
-                page: data.page
+            var categories = d.categories;
+            getJSON('/api/articles', {
+                page: '{{ pageIndex }}'
+            }, function (err, data) {
+                if (err) {
+                    return showError(err);
+                }
+                bindCategories(data.articles, categories);
+                initVM({
+                    categories: categories,
+                    articles: data.articles,
+                    page: data.page
+                });
             });
         });
     });
-});
 
-function bindCategories(articles, categories) {
-    // bind category_name to article:
-    var i, a, n;
-    for (i = 0; i < articles.length; i ++) {
-        a = articles[i];
-        for (n = 0; n < categories.length; n ++) {
-            if (a.category_id===categories[n].id) {
-                a.category_name = categories[n].name;
-                break;
-            }
-        }
-        a.tags = a.tags ? a.tags.split(',') : [];
-    }
-}
-
-function initVM(data) {
-    console.log('init vm...');
-    var vm = new Vue({
-        el: '#vm',
-        data: {
-            articles: data.articles,
-            page: data.page
-        },
-        created: function () {
-            $('#loading').hide();
-            $('#vm').show();
-        },
-        methods: {
-            editArticle: function(id) {
-                location.assign('edit_article?id=' + id);
-            },
-            find: function(id) {
-                for (var i = 0; i < this.articles.length; i ++) {
-                    var c = this.articles[i];
-                    if (c.id===id) {
-                        return c;
-                    }
+    function bindCategories(articles, categories) {
+        // bind category_name to article:
+        var i, a, n;
+        for (i = 0; i < articles.length; i++) {
+            a = articles[i];
+            for (n = 0; n < categories.length; n++) {
+                if (a.category_id === categories[n].id) {
+                    a.category_name = categories[n].name;
+                    break;
                 }
-                throw 'logic error';
-            },
-            deleteArticle: function(id) {
-                var that = this;
-                var a = that.find(id);
-                UIkit.modal.confirm('Article \"' + a.name + '\" will be deleted. Continue?', function() {
-                    that.$resource('/api/articles/' + a.id + '/delete').save({}).then(function(resp) {
-                        resp.json().then(function (result) {
-                            refresh();
-                        });
-                    }, onJsonError);
-                });
-            },
+            }
+            a.tags = a.tags ? a.tags.split(',') : [];
         }
-    });
-}
+    }
+
+    function initVM(data) {
+        var vm = new Vue({
+            el: '#vm',
+            data: {
+                articles: data.articles,
+                page: data.page
+            },
+            created: function () {
+                $('#loading').hide();
+                $('#vm').show();
+            },
+            methods: {
+                editArticle: function (id) {
+                    location.assign('edit_article?id=' + id);
+                },
+                find: function (id) {
+                    for (var i = 0; i < this.articles.length; i++) {
+                        var c = this.articles[i];
+                        if (c.id === id) {
+                            return c;
+                        }
+                    }
+                    throw 'logic error';
+                },
+                deleteArticle: function (id) {
+                    var that = this;
+                    var a = that.find(id);
+                    UIkit.modal.confirm('Article \"' + a.name + '\" will be deleted. Continue?', function () {
+                        that.$resource('/api/articles/' + a.id + '/delete').save({}).then(function (resp) {
+                            resp.json().then(function (result) {
+                                refresh();
+                            });
+                        }, onJsonError);
+                    });
+                },
+            }
+        });
+    }
 </script>
 {% endblock %}
 
 {% block main %}
 
-    <div id="loading" class="uk-width-1-1">
-        <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+<div id="loading" class="uk-width-1-1">
+    <i class="uk-icon-spinner uk-icon-spin"></i> {{ _('Loading') }}...
+</div>
+
+<div id="error" class="uk-width-1-1">
+</div>
+
+<div id="vm" class="uk-width-1-1">
+    <ul data-uk-tab class="uk-tab">
+        <li class="uk-active"><a href="#0">{{ _('Articles') }}</a></li>
+        <li><a href="#0" onclick="location.assign('category_list')">{{ _('Categories') }}</a></li>
+    </ul>
+    <div class="uk-margin">
+        <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
+        <a href="create_article" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i>
+            {{ _('New Article') }}</a>
     </div>
 
-    <div id="error" class="uk-width-1-1">
+    <table class="uk-table uk-table-hover">
+        <thead>
+            <tr>
+                <th width="20%">{{ _('Cover') }}</th>
+                <th width="35%">{{ _('Name') }}</th>
+                <th width="15%">{{ _('Category') }} / {{ _('Author') }}</th>
+                <th width="15%">Publish / Created</th>
+                <th width="15%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="a in articles">
+                <td>
+                    <img :src="'/files/attachments/' + a.cover_id + '/s'" />
+                </td>
+                <td>
+                    <p><a v-text="a.name" :href="'/article/' + a.id" target="_blank"></a></p>
+                    <p v-text="a.description"></p>
+                    <p><span v-for="t in a.tags" style="padding-right:1em;"><i class="uk-icon-tag"></i><span
+                                v-text="t"></span></span></p>
+                </td>
+                <td>
+                    <p><i class="uk-icon-list"></i> <a :href="'/category/' + a.category_id" v-text="a.category_name"
+                            target="_blank"></a></p>
+                    <p><i class="uk-icon-user"></i> <span v-text="a.user_name"></span></p>
+                </td>
+                <td>
+                    <p><span v-text="a.publish_at.toDateTime()"></span></p>
+                    <p><span v-text="a.created_at.toDateTime()"></span></p>
+                </td>
+                <td>
+                    <a v-on:click="editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i
+                            class="uk-icon-edit"></i></a>
+                    <a v-on:click="deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i
+                            class="uk-icon-trash"></i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div v-if="page.totalItems===0" class="x-empty-list">
+        <p>No category found.</p>
     </div>
 
-    <div id="vm" class="uk-width-1-1">
-        <ul data-uk-tab class="uk-tab">
-            <li class="uk-active"><a href="#0">{{ _('Articles') }}</a></li>
-            <li><a href="#0" onclick="location.assign('category_list')">{{ _('Categories') }}</a></li>
-        </ul>
-        <div class="uk-margin">
-            <a href="javascript:refresh()" class="uk-button"><i class="uk-icon-refresh"></i> {{ _('Refresh') }}</a>
-            <a href="create_article" class="uk-button uk-button-primary uk-float-right"><i class="uk-icon-plus"></i> {{ _('New Article') }}</a>
-        </div>
-
-        <table class="uk-table uk-table-hover">
-            <thead>
-                <tr>
-                    <th width="20%">{{ _('Cover') }}</th>
-                    <th width="35%">{{ _('Name') }}</th>
-                    <th width="15%">{{ _('Category') }} / {{ _('Author') }}</th>
-                    <th width="15%">Publish / Created</th>
-                    <th width="15%"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="a in articles">
-                    <td>
-                        <img :src="'/files/attachments/' + a.cover_id + '/s'" />
-                    </td>
-                    <td>
-                        <p><a v-text="a.name" :href="'/article/' + a.id" target="_blank"></a></p>
-                        <p v-text="a.description"></p>
-                        <p><span v-for="t in a.tags" style="padding-right:1em;"><i class="uk-icon-tag"></i><span v-text="t"></span></span></p>
-                    </td>
-                    <td>
-                        <p><i class="uk-icon-list"></i> <a :href="'/category/' + a.category_id" v-text="a.category_name" target="_blank"></a></p>
-                        <p><i class="uk-icon-user"></i> <span v-text="a.user_name"></span></p>
-                    </td>
-                    <td>
-                        <p><span v-text="a.publish_at.toDateTime()"></span></p>
-                        <p><span v-text="a.created_at.toDateTime()"></span></p>
-                    </td>
-                    <td>
-                        <a v-on:click="editArticle(a.id)" title="Edit Article" href="#0" class="x-btn"><i class="uk-icon-edit"></i></a>
-                        <a v-on:click="deleteArticle(a.id)" title="Delete Article" href="#0" class="x-btn"><i class="uk-icon-trash"></i></a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <div v-if="page.totalItems===0" class="x-empty-list">
-            <p>No category found.</p>
-        </div>
-
-        <div is="pagination" v-bind:page="page"></div>
-    </div>
+    <div is="pagination" v-bind:page="page"></div>
+</div>
 
 {% endblock %}
